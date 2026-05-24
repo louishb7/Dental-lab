@@ -21,7 +21,10 @@ router = APIRouter(
 
 @router.post("/", response_model=CaseResponse, status_code=status.HTTP_201_CREATED)
 def create_case(case: CaseCreate, db: Session = Depends(get_db)):
-    return case_service.create_case(db=db, case_data=case)
+    try:
+        return case_service.create_case(db=db, case_data=case)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @router.get("/", response_model=list[CaseResponse])

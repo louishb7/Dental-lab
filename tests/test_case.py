@@ -41,6 +41,31 @@ def test_create_case_and_normalize_money() -> None:
         assert case.delivered_at is None
 
 
+def test_create_and_move_case_require_active_doctor() -> None:
+    with SessionLocal() as db:
+        doctor = _create_doctor(db)
+        case = case_service.create_case(
+            db,
+            CaseCreate(doctor_id=doctor.id, patient_ref="Paciente ativo"),
+        )
+        case_service.update_case(db, case.id, CaseUpdate(status="delivered"))
+
+        doctor_service.delete_doctor(db, doctor.id)
+
+        with pytest.raises(ValueError, match="Doutor não encontrado"):
+            case_service.create_case(
+                db,
+                CaseCreate(doctor_id=doctor.id, patient_ref="Paciente inválido"),
+            )
+
+        with pytest.raises(ValueError, match="Doutor não encontrado"):
+            case_service.update_case(
+                db,
+                case.id,
+                CaseUpdate(doctor_id=doctor.id),
+            )
+
+
 def test_case_delivery_requires_reason_to_revert() -> None:
     with SessionLocal() as db:
         doctor = _create_doctor(db)

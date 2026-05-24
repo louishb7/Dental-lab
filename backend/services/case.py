@@ -9,10 +9,22 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from backend.models.case import Case
+from backend.models.doctor import Doctor
 from backend.schemas.case import CaseCreate, CaseUpdate
 
 
+def _get_active_doctor(db: Session, doctor_id: int) -> Doctor | None:
+    return (
+        db.query(Doctor)
+        .filter(Doctor.id == doctor_id, Doctor.deleted_at.is_(None))
+        .first()
+    )
+
+
 def create_case(db: Session, case_data: CaseCreate) -> Case:
+    if _get_active_doctor(db, case_data.doctor_id) is None:
+        raise ValueError("Doutor não encontrado")
+
     db_case = Case(
         doctor_id=case_data.doctor_id,
         patient_ref=case_data.patient_ref,
@@ -67,6 +79,10 @@ def update_case(db: Session, case_id: int, case_data: CaseUpdate) -> Case | None
     update_data = case_data.model_dump(exclude_unset=True)
     new_status = update_data.pop("status", None)
     new_reason = update_data.pop("status_revert_reason", None)
+
+    new_doctor_id = update_data.get("doctor_id")
+    if new_doctor_id is not None and _get_active_doctor(db, new_doctor_id) is None:
+        raise ValueError("Doutor não encontrado")
 
     for key, value in update_data.items():
         setattr(db_case, key, value)
