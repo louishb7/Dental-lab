@@ -4,9 +4,10 @@ Este arquivo define as portas de entrada da API para gerenciar os clientes (dent
 do laboratório Cadista. Ele conecta as requisições HTTP à lógica de banco de dados (CRUD).
 """
 
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
 
 from backend.database.connection import get_db
 from backend.schemas.doctor import DoctorCreate, DoctorResponse, DoctorUpdate
@@ -84,7 +85,7 @@ def update_doctor(
 
     Args:
         doctor_id (int): O ID único do doutor passado na URL.
-        doctor_data (DoctorCreate): Os novos dados enviados no corpo da requisição.
+        doctor_data (DoctorUpdate): Os novos dados enviados no corpo da requisição.
         db (Session): A sessão do banco de dados injetada automaticamente.
 
     Returns:
@@ -125,11 +126,17 @@ def delete_doctor(doctor_id: int, db: Session = Depends(get_db)):
             detail="Doutor não encontrado",
         )
 
-    if db_doctor.cases:
+    active_cases = [
+        case
+        for case in db_doctor.cases
+        if case.deleted_at is None and case.status in {"pending", "completed"}
+    ]
+
+    if active_cases:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=(
-                "Não é possível excluir este doutor porque existem casos vinculados."
+                "Não é possível excluir este doutor porque existem casos pendentes ou em andamento."
             ),
         )
 

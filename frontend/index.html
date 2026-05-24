@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadista - Teste de API</title>
+    <title>Cadista - Cadastro e Teste</title>
     <style>
         :root {
             --bg: #eef2f7;
@@ -15,6 +15,7 @@
             --accent-dark: #1d4ed8;
             --danger: #dc2626;
             --success: #047857;
+            --warning: #b45309;
             --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
         }
 
@@ -22,21 +23,21 @@
         body {
             margin: 0;
             font-family: Arial, Helvetica, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
             background:
                 radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 30%),
                 linear-gradient(180deg, #f8fafc 0%, var(--bg) 100%);
-            color: var(--text);
-            min-height: 100vh;
         }
         .container {
-            max-width: 1120px;
+            max-width: 1280px;
             margin: 0 auto;
             padding: 32px 20px 48px;
         }
         .hero {
             display: flex;
-            align-items: flex-end;
             justify-content: space-between;
+            align-items: flex-end;
             gap: 16px;
             margin-bottom: 24px;
         }
@@ -47,31 +48,8 @@
         .hero p {
             margin: 6px 0 0;
             color: var(--muted);
-            max-width: 60ch;
             line-height: 1.5;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 20px;
-        }
-        .card {
-            background: var(--panel);
-            border: 1px solid rgba(209, 213, 219, 0.9);
-            border-radius: 18px;
-            box-shadow: var(--shadow);
-            padding: 20px;
-        }
-        .card h2 {
-            margin: 0 0 16px;
-            font-size: 1.1rem;
-        }
-        .toolbar {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-bottom: 16px;
+            max-width: 72ch;
         }
         .badge {
             display: inline-flex;
@@ -83,6 +61,36 @@
             color: #1d4ed8;
             font-size: 0.92rem;
         }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: var(--panel);
+            border: 1px solid rgba(209, 213, 219, 0.9);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            padding: 20px;
+        }
+        .card h2 {
+            margin: 0;
+            font-size: 1.05rem;
+        }
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+        .toolbar-left {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
         .message {
             min-height: 22px;
             margin: 0 0 14px;
@@ -90,15 +98,14 @@
         }
         .message.error { color: var(--danger); }
         .message.success { color: var(--success); }
-        .form-group {
-            margin-bottom: 14px;
-        }
+        .message.warning { color: var(--warning); }
+        .form-group { margin-bottom: 14px; }
         label {
             display: block;
             font-weight: 700;
             margin-bottom: 6px;
         }
-        input, textarea {
+        input, textarea, select {
             width: 100%;
             border: 1px solid var(--border);
             border-radius: 12px;
@@ -107,11 +114,14 @@
             background: #fff;
             color: var(--text);
         }
-        input:focus, textarea:focus {
+        input:focus, textarea:focus, select:focus {
             outline: 2px solid rgba(37, 99, 235, 0.2);
             border-color: var(--accent);
         }
-        textarea { resize: vertical; min-height: 100px; }
+        textarea {
+            min-height: 92px;
+            resize: vertical;
+        }
         .actions {
             display: flex;
             gap: 10px;
@@ -132,23 +142,17 @@
         .btn-primary:hover { background: var(--accent-dark); }
         .btn-secondary { background: #e5e7eb; color: #111827; }
         .btn-danger { background: var(--danger); color: #fff; }
-        .btn-ghost {
-            background: transparent;
-            color: var(--accent);
-            padding-inline: 4px;
-        }
+        .btn-warning { background: #f59e0b; color: #111827; }
         .btn-small {
             padding: 8px 10px;
             border-radius: 10px;
-            font-size: 0.92rem;
+            font-size: 0.9rem;
         }
-        .table-wrap {
-            overflow-x: auto;
-        }
+        .table-wrap { overflow-x: auto; }
         table {
             width: 100%;
+            min-width: 720px;
             border-collapse: collapse;
-            min-width: 620px;
         }
         th, td {
             padding: 12px 10px;
@@ -157,34 +161,59 @@
             vertical-align: top;
         }
         th {
-            font-size: 0.83rem;
+            font-size: 0.8rem;
             color: var(--muted);
             text-transform: uppercase;
             letter-spacing: 0.04em;
         }
         .empty {
             color: var(--muted);
-            padding: 12px 0;
+            padding: 16px 0;
         }
         .row-actions {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
         }
-        .muted {
-            color: var(--muted);
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            background: #f3f4f6;
+            color: #111827;
         }
-        .section-stack {
+        .badge-status.pending { background: #dbeafe; color: #1d4ed8; }
+        .badge-status.completed { background: #fef3c7; color: #92400e; }
+        .badge-status.delivered { background: #dcfce7; color: #166534; }
+        .meta {
+            color: var(--muted);
+            font-size: 0.88rem;
+            line-height: 1.4;
+        }
+        .split {
             display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 20px;
+            margin-top: 20px;
         }
         .mode-label {
             font-size: 0.92rem;
             color: var(--muted);
         }
-        @media (max-width: 900px) {
+        @media (max-width: 1180px) {
             .grid { grid-template-columns: 1fr; }
-            .hero { align-items: flex-start; flex-direction: column; }
+        }
+        @media (max-width: 900px) {
+            .hero {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .split {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -193,7 +222,7 @@
     <div class="hero">
         <div>
             <h1>Cadista</h1>
-            <p>Teste de API pelo navegador para cadastrar, editar, listar e excluir doutores.</p>
+            <p>Cadastro e teste do fluxo real: doutores, casos e itens de caso. Esta página fala com a API em tempo real.</p>
         </div>
         <div class="badge">API: <span id="apiStatus">verificando...</span></div>
     </div>
@@ -201,272 +230,807 @@
     <div class="grid">
         <section class="card">
             <div class="toolbar">
-                <h2 style="margin: 0;">Cadastro de doutor</h2>
-                <span id="formMode" class="mode-label">Modo: criação</span>
+                <div class="toolbar-left">
+                    <h2>Doutores</h2>
+                    <span id="doctorFormMode" class="mode-label">Modo: criação</span>
+                </div>
+                <button id="refreshDoctorsButton" class="btn-secondary btn-small" type="button">Atualizar</button>
             </div>
-
-            <p id="formMessage" class="message"></p>
+            <p id="doctorMessage" class="message"></p>
 
             <form id="doctorForm">
-                <input type="hidden" id="doctorId" value="">
-
+                <input type="hidden" id="doctorId">
                 <div class="form-group">
-                    <label for="name">Nome *</label>
-                    <input type="text" id="name" required>
+                    <label for="doctorName">Nome *</label>
+                    <input id="doctorName" type="text" required>
                 </div>
-
                 <div class="form-group">
-                    <label for="clinic_name">Clínica</label>
-                    <input type="text" id="clinic_name" placeholder="Clínica ou consultório">
+                    <label for="doctorClinic">Clínica</label>
+                    <input id="doctorClinic" type="text" placeholder="Clínica ou consultório">
                 </div>
-
                 <div class="form-group">
-                    <label for="phone">Telefone</label>
-                    <input type="text" id="phone" placeholder="(xx) xxxx-xxxx">
+                    <label for="doctorPhone">Telefone</label>
+                    <input id="doctorPhone" type="text" placeholder="(xx) xxxx-xxxx">
                 </div>
-
                 <div class="form-group">
-                    <label for="notes">Observações</label>
-                    <textarea id="notes" placeholder="Informações adicionais"></textarea>
+                    <label for="doctorNotes">Observações</label>
+                    <textarea id="doctorNotes" placeholder="Informações adicionais"></textarea>
                 </div>
-
                 <div class="actions">
-                    <button class="btn-primary" type="submit" id="submitButton">Salvar doutor</button>
-                    <button class="btn-secondary" type="button" id="cancelEditButton" hidden>Cancelar edição</button>
+                    <button class="btn-primary" type="submit" id="doctorSubmitButton">Salvar doutor</button>
+                    <button class="btn-secondary" type="button" id="doctorCancelButton" hidden>Cancelar edição</button>
                 </div>
+            </form>
+
+            <div class="split">
+                <div>
+                    <p class="meta">Selecione os doutores aqui e use a lista para editar/excluir.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <h2>Casos</h2>
+                    <span id="caseFormMode" class="mode-label">Modo: criação</span>
+                </div>
+                <button id="refreshCasesButton" class="btn-secondary btn-small" type="button">Atualizar</button>
+            </div>
+            <p id="caseMessage" class="message"></p>
+
+            <form id="caseForm">
+                <input type="hidden" id="caseId">
+                <div class="form-group">
+                    <label for="caseDoctorId">Doutor *</label>
+                    <select id="caseDoctorId" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="casePatientRef">Referência do paciente *</label>
+                    <input id="casePatientRef" type="text" required placeholder="Nome ou código">
+                </div>
+                <div class="form-group">
+                    <label for="caseDeadline">Prazo</label>
+                    <input id="caseDeadline" type="date">
+                </div>
+                <div class="form-group">
+                    <label for="casePriority">Prioridade</label>
+                    <select id="casePriority">
+                        <option value="normal">Normal</option>
+                        <option value="urgent">Urgente</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="caseTotalValue">Valor combinado</label>
+                    <input id="caseTotalValue" type="number" step="0.01" min="0" placeholder="0,00">
+                </div>
+                <div class="form-group">
+                    <label for="caseNotes">Observações</label>
+                    <textarea id="caseNotes" placeholder="Detalhes do caso"></textarea>
+                </div>
+                <div class="actions">
+                    <button class="btn-primary" type="submit" id="caseSubmitButton">Salvar caso</button>
+                    <button class="btn-secondary" type="button" id="caseCancelButton" hidden>Cancelar edição</button>
+                </div>
+                <p class="meta">O caso novo entra como <strong>pending</strong>. O status é ajustado depois pela tabela.</p>
             </form>
         </section>
 
         <section class="card">
             <div class="toolbar">
-                <h2 style="margin: 0;">Doutores cadastrados</h2>
-                <button class="btn-secondary btn-small" type="button" id="refreshButton">Atualizar lista</button>
+                <div class="toolbar-left">
+                    <h2>Itens do caso</h2>
+                    <span id="itemFormMode" class="mode-label">Modo: criação</span>
+                </div>
+                <button id="refreshItemsButton" class="btn-secondary btn-small" type="button">Atualizar</button>
             </div>
+            <p id="itemMessage" class="message"></p>
 
-            <p id="listMessage" class="message"></p>
+                <div class="form-group">
+                    <label for="itemCaseId">Caso selecionado *</label>
+                    <select id="itemCaseId" required></select>
+                </div>
 
+            <form id="itemForm">
+                <input type="hidden" id="itemId">
+                <div class="form-group">
+                    <label for="itemTooth">Dente / descrição *</label>
+                    <input id="itemTooth" type="text" required placeholder="11, 21, 36 ou descrição livre">
+                </div>
+                <div class="form-group">
+                    <label for="itemServiceType">Tipo de serviço *</label>
+                    <input id="itemServiceType" type="text" required placeholder="Coroa, faceta, prótese...">
+                </div>
+                <div class="form-group">
+                    <label for="itemMaterial">Material</label>
+                    <input id="itemMaterial" type="text" placeholder="Zircônia, metal-cerâmica...">
+                </div>
+                <div class="form-group">
+                    <label for="itemColor">Cor / tonalidade</label>
+                    <input id="itemColor" type="text" placeholder="A1, B2...">
+                </div>
+                <div class="form-group">
+                    <label for="itemNotes">Observações</label>
+                    <textarea id="itemNotes" placeholder="Detalhes técnicos"></textarea>
+                </div>
+                <div class="actions">
+                    <button class="btn-primary" type="submit" id="itemSubmitButton">Salvar item</button>
+                    <button class="btn-secondary" type="button" id="itemCancelButton" hidden>Cancelar edição</button>
+                </div>
+            </form>
+        </section>
+    </div>
+
+    <div class="split">
+        <section class="card">
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <h2>Lista de doutores</h2>
+                </div>
+            </div>
+            <p id="doctorListMessage" class="message"></p>
             <div class="table-wrap">
                 <table>
                     <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nome</th>
-                            <th>Clínica</th>
-                            <th>Telefone</th>
-                            <th>Ações</th>
-                        </tr>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Clínica</th>
+                        <th>Telefone</th>
+                        <th>Ações</th>
+                    </tr>
                     </thead>
                     <tbody id="doctorsTableBody">
-                        <tr>
-                            <td colspan="5" class="empty">Carregando doutores...</td>
-                        </tr>
+                        <tr><td colspan="5" class="empty">Carregando doutores...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <h2>Lista de casos</h2>
+                </div>
+            </div>
+            <p id="caseListMessage" class="message"></p>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Doutor</th>
+                        <th>Paciente</th>
+                        <th>Status</th>
+                        <th>Prazo</th>
+                        <th>Ações</th>
+                    </tr>
+                    </thead>
+                    <tbody id="casesTableBody">
+                        <tr><td colspan="6" class="empty">Carregando casos...</td></tr>
                     </tbody>
                 </table>
             </div>
         </section>
     </div>
+
+    <section class="card" style="margin-top: 20px;">
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <h2>Itens do caso selecionado</h2>
+                <span id="selectedCaseLabel" class="mode-label">Nenhum caso selecionado</span>
+            </div>
+        </div>
+        <p id="itemListMessage" class="message"></p>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Dente / descrição</th>
+                    <th>Serviço</th>
+                    <th>Material</th>
+                    <th>Cor</th>
+                    <th>Ações</th>
+                </tr>
+                </thead>
+                <tbody id="itemsTableBody">
+                    <tr><td colspan="6" class="empty">Selecione um caso para listar os itens.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
 </div>
 
 <script>
-    const API_BASE_URL = "http://localhost:8000";
-    const DOCTORS_URL = `${API_BASE_URL}/doctors`;
+    const API_BASE_URL = "http://127.0.0.1:8001";
+    const state = {
+        doctors: [],
+        cases: [],
+        selectedCaseId: null,
+        editingDoctorId: null,
+        editingCaseId: null,
+        editingItemId: null,
+    };
 
-    const form = document.getElementById("doctorForm");
-    const formMessage = document.getElementById("formMessage");
-    const listMessage = document.getElementById("listMessage");
-    const doctorsTableBody = document.getElementById("doctorsTableBody");
-    const doctorIdInput = document.getElementById("doctorId");
-    const submitButton = document.getElementById("submitButton");
-    const cancelEditButton = document.getElementById("cancelEditButton");
-    const formMode = document.getElementById("formMode");
-    const apiStatus = document.getElementById("apiStatus");
-    const refreshButton = document.getElementById("refreshButton");
+    const el = {
+        apiStatus: document.getElementById("apiStatus"),
+        doctorMessage: document.getElementById("doctorMessage"),
+        caseMessage: document.getElementById("caseMessage"),
+        itemMessage: document.getElementById("itemMessage"),
+        doctorListMessage: document.getElementById("doctorListMessage"),
+        caseListMessage: document.getElementById("caseListMessage"),
+        itemListMessage: document.getElementById("itemListMessage"),
+        doctorsTableBody: document.getElementById("doctorsTableBody"),
+        casesTableBody: document.getElementById("casesTableBody"),
+        itemsTableBody: document.getElementById("itemsTableBody"),
+        doctorFormMode: document.getElementById("doctorFormMode"),
+        caseFormMode: document.getElementById("caseFormMode"),
+        itemFormMode: document.getElementById("itemFormMode"),
+        selectedCaseLabel: document.getElementById("selectedCaseLabel"),
+        caseDoctorId: document.getElementById("caseDoctorId"),
+        itemCaseId: document.getElementById("itemCaseId"),
+        doctorForm: document.getElementById("doctorForm"),
+        caseForm: document.getElementById("caseForm"),
+        itemForm: document.getElementById("itemForm"),
+    };
 
-    function setMessage(element, text, type = "") {
-        element.textContent = text;
-        element.className = type ? `message ${type}` : "message";
+    function setMessage(target, text, type = "") {
+        target.textContent = text;
+        target.className = type ? `message ${type}` : "message";
     }
 
-    function resetForm() {
-        form.reset();
-        doctorIdInput.value = "";
-        submitButton.textContent = "Salvar doutor";
-        cancelEditButton.hidden = true;
-        formMode.textContent = "Modo: criação";
+    function escapeText(value) {
+        return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
     }
 
-    function fillFormForEdit(doctor) {
-        doctorIdInput.value = doctor.id;
-        document.getElementById("name").value = doctor.name || "";
-        document.getElementById("clinic_name").value = doctor.clinic_name || "";
-        document.getElementById("phone").value = doctor.phone || "";
-        document.getElementById("notes").value = doctor.notes || "";
-        submitButton.textContent = "Atualizar doutor";
-        cancelEditButton.hidden = false;
-        formMode.textContent = `Modo: edição do ID ${doctor.id}`;
-        setMessage(formMessage, `Editando doutor #${doctor.id}`, "success");
-        document.getElementById("name").focus();
+    function formatDate(value) {
+        if (!value) return "-";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "-";
+        return date.toLocaleString("pt-BR");
     }
 
-    async function readApiError(response) {
-        try {
-            const data = await response.json();
-            return data.detail || JSON.stringify(data);
-        } catch {
-            return `Erro HTTP ${response.status}`;
+    function formatDateInput(value) {
+        if (!value) return "";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "";
+        return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+            .toISOString()
+            .slice(0, 10);
+    }
+
+    function readError(response) {
+        return response.json()
+            .then(data => data.detail || JSON.stringify(data))
+            .catch(() => `HTTP ${response.status}`);
+    }
+
+    function doctorNameById(doctorId) {
+        const doctor = state.doctors.find(item => item.id === doctorId);
+        return doctor ? doctor.name : `#${doctorId}`;
+    }
+
+    function caseLabelById(caseId) {
+        const item = state.cases.find(entry => entry.id === caseId);
+        if (!item) return `#${caseId}`;
+        return `#${item.id} - ${item.patient_ref}`;
+    }
+
+    function resetDoctorForm() {
+        el.doctorForm.reset();
+        document.getElementById("doctorId").value = "";
+        document.getElementById("doctorSubmitButton").textContent = "Salvar doutor";
+        document.getElementById("doctorCancelButton").hidden = true;
+        el.doctorFormMode.textContent = "Modo: criação";
+        state.editingDoctorId = null;
+    }
+
+    function resetCaseForm() {
+        el.caseForm.reset();
+        document.getElementById("caseId").value = "";
+        document.getElementById("caseSubmitButton").textContent = "Salvar caso";
+        document.getElementById("caseCancelButton").hidden = true;
+        el.caseFormMode.textContent = "Modo: criação";
+        state.editingCaseId = null;
+        document.getElementById("casePriority").value = "normal";
+    }
+
+    function resetItemForm() {
+        el.itemForm.reset();
+        document.getElementById("itemId").value = "";
+        document.getElementById("itemSubmitButton").textContent = "Salvar item";
+        document.getElementById("itemCancelButton").hidden = true;
+        el.itemFormMode.textContent = "Modo: criação";
+        state.editingItemId = null;
+    }
+
+    function setSelectedCase(caseId) {
+        state.selectedCaseId = caseId;
+        el.selectedCaseLabel.textContent = caseId ? caseLabelById(caseId) : "Nenhum caso selecionado";
+        el.itemCaseId.value = caseId ? String(caseId) : "";
+    }
+
+    function renderDoctorSelect() {
+        const options = state.doctors.length
+            ? state.doctors.map(doctor => `<option value="${doctor.id}">${escapeText(doctor.name)}</option>`).join("")
+            : `<option value="">Nenhum doutor cadastrado</option>`;
+        el.caseDoctorId.innerHTML = options;
+    }
+
+    function renderCaseSelect() {
+        if (!state.cases.length) {
+            el.itemCaseId.innerHTML = `<option value="">Nenhum caso cadastrado</option>`;
+            setSelectedCase(null);
+            return;
         }
+
+        el.itemCaseId.innerHTML = state.cases
+            .map(caseItem => `<option value="${caseItem.id}">#${caseItem.id} - ${escapeText(caseItem.patient_ref)}</option>`)
+            .join("");
+
+        if (!state.selectedCaseId || !state.cases.some(item => item.id === state.selectedCaseId)) {
+            state.selectedCaseId = state.cases[0].id;
+        }
+
+        setSelectedCase(state.selectedCaseId);
+    }
+
+    function renderDoctorsTable() {
+        if (!state.doctors.length) {
+            el.doctorsTableBody.innerHTML = `<tr><td colspan="5" class="empty">Nenhum doutor cadastrado.</td></tr>`;
+            return;
+        }
+
+        el.doctorsTableBody.innerHTML = state.doctors.map(doctor => `
+            <tr>
+                <td>${doctor.id}</td>
+                <td>${escapeText(doctor.name)}</td>
+                <td>${escapeText(doctor.clinic_name || "-")}</td>
+                <td>${escapeText(doctor.phone || "-")}</td>
+                <td>
+                    <div class="row-actions">
+                        <button class="btn-secondary btn-small" type="button" data-edit-doctor="${doctor.id}">Editar</button>
+                        <button class="btn-danger btn-small" type="button" data-delete-doctor="${doctor.id}">Excluir</button>
+                    </div>
+                </td>
+            </tr>
+        `).join("");
+
+        document.querySelectorAll("[data-edit-doctor]").forEach(button => {
+            button.addEventListener("click", () => editDoctor(Number(button.dataset.editDoctor)));
+        });
+        document.querySelectorAll("[data-delete-doctor]").forEach(button => {
+            button.addEventListener("click", () => deleteDoctor(Number(button.dataset.deleteDoctor)));
+        });
+    }
+
+    function renderCasesTable() {
+        if (!state.cases.length) {
+            el.casesTableBody.innerHTML = `<tr><td colspan="6" class="empty">Nenhum caso cadastrado.</td></tr>`;
+            return;
+        }
+
+        el.casesTableBody.innerHTML = state.cases.map(caseItem => `
+            <tr>
+                <td>${caseItem.id}</td>
+                <td>${escapeText(doctorNameById(caseItem.doctor_id))}</td>
+                <td>
+                    <div><strong>${escapeText(caseItem.patient_ref)}</strong></div>
+                    <div class="meta">Valor: ${caseItem.total_value ?? "-"}</div>
+                </td>
+                <td><span class="badge-status ${caseItem.status}">${escapeText(caseItem.status)}</span></td>
+                <td>
+                    <div>${formatDate(caseItem.deadline)}</div>
+                    <div class="meta">Criado: ${formatDate(caseItem.created_at)}</div>
+                    ${caseItem.delivered_at ? `<div class="meta">Entregue: ${formatDate(caseItem.delivered_at)}</div>` : ""}
+                    ${caseItem.deleted_at ? `<div class="meta">Removido: ${formatDate(caseItem.deleted_at)}</div>` : ""}
+                </td>
+                <td>
+                    <div class="row-actions">
+                        <button class="btn-secondary btn-small" type="button" data-edit-case="${caseItem.id}">Editar</button>
+                        <button class="btn-warning btn-small" type="button" data-complete-case="${caseItem.id}">Concluir</button>
+                        <button class="btn-primary btn-small" type="button" data-deliver-case="${caseItem.id}">Entregar</button>
+                        <button class="btn-danger btn-small" type="button" data-delete-case="${caseItem.id}">Excluir</button>
+                    </div>
+                </td>
+            </tr>
+        `).join("");
+
+        document.querySelectorAll("[data-edit-case]").forEach(button => {
+            button.addEventListener("click", () => editCase(Number(button.dataset.editCase)));
+        });
+        document.querySelectorAll("[data-complete-case]").forEach(button => {
+            button.addEventListener("click", () => updateCaseStatus(Number(button.dataset.completeCase), "completed"));
+        });
+        document.querySelectorAll("[data-deliver-case]").forEach(button => {
+            button.addEventListener("click", () => updateCaseStatus(Number(button.dataset.deliverCase), "delivered"));
+        });
+        document.querySelectorAll("[data-delete-case]").forEach(button => {
+            button.addEventListener("click", () => deleteCase(Number(button.dataset.deleteCase)));
+        });
+    }
+
+    function renderItemsTable() {
+        if (!state.selectedCaseId) {
+            el.itemsTableBody.innerHTML = `<tr><td colspan="6" class="empty">Selecione um caso para listar os itens.</td></tr>`;
+            return;
+        }
+
+        const currentCase = state.cases.find(item => item.id === state.selectedCaseId);
+        const items = currentCase?.items || [];
+
+        if (!items.length) {
+            el.itemsTableBody.innerHTML = `<tr><td colspan="6" class="empty">Este caso ainda não possui itens.</td></tr>`;
+            return;
+        }
+
+        el.itemsTableBody.innerHTML = items.map(item => `
+            <tr>
+                <td>${item.id}</td>
+                <td>${escapeText(item.tooth)}</td>
+                <td>${escapeText(item.service_type)}</td>
+                <td>${escapeText(item.material || "-")}</td>
+                <td>${escapeText(item.color || "-")}</td>
+                <td>
+                    <div class="row-actions">
+                        <button class="btn-secondary btn-small" type="button" data-edit-item="${item.id}">Editar</button>
+                        <button class="btn-danger btn-small" type="button" data-delete-item="${item.id}">Excluir</button>
+                    </div>
+                </td>
+            </tr>
+        `).join("");
+
+        document.querySelectorAll("[data-edit-item]").forEach(button => {
+            button.addEventListener("click", () => editItem(Number(button.dataset.editItem)));
+        });
+        document.querySelectorAll("[data-delete-item]").forEach(button => {
+            button.addEventListener("click", () => deleteItem(Number(button.dataset.deleteItem)));
+        });
+    }
+
+    async function loadDoctors() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/doctors/`);
+            if (!response.ok) throw new Error(await readError(response));
+            state.doctors = await response.json();
+            renderDoctorSelect();
+            renderDoctorsTable();
+            setMessage(el.doctorListMessage, `Carregados ${state.doctors.length} doutores.`, "success");
+        } catch (error) {
+            setMessage(el.doctorListMessage, error.message || "Falha ao carregar doutores.", "error");
+        }
+    }
+
+    async function loadCases() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/cases/`);
+            if (!response.ok) throw new Error(await readError(response));
+            state.cases = await response.json();
+            renderCaseSelect();
+            renderCasesTable();
+            renderItemsTable();
+            setMessage(el.caseListMessage, `Carregados ${state.cases.length} casos.`, "success");
+        } catch (error) {
+            setMessage(el.caseListMessage, error.message || "Falha ao carregar casos.", "error");
+        }
+    }
+
+    async function loadItemsForSelectedCase() {
+        if (!state.selectedCaseId) {
+            renderItemsTable();
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/cases/${state.selectedCaseId}/items/`);
+            if (!response.ok) throw new Error(await readError(response));
+            const items = await response.json();
+            const currentCase = state.cases.find(item => item.id === state.selectedCaseId);
+            if (currentCase) {
+                currentCase.items = items;
+            }
+            renderItemsTable();
+            setMessage(el.itemListMessage, `Carregados ${items.length} itens do caso selecionado.`, "success");
+        } catch (error) {
+            setMessage(el.itemListMessage, error.message || "Falha ao carregar itens.", "error");
+        }
+    }
+
+    async function refreshAll() {
+        await loadDoctors();
+        await loadCases();
+        await loadItemsForSelectedCase();
+    }
+
+    function editDoctor(id) {
+        const doctor = state.doctors.find(item => item.id === id);
+        if (!doctor) return;
+
+        state.editingDoctorId = id;
+        document.getElementById("doctorId").value = String(id);
+        document.getElementById("doctorName").value = doctor.name || "";
+        document.getElementById("doctorClinic").value = doctor.clinic_name || "";
+        document.getElementById("doctorPhone").value = doctor.phone || "";
+        document.getElementById("doctorNotes").value = doctor.notes || "";
+        document.getElementById("doctorSubmitButton").textContent = "Atualizar doutor";
+        document.getElementById("doctorCancelButton").hidden = false;
+        el.doctorFormMode.textContent = `Modo: edição #${id}`;
+        setMessage(el.doctorMessage, `Editando doutor #${id}.`, "warning");
+    }
+
+    function editCase(id) {
+        const caseItem = state.cases.find(item => item.id === id);
+        if (!caseItem) return;
+
+        state.editingCaseId = id;
+        document.getElementById("caseId").value = String(id);
+        document.getElementById("caseDoctorId").value = String(caseItem.doctor_id);
+        document.getElementById("casePatientRef").value = caseItem.patient_ref || "";
+        document.getElementById("caseDeadline").value = formatDateInput(caseItem.deadline);
+        document.getElementById("casePriority").value = caseItem.priority || "normal";
+        document.getElementById("caseTotalValue").value = caseItem.total_value ?? "";
+        document.getElementById("caseNotes").value = caseItem.notes || "";
+        document.getElementById("caseSubmitButton").textContent = "Atualizar caso";
+        document.getElementById("caseCancelButton").hidden = false;
+        el.caseFormMode.textContent = `Modo: edição #${id}`;
+        setMessage(el.caseMessage, `Editando caso #${id}.`, "warning");
+    }
+
+    function editItem(id) {
+        if (!state.selectedCaseId) return;
+        const caseItem = state.cases.find(item => item.id === state.selectedCaseId);
+        const item = caseItem?.items?.find(entry => entry.id === id);
+        if (!item) return;
+
+        state.editingItemId = id;
+        document.getElementById("itemId").value = String(id);
+        document.getElementById("itemCaseId").value = String(state.selectedCaseId);
+        document.getElementById("itemTooth").value = item.tooth || "";
+        document.getElementById("itemServiceType").value = item.service_type || "";
+        document.getElementById("itemMaterial").value = item.material || "";
+        document.getElementById("itemColor").value = item.color || "";
+        document.getElementById("itemNotes").value = item.notes || "";
+        document.getElementById("itemSubmitButton").textContent = "Atualizar item";
+        document.getElementById("itemCancelButton").hidden = false;
+        el.itemFormMode.textContent = `Modo: edição #${id}`;
+        setMessage(el.itemMessage, `Editando item #${id}.`, "warning");
+    }
+
+    async function submitDoctor(event) {
+        event.preventDefault();
+        const doctorId = document.getElementById("doctorId").value.trim();
+        const payload = {
+            name: document.getElementById("doctorName").value.trim(),
+            clinic_name: document.getElementById("doctorClinic").value.trim() || null,
+            phone: document.getElementById("doctorPhone").value.trim() || null,
+            notes: document.getElementById("doctorNotes").value.trim() || null,
+        };
+
+        const url = doctorId ? `${API_BASE_URL}/doctors/${doctorId}` : `${API_BASE_URL}/doctors/`;
+        const method = doctorId ? "PUT" : "POST";
+
+        try {
+            setMessage(el.doctorMessage, doctorId ? "Atualizando doutor..." : "Salvando doutor...", "");
+            const response = await fetch(url, {
+                method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+            if (!response.ok) throw new Error(await readError(response));
+
+            setMessage(el.doctorMessage, doctorId ? "Doutor atualizado com sucesso." : "Doutor criado com sucesso.", "success");
+            resetDoctorForm();
+            await refreshAll();
+        } catch (error) {
+            setMessage(el.doctorMessage, error.message || "Falha ao salvar doutor.", "error");
+        }
+    }
+
+    async function submitCase(event) {
+        event.preventDefault();
+        const caseId = document.getElementById("caseId").value.trim();
+        const deadlineValue = document.getElementById("caseDeadline").value;
+
+        const payload = {
+            doctor_id: Number(document.getElementById("caseDoctorId").value),
+            patient_ref: document.getElementById("casePatientRef").value.trim(),
+            deadline: deadlineValue ? new Date(`${deadlineValue}T00:00:00`).toISOString() : null,
+            priority: document.getElementById("casePriority").value,
+            total_value: document.getElementById("caseTotalValue").value
+                ? Number(document.getElementById("caseTotalValue").value)
+                : null,
+            notes: document.getElementById("caseNotes").value.trim() || null,
+        };
+
+        const url = caseId ? `${API_BASE_URL}/cases/${caseId}` : `${API_BASE_URL}/cases/`;
+        const method = caseId ? "PUT" : "POST";
+
+        try {
+            setMessage(el.caseMessage, caseId ? "Atualizando caso..." : "Salvando caso...", "");
+            const response = await fetch(url, {
+                method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+            if (!response.ok) throw new Error(await readError(response));
+
+            setMessage(el.caseMessage, caseId ? "Caso atualizado com sucesso." : "Caso criado com sucesso.", "success");
+            resetCaseForm();
+            await refreshAll();
+        } catch (error) {
+            setMessage(el.caseMessage, error.message || "Falha ao salvar caso.", "error");
+        }
+    }
+
+    async function submitItem(event) {
+        event.preventDefault();
+        const caseId = Number(document.getElementById("itemCaseId").value);
+        const itemId = document.getElementById("itemId").value.trim();
+
+        if (!caseId || Number.isNaN(caseId)) {
+            setMessage(el.itemMessage, "Selecione um caso válido antes de salvar o item.", "error");
+            return;
+        }
+
+        const payload = {
+            tooth: document.getElementById("itemTooth").value.trim(),
+            service_type: document.getElementById("itemServiceType").value.trim(),
+            material: document.getElementById("itemMaterial").value.trim() || null,
+            color: document.getElementById("itemColor").value.trim() || null,
+            notes: document.getElementById("itemNotes").value.trim() || null,
+        };
+
+        const url = itemId
+            ? `${API_BASE_URL}/cases/${caseId}/items/${itemId}`
+            : `${API_BASE_URL}/cases/${caseId}/items/`;
+        const method = itemId ? "PUT" : "POST";
+
+        try {
+            setMessage(el.itemMessage, itemId ? "Atualizando item..." : "Salvando item...", "");
+            const response = await fetch(url, {
+                method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+            if (!response.ok) throw new Error(await readError(response));
+
+            setMessage(el.itemMessage, itemId ? "Item atualizado com sucesso." : "Item criado com sucesso.", "success");
+            resetItemForm();
+            await loadCases();
+            setSelectedCase(caseId);
+            await loadItemsForSelectedCase();
+        } catch (error) {
+            setMessage(el.itemMessage, error.message || "Falha ao salvar item.", "error");
+        }
+    }
+
+    async function deleteDoctor(id) {
+        if (!confirm(`Excluir o doutor #${id}? A API vai bloquear se houver casos vinculados.`)) return;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/doctors/${id}`, { method: "DELETE" });
+            if (!response.ok) throw new Error(await readError(response));
+            setMessage(el.doctorListMessage, `Doutor #${id} excluído com sucesso.`, "success");
+            await refreshAll();
+        } catch (error) {
+            setMessage(el.doctorListMessage, error.message || "Falha ao excluir doutor.", "error");
+        }
+    }
+
+    async function deleteCase(id) {
+        if (!confirm(`Excluir o caso #${id}? Casos não pendentes serão removidos por soft delete.`)) return;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/cases/${id}`, { method: "DELETE" });
+            if (!response.ok) throw new Error(await readError(response));
+            setMessage(el.caseListMessage, `Caso #${id} removido com sucesso.`, "success");
+            await refreshAll();
+        } catch (error) {
+            setMessage(el.caseListMessage, error.message || "Falha ao excluir caso.", "error");
+        }
+    }
+
+    async function deleteItem(id) {
+        if (!state.selectedCaseId) return;
+        if (!confirm(`Excluir o item #${id}?`)) return;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/cases/${state.selectedCaseId}/items/${id}`, { method: "DELETE" });
+            if (!response.ok) throw new Error(await readError(response));
+            setMessage(el.itemListMessage, `Item #${id} excluído com sucesso.`, "success");
+            await loadCases();
+            setSelectedCase(state.selectedCaseId);
+            await loadItemsForSelectedCase();
+        } catch (error) {
+            setMessage(el.itemListMessage, error.message || "Falha ao excluir item.", "error");
+        }
+    }
+
+    async function updateCaseStatus(id, newStatus) {
+        const caseItem = state.cases.find(entry => entry.id === id);
+        if (!caseItem) return;
+
+        const payload = { status: newStatus };
+
+        if (caseItem.status === "delivered" && newStatus !== "delivered") {
+            const reason = prompt("Informe o motivo da reversão do status:");
+            if (!reason || !reason.trim()) {
+                setMessage(el.caseListMessage, "A reversão foi cancelada porque o motivo é obrigatório.", "warning");
+                return;
+            }
+            payload.status_revert_reason = reason.trim();
+        }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/cases/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+            if (!response.ok) throw new Error(await readError(response));
+            setMessage(el.caseListMessage, `Caso #${id} atualizado para ${newStatus}.`, "success");
+            await refreshAll();
+        } catch (error) {
+            setMessage(el.caseListMessage, error.message || "Falha ao atualizar status do caso.", "error");
+        }
+    }
+
+    function bindFormEvents() {
+        el.doctorForm.addEventListener("submit", submitDoctor);
+        el.caseForm.addEventListener("submit", submitCase);
+        el.itemForm.addEventListener("submit", submitItem);
+
+        document.getElementById("doctorCancelButton").addEventListener("click", () => {
+            resetDoctorForm();
+            setMessage(el.doctorMessage, "Edição de doutor cancelada.", "");
+        });
+
+        document.getElementById("caseCancelButton").addEventListener("click", () => {
+            resetCaseForm();
+            setMessage(el.caseMessage, "Edição de caso cancelada.", "");
+        });
+
+        document.getElementById("itemCancelButton").addEventListener("click", () => {
+            resetItemForm();
+            setMessage(el.itemMessage, "Edição de item cancelada.", "");
+        });
+
+        document.getElementById("refreshDoctorsButton").addEventListener("click", loadDoctors);
+        document.getElementById("refreshCasesButton").addEventListener("click", loadCases);
+        document.getElementById("refreshItemsButton").addEventListener("click", loadItemsForSelectedCase);
+
+        el.itemCaseId.addEventListener("change", async () => {
+            state.selectedCaseId = Number(el.itemCaseId.value) || null;
+            el.selectedCaseLabel.textContent = state.selectedCaseId ? caseLabelById(state.selectedCaseId) : "Nenhum caso selecionado";
+            await loadItemsForSelectedCase();
+        });
     }
 
     async function checkApi() {
         try {
             const response = await fetch(`${API_BASE_URL}/`);
+            if (!response.ok) throw new Error(await readError(response));
             const data = await response.json();
-            apiStatus.textContent = data.message || "online";
+            el.apiStatus.textContent = data.message || "online";
         } catch (error) {
-            apiStatus.textContent = "offline";
-            setMessage(listMessage, "A API não respondeu. Verifique se o backend está rodando.", "error");
+            el.apiStatus.textContent = "offline";
             console.error(error);
         }
     }
 
-    async function loadDoctors() {
-        setMessage(listMessage, "Atualizando lista...", "");
-
-        try {
-            const response = await fetch(DOCTORS_URL);
-            if (!response.ok) {
-                const errorMessage = await readApiError(response);
-                throw new Error(errorMessage);
-            }
-
-            const doctors = await response.json();
-            doctorsTableBody.innerHTML = "";
-
-            if (!doctors.length) {
-                doctorsTableBody.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="empty">Nenhum doutor cadastrado ainda.</td>
-                    </tr>
-                `;
-                setMessage(listMessage, "Lista carregada com sucesso.", "success");
-                return;
-            }
-
-            for (const doctor of doctors) {
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>${doctor.id}</td>
-                    <td>${doctor.name || "-"}</td>
-                    <td>${doctor.clinic_name || "-"}</td>
-                    <td>${doctor.phone || "-"}</td>
-                    <td>
-                        <div class="row-actions">
-                            <button class="btn-secondary btn-small" type="button" data-action="edit">Editar</button>
-                            <button class="btn-danger btn-small" type="button" data-action="delete">Excluir</button>
-                        </div>
-                    </td>
-                `;
-
-                row.querySelector('[data-action="edit"]').addEventListener("click", () => fillFormForEdit(doctor));
-                row.querySelector('[data-action="delete"]').addEventListener("click", () => deleteDoctor(doctor.id, doctor.name));
-                doctorsTableBody.appendChild(row);
-            }
-
-            setMessage(listMessage, `Foram carregados ${doctors.length} doutores.`, "success");
-        } catch (error) {
-            doctorsTableBody.innerHTML = `
-                <tr>
-                    <td colspan="5" class="empty">Falha ao carregar doutores.</td>
-                </tr>
-            `;
-            setMessage(listMessage, error.message || "Falha ao carregar doutores.", "error");
-        }
+    async function bootstrap() {
+        bindFormEvents();
+        await checkApi();
+        await refreshAll();
     }
 
-    async function submitDoctor(event) {
-        event.preventDefault();
-
-        const doctorId = doctorIdInput.value.trim();
-        const payload = {
-            name: document.getElementById("name").value.trim(),
-            clinic_name: document.getElementById("clinic_name").value.trim() || null,
-            phone: document.getElementById("phone").value.trim() || null,
-            notes: document.getElementById("notes").value.trim() || null,
-        };
-
-        const method = doctorId ? "PUT" : "POST";
-        const url = doctorId ? `${DOCTORS_URL}/${doctorId}` : DOCTORS_URL;
-
-        try {
-            setMessage(formMessage, doctorId ? "Atualizando doutor..." : "Salvando doutor...", "");
-
-            const response = await fetch(url, {
-                method,
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
-            });
-
-            if (!response.ok) {
-                const errorMessage = await readApiError(response);
-                throw new Error(errorMessage);
-            }
-
-            resetForm();
-            setMessage(
-                formMessage,
-                doctorId ? "Doutor atualizado com sucesso." : "Doutor criado com sucesso.",
-                "success"
-            );
-            await loadDoctors();
-        } catch (error) {
-            setMessage(formMessage, error.message || "Falha ao salvar doutor.", "error");
-        }
-    }
-
-    async function deleteDoctor(id, name) {
-        const confirmed = confirm(
-            `Excluir o doutor "${name}"? Se houver casos vinculados, a API vai bloquear a operação.`
-        );
-
-        if (!confirmed) {
-            return;
-        }
-
-        try {
-            setMessage(listMessage, `Excluindo doutor #${id}...`, "");
-
-            const response = await fetch(`${DOCTORS_URL}/${id}`, {
-                method: "DELETE",
-            });
-
-            if (!response.ok) {
-                const errorMessage = await readApiError(response);
-                throw new Error(errorMessage);
-            }
-
-            if (doctorIdInput.value === String(id)) {
-                resetForm();
-            }
-
-            setMessage(listMessage, `Doutor #${id} excluído com sucesso.`, "success");
-            await loadDoctors();
-        } catch (error) {
-            setMessage(listMessage, error.message || "Falha ao excluir doutor.", "error");
-        }
-    }
-
-    cancelEditButton.addEventListener("click", () => {
-        resetForm();
-        setMessage(formMessage, "Edição cancelada.", "");
-    });
-
-    refreshButton.addEventListener("click", loadDoctors);
-    form.addEventListener("submit", submitDoctor);
-
-    checkApi();
-    loadDoctors();
+    bootstrap();
 </script>
 </body>
 </html>

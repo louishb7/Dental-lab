@@ -15,6 +15,7 @@ from backend.schemas.case import CaseBase, CaseCreate, CaseUpdate, CaseResponse
 from backend.schemas.case_item import (
     CaseItemBase,
     CaseItemCreate,
+    CaseItemUpdate,
     CaseItemResponse,
 )
 
@@ -29,5 +30,6 @@ __all__ = [
     "CaseResponse",
     "CaseItemBase",
     "CaseItemCreate",
+    "CaseItemUpdate",
     "CaseItemResponse",
 ]

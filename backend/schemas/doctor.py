@@ -3,9 +3,10 @@ Módulo de Schemas Pydantic para a entidade Doctor (Doutor/Dentista).
 Responsável pela validação de dados de entrada e formatação de saída dos clientes do laboratório.
 """
 
-from pydantic import BaseModel, ConfigDict, Field
-from typing import Optional
 from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class DoctorBase(BaseModel):
@@ -52,6 +53,9 @@ class DoctorResponse(DoctorBase):
     id: int = Field(..., description="ID único gerado pelo banco de dados")
     created_at: datetime = Field(
         ..., description="Data e hora em que o registro foi criado"
+    )
+    deleted_at: Optional[datetime] = Field(
+        default=None, description="Data de soft delete do doutor"
     )
 
     model_config = ConfigDict(from_attributes=True)

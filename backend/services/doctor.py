@@ -2,6 +2,8 @@
 Módulo de operações de persistência para a entidade Doctor.
 """
 
+from datetime import datetime, timezone
+
 from sqlalchemy.orm import Session
 
 from backend.models.doctor import Doctor
@@ -17,11 +19,21 @@ def create_doctor(db: Session, doctor: DoctorCreate) -> Doctor:
 
 
 def get_doctor_by_id(db: Session, doctor_id: int) -> Doctor | None:
-    return db.query(Doctor).filter(Doctor.id == doctor_id).first()
+    return (
+        db.query(Doctor)
+        .filter(Doctor.id == doctor_id, Doctor.deleted_at.is_(None))
+        .first()
+    )
 
 
 def get_all_doctors(db: Session, skip: int = 0, limit: int = 100) -> list[Doctor]:
-    return db.query(Doctor).offset(skip).limit(limit).all()
+    return (
+        db.query(Doctor)
+        .filter(Doctor.deleted_at.is_(None))
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
 
 
 def update_doctor(
@@ -44,7 +56,7 @@ def delete_doctor(db: Session, doctor_id: int) -> bool:
     db_doctor = get_doctor_by_id(db, doctor_id)
 
     if db_doctor:
-        db.delete(db_doctor)
+        db_doctor.deleted_at = datetime.now(timezone.utc)
         db.commit()
         return True
 

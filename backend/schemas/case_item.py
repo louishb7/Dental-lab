@@ -51,6 +51,35 @@ class CaseItemCreate(CaseItemBase):
     pass
 
 
+class CaseItemUpdate(BaseModel):
+    """Payload parcial para atualização de um item de caso."""
+
+    tooth: Optional[str] = None
+    service_type: Optional[str] = None
+    material: Optional[str] = None
+    color: Optional[str] = None
+    notes: Optional[str] = None
+
+    @field_validator("tooth")
+    @classmethod
+    def validate_tooth_update(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return value
+
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("O campo tooth não pode ser vazio")
+
+        if normalized.isdigit():
+            tooth_number = int(normalized)
+            if tooth_number < 11 or tooth_number > 48:
+                raise ValueError(
+                    "Quando numérico, o campo tooth deve estar entre 11 e 48"
+                )
+
+        return normalized
+
+
 class CaseItemResponse(CaseItemBase):
     """Resposta serializada de um item de caso."""
 
