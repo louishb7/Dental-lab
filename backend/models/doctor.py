@@ -31,8 +31,6 @@ class Doctor(Base):
     phone = Column(String(50))
     notes = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-
-cases = relationship(
-    "DentalCase", back_populates="doctor", cascade="all, delete-orphan"
-)
+    cases = relationship(
+        "DentalCase", back_populates="doctor", cascade="all, delete-orphan"
+    )

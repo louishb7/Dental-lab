@@ -10,7 +10,7 @@ from typing import List
 
 from backend.database.connection import get_db
 from backend.schemas.doctor import DoctorCreate, DoctorResponse
-from backend.crud import doctor as crud_doctor
+from backend.services import doctor as doctor_service
 
 # Cria o roteador para agrupar todos os endpoints de "/doctors"
 router = APIRouter(prefix="/doctors", tags=["Doctors"])
@@ -30,7 +30,7 @@ def create_doctor(doctor: DoctorCreate, db: Session = Depends(get_db)):
     Returns:
         DoctorResponse: Os dados do doutor recém-criado, formatados para saída.
     """
-    return crud_doctor.create_doctor(db=db, doctor=doctor)
+    return doctor_service.create_doctor(db=db, doctor=doctor)
 
 
 @router.get("/", response_model=List[DoctorResponse])
@@ -48,7 +48,7 @@ def read_doctors(
     Returns:
         List[DoctorResponse]: Uma lista de doutores formatada pelo schema.
     """
-    return crud_doctor.get_all_doctors(db, skip=skip, limit=limit)
+    return doctor_service.get_all_doctors(db, skip=skip, limit=limit)
 
 
 @router.get("/{doctor_id}", response_model=DoctorResponse)
@@ -66,7 +66,7 @@ def read_doctor(doctor_id: int, db: Session = Depends(get_db)):
     Raises:
         HTTPException: Retorna erro 404 se o doutor não for encontrado.
     """
-    db_doctor = crud_doctor.get_doctor_by_id(db, doctor_id=doctor_id)
+    db_doctor = doctor_service.get_doctor_by_id(db, doctor_id=doctor_id)
     if db_doctor is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -93,7 +93,7 @@ def update_doctor(
     Raises:
         HTTPException: Retorna erro 404 se o doutor não for encontrado.
     """
-    updated_doctor = crud_doctor.update_doctor(
+    updated_doctor = doctor_service.update_doctor(
         db, doctor_id=doctor_id, doctor_data=doctor_data
     )
     if updated_doctor is None:
@@ -117,7 +117,7 @@ def delete_doctor(doctor_id: int, db: Session = Depends(get_db)):
     Raises:
         HTTPException: Retorna erro 404 se o doutor não for encontrado.
     """
-    success = crud_doctor.delete_doctor(db, doctor_id=doctor_id)
+    success = doctor_service.delete_doctor(db, doctor_id=doctor_id)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
