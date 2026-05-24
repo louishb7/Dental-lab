@@ -25,7 +25,7 @@ class CaseItem(Base):
 
     __tablename__ = "case_items"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     case_id = Column(
         Integer,
         ForeignKey("cases.id", ondelete="CASCADE"),

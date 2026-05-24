@@ -40,7 +40,7 @@ class Case(Base):
 
     __tablename__ = "cases"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     doctor_id = Column(
         Integer, ForeignKey("doctors.id", ondelete="RESTRICT"), nullable=False
     )

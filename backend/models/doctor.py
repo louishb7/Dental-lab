@@ -24,7 +24,7 @@ class Doctor(Base):
 
     __tablename__ = "doctors"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     name = Column(String(150), nullable=False, index=True)
     clinic_name = Column(String(150))
     phone = Column(String(50))
