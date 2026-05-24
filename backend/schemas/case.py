@@ -5,10 +5,10 @@ Schemas Pydantic para a entidade Case.
 from __future__ import annotations
 
 from datetime import datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from backend.schemas.case_item import CaseItemResponse
 
@@ -35,6 +35,31 @@ class CaseBase(BaseModel):
         default=None, description="Observações gerais do caso"
     )
 
+    @field_validator("total_value", mode="before")
+    @classmethod
+    def normalize_total_value(cls, value):
+        if value is None or value == "":
+            return None
+
+        if isinstance(value, Decimal):
+            return value
+
+        if isinstance(value, (int, float)):
+            return Decimal(str(value))
+
+        if isinstance(value, str):
+            normalized = value.strip()
+            if not normalized:
+                return None
+
+            normalized = normalized.replace(".", "").replace(",", ".")
+            try:
+                return Decimal(normalized)
+            except InvalidOperation as exc:
+                raise ValueError("Valor combinado inválido") from exc
+
+        return value
+
 
 class CaseCreate(CaseBase):
     """Payload para criação de um caso."""
@@ -55,6 +80,31 @@ class CaseUpdate(BaseModel):
     )
     notes: Optional[str] = None
     status_revert_reason: Optional[str] = None
+
+    @field_validator("total_value", mode="before")
+    @classmethod
+    def normalize_total_value(cls, value):
+        if value is None or value == "":
+            return None
+
+        if isinstance(value, Decimal):
+            return value
+
+        if isinstance(value, (int, float)):
+            return Decimal(str(value))
+
+        if isinstance(value, str):
+            normalized = value.strip()
+            if not normalized:
+                return None
+
+            normalized = normalized.replace(".", "").replace(",", ".")
+            try:
+                return Decimal(normalized)
+            except InvalidOperation as exc:
+                raise ValueError("Valor combinado inválido") from exc
+
+        return value
 
 
 class CaseResponse(CaseBase):

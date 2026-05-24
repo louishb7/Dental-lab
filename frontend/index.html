@@ -203,6 +203,23 @@
             font-size: 0.92rem;
             color: var(--muted);
         }
+        .mode-toggle {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .mode-toggle .active {
+            background: var(--accent);
+            color: #fff;
+        }
+        .case-advanced {
+            margin-top: 8px;
+            padding-top: 6px;
+            border-top: 1px dashed #dbe3f0;
+        }
+        .case-mode-note {
+            margin: 12px 0 0;
+        }
         @media (max-width: 1180px) {
             .grid { grid-template-columns: 1fr; }
         }
@@ -275,7 +292,11 @@
                     <h2>Casos</h2>
                     <span id="caseFormMode" class="mode-label">Modo: criação</span>
                 </div>
-                <button id="refreshCasesButton" class="btn-secondary btn-small" type="button">Atualizar</button>
+                <div class="mode-toggle">
+                    <button id="caseSimpleModeButton" class="btn-primary btn-small" type="button">Caso simples</button>
+                    <button id="caseFullModeButton" class="btn-secondary btn-small" type="button">Caso completo</button>
+                    <button id="refreshCasesButton" class="btn-secondary btn-small" type="button">Atualizar</button>
+                </div>
             </div>
             <p id="caseMessage" class="message"></p>
 
@@ -289,30 +310,32 @@
                     <label for="casePatientRef">Referência do paciente *</label>
                     <input id="casePatientRef" type="text" required placeholder="Nome ou código">
                 </div>
-                <div class="form-group">
-                    <label for="caseDeadline">Prazo</label>
-                    <input id="caseDeadline" type="date">
-                </div>
-                <div class="form-group">
-                    <label for="casePriority">Prioridade</label>
-                    <select id="casePriority">
-                        <option value="normal">Normal</option>
-                        <option value="urgent">Urgente</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="caseTotalValue">Valor combinado</label>
-                    <input id="caseTotalValue" type="number" step="0.01" min="0" placeholder="0,00">
-                </div>
-                <div class="form-group">
-                    <label for="caseNotes">Observações</label>
-                    <textarea id="caseNotes" placeholder="Detalhes do caso"></textarea>
+                <div id="caseAdvancedFields" class="case-advanced">
+                    <div class="form-group">
+                        <label for="caseDeadline">Prazo</label>
+                        <input id="caseDeadline" type="date">
+                    </div>
+                    <div class="form-group">
+                        <label for="casePriority">Prioridade</label>
+                        <select id="casePriority">
+                            <option value="normal">Normal</option>
+                            <option value="urgent">Urgente</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="caseTotalValue">Valor combinado</label>
+                        <input id="caseTotalValue" type="text" inputmode="decimal" autocomplete="off" placeholder="0,00">
+                    </div>
+                    <div class="form-group">
+                        <label for="caseNotes">Observações</label>
+                        <textarea id="caseNotes" placeholder="Detalhes do caso"></textarea>
+                    </div>
                 </div>
                 <div class="actions">
                     <button class="btn-primary" type="submit" id="caseSubmitButton">Salvar caso</button>
                     <button class="btn-secondary" type="button" id="caseCancelButton" hidden>Cancelar edição</button>
                 </div>
-                <p class="meta">O caso novo entra como <strong>pending</strong>. O status é ajustado depois pela tabela.</p>
+                <p id="caseModeNote" class="meta case-mode-note">Modo simples: cria o caso e direciona para itens. Modo completo: registra os detalhes técnicos na criação.</p>
             </form>
         </section>
 
@@ -414,7 +437,7 @@
         </section>
     </div>
 
-    <section class="card" style="margin-top: 20px;">
+    <section class="card" id="selectedCaseSection" style="margin-top: 20px;">
         <div class="toolbar">
             <div class="toolbar-left">
                 <h2>Itens do caso selecionado</h2>
@@ -451,6 +474,7 @@
         editingDoctorId: null,
         editingCaseId: null,
         editingItemId: null,
+        caseCreationMode: "simple",
     };
 
     const el = {
@@ -466,6 +490,10 @@
         itemsTableBody: document.getElementById("itemsTableBody"),
         doctorFormMode: document.getElementById("doctorFormMode"),
         caseFormMode: document.getElementById("caseFormMode"),
+        caseModeNote: document.getElementById("caseModeNote"),
+        caseAdvancedFields: document.getElementById("caseAdvancedFields"),
+        caseSimpleModeButton: document.getElementById("caseSimpleModeButton"),
+        caseFullModeButton: document.getElementById("caseFullModeButton"),
         itemFormMode: document.getElementById("itemFormMode"),
         selectedCaseLabel: document.getElementById("selectedCaseLabel"),
         caseDoctorId: document.getElementById("caseDoctorId"),
@@ -505,6 +533,34 @@
             .slice(0, 10);
     }
 
+    function formatMoneyDisplay(value) {
+        if (value === null || value === undefined || value === "") return "";
+        const normalized = String(value).trim().replace(/\./g, "").replace(",", ".");
+        const numeric = Number(normalized);
+        if (Number.isNaN(numeric)) return "";
+        return numeric.toLocaleString("pt-BR", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
+    }
+
+    function formatMoneyMask(value) {
+        const digits = String(value ?? "").replace(/\D/g, "");
+        if (!digits) return "";
+
+        const cents = digits.padStart(3, "0");
+        const integerPart = cents.slice(0, -2);
+        const decimalPart = cents.slice(-2);
+        const formattedInteger = Number(integerPart || "0").toLocaleString("pt-BR");
+        return `${formattedInteger},${decimalPart}`;
+    }
+
+    function moneyToDecimal(value) {
+        const digits = String(value ?? "").replace(/\D/g, "");
+        if (!digits) return null;
+        return (Number(digits) / 100).toFixed(2);
+    }
+
     function readError(response) {
         return response.json()
             .then(data => data.detail || JSON.stringify(data))
@@ -534,11 +590,12 @@
     function resetCaseForm() {
         el.caseForm.reset();
         document.getElementById("caseId").value = "";
-        document.getElementById("caseSubmitButton").textContent = "Salvar caso";
         document.getElementById("caseCancelButton").hidden = true;
         el.caseFormMode.textContent = "Modo: criação";
         state.editingCaseId = null;
         document.getElementById("casePriority").value = "normal";
+        document.getElementById("caseTotalValue").value = "";
+        updateCaseModeUi(state.caseCreationMode);
     }
 
     function resetItemForm() {
@@ -554,6 +611,21 @@
         state.selectedCaseId = caseId;
         el.selectedCaseLabel.textContent = caseId ? caseLabelById(caseId) : "Nenhum caso selecionado";
         el.itemCaseId.value = caseId ? String(caseId) : "";
+    }
+
+    function updateCaseModeUi(mode) {
+        state.caseCreationMode = mode;
+        const isSimple = mode === "simple";
+        el.caseAdvancedFields.hidden = isSimple;
+        el.caseFormMode.textContent = isSimple ? "Modo: criação simples" : "Modo: criação completa";
+        el.caseModeNote.textContent = isSimple
+            ? "Modo simples: cria o caso e direciona para itens."
+            : "Modo completo: registra os detalhes técnicos na criação.";
+        document.getElementById("caseSubmitButton").textContent = state.editingCaseId
+            ? "Atualizar caso"
+            : (isSimple ? "Criar caso simples" : "Salvar caso");
+        el.caseSimpleModeButton.classList.toggle("active", isSimple);
+        el.caseFullModeButton.classList.toggle("active", !isSimple);
     }
 
     function renderDoctorSelect() {
@@ -622,7 +694,7 @@
                 <td>${escapeText(doctorNameById(caseItem.doctor_id))}</td>
                 <td>
                     <div><strong>${escapeText(caseItem.patient_ref)}</strong></div>
-                    <div class="meta">Valor: ${caseItem.total_value ?? "-"}</div>
+                    <div class="meta">Valor: ${formatMoneyDisplay(caseItem.total_value) || "-"}</div>
                 </td>
                 <td><span class="badge-status ${caseItem.status}">${escapeText(caseItem.status)}</span></td>
                 <td>
@@ -633,6 +705,7 @@
                 </td>
                 <td>
                     <div class="row-actions">
+                        <button class="btn-primary btn-small" type="button" data-view-case="${caseItem.id}">Itens</button>
                         <button class="btn-secondary btn-small" type="button" data-edit-case="${caseItem.id}">Editar</button>
                         <button class="btn-warning btn-small" type="button" data-complete-case="${caseItem.id}">Concluir</button>
                         <button class="btn-primary btn-small" type="button" data-deliver-case="${caseItem.id}">Entregar</button>
@@ -644,6 +717,9 @@
 
         document.querySelectorAll("[data-edit-case]").forEach(button => {
             button.addEventListener("click", () => editCase(Number(button.dataset.editCase)));
+        });
+        document.querySelectorAll("[data-view-case]").forEach(button => {
+            button.addEventListener("click", () => openCaseDetails(Number(button.dataset.viewCase)));
         });
         document.querySelectorAll("[data-complete-case]").forEach(button => {
             button.addEventListener("click", () => updateCaseStatus(Number(button.dataset.completeCase), "completed"));
@@ -769,17 +845,28 @@
         if (!caseItem) return;
 
         state.editingCaseId = id;
+        updateCaseModeUi("full");
         document.getElementById("caseId").value = String(id);
         document.getElementById("caseDoctorId").value = String(caseItem.doctor_id);
         document.getElementById("casePatientRef").value = caseItem.patient_ref || "";
         document.getElementById("caseDeadline").value = formatDateInput(caseItem.deadline);
         document.getElementById("casePriority").value = caseItem.priority || "normal";
-        document.getElementById("caseTotalValue").value = caseItem.total_value ?? "";
+        document.getElementById("caseTotalValue").value = formatMoneyDisplay(caseItem.total_value);
         document.getElementById("caseNotes").value = caseItem.notes || "";
         document.getElementById("caseSubmitButton").textContent = "Atualizar caso";
         document.getElementById("caseCancelButton").hidden = false;
         el.caseFormMode.textContent = `Modo: edição #${id}`;
         setMessage(el.caseMessage, `Editando caso #${id}.`, "warning");
+    }
+
+    async function openCaseDetails(id) {
+        const caseItem = state.cases.find(item => item.id === id);
+        if (!caseItem) return;
+
+        setSelectedCase(id);
+        setMessage(el.itemMessage, `Itens do caso #${id} selecionados para revisão.`, "success");
+        document.getElementById("selectedCaseSection").scrollIntoView({ behavior: "smooth", block: "start" });
+        await loadItemsForSelectedCase();
     }
 
     function editItem(id) {
@@ -835,18 +922,19 @@
     async function submitCase(event) {
         event.preventDefault();
         const caseId = document.getElementById("caseId").value.trim();
-        const deadlineValue = document.getElementById("caseDeadline").value;
 
         const payload = {
             doctor_id: Number(document.getElementById("caseDoctorId").value),
             patient_ref: document.getElementById("casePatientRef").value.trim(),
-            deadline: deadlineValue ? new Date(`${deadlineValue}T00:00:00`).toISOString() : null,
-            priority: document.getElementById("casePriority").value,
-            total_value: document.getElementById("caseTotalValue").value
-                ? Number(document.getElementById("caseTotalValue").value)
-                : null,
-            notes: document.getElementById("caseNotes").value.trim() || null,
         };
+
+        if (state.caseCreationMode === "full") {
+            const deadlineValue = document.getElementById("caseDeadline").value;
+            payload.deadline = deadlineValue ? new Date(`${deadlineValue}T00:00:00`).toISOString() : null;
+            payload.priority = document.getElementById("casePriority").value;
+            payload.total_value = moneyToDecimal(document.getElementById("caseTotalValue").value);
+            payload.notes = document.getElementById("caseNotes").value.trim() || null;
+        }
 
         const url = caseId ? `${API_BASE_URL}/cases/${caseId}` : `${API_BASE_URL}/cases/`;
         const method = caseId ? "PUT" : "POST";
@@ -860,9 +948,15 @@
             });
             if (!response.ok) throw new Error(await readError(response));
 
+            const savedCase = await response.json();
             setMessage(el.caseMessage, caseId ? "Caso atualizado com sucesso." : "Caso criado com sucesso.", "success");
             resetCaseForm();
             await refreshAll();
+            if (!caseId) {
+                setSelectedCase(savedCase.id);
+                await loadItemsForSelectedCase();
+                document.getElementById("itemTooth").focus();
+            }
         } catch (error) {
             setMessage(el.caseMessage, error.message || "Falha ao salvar caso.", "error");
         }
@@ -996,6 +1090,18 @@
             setMessage(el.caseMessage, "Edição de caso cancelada.", "");
         });
 
+        document.getElementById("caseSimpleModeButton").addEventListener("click", () => {
+            state.editingCaseId = null;
+            resetCaseForm();
+            updateCaseModeUi("simple");
+        });
+
+        document.getElementById("caseFullModeButton").addEventListener("click", () => {
+            state.editingCaseId = null;
+            resetCaseForm();
+            updateCaseModeUi("full");
+        });
+
         document.getElementById("itemCancelButton").addEventListener("click", () => {
             resetItemForm();
             setMessage(el.itemMessage, "Edição de item cancelada.", "");
@@ -1009,6 +1115,10 @@
             state.selectedCaseId = Number(el.itemCaseId.value) || null;
             el.selectedCaseLabel.textContent = state.selectedCaseId ? caseLabelById(state.selectedCaseId) : "Nenhum caso selecionado";
             await loadItemsForSelectedCase();
+        });
+
+        document.getElementById("caseTotalValue").addEventListener("input", event => {
+            event.target.value = formatMoneyMask(event.target.value);
         });
     }
 
@@ -1026,6 +1136,7 @@
 
     async function bootstrap() {
         bindFormEvents();
+        updateCaseModeUi("simple");
         await checkApi();
         await refreshAll();
     }
