@@ -4,17 +4,12 @@ Responsável por estabelecer a conexão com o PostgreSQL e fornecer
 sessões de banco de dados para as rotas da aplicação.
 """
 
-import os
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-SQLALCHEMY_DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://cadista_user:cadista123@localhost:5432/cadista_db",
-)
+from backend.core.settings import DATABASE_URL
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL, pool_pre_ping=True)
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

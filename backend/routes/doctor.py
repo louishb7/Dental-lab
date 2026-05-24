@@ -108,7 +108,8 @@ def update_doctor(
 def delete_doctor(doctor_id: int, db: Session = Depends(get_db)):
     """
     Exclui um Doutor do sistema.
-    Aviso: Isso também excluirá todos os casos (DentalCase) associados a ele.
+    Aviso: a remoção deve respeitar a regra de negócio que impede
+    excluir doutores com casos pendentes ou em andamento associados.
 
     Args:
         doctor_id (int): O ID único do doutor passado na URL.

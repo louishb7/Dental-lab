@@ -33,8 +33,8 @@
             <input type="text" id="name" required>
         </div>
         <div class="form-group">
-            <label for="clinic">Clínica</label>
-            <input type="text" id="clinic">
+            <label for="clinic_name">Clínica</label>
+            <input type="text" id="clinic_name">
         </div>
         <div class="form-group">
             <label for="phone">Telefone</label>
@@ -87,7 +87,7 @@
                 tr.innerHTML = `
                     <td>${doctor.id}</td>
                     <td>${doctor.name}</td>
-                    <td>${doctor.clinic || '-'}</td>
+                    <td>${doctor.clinic_name || '-'}</td>
                     <td>${doctor.phone || '-'}</td>
                     <td>
                         <button class="btn-delete" onclick="deleteDoctor(${doctor.id})">Excluir</button>
@@ -111,7 +111,7 @@
         // Captura os valores dos inputs
         const doctorData = {
             name: document.getElementById('name').value,
-            clinic: document.getElementById('clinic').value,
+            clinic_name: document.getElementById('clinic_name').value,
             phone: document.getElementById('phone').value,
             notes: document.getElementById('notes').value
         };

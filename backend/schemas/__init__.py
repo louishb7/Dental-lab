@@ -6,11 +6,7 @@ para serem consumidas pelas rotas da API, garantindo a separação de responsabi
 """
 
 from backend.schemas.doctor import DoctorBase, DoctorCreate, DoctorResponse
-from backend.schemas.dental_case import (
-    DentalCaseBase,
-    DentalCaseCreate,
-    DentalCaseResponse,
-)
+from backend.schemas.case import CaseBase, CaseCreate, CaseUpdate, CaseResponse
 from backend.schemas.case_item import (
     CaseItemBase,
     CaseItemCreate,
@@ -21,9 +17,10 @@ __all__ = [
     "DoctorBase",
     "DoctorCreate",
     "DoctorResponse",
-    "DentalCaseBase",
-    "DentalCaseCreate",
-    "DentalCaseResponse",
+    "CaseBase",
+    "CaseCreate",
+    "CaseUpdate",
+    "CaseResponse",
     "CaseItemBase",
     "CaseItemCreate",
     "CaseItemResponse",

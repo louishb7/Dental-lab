@@ -1,26 +1,26 @@
 """
-Módulo contendo o modelo de dados do Item do Caso (CaseItem).
+Módulo contendo o modelo de dados do Item do Caso.
 """
 
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, Numeric
+from sqlalchemy import Column, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
+
 from backend.database.connection import Base
 
 
 class CaseItem(Base):
     """
-    Modelo ORM que representa um trabalho individual dentro de um Caso Odontológico.
+    Modelo ORM que representa um trabalho individual dentro de um caso.
 
     Atributos:
-        id (int): Identificador único do item de trabalho.
-        case_id (int): Chave estrangeira vinculando este item a um DentalCase.
-        tooth (int): Número que identifica o dente trabalhado (ex: 11, 21, 36).
-        service_type (str): O tipo de serviço realizado (ex: 'coroa', 'faceta').
-        material (str): O material utilizado no trabalho (ex: 'zircônia').
-        color (str): A escala de cor utilizada (ex: 'A1').
-        value (Numeric): Valor financeiro cobrado especificamente por este item.
+        id (int): Identificador único do item.
+        case_id (int): Chave estrangeira vinculando este item a um Case.
+        tooth (str): Número do dente em FDI ou descrição livre.
+        service_type (str): Tipo de serviço executado.
+        material (str): Material utilizado.
+        color (str): Cor ou tonalidade.
         notes (str): Observações específicas do item.
-        dental_case (DentalCase): Relacionamento N:1 com o modelo DentalCase.
+        case (Case): Relacionamento N:1 com o modelo Case.
     """
 
     __tablename__ = "case_items"
@@ -28,14 +28,14 @@ class CaseItem(Base):
     id = Column(Integer, primary_key=True, index=True)
     case_id = Column(
         Integer,
-        ForeignKey("dental_cases.id", ondelete="CASCADE"),
+        ForeignKey("cases.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
-    tooth = Column(Integer)
+    tooth = Column(String(100), nullable=False)
     service_type = Column(String(100), nullable=False)
     material = Column(String(100))
     color = Column(String(50))
-    value = Column(Numeric(10, 2), default=0.00)
     notes = Column(Text)
 
-    dental_case = relationship("DentalCase", back_populates="items")
+    case = relationship("Case", back_populates="items")

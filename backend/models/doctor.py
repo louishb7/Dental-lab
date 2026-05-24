@@ -15,22 +15,19 @@ class Doctor(Base):
     Atributos:
         id (int): Identificador único do doutor.
         name (str): Nome do doutor/dentista.
-        clinic (str): Nome da clínica associada.
+        clinic_name (str): Nome da clínica associada.
         phone (str): Telefone de contato.
         notes (str): Observações gerais sobre o doutor.
         created_at (datetime): Data e hora da criação do registro.
-        cases (list[DentalCase]): Relacionamento 1:N indicando os casos vinculados a este doutor.
-                                  Possui comportamento de cascata para exclusão.
+        cases (list[Case]): Relacionamento 1:N indicando os casos vinculados a este doutor.
     """
 
     __tablename__ = "doctors"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(150), nullable=False, index=True)
-    clinic = Column(String(150))
+    clinic_name = Column(String(150))
     phone = Column(String(50))
     notes = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    cases = relationship(
-        "DentalCase", back_populates="doctor", cascade="all, delete-orphan"
-    )
+    cases = relationship("Case", back_populates="doctor")

@@ -14,7 +14,7 @@ class DoctorBase(BaseModel):
     """
 
     name: str = Field(..., description="Nome completo do doutor")
-    clinic: Optional[str] = Field(
+    clinic_name: Optional[str] = Field(
         default=None, description="Nome da clínica ou consultório"
     )
     phone: Optional[str] = Field(
