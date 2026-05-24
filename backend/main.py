@@ -4,7 +4,7 @@ Ponto de entrada principal da API Cadista.
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.routes import case, case_item, doctor
+from backend.routes import auth, case, case_item, doctor
 
 app = FastAPI(
     title="API Cadista",
@@ -23,6 +23,7 @@ app.add_middleware(
 app.include_router(doctor.router)
 app.include_router(case.router)
 app.include_router(case_item.router)
+app.include_router(auth.router)
 
 
 @app.get("/")

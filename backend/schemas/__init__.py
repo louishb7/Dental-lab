@@ -18,6 +18,11 @@ from backend.schemas.case_item import (
     CaseItemUpdate,
     CaseItemResponse,
 )
+from backend.schemas.auth import (
+    AuthLoginRequest,
+    AuthTokenResponse,
+    AuthUserResponse,
+)
 
 __all__ = [
     "DoctorBase",
@@ -32,4 +37,7 @@ __all__ = [
     "CaseItemCreate",
     "CaseItemUpdate",
     "CaseItemResponse",
+    "AuthLoginRequest",
+    "AuthTokenResponse",
+    "AuthUserResponse",
 ]

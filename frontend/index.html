@@ -220,8 +220,20 @@
         .case-mode-note {
             margin: 12px 0 0;
         }
+        .filter-bar {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto auto;
+            gap: 10px;
+            align-items: end;
+            margin-bottom: 14px;
+        }
         @media (max-width: 1180px) {
             .grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 720px) {
+            .filter-bar {
+                grid-template-columns: 1fr;
+            }
         }
         @media (max-width: 900px) {
             .hero {
@@ -416,6 +428,25 @@
                     <h2>Lista de casos</h2>
                 </div>
             </div>
+            <div class="filter-bar">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="caseListStatusFilter">Status</label>
+                    <select id="caseListStatusFilter">
+                        <option value="">Todos</option>
+                        <option value="pending">Pending</option>
+                        <option value="completed">Completed</option>
+                        <option value="delivered">Delivered</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="caseListDoctorFilter">Doutor</label>
+                    <select id="caseListDoctorFilter">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <button id="applyCaseFiltersButton" class="btn-primary btn-small" type="button">Aplicar</button>
+                <button id="clearCaseFiltersButton" class="btn-secondary btn-small" type="button">Limpar</button>
+            </div>
             <p id="caseListMessage" class="message"></p>
             <div class="table-wrap">
                 <table>
@@ -440,11 +471,24 @@
     <section class="card" id="selectedCaseSection" style="margin-top: 20px;">
         <div class="toolbar">
             <div class="toolbar-left">
-                <h2>Itens do caso selecionado</h2>
+                <h2>Detalhe do caso</h2>
                 <span id="selectedCaseLabel" class="mode-label">Nenhum caso selecionado</span>
+            </div>
+            <div class="mode-toggle">
+                <button id="selectedCaseEditButton" class="btn-secondary btn-small" type="button">Editar caso</button>
+                <button id="selectedCaseDeleteButton" class="btn-danger btn-small" type="button">Excluir caso</button>
+                <button id="selectedCaseAddItemButton" class="btn-primary btn-small" type="button">Novo item</button>
             </div>
         </div>
         <p id="itemListMessage" class="message"></p>
+        <div id="caseDetailPanel" class="card" style="padding: 16px; margin-bottom: 18px; box-shadow: none;">
+            <div class="empty">Selecione um caso na lista para ver os detalhes completos.</div>
+        </div>
+        <div class="toolbar" style="margin-top: 4px;">
+            <div class="toolbar-left">
+                <h3 style="margin: 0;">Itens do caso</h3>
+            </div>
+        </div>
         <div class="table-wrap">
             <table>
                 <thead>
@@ -475,6 +519,10 @@
         editingCaseId: null,
         editingItemId: null,
         caseCreationMode: "simple",
+        caseFilters: {
+            status: "",
+            doctorId: "",
+        },
     };
 
     const el = {
@@ -488,12 +536,20 @@
         doctorsTableBody: document.getElementById("doctorsTableBody"),
         casesTableBody: document.getElementById("casesTableBody"),
         itemsTableBody: document.getElementById("itemsTableBody"),
+        caseDetailPanel: document.getElementById("caseDetailPanel"),
         doctorFormMode: document.getElementById("doctorFormMode"),
         caseFormMode: document.getElementById("caseFormMode"),
         caseModeNote: document.getElementById("caseModeNote"),
         caseAdvancedFields: document.getElementById("caseAdvancedFields"),
         caseSimpleModeButton: document.getElementById("caseSimpleModeButton"),
         caseFullModeButton: document.getElementById("caseFullModeButton"),
+        selectedCaseEditButton: document.getElementById("selectedCaseEditButton"),
+        selectedCaseDeleteButton: document.getElementById("selectedCaseDeleteButton"),
+        selectedCaseAddItemButton: document.getElementById("selectedCaseAddItemButton"),
+        caseListStatusFilter: document.getElementById("caseListStatusFilter"),
+        caseListDoctorFilter: document.getElementById("caseListDoctorFilter"),
+        applyCaseFiltersButton: document.getElementById("applyCaseFiltersButton"),
+        clearCaseFiltersButton: document.getElementById("clearCaseFiltersButton"),
         itemFormMode: document.getElementById("itemFormMode"),
         selectedCaseLabel: document.getElementById("selectedCaseLabel"),
         caseDoctorId: document.getElementById("caseDoctorId"),
@@ -578,6 +634,10 @@
         return `#${item.id} - ${item.patient_ref}`;
     }
 
+    function currentSelectedCase() {
+        return state.cases.find(item => item.id === state.selectedCaseId) || null;
+    }
+
     function resetDoctorForm() {
         el.doctorForm.reset();
         document.getElementById("doctorId").value = "";
@@ -611,6 +671,7 @@
         state.selectedCaseId = caseId;
         el.selectedCaseLabel.textContent = caseId ? caseLabelById(caseId) : "Nenhum caso selecionado";
         el.itemCaseId.value = caseId ? String(caseId) : "";
+        renderSelectedCaseDetails();
     }
 
     function updateCaseModeUi(mode) {
@@ -633,6 +694,67 @@
             ? state.doctors.map(doctor => `<option value="${doctor.id}">${escapeText(doctor.name)}</option>`).join("")
             : `<option value="">Nenhum doutor cadastrado</option>`;
         el.caseDoctorId.innerHTML = options;
+    }
+
+    function renderCaseFilterSelects() {
+        const doctorOptions = [
+            `<option value="">Todos</option>`,
+            ...state.doctors.map(doctor => (
+                `<option value="${doctor.id}">${escapeText(doctor.name)}</option>`
+            )),
+        ].join("");
+
+        el.caseListDoctorFilter.innerHTML = doctorOptions;
+        el.caseListStatusFilter.value = state.caseFilters.status;
+        el.caseListDoctorFilter.value = state.caseFilters.doctorId;
+    }
+
+    function buildCaseQueryParams() {
+        const params = new URLSearchParams();
+        if (state.caseFilters.status) {
+            params.set("status", state.caseFilters.status);
+        }
+        if (state.caseFilters.doctorId) {
+            params.set("doctor_id", state.caseFilters.doctorId);
+        }
+        return params.toString();
+    }
+
+    function renderSelectedCaseDetails() {
+        const currentCase = currentSelectedCase();
+
+        const disabled = !currentCase;
+        el.selectedCaseEditButton.disabled = disabled;
+        el.selectedCaseDeleteButton.disabled = disabled;
+        el.selectedCaseAddItemButton.disabled = disabled;
+
+        if (!currentCase) {
+            el.caseDetailPanel.innerHTML = `<div class="empty">Selecione um caso na lista para ver os detalhes completos.</div>`;
+            return;
+        }
+
+        const items = currentCase.items || [];
+        el.caseDetailPanel.innerHTML = `
+            <div class="split" style="margin-top: 0;">
+                <div>
+                    <h3 style="margin-top: 0;">#${currentCase.id} - ${escapeText(currentCase.patient_ref)}</h3>
+                    <div class="meta">Doutor: ${escapeText(doctorNameById(currentCase.doctor_id))}</div>
+                    <div class="meta">Status: <span class="badge-status ${currentCase.status}">${escapeText(currentCase.status)}</span></div>
+                    <div class="meta">Prioridade: ${escapeText(currentCase.priority || "normal")}</div>
+                    <div class="meta">Prazo: ${formatDate(currentCase.deadline)}</div>
+                    <div class="meta">Valor combinado: ${formatMoneyDisplay(currentCase.total_value) || "-"}</div>
+                    <div class="meta">Itens vinculados: ${items.length}</div>
+                </div>
+                <div>
+                    <div class="meta">Criado em: ${formatDate(currentCase.created_at)}</div>
+                    <div class="meta">Entregue em: ${formatDate(currentCase.delivered_at)}</div>
+                    <div class="meta">Removido em: ${formatDate(currentCase.deleted_at)}</div>
+                    <div class="meta">Motivo de reversão: ${escapeText(currentCase.status_revert_reason || "-")}</div>
+                    <div class="meta" style="margin-top: 10px;">Observações:</div>
+                    <div>${escapeText(currentCase.notes || "-")}</div>
+                </div>
+            </div>
+        `;
     }
 
     function renderCaseSelect() {
@@ -776,6 +898,7 @@
             if (!response.ok) throw new Error(await readError(response));
             state.doctors = await response.json();
             renderDoctorSelect();
+            renderCaseFilterSelects();
             renderDoctorsTable();
             setMessage(el.doctorListMessage, `Carregados ${state.doctors.length} doutores.`, "success");
         } catch (error) {
@@ -785,13 +908,26 @@
 
     async function loadCases() {
         try {
-            const response = await fetch(`${API_BASE_URL}/cases/`);
+            const query = buildCaseQueryParams();
+            const response = await fetch(
+                query ? `${API_BASE_URL}/cases/?${query}` : `${API_BASE_URL}/cases/`
+            );
             if (!response.ok) throw new Error(await readError(response));
             state.cases = await response.json();
             renderCaseSelect();
+            renderSelectedCaseDetails();
             renderCasesTable();
             renderItemsTable();
-            setMessage(el.caseListMessage, `Carregados ${state.cases.length} casos.`, "success");
+            const activeFilters = [
+                state.caseFilters.status ? `status=${state.caseFilters.status}` : null,
+                state.caseFilters.doctorId ? `doctor=${doctorNameById(Number(state.caseFilters.doctorId))}` : null,
+            ].filter(Boolean);
+            const filterLabel = activeFilters.length ? ` (${activeFilters.join(", ")})` : "";
+            setMessage(
+                el.caseListMessage,
+                `Carregados ${state.cases.length} casos${filterLabel}.`,
+                "success"
+            );
         } catch (error) {
             setMessage(el.caseListMessage, error.message || "Falha ao carregar casos.", "error");
         }
@@ -800,6 +936,7 @@
     async function loadItemsForSelectedCase() {
         if (!state.selectedCaseId) {
             renderItemsTable();
+            renderSelectedCaseDetails();
             return;
         }
 
@@ -811,6 +948,7 @@
             if (currentCase) {
                 currentCase.items = items;
             }
+            renderSelectedCaseDetails();
             renderItemsTable();
             setMessage(el.itemListMessage, `Carregados ${items.length} itens do caso selecionado.`, "success");
         } catch (error) {
@@ -867,6 +1005,7 @@
         setMessage(el.itemMessage, `Itens do caso #${id} selecionados para revisão.`, "success");
         document.getElementById("selectedCaseSection").scrollIntoView({ behavior: "smooth", block: "start" });
         await loadItemsForSelectedCase();
+        document.getElementById("itemTooth").focus();
     }
 
     function editItem(id) {
@@ -955,6 +1094,7 @@
             if (!caseId) {
                 setSelectedCase(savedCase.id);
                 await loadItemsForSelectedCase();
+                document.getElementById("selectedCaseSection").scrollIntoView({ behavior: "smooth", block: "start" });
                 document.getElementById("itemTooth").focus();
             }
         } catch (error) {
@@ -999,6 +1139,7 @@
             await loadCases();
             setSelectedCase(caseId);
             await loadItemsForSelectedCase();
+            document.getElementById("itemTooth").focus();
         } catch (error) {
             setMessage(el.itemMessage, error.message || "Falha ao salvar item.", "error");
         }
@@ -1100,6 +1241,42 @@
             state.editingCaseId = null;
             resetCaseForm();
             updateCaseModeUi("full");
+        });
+
+        el.applyCaseFiltersButton.addEventListener("click", async () => {
+            state.caseFilters.status = el.caseListStatusFilter.value;
+            state.caseFilters.doctorId = el.caseListDoctorFilter.value;
+            await loadCases();
+            await loadItemsForSelectedCase();
+        });
+
+        el.clearCaseFiltersButton.addEventListener("click", async () => {
+            state.caseFilters.status = "";
+            state.caseFilters.doctorId = "";
+            el.caseListStatusFilter.value = "";
+            el.caseListDoctorFilter.value = "";
+            await loadCases();
+            await loadItemsForSelectedCase();
+        });
+
+        el.selectedCaseEditButton.addEventListener("click", () => {
+            if (state.selectedCaseId) {
+                editCase(state.selectedCaseId);
+                document.getElementById("caseForm").scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+        });
+
+        el.selectedCaseDeleteButton.addEventListener("click", () => {
+            if (state.selectedCaseId) {
+                deleteCase(state.selectedCaseId);
+            }
+        });
+
+        el.selectedCaseAddItemButton.addEventListener("click", () => {
+            if (!state.selectedCaseId) return;
+            setSelectedCase(state.selectedCaseId);
+            document.getElementById("itemTooth").focus();
+            document.getElementById("itemForm").scrollIntoView({ behavior: "smooth", block: "start" });
         });
 
         document.getElementById("itemCancelButton").addEventListener("click", () => {
