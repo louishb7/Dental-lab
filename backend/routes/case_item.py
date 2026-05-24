@@ -7,6 +7,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from backend.dependencies.auth import get_current_user
 from backend.database.connection import get_db
 from backend.schemas.case_item import (
     CaseItemCreate,
@@ -15,7 +16,11 @@ from backend.schemas.case_item import (
 )
 from backend.services import case_item as case_item_service
 
-router = APIRouter(prefix="/cases/{case_id}/items", tags=["CaseItems"])
+router = APIRouter(
+    prefix="/cases/{case_id}/items",
+    tags=["CaseItems"],
+    dependencies=[Depends(get_current_user)],
+)
 
 
 @router.get("/", response_model=list[CaseItemResponse])

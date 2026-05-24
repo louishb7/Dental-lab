@@ -12,7 +12,7 @@ def _truncate_tables() -> None:
     with SessionLocal() as db:
         db.execute(
             text(
-                "TRUNCATE TABLE case_items, cases, doctors RESTART IDENTITY CASCADE"
+                "TRUNCATE TABLE case_items, cases, doctors, users RESTART IDENTITY CASCADE"
             )
         )
         db.commit()

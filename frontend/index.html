@@ -66,6 +66,62 @@
             grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 20px;
         }
+        .auth-card {
+            margin-bottom: 20px;
+        }
+        .auth-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.1fr;
+            gap: 20px;
+        }
+        .auth-copy {
+            border-radius: 16px;
+            padding: 20px;
+            background:
+                linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(255, 255, 255, 0.92)),
+                linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+            border: 1px solid rgba(191, 219, 254, 0.9);
+        }
+        .auth-copy h3 {
+            margin: 0 0 12px;
+            font-size: 1.1rem;
+        }
+        .auth-copy p {
+            margin: 0 0 10px;
+            color: var(--text);
+            line-height: 1.55;
+        }
+        .auth-copy .meta {
+            margin-top: 12px;
+        }
+        .auth-subcard {
+            border: 1px solid rgba(209, 213, 219, 0.9);
+            border-radius: 16px;
+            padding: 16px;
+            background: #f8fafc;
+            margin-bottom: 14px;
+        }
+        .auth-subcard h3 {
+            margin: 0 0 14px;
+            font-size: 1rem;
+        }
+        .session-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .session-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: #e0f2fe;
+            color: #075985;
+            font-weight: 700;
+        }
         .card {
             background: var(--panel);
             border: 1px solid rgba(209, 213, 219, 0.9);
@@ -229,6 +285,7 @@
         }
         @media (max-width: 1180px) {
             .grid { grid-template-columns: 1fr; }
+            .auth-grid { grid-template-columns: 1fr; }
         }
         @media (max-width: 720px) {
             .filter-bar {
@@ -256,6 +313,69 @@
         <div class="badge">API: <span id="apiStatus">verificando...</span></div>
     </div>
 
+    <section class="card auth-card">
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <h2>Acesso</h2>
+                <span id="sessionStatus" class="mode-label">Sessão: desconectada</span>
+            </div>
+            <div class="mode-toggle">
+                <button id="logoutButton" class="btn-danger btn-small" type="button">Sair</button>
+            </div>
+        </div>
+        <p id="authMessage" class="message"></p>
+        <div class="auth-grid">
+            <div class="auth-copy">
+                <h3>Autenticação JWT de usuário único</h3>
+                <p>
+                    Este projeto usa uma sessão simples de um único usuário. O cadastro abaixo grava o usuário
+                    diretamente no banco de dados e o login valida o token pela API.
+                </p>
+                <p>
+                    O primeiro cadastro cria o usuário persistido. Depois disso, o login pode ser feito por usuário
+                    ou email.
+                </p>
+                <div class="meta" id="sessionMeta">Nenhuma sessão ativa.</div>
+            </div>
+            <div>
+                <form id="registerForm" class="auth-subcard">
+                    <h3>Cadastro do usuário</h3>
+                    <div class="form-group">
+                        <label for="registerEmail">Email *</label>
+                        <input id="registerEmail" type="email" autocomplete="email" required placeholder="voce@exemplo.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="registerUsername">Usuário *</label>
+                        <input id="registerUsername" type="text" autocomplete="username" required placeholder="admin">
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">Senha *</label>
+                        <input id="registerPassword" type="password" autocomplete="new-password" required placeholder="mínimo 6 caracteres">
+                    </div>
+                    <div class="actions">
+                        <button class="btn-primary" type="submit">Cadastrar usuário</button>
+                    </div>
+                </form>
+
+                <form id="loginForm" class="auth-subcard">
+                    <h3>Login</h3>
+                    <div class="form-group">
+                        <label for="authIdentifier">Usuário ou email</label>
+                        <input id="authIdentifier" type="text" autocomplete="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="authPassword">Senha</label>
+                        <input id="authPassword" type="password" autocomplete="current-password" required>
+                    </div>
+                    <div class="actions">
+                        <button class="btn-primary" type="submit">Entrar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <div id="appContent" hidden>
     <div class="grid">
         <section class="card">
             <div class="toolbar">
@@ -508,9 +628,11 @@
         </div>
     </section>
 </div>
+</div>
 
 <script>
     const API_BASE_URL = "http://127.0.0.1:8001";
+    const AUTH_SESSION_KEY = "cadista.auth.session";
     const state = {
         doctors: [],
         cases: [],
@@ -523,10 +645,27 @@
             status: "",
             doctorId: "",
         },
+        auth: {
+            token: "",
+            username: "",
+            email: "",
+        },
     };
 
     const el = {
         apiStatus: document.getElementById("apiStatus"),
+        authMessage: document.getElementById("authMessage"),
+        authIdentifier: document.getElementById("authIdentifier"),
+        authPassword: document.getElementById("authPassword"),
+        registerEmail: document.getElementById("registerEmail"),
+        registerUsername: document.getElementById("registerUsername"),
+        registerPassword: document.getElementById("registerPassword"),
+        loginForm: document.getElementById("loginForm"),
+        registerForm: document.getElementById("registerForm"),
+        logoutButton: document.getElementById("logoutButton"),
+        sessionStatus: document.getElementById("sessionStatus"),
+        sessionMeta: document.getElementById("sessionMeta"),
+        appContent: document.getElementById("appContent"),
         doctorMessage: document.getElementById("doctorMessage"),
         caseMessage: document.getElementById("caseMessage"),
         itemMessage: document.getElementById("itemMessage"),
@@ -621,6 +760,105 @@
         return response.json()
             .then(data => data.detail || JSON.stringify(data))
             .catch(() => `HTTP ${response.status}`);
+    }
+
+    function updateAuthUi() {
+        const isAuthenticated = Boolean(state.auth.token);
+
+        el.sessionStatus.textContent = isAuthenticated
+            ? `Sessão ativa: ${state.auth.username}`
+            : "Sessão: desconectada";
+        el.sessionMeta.textContent = isAuthenticated
+            ? `Usuário autenticado: ${state.auth.username} (${state.auth.email || "sem email"}). O token fica salvo localmente neste navegador.`
+            : "Nenhuma sessão ativa.";
+        el.logoutButton.hidden = !isAuthenticated;
+        el.appContent.hidden = !isAuthenticated;
+
+        if (isAuthenticated) {
+            setMessage(el.authMessage, "Sessão autenticada com sucesso.", "success");
+        }
+    }
+
+    function saveSession(token, username, email = "") {
+        state.auth.token = token;
+        state.auth.username = username;
+        state.auth.email = email;
+        localStorage.setItem(
+            AUTH_SESSION_KEY,
+            JSON.stringify({
+                token,
+                username,
+                email,
+            }),
+        );
+        updateAuthUi();
+    }
+
+    function clearSession(message = "Sessão encerrada.") {
+        state.auth.token = "";
+        state.auth.username = "";
+        state.auth.email = "";
+        localStorage.removeItem(AUTH_SESSION_KEY);
+        updateAuthUi();
+        setMessage(el.authMessage, message, "warning");
+    }
+
+    function authHeaders(extraHeaders = {}) {
+        const headers = new Headers(extraHeaders);
+        if (state.auth.token) {
+            headers.set("Authorization", `Bearer ${state.auth.token}`);
+        }
+        return headers;
+    }
+
+    async function authFetch(url, options = {}) {
+        const headers = authHeaders(options.headers || {});
+        const response = await fetch(url, {
+            ...options,
+            headers,
+        });
+        if (response.status === 401 && state.auth.token) {
+            clearSession("Sessão expirada. Faça login novamente.");
+        }
+        return response;
+    }
+
+    async function restoreSession() {
+        try {
+            const raw = localStorage.getItem(AUTH_SESSION_KEY);
+            if (!raw) {
+                updateAuthUi();
+                return false;
+            }
+
+            const parsed = JSON.parse(raw);
+            if (!parsed?.token || !parsed?.username) {
+                localStorage.removeItem(AUTH_SESSION_KEY);
+                updateAuthUi();
+                return false;
+            }
+
+            state.auth.token = parsed.token;
+            state.auth.username = parsed.username;
+            state.auth.email = parsed.email || "";
+
+            const response = await authFetch(`${API_BASE_URL}/auth/me`);
+            if (!response.ok) throw new Error(await readError(response));
+
+            const data = await response.json();
+            state.auth.username = data.username || parsed.username;
+            state.auth.email = data.email || parsed.email || "";
+            updateAuthUi();
+            return true;
+        } catch (error) {
+            localStorage.removeItem(AUTH_SESSION_KEY);
+            state.auth.token = "";
+            state.auth.username = "";
+            state.auth.email = "";
+            updateAuthUi();
+            setMessage(el.authMessage, error.message || "A sessão salva expirou.", "warning");
+            return false;
+        }
     }
 
     function doctorNameById(doctorId) {
@@ -894,7 +1132,7 @@
 
     async function loadDoctors() {
         try {
-            const response = await fetch(`${API_BASE_URL}/doctors/`);
+            const response = await authFetch(`${API_BASE_URL}/doctors/`);
             if (!response.ok) throw new Error(await readError(response));
             state.doctors = await response.json();
             renderDoctorSelect();
@@ -909,7 +1147,7 @@
     async function loadCases() {
         try {
             const query = buildCaseQueryParams();
-            const response = await fetch(
+            const response = await authFetch(
                 query ? `${API_BASE_URL}/cases/?${query}` : `${API_BASE_URL}/cases/`
             );
             if (!response.ok) throw new Error(await readError(response));
@@ -941,7 +1179,7 @@
         }
 
         try {
-            const response = await fetch(`${API_BASE_URL}/cases/${state.selectedCaseId}/items/`);
+            const response = await authFetch(`${API_BASE_URL}/cases/${state.selectedCaseId}/items/`);
             if (!response.ok) throw new Error(await readError(response));
             const items = await response.json();
             const currentCase = state.cases.find(item => item.id === state.selectedCaseId);
@@ -1043,7 +1281,7 @@
 
         try {
             setMessage(el.doctorMessage, doctorId ? "Atualizando doutor..." : "Salvando doutor...", "");
-            const response = await fetch(url, {
+            const response = await authFetch(url, {
                 method,
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
@@ -1080,7 +1318,7 @@
 
         try {
             setMessage(el.caseMessage, caseId ? "Atualizando caso..." : "Salvando caso...", "");
-            const response = await fetch(url, {
+            const response = await authFetch(url, {
                 method,
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
@@ -1127,7 +1365,7 @@
 
         try {
             setMessage(el.itemMessage, itemId ? "Atualizando item..." : "Salvando item...", "");
-            const response = await fetch(url, {
+            const response = await authFetch(url, {
                 method,
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
@@ -1149,7 +1387,7 @@
         if (!confirm(`Excluir o doutor #${id}? A API vai bloquear se houver casos vinculados.`)) return;
 
         try {
-            const response = await fetch(`${API_BASE_URL}/doctors/${id}`, { method: "DELETE" });
+            const response = await authFetch(`${API_BASE_URL}/doctors/${id}`, { method: "DELETE" });
             if (!response.ok) throw new Error(await readError(response));
             setMessage(el.doctorListMessage, `Doutor #${id} excluído com sucesso.`, "success");
             await refreshAll();
@@ -1162,7 +1400,7 @@
         if (!confirm(`Excluir o caso #${id}? Casos não pendentes serão removidos por soft delete.`)) return;
 
         try {
-            const response = await fetch(`${API_BASE_URL}/cases/${id}`, { method: "DELETE" });
+            const response = await authFetch(`${API_BASE_URL}/cases/${id}`, { method: "DELETE" });
             if (!response.ok) throw new Error(await readError(response));
             setMessage(el.caseListMessage, `Caso #${id} removido com sucesso.`, "success");
             await refreshAll();
@@ -1176,7 +1414,7 @@
         if (!confirm(`Excluir o item #${id}?`)) return;
 
         try {
-            const response = await fetch(`${API_BASE_URL}/cases/${state.selectedCaseId}/items/${id}`, { method: "DELETE" });
+            const response = await authFetch(`${API_BASE_URL}/cases/${state.selectedCaseId}/items/${id}`, { method: "DELETE" });
             if (!response.ok) throw new Error(await readError(response));
             setMessage(el.itemListMessage, `Item #${id} excluído com sucesso.`, "success");
             await loadCases();
@@ -1203,7 +1441,7 @@
         }
 
         try {
-            const response = await fetch(`${API_BASE_URL}/cases/${id}`, {
+            const response = await authFetch(`${API_BASE_URL}/cases/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
@@ -1216,10 +1454,87 @@
         }
     }
 
+    async function submitRegister(event) {
+        event.preventDefault();
+        const payload = {
+            email: el.registerEmail.value.trim(),
+            username: el.registerUsername.value.trim(),
+            password: el.registerPassword.value,
+        };
+
+        setMessage(
+            el.authMessage,
+            "Criando usuário...",
+        );
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/auth/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+            if (!response.ok) throw new Error(await readError(response));
+
+            const result = await response.json();
+            saveSession(result.access_token, result.username || payload.username, result.email || payload.email);
+            el.registerForm.reset();
+            setMessage(el.authMessage, "Usuário cadastrado com sucesso e sessão iniciada.", "success");
+            await refreshAll();
+            await loadItemsForSelectedCase();
+        } catch (error) {
+            setMessage(el.authMessage, error.message || "Falha ao cadastrar usuário.", "error");
+        }
+    }
+
+    async function submitLogin(event) {
+        event.preventDefault();
+        const identifier = el.authIdentifier.value.trim();
+        const password = el.authPassword.value;
+
+        try {
+            setMessage(el.authMessage, "Validando credenciais...", "");
+            const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ identifier, password }),
+            });
+
+            if (!response.ok) throw new Error(await readError(response));
+
+            const payload = await response.json();
+            saveSession(payload.access_token, payload.username || identifier, payload.email || "");
+            el.loginForm.reset();
+            setMessage(el.authMessage, "Login realizado com sucesso.", "success");
+            await refreshAll();
+            await loadItemsForSelectedCase();
+        } catch (error) {
+            clearSession("Nenhuma sessão ativa.");
+            setMessage(el.authMessage, error.message || "Falha ao autenticar.", "error");
+        }
+    }
+
+    function logoutSession() {
+        clearSession();
+        state.doctors = [];
+        state.cases = [];
+        state.selectedCaseId = null;
+        renderDoctorsTable();
+        renderCasesTable();
+        renderItemsTable();
+        renderSelectedCaseDetails();
+        renderDoctorSelect();
+        renderCaseFilterSelects();
+        setMessage(el.doctorListMessage, "Faça login para carregar a lista de doutores.", "warning");
+        setMessage(el.caseListMessage, "Faça login para carregar a lista de casos.", "warning");
+        setMessage(el.itemListMessage, "Faça login para carregar os itens do caso.", "warning");
+    }
+
     function bindFormEvents() {
         el.doctorForm.addEventListener("submit", submitDoctor);
         el.caseForm.addEventListener("submit", submitCase);
         el.itemForm.addEventListener("submit", submitItem);
+        el.loginForm.addEventListener("submit", submitLogin);
+        el.registerForm.addEventListener("submit", submitRegister);
 
         document.getElementById("doctorCancelButton").addEventListener("click", () => {
             resetDoctorForm();
@@ -1297,6 +1612,8 @@
         document.getElementById("caseTotalValue").addEventListener("input", event => {
             event.target.value = formatMoneyMask(event.target.value);
         });
+
+        el.logoutButton.addEventListener("click", logoutSession);
     }
 
     async function checkApi() {
@@ -1315,7 +1632,18 @@
         bindFormEvents();
         updateCaseModeUi("simple");
         await checkApi();
-        await refreshAll();
+        const hasSession = await restoreSession();
+        if (hasSession) {
+            await refreshAll();
+        } else {
+            renderDoctorsTable();
+            renderCasesTable();
+            renderItemsTable();
+            renderSelectedCaseDetails();
+            renderDoctorSelect();
+            renderCaseFilterSelects();
+            updateAuthUi();
+        }
     }
 
     bootstrap();

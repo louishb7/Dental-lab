@@ -13,9 +13,6 @@ DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "postgresql://cadista_user:cadista123@localhost:5432/cadista_db",
 )
-AUTH_USERNAME = os.getenv("AUTH_USERNAME", "admin")
-AUTH_PASSWORD = os.getenv("AUTH_PASSWORD", "admin123")
-AUTH_PASSWORD_HASH = os.getenv("AUTH_PASSWORD_HASH", "")
 SECRET_KEY = os.getenv("SECRET_KEY", "change-me")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))

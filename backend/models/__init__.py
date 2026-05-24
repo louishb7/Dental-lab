@@ -10,5 +10,6 @@ from backend.database.connection import Base
 from backend.models.doctor import Doctor
 from backend.models.case import Case
 from backend.models.case_item import CaseItem
+from backend.models.user import User
 
-__all__ = ["Base", "Doctor", "Case", "CaseItem"]
+__all__ = ["Base", "Doctor", "Case", "CaseItem", "User"]

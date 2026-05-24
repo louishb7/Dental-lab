@@ -9,12 +9,17 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from backend.dependencies.auth import get_current_user
 from backend.database.connection import get_db
 from backend.schemas.doctor import DoctorCreate, DoctorResponse, DoctorUpdate
 from backend.services import doctor as doctor_service
 
 # Cria o roteador para agrupar todos os endpoints de "/doctors"
-router = APIRouter(prefix="/doctors", tags=["Doctors"])
+router = APIRouter(
+    prefix="/doctors",
+    tags=["Doctors"],
+    dependencies=[Depends(get_current_user)],
+)
 
 
 @router.post(

@@ -7,11 +7,16 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
+from backend.dependencies.auth import get_current_user
 from backend.database.connection import get_db
 from backend.schemas.case import CaseCreate, CaseResponse, CaseUpdate
 from backend.services import case as case_service
 
-router = APIRouter(prefix="/cases", tags=["Cases"])
+router = APIRouter(
+    prefix="/cases",
+    tags=["Cases"],
+    dependencies=[Depends(get_current_user)],
+)
 
 
 @router.post("/", response_model=CaseResponse, status_code=status.HTTP_201_CREATED)
@@ -67,4 +72,3 @@ def delete_case(case_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
     return deleted_case
-

@@ -1,5 +1,5 @@
 """
-Lógica de autenticação da sessão única do Cadista.
+Lógica de autenticação da sessão do Cadista.
 """
 
 from __future__ import annotations
@@ -14,20 +14,12 @@ from backend.core import settings
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def _password_matches(password: str) -> bool:
-    if settings.AUTH_PASSWORD_HASH:
-        return pwd_context.verify(password, settings.AUTH_PASSWORD_HASH)
-    return password == settings.AUTH_PASSWORD
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
 
 
-def authenticate_user(username: str, password: str) -> str | None:
-    if username != settings.AUTH_USERNAME:
-        return None
-
-    if not _password_matches(password):
-        return None
-
-    return username
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
 
 
 def create_access_token(username: str) -> str:
@@ -54,8 +46,5 @@ def get_username_from_token(token: str) -> str:
     username = payload.get("sub")
     if not isinstance(username, str) or not username:
         raise ValueError("Token inválido ou expirado")
-
-    if username != settings.AUTH_USERNAME:
-        raise ValueError("Usuário autenticado não corresponde ao usuário configurado")
 
     return username

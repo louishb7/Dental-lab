@@ -20,6 +20,7 @@ from backend.schemas.case_item import (
 )
 from backend.schemas.auth import (
     AuthLoginRequest,
+    AuthRegisterRequest,
     AuthTokenResponse,
     AuthUserResponse,
 )
@@ -37,6 +38,7 @@ __all__ = [
     "CaseItemCreate",
     "CaseItemUpdate",
     "CaseItemResponse",
+    "AuthRegisterRequest",
     "AuthLoginRequest",
     "AuthTokenResponse",
     "AuthUserResponse",
