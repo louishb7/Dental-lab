@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from backend.database.connection import get_db
-from backend.schemas.doctor import DoctorCreate, DoctorResponse
+from backend.schemas.doctor import DoctorCreate, DoctorResponse, DoctorUpdate
 from backend.services import doctor as doctor_service
 
 # Cria o roteador para agrupar todos os endpoints de "/doctors"
@@ -77,7 +77,7 @@ def read_doctor(doctor_id: int, db: Session = Depends(get_db)):
 
 @router.put("/{doctor_id}", response_model=DoctorResponse)
 def update_doctor(
-    doctor_id: int, doctor_data: DoctorCreate, db: Session = Depends(get_db)
+    doctor_id: int, doctor_data: DoctorUpdate, db: Session = Depends(get_db)
 ):
     """
     Atualiza os dados de um Doutor existente.
@@ -118,11 +118,26 @@ def delete_doctor(doctor_id: int, db: Session = Depends(get_db)):
     Raises:
         HTTPException: Retorna erro 404 se o doutor não for encontrado.
     """
-    success = doctor_service.delete_doctor(db, doctor_id=doctor_id)
-    if not success:
+    db_doctor = doctor_service.get_doctor_by_id(db, doctor_id=doctor_id)
+    if db_doctor is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Doutor não encontrado",
         )
-    # Em deletes bem-sucedidos (204 No Content), o FastAPI não espera um return de dados
+
+    if db_doctor.cases:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                "Não é possível excluir este doutor porque existem casos vinculados."
+            ),
+        )
+
+    success = doctor_service.delete_doctor(db, doctor_id=doctor_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Falha inesperada ao excluir doutor",
+        )
+
     return None

@@ -33,6 +33,17 @@ class DoctorCreate(DoctorBase):
     pass
 
 
+class DoctorUpdate(BaseModel):
+    """
+    Schema de validação para atualização parcial de um Doutor.
+    """
+
+    name: Optional[str] = None
+    clinic_name: Optional[str] = None
+    phone: Optional[str] = None
+    notes: Optional[str] = None
+
+
 class DoctorResponse(DoctorBase):
     """
     Schema de formatação de saída para as rotas que retornam dados do Doutor.

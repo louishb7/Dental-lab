@@ -5,7 +5,7 @@ Módulo de operações de persistência para a entidade Doctor.
 from sqlalchemy.orm import Session
 
 from backend.models.doctor import Doctor
-from backend.schemas.doctor import DoctorCreate
+from backend.schemas.doctor import DoctorCreate, DoctorUpdate
 
 
 def create_doctor(db: Session, doctor: DoctorCreate) -> Doctor:
@@ -25,7 +25,7 @@ def get_all_doctors(db: Session, skip: int = 0, limit: int = 100) -> list[Doctor
 
 
 def update_doctor(
-    db: Session, doctor_id: int, doctor_data: DoctorCreate
+    db: Session, doctor_id: int, doctor_data: DoctorUpdate
 ) -> Doctor | None:
     db_doctor = get_doctor_by_id(db, doctor_id)
 

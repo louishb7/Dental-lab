@@ -3,170 +3,470 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadista MVP - Gestão de Doutores</title>
+    <title>Cadista - Teste de API</title>
     <style>
-        /* Estilização básica e pragmática para o MVP */
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1, h2 { color: #2c3e50; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        button { background-color: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 16px; }
-        button:hover { background-color: #2980b9; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #ddd; }
-        th { background-color: #ecf0f1; }
-        .btn-delete { background-color: #e74c3c; padding: 5px 10px; font-size: 14px; }
-        .btn-delete:hover { background-color: #c0392b; }
+        :root {
+            --bg: #eef2f7;
+            --panel: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --border: #d1d5db;
+            --accent: #2563eb;
+            --accent-dark: #1d4ed8;
+            --danger: #dc2626;
+            --success: #047857;
+            --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 30%),
+                linear-gradient(180deg, #f8fafc 0%, var(--bg) 100%);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 32px 20px 48px;
+        }
+        .hero {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .hero h1 {
+            margin: 0;
+            font-size: clamp(2rem, 4vw, 3rem);
+        }
+        .hero p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            max-width: 60ch;
+            line-height: 1.5;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 20px;
+        }
+        .card {
+            background: var(--panel);
+            border: 1px solid rgba(209, 213, 219, 0.9);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            padding: 20px;
+        }
+        .card h2 {
+            margin: 0 0 16px;
+            font-size: 1.1rem;
+        }
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-size: 0.92rem;
+        }
+        .message {
+            min-height: 22px;
+            margin: 0 0 14px;
+            font-size: 0.95rem;
+        }
+        .message.error { color: var(--danger); }
+        .message.success { color: var(--success); }
+        .form-group {
+            margin-bottom: 14px;
+        }
+        label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        input, textarea {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 14px;
+            font: inherit;
+            background: #fff;
+            color: var(--text);
+        }
+        input:focus, textarea:focus {
+            outline: 2px solid rgba(37, 99, 235, 0.2);
+            border-color: var(--accent);
+        }
+        textarea { resize: vertical; min-height: 100px; }
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        button {
+            border: 0;
+            border-radius: 12px;
+            padding: 11px 14px;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.12s ease, background 0.12s ease, opacity 0.12s ease;
+        }
+        button:hover { transform: translateY(-1px); }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-primary:hover { background: var(--accent-dark); }
+        .btn-secondary { background: #e5e7eb; color: #111827; }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-ghost {
+            background: transparent;
+            color: var(--accent);
+            padding-inline: 4px;
+        }
+        .btn-small {
+            padding: 8px 10px;
+            border-radius: 10px;
+            font-size: 0.92rem;
+        }
+        .table-wrap {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 620px;
+        }
+        th, td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            font-size: 0.83rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .empty {
+            color: var(--muted);
+            padding: 12px 0;
+        }
+        .row-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .muted {
+            color: var(--muted);
+        }
+        .section-stack {
+            display: grid;
+            gap: 20px;
+        }
+        .mode-label {
+            font-size: 0.92rem;
+            color: var(--muted);
+        }
+        @media (max-width: 900px) {
+            .grid { grid-template-columns: 1fr; }
+            .hero { align-items: flex-start; flex-direction: column; }
+        }
     </style>
 </head>
 <body>
-
 <div class="container">
-    <h1>Cadista - MVP</h1>
-    
-    <h2>Cadastrar Novo Doutor</h2>
-    <form id="doctorForm">
-        <div class="form-group">
-            <label for="name">Nome (Obrigatório)</label>
-            <input type="text" id="name" required>
+    <div class="hero">
+        <div>
+            <h1>Cadista</h1>
+            <p>Teste de API pelo navegador para cadastrar, editar, listar e excluir doutores.</p>
         </div>
-        <div class="form-group">
-            <label for="clinic_name">Clínica</label>
-            <input type="text" id="clinic_name">
-        </div>
-        <div class="form-group">
-            <label for="phone">Telefone</label>
-            <input type="text" id="phone">
-        </div>
-        <div class="form-group">
-            <label for="notes">Observações</label>
-            <textarea id="notes" rows="3"></textarea>
-        </div>
-        <button type="submit">Salvar Doutor</button>
-    </form>
+        <div class="badge">API: <span id="apiStatus">verificando...</span></div>
+    </div>
 
-    <h2>Lista de Doutores</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nome</th>
-                <th>Clínica</th>
-                <th>Telefone</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody id="doctorsTableBody">
-            </tbody>
-    </table>
+    <div class="grid">
+        <section class="card">
+            <div class="toolbar">
+                <h2 style="margin: 0;">Cadastro de doutor</h2>
+                <span id="formMode" class="mode-label">Modo: criação</span>
+            </div>
+
+            <p id="formMessage" class="message"></p>
+
+            <form id="doctorForm">
+                <input type="hidden" id="doctorId" value="">
+
+                <div class="form-group">
+                    <label for="name">Nome *</label>
+                    <input type="text" id="name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="clinic_name">Clínica</label>
+                    <input type="text" id="clinic_name" placeholder="Clínica ou consultório">
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Telefone</label>
+                    <input type="text" id="phone" placeholder="(xx) xxxx-xxxx">
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">Observações</label>
+                    <textarea id="notes" placeholder="Informações adicionais"></textarea>
+                </div>
+
+                <div class="actions">
+                    <button class="btn-primary" type="submit" id="submitButton">Salvar doutor</button>
+                    <button class="btn-secondary" type="button" id="cancelEditButton" hidden>Cancelar edição</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="card">
+            <div class="toolbar">
+                <h2 style="margin: 0;">Doutores cadastrados</h2>
+                <button class="btn-secondary btn-small" type="button" id="refreshButton">Atualizar lista</button>
+            </div>
+
+            <p id="listMessage" class="message"></p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Clínica</th>
+                            <th>Telefone</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="doctorsTableBody">
+                        <tr>
+                            <td colspan="5" class="empty">Carregando doutores...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
 </div>
 
 <script>
-    /**
-     * URL base da nossa API FastAPI rodando localmente.
-     * @constant {string}
-     */
-    const API_URL = "http://localhost:8000/doctors";
+    const API_BASE_URL = "http://localhost:8000";
+    const DOCTORS_URL = `${API_BASE_URL}/doctors`;
 
-    /**
-     * Busca todos os doutores na API e renderiza na tabela HTML.
-     * É chamada ao carregar a página e após qualquer alteração (criar/deletar).
-     */
-    async function loadDoctors() {
+    const form = document.getElementById("doctorForm");
+    const formMessage = document.getElementById("formMessage");
+    const listMessage = document.getElementById("listMessage");
+    const doctorsTableBody = document.getElementById("doctorsTableBody");
+    const doctorIdInput = document.getElementById("doctorId");
+    const submitButton = document.getElementById("submitButton");
+    const cancelEditButton = document.getElementById("cancelEditButton");
+    const formMode = document.getElementById("formMode");
+    const apiStatus = document.getElementById("apiStatus");
+    const refreshButton = document.getElementById("refreshButton");
+
+    function setMessage(element, text, type = "") {
+        element.textContent = text;
+        element.className = type ? `message ${type}` : "message";
+    }
+
+    function resetForm() {
+        form.reset();
+        doctorIdInput.value = "";
+        submitButton.textContent = "Salvar doutor";
+        cancelEditButton.hidden = true;
+        formMode.textContent = "Modo: criação";
+    }
+
+    function fillFormForEdit(doctor) {
+        doctorIdInput.value = doctor.id;
+        document.getElementById("name").value = doctor.name || "";
+        document.getElementById("clinic_name").value = doctor.clinic_name || "";
+        document.getElementById("phone").value = doctor.phone || "";
+        document.getElementById("notes").value = doctor.notes || "";
+        submitButton.textContent = "Atualizar doutor";
+        cancelEditButton.hidden = false;
+        formMode.textContent = `Modo: edição do ID ${doctor.id}`;
+        setMessage(formMessage, `Editando doutor #${doctor.id}`, "success");
+        document.getElementById("name").focus();
+    }
+
+    async function readApiError(response) {
         try {
-            const response = await fetch(API_URL + "/");
-            const doctors = await response.json();
-            
-            const tbody = document.getElementById('doctorsTableBody');
-            tbody.innerHTML = ''; // Limpa a tabela atual
+            const data = await response.json();
+            return data.detail || JSON.stringify(data);
+        } catch {
+            return `Erro HTTP ${response.status}`;
+        }
+    }
 
-            doctors.forEach(doctor => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
+    async function checkApi() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/`);
+            const data = await response.json();
+            apiStatus.textContent = data.message || "online";
+        } catch (error) {
+            apiStatus.textContent = "offline";
+            setMessage(listMessage, "A API não respondeu. Verifique se o backend está rodando.", "error");
+            console.error(error);
+        }
+    }
+
+    async function loadDoctors() {
+        setMessage(listMessage, "Atualizando lista...", "");
+
+        try {
+            const response = await fetch(DOCTORS_URL);
+            if (!response.ok) {
+                const errorMessage = await readApiError(response);
+                throw new Error(errorMessage);
+            }
+
+            const doctors = await response.json();
+            doctorsTableBody.innerHTML = "";
+
+            if (!doctors.length) {
+                doctorsTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="empty">Nenhum doutor cadastrado ainda.</td>
+                    </tr>
+                `;
+                setMessage(listMessage, "Lista carregada com sucesso.", "success");
+                return;
+            }
+
+            for (const doctor of doctors) {
+                const row = document.createElement("tr");
+                row.innerHTML = `
                     <td>${doctor.id}</td>
-                    <td>${doctor.name}</td>
-                    <td>${doctor.clinic_name || '-'}</td>
-                    <td>${doctor.phone || '-'}</td>
+                    <td>${doctor.name || "-"}</td>
+                    <td>${doctor.clinic_name || "-"}</td>
+                    <td>${doctor.phone || "-"}</td>
                     <td>
-                        <button class="btn-delete" onclick="deleteDoctor(${doctor.id})">Excluir</button>
+                        <div class="row-actions">
+                            <button class="btn-secondary btn-small" type="button" data-action="edit">Editar</button>
+                            <button class="btn-danger btn-small" type="button" data-action="delete">Excluir</button>
+                        </div>
                     </td>
                 `;
-                tbody.appendChild(tr);
-            });
+
+                row.querySelector('[data-action="edit"]').addEventListener("click", () => fillFormForEdit(doctor));
+                row.querySelector('[data-action="delete"]').addEventListener("click", () => deleteDoctor(doctor.id, doctor.name));
+                doctorsTableBody.appendChild(row);
+            }
+
+            setMessage(listMessage, `Foram carregados ${doctors.length} doutores.`, "success");
         } catch (error) {
-            console.error("Erro ao carregar doutores:", error);
-            alert("Falha ao carregar os dados. A API está rodando?");
+            doctorsTableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="empty">Falha ao carregar doutores.</td>
+                </tr>
+            `;
+            setMessage(listMessage, error.message || "Falha ao carregar doutores.", "error");
         }
     }
 
-    /**
-     * Envia os dados do formulário via POST para criar um novo Doutor.
-     * * @param {Event} event - O evento de submissão do formulário.
-     */
-    async function createDoctor(event) {
-        event.preventDefault(); // Evita que a página recarregue
+    async function submitDoctor(event) {
+        event.preventDefault();
 
-        // Captura os valores dos inputs
-        const doctorData = {
-            name: document.getElementById('name').value,
-            clinic_name: document.getElementById('clinic_name').value,
-            phone: document.getElementById('phone').value,
-            notes: document.getElementById('notes').value
+        const doctorId = doctorIdInput.value.trim();
+        const payload = {
+            name: document.getElementById("name").value.trim(),
+            clinic_name: document.getElementById("clinic_name").value.trim() || null,
+            phone: document.getElementById("phone").value.trim() || null,
+            notes: document.getElementById("notes").value.trim() || null,
         };
 
+        const method = doctorId ? "PUT" : "POST";
+        const url = doctorId ? `${DOCTORS_URL}/${doctorId}` : DOCTORS_URL;
+
         try {
-            const response = await fetch(API_URL + "/", {
-                method: 'POST',
+            setMessage(formMessage, doctorId ? "Atualizando doutor..." : "Salvando doutor...", "");
+
+            const response = await fetch(url, {
+                method,
                 headers: {
-                    'Content-Type': 'application/json'
+                    "Content-Type": "application/json",
                 },
-                body: JSON.stringify(doctorData)
+                body: JSON.stringify(payload),
             });
 
-            if (response.ok) {
-                document.getElementById('doctorForm').reset(); // Limpa o formulário
-                loadDoctors(); // Recarrega a tabela com o novo dado
-            } else {
-                alert("Erro ao criar doutor. Verifique os dados.");
+            if (!response.ok) {
+                const errorMessage = await readApiError(response);
+                throw new Error(errorMessage);
             }
+
+            resetForm();
+            setMessage(
+                formMessage,
+                doctorId ? "Doutor atualizado com sucesso." : "Doutor criado com sucesso.",
+                "success"
+            );
+            await loadDoctors();
         } catch (error) {
-            console.error("Erro ao criar doutor:", error);
+            setMessage(formMessage, error.message || "Falha ao salvar doutor.", "error");
         }
     }
 
-    /**
-     * Envia uma requisição DELETE para a API para remover um Doutor específico.
-     * * @param {number} id - O identificador único do Doutor a ser excluído.
-     */
-    async function deleteDoctor(id) {
-        if (!confirm("Tem certeza que deseja excluir este doutor? Todos os casos dele serão perdidos.")) {
+    async function deleteDoctor(id, name) {
+        const confirmed = confirm(
+            `Excluir o doutor "${name}"? Se houver casos vinculados, a API vai bloquear a operação.`
+        );
+
+        if (!confirmed) {
             return;
         }
 
         try {
-            const response = await fetch(`${API_URL}/${id}`, {
-                method: 'DELETE'
+            setMessage(listMessage, `Excluindo doutor #${id}...`, "");
+
+            const response = await fetch(`${DOCTORS_URL}/${id}`, {
+                method: "DELETE",
             });
 
-            if (response.ok) {
-                loadDoctors(); // Recarrega a tabela após a exclusão
-            } else {
-                alert("Erro ao excluir doutor.");
+            if (!response.ok) {
+                const errorMessage = await readApiError(response);
+                throw new Error(errorMessage);
             }
+
+            if (doctorIdInput.value === String(id)) {
+                resetForm();
+            }
+
+            setMessage(listMessage, `Doutor #${id} excluído com sucesso.`, "success");
+            await loadDoctors();
         } catch (error) {
-            console.error("Erro ao excluir doutor:", error);
+            setMessage(listMessage, error.message || "Falha ao excluir doutor.", "error");
         }
     }
 
-    // Inicializa a aplicação:
-    // 1. Atribui a função de criação ao evento de envio do formulário
-    document.getElementById('doctorForm').addEventListener('submit', createDoctor);
-    
-    // 2. Carrega a lista de doutores assim que o script é lido
+    cancelEditButton.addEventListener("click", () => {
+        resetForm();
+        setMessage(formMessage, "Edição cancelada.", "");
+    });
+
+    refreshButton.addEventListener("click", loadDoctors);
+    form.addEventListener("submit", submitDoctor);
+
+    checkApi();
     loadDoctors();
 </script>
-
 </body>
 </html>
