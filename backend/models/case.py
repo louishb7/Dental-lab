@@ -25,6 +25,7 @@ class Case(Base):
         id (int): Identificador único do caso.
         doctor_id (int): Chave estrangeira referenciando o doutor dono do caso.
         patient_ref (str): Nome ou código identificador do paciente.
+        pricing_mode (str): Tipo de cobrança do caso.
         deadline (datetime): Prazo de entrega estipulado.
         priority (str): Prioridade do caso ('normal' ou 'urgent').
         status (str): Estado atual do caso ('pending', 'completed', 'delivered').
@@ -45,6 +46,7 @@ class Case(Base):
         Integer, ForeignKey("doctors.id", ondelete="RESTRICT"), nullable=False
     )
     patient_ref = Column(String(150), nullable=False, index=True)
+    pricing_mode = Column(String(20), nullable=False, default="services", index=True)
     deadline = Column(DateTime(timezone=True))
     priority = Column(String(20), nullable=False, default="normal", index=True)
     status = Column(String(20), nullable=False, default="pending", index=True)

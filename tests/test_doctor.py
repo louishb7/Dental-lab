@@ -47,10 +47,11 @@ def test_create_update_and_soft_delete_doctor() -> None:
 
 def test_doctor_phone_requires_brazilian_mobile_order() -> None:
     assert DoctorCreate(name="Dr. Valido", phone="11999990000").phone == "(11)99999-0000"
+    assert DoctorCreate(name="Dr. Fixo", phone="(11)3333-4444").phone == "(11)3333-4444"
     assert DoctorCreate(name="Dr. Sem Telefone", phone="").phone is None
 
     with pytest.raises(ValueError, match="Telefone deve estar em branco"):
-        DoctorCreate(name="Dr. Invalido", phone="(11)88888-0000")
+        DoctorCreate(name="Dr. Invalido", phone="123456789")
 
 
 def test_delete_doctor_is_blocked_when_active_cases_exist() -> None:

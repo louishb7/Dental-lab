@@ -410,6 +410,14 @@ Auditoria resumida antes da reorganizacao:
             transform: none;
         }
 
+        .field-help {
+            display: block;
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 0.78rem;
+            line-height: 1.35;
+        }
+
         .dashboard-card {
             margin-bottom: 18px;
         }
@@ -520,6 +528,32 @@ Auditoria resumida antes da reorganizacao:
             margin-bottom: 12px;
             font-weight: 800;
             font-size: 1.15rem;
+        }
+
+        .delivery-control {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+        }
+
+        .delivery-control.selected {
+            border-color: rgba(37, 99, 235, 0.35);
+            background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+        }
+
+        .delivery-control-copy {
+            color: var(--muted);
+            line-height: 1.4;
+        }
+
+        .delivery-control-copy strong {
+            color: var(--text);
         }
 
         .case-summary {
@@ -711,7 +745,7 @@ Auditoria resumida antes da reorganizacao:
                     </div>
                     <div class="form-group">
                         <label for="doctorPhone">Telefone</label>
-                    <input id="doctorPhone" type="text" inputmode="numeric" autocomplete="tel" maxlength="14" placeholder="(xx)9xxxx-xxxx">
+                        <input id="doctorPhone" type="text" inputmode="numeric" autocomplete="tel" maxlength="14" placeholder="(xx)xxxx-xxxx ou (xx)9xxxx-xxxx">
                         <span class="field-error" data-error-for="doctorPhone"></span>
                     </div>
                     <div class="form-group full">
@@ -772,6 +806,15 @@ Auditoria resumida antes da reorganizacao:
                         <span class="field-error" data-error-for="caseMode"></span>
                     </div>
                     <div class="form-group">
+                        <label for="casePricingMode">Cobrança</label>
+                        <select id="casePricingMode">
+                            <option value="services">Somar serviços</option>
+                            <option value="fixed">Valor fixo</option>
+                        </select>
+                        <span class="field-error" data-error-for="casePricingMode"></span>
+                        <small class="field-help">Somar serviços usa o valor de cada item. Valor fixo é usado quando existe um combinado com desconto.</small>
+                    </div>
+                    <div class="form-group">
                         <label for="casePatientRef">Referencia do paciente *</label>
                         <input id="casePatientRef" type="text">
                         <span class="field-error" data-error-for="casePatientRef"></span>
@@ -789,8 +832,8 @@ Auditoria resumida antes da reorganizacao:
                         </select>
                         <span class="field-error" data-error-for="casePriority"></span>
                     </div>
-                    <div class="form-group case-full-field">
-                        <label for="caseTotalValue">Valor combinado</label>
+                    <div class="form-group pricing-fixed-field">
+                        <label for="caseTotalValue">Valor fixo do caso</label>
                         <input id="caseTotalValue" type="text" inputmode="decimal" autocomplete="off" placeholder="0,00">
                         <span class="field-error" data-error-for="caseTotalValue"></span>
                     </div>
@@ -838,6 +881,7 @@ Auditoria resumida antes da reorganizacao:
             </div>
 
             <div id="caseSummary" class="case-summary"></div>
+            <div id="deliveryControl"></div>
 
             <form id="itemForm" class="context-form" hidden novalidate>
                 <div class="form-header">
@@ -855,6 +899,11 @@ Auditoria resumida antes da reorganizacao:
                         <label for="itemServiceType">Servico *</label>
                         <input id="itemServiceType" type="text" placeholder="Coroa, faceta, protese...">
                         <span class="field-error" data-error-for="itemServiceType"></span>
+                    </div>
+                    <div class="form-group item-services-field">
+                        <label for="itemUnitValue">Valor unitário</label>
+                        <input id="itemUnitValue" type="text" inputmode="decimal" autocomplete="off" placeholder="0,00">
+                        <span class="field-error" data-error-for="itemUnitValue"></span>
                     </div>
                     <div class="form-group">
                         <label for="itemMaterial">Material</label>
@@ -884,13 +933,14 @@ Auditoria resumida antes da reorganizacao:
                     <tr>
                         <th>Dente</th>
                         <th>Servico</th>
+                        <th>Valor</th>
                         <th>Material</th>
                         <th>Cor</th>
                         <th>Acoes</th>
                     </tr>
                     </thead>
                     <tbody id="itemsTableBody">
-                    <tr><td colspan="5" class="empty">Selecione um caso.</td></tr>
+                    <tr><td colspan="6" class="empty">Selecione um caso.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -907,7 +957,7 @@ Auditoria resumida antes da reorganizacao:
         delivered: null,
     };
 
-        const state = {
+    const state = {
             viewLevel: "doctors",
             doctors: [],
             cases: [],
@@ -924,28 +974,31 @@ Auditoria resumida antes da reorganizacao:
                 delivered_total_month: "0.00",
                 delivered_count_month: 0,
             },
+            delivery: {
+                selectedCaseId: null,
+            },
             selectedDoctorId: null,
             selectedCaseId: null,
             editing: {
                 doctorId: null,
                 caseId: null,
-            itemId: null,
-        },
-        forms: {
-            doctorOpen: false,
-            caseOpen: false,
-            itemOpen: false,
-        },
-        auth: {
-            token: "",
-            username: "",
-            email: "",
-        },
+                itemId: null,
+            },
+            forms: {
+                doctorOpen: false,
+                caseOpen: false,
+                itemOpen: false,
+            },
+            auth: {
+                token: "",
+                username: "",
+                email: "",
+            },
     };
 
-        const el = {
-            apiStatus: document.getElementById("apiStatus"),
-            authMessage: document.getElementById("authMessage"),
+    const el = {
+        apiStatus: document.getElementById("apiStatus"),
+        authMessage: document.getElementById("authMessage"),
         authIdentifier: document.getElementById("authIdentifier"),
         authPassword: document.getElementById("authPassword"),
         registerEmail: document.getElementById("registerEmail"),
@@ -970,6 +1023,7 @@ Auditoria resumida antes da reorganizacao:
             dashboardFinanceList: document.getElementById("dashboardFinanceList"),
             dashboardFinanceTotal: document.getElementById("dashboardFinanceTotal"),
             refreshDashboardButton: document.getElementById("refreshDashboardButton"),
+            deliveryControl: document.getElementById("deliveryControl"),
             doctorsLevel: document.getElementById("doctorsLevel"),
             casesLevel: document.getElementById("casesLevel"),
             itemsLevel: document.getElementById("itemsLevel"),
@@ -991,6 +1045,7 @@ Auditoria resumida antes da reorganizacao:
         itemsLevelMeta: document.getElementById("itemsLevelMeta"),
         caseSummary: document.getElementById("caseSummary"),
         caseMode: document.getElementById("caseMode"),
+        casePricingMode: document.getElementById("casePricingMode"),
         caseTotalValue: document.getElementById("caseTotalValue"),
     };
 
@@ -1010,6 +1065,7 @@ Auditoria resumida antes da reorganizacao:
         itemId: document.getElementById("itemId"),
         itemTooth: document.getElementById("itemTooth"),
         itemServiceType: document.getElementById("itemServiceType"),
+        itemUnitValue: document.getElementById("itemUnitValue"),
         itemMaterial: document.getElementById("itemMaterial"),
         itemColor: document.getElementById("itemColor"),
         itemNotes: document.getElementById("itemNotes"),
@@ -1065,17 +1121,26 @@ Auditoria resumida antes da reorganizacao:
         return `${Number(integerPart || "0").toLocaleString("pt-BR")},${decimalPart}`;
     }
 
-    function formatBrazilianMobileMask(value) {
+    function formatBrazilianPhoneMask(value) {
         const digits = String(value ?? "").replace(/\D/g, "").slice(0, 11);
         if (!digits) return "";
         if (digits.length <= 2) return `(${digits}`;
-        if (digits.length <= 7) return `(${digits.slice(0, 2)})${digits.slice(2)}`;
-        return `(${digits.slice(0, 2)})${digits.slice(2, 7)}-${digits.slice(7)}`;
+        const area = digits.slice(0, 2);
+        const rest = digits.slice(2);
+        if (digits.length <= 10) {
+            const prefix = rest.slice(0, 4);
+            const suffix = rest.slice(4);
+            return suffix ? `(${area})${prefix}-${suffix}` : `(${area})${prefix}`;
+        }
+        const prefix = rest.slice(0, 5);
+        const suffix = rest.slice(5);
+        return suffix ? `(${area})${prefix}-${suffix}` : `(${area})${prefix}`;
     }
 
-    function isValidBrazilianMobile(value) {
-        if (!value.trim()) return true;
-        return /^\(\d{2}\)9\d{4}-\d{4}$/.test(value.trim());
+    function isValidBrazilianPhone(value) {
+        const digits = String(value ?? "").replace(/\D/g, "");
+        if (!digits) return true;
+        return digits.length === 10 || digits.length === 11;
     }
 
     function moneyToDecimal(value) {
@@ -1135,8 +1200,11 @@ Auditoria resumida antes da reorganizacao:
         clearFieldErrors(el.doctorForm);
         let valid = true;
         valid = requireField(fields.doctorName, "Nome") && valid;
-        if (!isValidBrazilianMobile(fields.doctorPhone.value)) {
-            setFieldError(fields.doctorPhone, "Telefone deve ficar em branco ou seguir o padrao (xx)9xxxx-xxxx.");
+        if (!isValidBrazilianPhone(fields.doctorPhone.value)) {
+            setFieldError(
+                fields.doctorPhone,
+                "Telefone deve ficar em branco ou seguir o padrao (xx)xxxx-xxxx / (xx)xxxxx-xxxx."
+            );
             valid = false;
         }
         return valid;
@@ -1150,6 +1218,10 @@ Auditoria resumida antes da reorganizacao:
             setMessage(el.appMessage, "Selecione um doutor antes de criar o caso.", "error");
             valid = false;
         }
+        if (el.casePricingMode.value === "fixed" && !fields.caseTotalValue.value.trim()) {
+            setFieldError(fields.caseTotalValue, "Informe o valor fixo do caso.");
+            valid = false;
+        }
         return valid;
     }
 
@@ -1158,6 +1230,10 @@ Auditoria resumida antes da reorganizacao:
         let valid = true;
         valid = requireField(fields.itemTooth, "Dente / descricao") && valid;
         valid = requireField(fields.itemServiceType, "Servico") && valid;
+        if (selectedCase()?.pricing_mode === "services" && !fields.itemUnitValue.value.trim()) {
+            setFieldError(fields.itemUnitValue, "Informe o valor unitário do serviço.");
+            valid = false;
+        }
         const tooth = fields.itemTooth.value.trim();
         if (/^\d+$/.test(tooth)) {
             const toothNumber = Number(tooth);
@@ -1352,16 +1428,17 @@ Auditoria resumida antes da reorganizacao:
                 { render: caseItem => formatMoneyDisplay(caseItem.total_value) },
                 {
                     render: caseItem => {
-                        const nextStatus = STATUS_FLOW[caseItem.status];
                         return actionMenu([
                             Number(caseItem.items_count || 0) > 0
                                 ? menuButton("view-case-items", caseItem.id, "Ver itens")
                                 : "",
                             menuButton("create-case-item", caseItem.id, "Criar item", "primary"),
                             menuButton("edit-case", caseItem.id, "Editar"),
-                            nextStatus
-                                ? menuButton("advance-case-status", caseItem.id, `Avancar para ${nextStatus}`)
-                                : menuButton(null, caseItem.id, "Status final", "", true),
+                            caseItem.status === "pending"
+                                ? menuButton("advance-case-status", caseItem.id, "Feito!", "primary")
+                                : caseItem.status === "completed"
+                                    ? menuButton("select-delivery-case", caseItem.id, "Selecionar entrega", "primary")
+                                    : menuButton(null, caseItem.id, "Entregue", "", true),
                             menuButton("delete-case", caseItem.id, "Excluir", "danger"),
                         ].filter(Boolean));
                     },
@@ -1380,6 +1457,7 @@ Auditoria resumida antes da reorganizacao:
             [
                 { render: item => escapeText(item.tooth) },
                 { render: item => escapeText(item.service_type) },
+                { render: item => formatMoneyDisplay(item.unit_value) },
                 { render: item => escapeText(item.material || "-") },
                 { render: item => escapeText(item.color || "-") },
                 {
@@ -1412,6 +1490,7 @@ Auditoria resumida antes da reorganizacao:
         const caseItem = selectedCase();
         if (!caseItem) {
             el.caseSummary.innerHTML = "";
+            el.deliveryControl.innerHTML = "";
             return;
         }
 
@@ -1419,6 +1498,10 @@ Auditoria resumida antes da reorganizacao:
             <div class="summary-item">
                 <div class="summary-label">Paciente</div>
                 <div class="summary-value">${escapeText(caseItem.patient_ref)}</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Cobrança</div>
+                <div class="summary-value">${escapeText(caseItem.pricing_mode === "fixed" ? "Valor fixo" : "Somar serviços")}</div>
             </div>
             <div class="summary-item">
                 <div class="summary-label">Status</div>
@@ -1431,6 +1514,33 @@ Auditoria resumida antes da reorganizacao:
             <div class="summary-item">
                 <div class="summary-label">Valor</div>
                 <div class="summary-value">${formatMoneyDisplay(caseItem.total_value)}</div>
+            </div>
+        `;
+
+        renderDeliveryControl(caseItem);
+    }
+
+    function renderDeliveryControl(caseItem) {
+        if (caseItem.status !== "completed") {
+            el.deliveryControl.innerHTML = "";
+            return;
+        }
+
+        const isSelected = state.delivery.selectedCaseId === caseItem.id;
+        el.deliveryControl.innerHTML = `
+            <div class="delivery-control ${isSelected ? "selected" : ""}">
+                <div class="delivery-control-copy">
+                    <strong>${isSelected ? "Entrega selecionada." : "Selecione a entrega."}</strong>
+                    <div>Revise os dentes do caso antes de marcar como entregue.</div>
+                </div>
+                <div class="button-row">
+                    ${
+                        isSelected
+                            ? `<button type="button" class="row-action primary" data-action="confirm-delivery-case" data-id="${caseItem.id}">Entregue</button>
+                               <button type="button" class="row-action" data-action="cancel-delivery-selection" data-id="${caseItem.id}">Cancelar</button>`
+                            : `<button type="button" class="row-action primary" data-action="select-delivery-case" data-id="${caseItem.id}">Selecionar entrega</button>`
+                    }
+                </div>
             </div>
         `;
     }
@@ -1575,8 +1685,15 @@ Auditoria resumida antes da reorganizacao:
         el.doctorForm.hidden = !state.forms.doctorOpen;
         el.caseForm.hidden = !state.forms.caseOpen;
         el.itemForm.hidden = !state.forms.itemOpen;
+        const showFullFields = el.caseMode.value !== "simple" || Boolean(state.editing.caseId);
         document.querySelectorAll(".case-full-field").forEach(field => {
-            field.hidden = el.caseMode.value === "simple" && !state.editing.caseId;
+            field.hidden = !showFullFields;
+        });
+        document.querySelectorAll(".pricing-fixed-field").forEach(field => {
+            field.hidden = el.casePricingMode.value !== "fixed";
+        });
+        document.querySelectorAll(".item-services-field").forEach(field => {
+            field.hidden = selectedCase()?.pricing_mode !== "services";
         });
     }
 
@@ -1595,8 +1712,10 @@ Auditoria resumida antes da reorganizacao:
         fields.caseId.value = "";
         fields.caseDoctorId.value = state.selectedDoctorId ? String(state.selectedDoctorId) : "";
         el.caseMode.value = "simple";
+        el.casePricingMode.value = "services";
         fields.casePriority.value = "normal";
         fields.caseTotalValue.value = "";
+        fields.caseNotes.value = "";
         state.editing.caseId = null;
         el.caseFormTitle.textContent = "Novo caso";
         el.caseSubmitButton.textContent = "Salvar caso";
@@ -1645,6 +1764,7 @@ Auditoria resumida antes da reorganizacao:
             fields.caseTotalValue.value = formatMoneyDisplay(caseItem.total_value).replace("-", "");
             fields.caseNotes.value = caseItem.notes || "";
             el.caseMode.value = "full";
+            el.casePricingMode.value = caseItem.pricing_mode || (caseItem.total_value ? "fixed" : "services");
             el.caseFormTitle.textContent = `Editar caso #${id}`;
             el.caseSubmitButton.textContent = "Atualizar caso";
         }
@@ -1665,6 +1785,7 @@ Auditoria resumida antes da reorganizacao:
             fields.itemId.value = String(id);
             fields.itemTooth.value = item.tooth || "";
             fields.itemServiceType.value = item.service_type || "";
+            fields.itemUnitValue.value = formatMoneyDisplay(item.unit_value).replace("-", "");
             fields.itemMaterial.value = item.material || "";
             fields.itemColor.value = item.color || "";
             fields.itemNotes.value = item.notes || "";
@@ -1715,6 +1836,7 @@ Auditoria resumida antes da reorganizacao:
         if (!doctor) return;
         state.selectedDoctorId = id;
         state.selectedCaseId = null;
+        state.delivery.selectedCaseId = null;
         state.viewLevel = "cases";
         state.forms.doctorOpen = false;
         state.forms.caseOpen = false;
@@ -1727,6 +1849,7 @@ Auditoria resumida antes da reorganizacao:
         if (!doctor) return;
         state.selectedDoctorId = id;
         state.selectedCaseId = null;
+        state.delivery.selectedCaseId = null;
         state.viewLevel = "cases";
         state.forms.doctorOpen = false;
         state.forms.caseOpen = false;
@@ -1740,6 +1863,7 @@ Auditoria resumida antes da reorganizacao:
         if (!caseItem) return;
         state.selectedDoctorId = caseItem.doctor_id;
         state.selectedCaseId = id;
+        state.delivery.selectedCaseId = null;
         state.viewLevel = "items";
         state.forms.caseOpen = false;
         state.forms.itemOpen = false;
@@ -1753,6 +1877,7 @@ Auditoria resumida antes da reorganizacao:
         if (!caseItem) return;
         state.selectedDoctorId = caseItem.doctor_id;
         state.selectedCaseId = id;
+        state.delivery.selectedCaseId = null;
         state.viewLevel = "items";
         state.forms.caseOpen = false;
         state.forms.itemOpen = false;
@@ -1762,10 +1887,56 @@ Auditoria resumida antes da reorganizacao:
         setMessage(el.appMessage, `Criar um novo item para o caso #${id}.`, "success");
     }
 
+    async function selectDeliveryCase(id) {
+        const caseItem = state.cases.find(item => item.id === id);
+        if (!caseItem) return;
+
+        state.selectedDoctorId = caseItem.doctor_id;
+        state.selectedCaseId = id;
+        state.delivery.selectedCaseId = id;
+        state.viewLevel = "items";
+        state.forms.caseOpen = false;
+        state.forms.itemOpen = false;
+        renderLevel();
+        await loadItemsForCase(id);
+        setMessage(
+            el.appMessage,
+            `Caso #${id} selecionado para entrega. Revise os itens e clique em Entregue.`,
+            "success"
+        );
+    }
+
+    async function confirmDeliveryCase(id) {
+        const caseItem = state.cases.find(item => item.id === id);
+        if (!caseItem || state.delivery.selectedCaseId !== id) return;
+
+        try {
+            const saved = await saveEntity({
+                path: `/cases/${id}`,
+                method: "PUT",
+                payload: { status: "delivered" },
+            });
+            upsertById(state.cases, saved);
+            state.delivery.selectedCaseId = null;
+            await refreshData();
+            setMessage(el.appMessage, `Caso #${id} entregue.`, "success");
+        } catch (error) {
+            setMessage(el.appMessage, error.message || "Falha ao entregar o caso.", "error");
+        }
+    }
+
+    function cancelDeliverySelection(id) {
+        if (state.delivery.selectedCaseId !== id) return;
+        state.delivery.selectedCaseId = null;
+        renderLevel();
+        setMessage(el.appMessage, `Seleção de entrega do caso #${id} cancelada.`, "");
+    }
+
     function backToDoctors() {
         state.viewLevel = "doctors";
         state.selectedDoctorId = null;
         state.selectedCaseId = null;
+        state.delivery.selectedCaseId = null;
         state.forms.caseOpen = false;
         state.forms.itemOpen = false;
         setMessage(el.appMessage, "Lista de doutores.", "");
@@ -1775,6 +1946,7 @@ Auditoria resumida antes da reorganizacao:
     function backToCases() {
         state.viewLevel = "cases";
         state.selectedCaseId = null;
+        state.delivery.selectedCaseId = null;
         state.forms.itemOpen = false;
         setMessage(el.appMessage, "Lista de casos do doutor selecionado.", "");
         renderLevel();
@@ -1814,17 +1986,22 @@ Auditoria resumida antes da reorganizacao:
         if (!validateCaseForm()) return;
 
         const id = fields.caseId.value.trim();
+        const pricingMode = el.casePricingMode.value;
         const payload = {
             doctor_id: Number(fields.caseDoctorId.value),
             patient_ref: fields.casePatientRef.value.trim(),
+            pricing_mode: pricingMode,
         };
 
         if (el.caseMode.value === "full" || id) {
             const deadlineValue = fields.caseDeadline.value;
             payload.deadline = deadlineValue ? new Date(`${deadlineValue}T00:00:00`).toISOString() : null;
             payload.priority = fields.casePriority.value;
-            payload.total_value = moneyToDecimal(fields.caseTotalValue.value);
             payload.notes = fields.caseNotes.value.trim() || null;
+        }
+
+        if (pricingMode === "fixed") {
+            payload.total_value = moneyToDecimal(fields.caseTotalValue.value);
         }
 
         try {
@@ -1858,6 +2035,9 @@ Auditoria resumida antes da reorganizacao:
         const payload = {
             tooth: fields.itemTooth.value.trim(),
             service_type: fields.itemServiceType.value.trim(),
+            unit_value: selectedCase()?.pricing_mode === "services"
+                ? moneyToDecimal(fields.itemUnitValue.value)
+                : null,
             material: fields.itemMaterial.value.trim() || null,
             color: fields.itemColor.value.trim() || null,
             notes: fields.itemNotes.value.trim() || null,
@@ -1956,17 +2136,16 @@ Auditoria resumida antes da reorganizacao:
 
     async function advanceCaseStatus(id) {
         const caseItem = state.cases.find(item => item.id === id);
-        const nextStatus = caseItem ? STATUS_FLOW[caseItem.status] : null;
-        if (!caseItem || !nextStatus) return;
+        if (!caseItem || caseItem.status !== "pending") return;
 
         try {
             const saved = await saveEntity({
                 path: `/cases/${id}`,
                 method: "PUT",
-                payload: { status: nextStatus },
+                payload: { status: "completed" },
             });
             upsertById(state.cases, saved);
-            setMessage(el.appMessage, `Caso #${id} atualizado para ${nextStatus}.`, "success");
+            setMessage(el.appMessage, `Caso #${id} marcado como feito.`, "success");
             renderLevel();
             await refreshData();
         } catch (error) {
@@ -2038,6 +2217,7 @@ Auditoria resumida antes da reorganizacao:
         state.cases = [];
         state.selectedDoctorId = null;
         state.selectedCaseId = null;
+        state.delivery.selectedCaseId = null;
         state.viewLevel = "doctors";
         renderLevel();
     }
@@ -2084,11 +2264,15 @@ Auditoria resumida antes da reorganizacao:
         });
 
         el.caseMode.addEventListener("change", renderFormVisibility);
+        el.casePricingMode.addEventListener("change", renderFormVisibility);
         el.caseTotalValue.addEventListener("input", event => {
             event.target.value = formatMoneyMask(event.target.value);
         });
+        fields.itemUnitValue.addEventListener("input", event => {
+            event.target.value = formatMoneyMask(event.target.value);
+        });
         fields.doctorPhone.addEventListener("input", event => {
-            event.target.value = formatBrazilianMobileMask(event.target.value);
+            event.target.value = formatBrazilianPhoneMask(event.target.value);
         });
 
         el.appContent.addEventListener("click", async event => {
@@ -2111,6 +2295,9 @@ Auditoria resumida antes da reorganizacao:
             if (action === "create-case-item") await createItemForCase(id);
             if (action === "edit-case") openCaseForm(id);
             if (action === "advance-case-status") await advanceCaseStatus(id);
+            if (action === "select-delivery-case") await selectDeliveryCase(id);
+            if (action === "confirm-delivery-case") await confirmDeliveryCase(id);
+            if (action === "cancel-delivery-selection") cancelDeliverySelection(id);
             if (action === "delete-case") await deleteCase(id);
             if (action === "back-to-cases") backToCases();
             if (action === "close-case-form") {

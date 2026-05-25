@@ -137,3 +137,18 @@ def test_login_rejects_invalid_credentials(monkeypatch) -> None:
         json={"identifier": "admin", "password": "wrong"},
     )
     assert response.status_code == 401, response.text
+
+
+def test_registered_user_can_login_again_in_a_new_client_session(monkeypatch) -> None:
+    _configure_test_security(monkeypatch)
+    first_client = TestClient(app)
+    _register_user(first_client)
+
+    second_client = TestClient(app)
+    response = second_client.post(
+        "/auth/login",
+        json={"identifier": "admin", "password": "secret123"},
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.json()["username"] == "admin"

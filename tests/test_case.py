@@ -6,8 +6,10 @@ import pytest
 
 from backend.database.connection import SessionLocal
 from backend.schemas.case import CaseCreate, CaseUpdate
+from backend.schemas.case_item import CaseItemCreate
 from backend.schemas.doctor import DoctorCreate
 from backend.services import case as case_service
+from backend.services import case_item as case_item_service
 from backend.services import doctor as doctor_service
 
 
@@ -48,6 +50,7 @@ def test_create_and_move_case_require_active_doctor() -> None:
             db,
             CaseCreate(doctor_id=doctor.id, patient_ref="Paciente ativo"),
         )
+        case_service.update_case(db, case.id, CaseUpdate(status="completed"))
         case_service.update_case(db, case.id, CaseUpdate(status="delivered"))
 
         doctor_service.delete_doctor(db, doctor.id)
@@ -66,13 +69,29 @@ def test_create_and_move_case_require_active_doctor() -> None:
             )
 
 
-def test_case_delivery_requires_reason_to_revert() -> None:
+def test_case_status_flow_is_linear() -> None:
     with SessionLocal() as db:
         doctor = _create_doctor(db)
         case = case_service.create_case(
             db,
             CaseCreate(doctor_id=doctor.id, patient_ref="Paciente B"),
         )
+
+        with pytest.raises(ValueError, match="Fluxo de status inválido"):
+            case_service.update_case(
+                db,
+                case.id,
+                CaseUpdate(status="delivered"),
+            )
+
+        completed = case_service.update_case(
+            db,
+            case.id,
+            CaseUpdate(status="completed"),
+        )
+
+        assert completed is not None
+        assert completed.status == "completed"
 
         delivered = case_service.update_case(
             db,
@@ -84,25 +103,60 @@ def test_case_delivery_requires_reason_to_revert() -> None:
         assert delivered.status == "delivered"
         assert delivered.delivered_at is not None
 
-        with pytest.raises(ValueError, match="obrigatório informar um motivo"):
+        with pytest.raises(ValueError, match="Fluxo de status inválido"):
             case_service.update_case(
                 db,
                 case.id,
                 CaseUpdate(status="completed"),
             )
 
-        reverted = case_service.update_case(
+        with pytest.raises(ValueError, match="Fluxo de status inválido"):
+            case_service.update_case(
+                db,
+                case.id,
+                CaseUpdate(status="pending"),
+            )
+
+
+def test_service_mode_case_recalculates_total_from_items() -> None:
+    with SessionLocal() as db:
+        doctor = _create_doctor(db)
+        case = case_service.create_case(
             db,
-            case.id,
-            CaseUpdate(
-                status="completed",
-                status_revert_reason="Ajuste técnico",
+            CaseCreate(
+                doctor_id=doctor.id,
+                patient_ref="Paciente Soma",
+                pricing_mode="services",
             ),
         )
 
-        assert reverted is not None
-        assert reverted.status == "completed"
-        assert reverted.status_revert_reason == "Ajuste técnico"
+        assert case.total_value is None
+
+        first_item = case_item_service.create_case_item(
+            db,
+            case.id,
+            CaseItemCreate(
+                tooth="11",
+                service_type="coroa",
+                unit_value="120,00",
+            ),
+        )
+        assert first_item.unit_value == Decimal("120.00")
+
+        second_item = case_item_service.create_case_item(
+            db,
+            case.id,
+            CaseItemCreate(
+                tooth="21",
+                service_type="faceta",
+                unit_value="80,00",
+            ),
+        )
+        assert second_item.unit_value == Decimal("80.00")
+
+        updated_case = case_service.get_case_by_id(db, case.id)
+        assert updated_case is not None
+        assert updated_case.total_value == Decimal("200.00")
 
 
 def test_case_delete_rules_and_soft_delete() -> None:
@@ -137,6 +191,7 @@ def test_case_delete_rules_and_soft_delete() -> None:
                 patient_ref="Paciente E",
             ),
         )
+        case_service.update_case(db, delivered_case.id, CaseUpdate(status="completed"))
         case_service.update_case(db, delivered_case.id, CaseUpdate(status="delivered"))
 
         deleted_delivered = case_service.delete_case(db, delivered_case.id)

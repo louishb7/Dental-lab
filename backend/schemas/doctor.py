@@ -10,10 +10,10 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
-PHONE_PATTERN = re.compile(r"^\(\d{2}\)9\d{4}-\d{4}$")
+PHONE_PATTERN = re.compile(r"^\(\d{2}\)\d{4,5}-\d{4}$")
 
 
-def normalize_brazilian_mobile(value: Optional[str]) -> Optional[str]:
+def normalize_brazilian_phone(value: Optional[str]) -> Optional[str]:
     if value is None:
         return None
 
@@ -25,10 +25,16 @@ def normalize_brazilian_mobile(value: Optional[str]) -> Optional[str]:
         return normalized
 
     digits = re.sub(r"\D", "", normalized)
-    if len(digits) == 11 and digits[2] == "9":
+    if len(digits) == 10:
+        return f"({digits[:2]}){digits[2:6]}-{digits[6:]}"
+
+    if len(digits) == 11:
         return f"({digits[:2]}){digits[2:7]}-{digits[7:]}"
 
-    raise ValueError("Telefone deve estar em branco ou seguir o padrão (xx)9xxxx-xxxx")
+    raise ValueError(
+        "Telefone deve estar em branco ou seguir o padrão "
+        "(xx)xxxx-xxxx / (xx)xxxxx-xxxx"
+    )
 
 
 class DoctorBase(BaseModel):
@@ -50,7 +56,7 @@ class DoctorBase(BaseModel):
     @field_validator("phone")
     @classmethod
     def validate_phone(cls, value: Optional[str]) -> Optional[str]:
-        return normalize_brazilian_mobile(value)
+        return normalize_brazilian_phone(value)
 
 
 class DoctorCreate(DoctorBase):
@@ -74,7 +80,7 @@ class DoctorUpdate(BaseModel):
     @field_validator("phone")
     @classmethod
     def validate_phone(cls, value: Optional[str]) -> Optional[str]:
-        return normalize_brazilian_mobile(value)
+        return normalize_brazilian_phone(value)
 
 
 class DoctorResponse(DoctorBase):

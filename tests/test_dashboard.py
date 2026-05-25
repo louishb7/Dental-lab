@@ -82,6 +82,7 @@ def test_dashboard_overview_and_list_counts(monkeypatch) -> None:
             CaseItemCreate(
                 tooth="11",
                 service_type="coroa",
+                unit_value="120,00",
             ),
         )
 
@@ -107,6 +108,11 @@ def test_dashboard_overview_and_list_counts(monkeypatch) -> None:
                 patient_ref="Paciente entregue",
                 total_value="250,00",
             ),
+        )
+        case_service.update_case(
+            db,
+            delivered_case.id,
+            CaseUpdate(status="completed"),
         )
         case_service.update_case(
             db,

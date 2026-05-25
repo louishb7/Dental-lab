@@ -17,6 +17,10 @@ class CaseBase(BaseModel):
     """Campos compartilhados entre criação, atualização e resposta de Case."""
 
     patient_ref: str = Field(..., description="Referência do paciente")
+    pricing_mode: Optional[Literal["fixed", "services"]] = Field(
+        default=None,
+        description="Tipo de cobrança do caso: valor fixo ou soma dos serviços",
+    )
     deadline: Optional[datetime] = Field(
         default=None, description="Prazo de entrega acordado"
     )

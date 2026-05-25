@@ -2,7 +2,7 @@
 Módulo contendo o modelo de dados do Item do Caso.
 """
 
-from sqlalchemy import Column, ForeignKey, Integer, String, Text
+from sqlalchemy import Column, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import relationship
 
 from backend.database.connection import Base
@@ -17,6 +17,7 @@ class CaseItem(Base):
         case_id (int): Chave estrangeira vinculando este item a um Case.
         tooth (str): Número do dente em FDI ou descrição livre.
         service_type (str): Tipo de serviço executado.
+        unit_value (Decimal | None): Valor unitário do serviço.
         material (str): Material utilizado.
         color (str): Cor ou tonalidade.
         notes (str): Observações específicas do item.
@@ -34,6 +35,7 @@ class CaseItem(Base):
     )
     tooth = Column(String(100), nullable=False)
     service_type = Column(String(100), nullable=False)
+    unit_value = Column(Numeric(10, 2), nullable=True)
     material = Column(String(100))
     color = Column(String(50))
     notes = Column(Text)
