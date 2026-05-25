@@ -1,304 +1,459 @@
+<!--
+Auditoria resumida antes da reorganizacao:
+- Renderizacao duplicada: renderDoctorsTable, renderCasesTable e renderItemsTable repetiam tbody, vazio e addEventListener por linha.
+- Fluxos duplicados: submitDoctor/submitCase/submitItem, deleteDoctor/deleteCase/deleteItem e editDoctor/editCase/editItem seguiam o mesmo padrao.
+- HTML flat: formulario e lista de doutores, formulario/lista/filtros de casos e formulario/tabela de itens ficavam sempre visiveis, apesar da relacao doutor -> caso -> item.
+- Caso aparecia em quatro lugares: formulario global, lista global filtravel, select de item e painel de detalhe. Item dependia de um select global de caso.
+- Os botoes de caso por linha eram excessivos; as acoes foram agrupadas em um menu compacto por linha.
+- O modo simples/completo do caso estava em botoes externos; agora e opcao dentro do formulario do caso.
+- Os listeners das tabelas eram recriados a cada render. Agora ha delegacao unica no container do app.
+-->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadista - Cadastro e Teste</title>
+    <title>Cadista - Interface de Teste</title>
     <style>
         :root {
-            --bg: #eef2f7;
+            --bg: #f4f6f8;
             --panel: #ffffff;
-            --text: #1f2937;
-            --muted: #6b7280;
-            --border: #d1d5db;
+            --text: #20242a;
+            --muted: #667085;
+            --border: #d7dde5;
+            --soft: #eef1f5;
             --accent: #2563eb;
             --accent-dark: #1d4ed8;
             --danger: #dc2626;
             --success: #047857;
             --warning: #b45309;
-            --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            --shadow: 0 12px 28px rgba(16, 24, 40, 0.08);
         }
 
         * { box-sizing: border-box; }
+
         body {
             margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            color: var(--text);
             min-height: 100vh;
-            background:
-                radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 30%),
-                linear-gradient(180deg, #f8fafc 0%, var(--bg) 100%);
+            color: var(--text);
+            background: var(--bg);
+            font-family: Arial, Helvetica, sans-serif;
         }
+
         .container {
-            max-width: 1280px;
+            max-width: 1180px;
             margin: 0 auto;
-            padding: 32px 20px 48px;
+            padding: 28px 18px 44px;
         }
+
         .hero {
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
-            gap: 16px;
-            margin-bottom: 24px;
+            gap: 18px;
+            margin-bottom: 18px;
         }
+
         .hero h1 {
             margin: 0;
-            font-size: clamp(2rem, 4vw, 3rem);
+            font-size: 2.25rem;
+            letter-spacing: 0;
         }
+
         .hero p {
             margin: 6px 0 0;
             color: var(--muted);
-            line-height: 1.5;
-            max-width: 72ch;
+            line-height: 1.45;
         }
-        .badge {
+
+        .api-badge,
+        .session-chip,
+        .status-badge,
+        .priority-badge {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
+            gap: 6px;
+            width: max-content;
             border-radius: 999px;
-            background: #eff6ff;
-            color: #1d4ed8;
-            font-size: 0.92rem;
+            font-size: 0.84rem;
+            font-weight: 700;
+            white-space: nowrap;
         }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 20px;
+
+        .api-badge {
+            padding: 8px 12px;
+            background: #e8f0fe;
+            color: #174ea6;
         }
+
+        .session-chip {
+            padding: 7px 10px;
+            background: #ecfdf3;
+            color: #027a48;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 18px;
+        }
+
         .auth-card {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
+
         .auth-grid {
             display: grid;
-            grid-template-columns: 1fr 1.1fr;
-            gap: 20px;
+            grid-template-columns: minmax(220px, 0.9fr) minmax(280px, 1.1fr);
+            gap: 18px;
         }
+
         .auth-copy {
-            border-radius: 16px;
-            padding: 20px;
-            background:
-                linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(255, 255, 255, 0.92)),
-                linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
-            border: 1px solid rgba(191, 219, 254, 0.9);
-        }
-        .auth-copy h3 {
-            margin: 0 0 12px;
-            font-size: 1.1rem;
-        }
-        .auth-copy p {
-            margin: 0 0 10px;
-            color: var(--text);
-            line-height: 1.55;
-        }
-        .auth-copy .meta {
-            margin-top: 12px;
-        }
-        .auth-subcard {
-            border: 1px solid rgba(209, 213, 219, 0.9);
-            border-radius: 16px;
-            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
             background: #f8fafc;
-            margin-bottom: 14px;
+            padding: 16px;
         }
-        .auth-subcard h3 {
-            margin: 0 0 14px;
+
+        .auth-copy h3,
+        .auth-form h3 {
+            margin: 0 0 12px;
             font-size: 1rem;
         }
-        .session-row {
+
+        .auth-copy p,
+        .meta {
+            color: var(--muted);
+            line-height: 1.45;
+        }
+
+        .auth-form {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fbfcfe;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .toolbar,
+        .level-header,
+        .form-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar {
+            margin-bottom: 14px;
+        }
+
+        .toolbar-left,
+        .button-row {
             display: flex;
             align-items: center;
             gap: 10px;
             flex-wrap: wrap;
-            margin-top: 10px;
         }
-        .session-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
-            border-radius: 999px;
-            background: #e0f2fe;
-            color: #075985;
-            font-weight: 700;
+
+        .level-header {
+            margin-bottom: 10px;
         }
-        .card {
-            background: var(--panel);
-            border: 1px solid rgba(209, 213, 219, 0.9);
-            border-radius: 18px;
-            box-shadow: var(--shadow);
-            padding: 20px;
-        }
-        .card h2 {
+
+        .level-title h2 {
             margin: 0;
-            font-size: 1.05rem;
+            font-size: 1.35rem;
         }
-        .toolbar {
+
+        .level-title p {
+            margin: 5px 0 0;
+            color: var(--muted);
+        }
+
+        .breadcrumb {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             align-items: center;
-            justify-content: space-between;
             flex-wrap: wrap;
             margin-bottom: 14px;
+            color: var(--muted);
+            font-size: 0.92rem;
         }
-        .toolbar-left {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-wrap: wrap;
+
+        .breadcrumb strong {
+            color: var(--text);
         }
+
+        .level-panel {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.18s ease, transform 0.18s ease;
+        }
+
+        .level-panel[hidden] {
+            display: none;
+            opacity: 0;
+            transform: translateY(8px);
+        }
+
         .message {
-            min-height: 22px;
-            margin: 0 0 14px;
-            font-size: 0.95rem;
+            min-height: 21px;
+            margin: 0 0 12px;
+            font-size: 0.94rem;
         }
+
         .message.error { color: var(--danger); }
         .message.success { color: var(--success); }
         .message.warning { color: var(--warning); }
-        .form-group { margin-bottom: 14px; }
+
+        form.context-form {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fbfcfe;
+            padding: 16px;
+            margin: 0 0 16px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px 14px;
+        }
+
+        .form-group {
+            margin: 0;
+        }
+
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+
         label {
             display: block;
-            font-weight: 700;
             margin-bottom: 6px;
+            font-weight: 700;
         }
-        input, textarea, select {
+
+        input,
+        textarea,
+        select {
             width: 100%;
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px 14px;
-            font: inherit;
+            border-radius: 8px;
             background: #fff;
             color: var(--text);
+            font: inherit;
+            padding: 10px 12px;
         }
-        input:focus, textarea:focus, select:focus {
-            outline: 2px solid rgba(37, 99, 235, 0.2);
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: 2px solid rgba(37, 99, 235, 0.18);
             border-color: var(--accent);
         }
+
         textarea {
-            min-height: 92px;
+            min-height: 82px;
             resize: vertical;
         }
-        .actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 10px;
+
+        .field-error {
+            display: block;
+            min-height: 18px;
+            margin-top: 4px;
+            color: var(--danger);
+            font-size: 0.82rem;
         }
+
+        .has-error input,
+        .has-error textarea,
+        .has-error select {
+            border-color: var(--danger);
+        }
+
         button {
             border: 0;
-            border-radius: 12px;
-            padding: 11px 14px;
+            border-radius: 8px;
+            padding: 10px 13px;
             font: inherit;
             font-weight: 700;
             cursor: pointer;
-            transition: transform 0.12s ease, background 0.12s ease, opacity 0.12s ease;
+            transition: background 0.12s ease, transform 0.12s ease, opacity 0.12s ease;
         }
-        button:hover { transform: translateY(-1px); }
+
+        button:hover {
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .btn-primary { background: var(--accent); color: #fff; }
         .btn-primary:hover { background: var(--accent-dark); }
-        .btn-secondary { background: #e5e7eb; color: #111827; }
+        .btn-secondary { background: #e7eaee; color: #111827; }
         .btn-danger { background: var(--danger); color: #fff; }
         .btn-warning { background: #f59e0b; color: #111827; }
-        .btn-small {
-            padding: 8px 10px;
-            border-radius: 10px;
-            font-size: 0.9rem;
+        .btn-small { padding: 7px 10px; font-size: 0.9rem; }
+
+        .table-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: 8px;
         }
-        .table-wrap { overflow-x: auto; }
+
         table {
             width: 100%;
             min-width: 720px;
             border-collapse: collapse;
+            background: #fff;
         }
-        th, td {
+
+        th,
+        td {
             padding: 12px 10px;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid #edf0f3;
             text-align: left;
-            vertical-align: top;
+            vertical-align: middle;
         }
+
+        tr:last-child td {
+            border-bottom: 0;
+        }
+
         th {
-            font-size: 0.8rem;
             color: var(--muted);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            background: #f8fafc;
+        }
+
+        .empty {
+            color: var(--muted);
+            padding: 16px 10px;
+        }
+
+        .status-badge {
+            padding: 5px 9px;
+            background: #eef2f6;
+            color: #364152;
+        }
+
+        .status-badge.pending { background: #dbeafe; color: #1d4ed8; }
+        .status-badge.completed { background: #fef3c7; color: #92400e; }
+        .status-badge.delivered { background: #dcfce7; color: #166534; }
+
+        .priority-badge {
+            padding: 5px 9px;
+            background: #eef2f6;
+            color: #344054;
+        }
+
+        .priority-badge.urgent {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .row-menu {
+            position: relative;
+            width: max-content;
+        }
+
+        .row-menu summary {
+            list-style: none;
+            border-radius: 8px;
+            background: #e7eaee;
+            padding: 7px 10px;
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .row-menu summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .row-menu[open] summary {
+            background: #d8dee6;
+        }
+
+        .row-menu-list {
+            min-width: 150px;
+            margin-top: 6px;
+            padding: 6px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: var(--shadow);
+        }
+
+        .row-menu-list button {
+            display: block;
+            width: 100%;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text);
+            text-align: left;
+            padding: 8px 9px;
+        }
+
+        .row-menu-list button:hover {
+            background: var(--soft);
+            transform: none;
+        }
+
+        .row-menu-list .danger {
+            color: var(--danger);
+        }
+
+        .case-summary {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .summary-item {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fbfcfe;
+            padding: 10px;
+        }
+
+        .summary-label {
+            color: var(--muted);
+            font-size: 0.78rem;
             text-transform: uppercase;
             letter-spacing: 0.04em;
         }
-        .empty {
-            color: var(--muted);
-            padding: 16px 0;
-        }
-        .row-actions {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .badge-status {
-            display: inline-flex;
-            align-items: center;
-            padding: 5px 10px;
-            border-radius: 999px;
-            font-size: 0.82rem;
+
+        .summary-value {
+            margin-top: 5px;
             font-weight: 700;
-            background: #f3f4f6;
-            color: #111827;
         }
-        .badge-status.pending { background: #dbeafe; color: #1d4ed8; }
-        .badge-status.completed { background: #fef3c7; color: #92400e; }
-        .badge-status.delivered { background: #dcfce7; color: #166534; }
-        .meta {
-            color: var(--muted);
-            font-size: 0.88rem;
-            line-height: 1.4;
-        }
-        .split {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .mode-label {
-            font-size: 0.92rem;
-            color: var(--muted);
-        }
-        .mode-toggle {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .mode-toggle .active {
-            background: var(--accent);
-            color: #fff;
-        }
-        .case-advanced {
-            margin-top: 8px;
-            padding-top: 6px;
-            border-top: 1px dashed #dbe3f0;
-        }
-        .case-mode-note {
-            margin: 12px 0 0;
-        }
-        .filter-bar {
-            display: grid;
-            grid-template-columns: 1fr 1fr auto auto;
-            gap: 10px;
-            align-items: end;
-            margin-bottom: 14px;
-        }
-        @media (max-width: 1180px) {
-            .grid { grid-template-columns: 1fr; }
-            .auth-grid { grid-template-columns: 1fr; }
-        }
-        @media (max-width: 720px) {
-            .filter-bar {
+
+        @media (max-width: 840px) {
+            .hero,
+            .auth-grid,
+            .form-grid,
+            .case-summary {
                 grid-template-columns: 1fr;
             }
-        }
-        @media (max-width: 900px) {
+
             .hero {
-                flex-direction: column;
                 align-items: flex-start;
+                flex-direction: column;
             }
-            .split {
-                grid-template-columns: 1fr;
+
+            .form-group.full {
+                grid-column: auto;
             }
         }
     </style>
@@ -308,66 +463,66 @@
     <div class="hero">
         <div>
             <h1>Cadista</h1>
-            <p>Cadastro e teste do fluxo real: doutores, casos e itens de caso. Esta página fala com a API em tempo real.</p>
+            <p>Interface de teste organizada pelo fluxo real: doutores, casos e itens.</p>
         </div>
-        <div class="badge">API: <span id="apiStatus">verificando...</span></div>
+        <div class="api-badge">API: <span id="apiStatus">verificando...</span></div>
     </div>
 
-    <section class="card auth-card">
+    <section id="authCard" class="card auth-card">
         <div class="toolbar">
             <div class="toolbar-left">
                 <h2>Acesso</h2>
-                <span id="sessionStatus" class="mode-label">Sessão: desconectada</span>
+                <span id="sessionStatus" class="meta">Sessao: desconectada</span>
             </div>
-            <div class="mode-toggle">
-                <button id="logoutButton" class="btn-danger btn-small" type="button">Sair</button>
-            </div>
+            <button id="logoutButton" class="btn-danger btn-small" type="button" hidden>Sair</button>
         </div>
         <p id="authMessage" class="message"></p>
         <div class="auth-grid">
             <div class="auth-copy">
-                <h3>Autenticação JWT de usuário único</h3>
-                <p>
-                    Este projeto usa uma sessão simples de um único usuário. O cadastro abaixo grava o usuário
-                    diretamente no banco de dados e o login valida o token pela API.
-                </p>
-                <p>
-                    O primeiro cadastro cria o usuário persistido. Depois disso, o login pode ser feito por usuário
-                    ou email.
-                </p>
-                <div class="meta" id="sessionMeta">Nenhuma sessão ativa.</div>
+                <h3>Autenticacao JWT</h3>
+                <p>Use cadastro ou login para liberar a interface de teste. A sessao fica salva localmente no navegador.</p>
+                <div id="sessionMeta" class="meta">Nenhuma sessao ativa.</div>
             </div>
             <div>
-                <form id="registerForm" class="auth-subcard">
-                    <h3>Cadastro do usuário</h3>
-                    <div class="form-group">
-                        <label for="registerEmail">Email *</label>
-                        <input id="registerEmail" type="email" autocomplete="email" required placeholder="voce@exemplo.com">
+                <form id="registerForm" class="auth-form" novalidate>
+                    <h3>Cadastro</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="registerEmail">Email *</label>
+                            <input id="registerEmail" type="email" autocomplete="email">
+                            <span class="field-error" data-error-for="registerEmail"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerUsername">Usuario *</label>
+                            <input id="registerUsername" type="text" autocomplete="username">
+                            <span class="field-error" data-error-for="registerUsername"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerPassword">Senha *</label>
+                            <input id="registerPassword" type="password" autocomplete="new-password">
+                            <span class="field-error" data-error-for="registerPassword"></span>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="registerUsername">Usuário *</label>
-                        <input id="registerUsername" type="text" autocomplete="username" required placeholder="admin">
-                    </div>
-                    <div class="form-group">
-                        <label for="registerPassword">Senha *</label>
-                        <input id="registerPassword" type="password" autocomplete="new-password" required placeholder="mínimo 6 caracteres">
-                    </div>
-                    <div class="actions">
-                        <button class="btn-primary" type="submit">Cadastrar usuário</button>
+                    <div class="button-row" style="margin-top: 12px;">
+                        <button class="btn-primary" type="submit">Cadastrar usuario</button>
                     </div>
                 </form>
 
-                <form id="loginForm" class="auth-subcard">
+                <form id="loginForm" class="auth-form" novalidate>
                     <h3>Login</h3>
-                    <div class="form-group">
-                        <label for="authIdentifier">Usuário ou email</label>
-                        <input id="authIdentifier" type="text" autocomplete="username" required>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="authIdentifier">Usuario ou email *</label>
+                            <input id="authIdentifier" type="text" autocomplete="username">
+                            <span class="field-error" data-error-for="authIdentifier"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="authPassword">Senha *</label>
+                            <input id="authPassword" type="password" autocomplete="current-password">
+                            <span class="field-error" data-error-for="authPassword"></span>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="authPassword">Senha</label>
-                        <input id="authPassword" type="password" autocomplete="current-password" required>
-                    </div>
-                    <div class="actions">
+                    <div class="button-row" style="margin-top: 12px;">
                         <button class="btn-primary" type="submit">Entrar</button>
                     </div>
                 </form>
@@ -375,275 +530,258 @@
         </div>
     </section>
 
-    <div id="appContent" hidden>
-    <div class="grid">
-        <section class="card">
-            <div class="toolbar">
-                <div class="toolbar-left">
-                    <h2>Doutores</h2>
-                    <span id="doctorFormMode" class="mode-label">Modo: criação</span>
-                </div>
-                <button id="refreshDoctorsButton" class="btn-secondary btn-small" type="button">Atualizar</button>
+    <main id="appContent" hidden>
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <span id="appSessionStatus" class="session-chip"></span>
             </div>
-            <p id="doctorMessage" class="message"></p>
+            <button id="appLogoutButton" class="btn-danger btn-small" type="button">Sair</button>
+        </div>
+        <nav id="breadcrumb" class="breadcrumb"></nav>
+        <p id="appMessage" class="message"></p>
 
-            <form id="doctorForm">
-                <input type="hidden" id="doctorId">
-                <div class="form-group">
-                    <label for="doctorName">Nome *</label>
-                    <input id="doctorName" type="text" required>
+        <section id="doctorsLevel" class="card level-panel">
+            <div class="level-header">
+                <div class="level-title">
+                    <h2>Doutores</h2>
+                    <p>Escolha um doutor para ver os casos vinculados.</p>
                 </div>
-                <div class="form-group">
-                    <label for="doctorClinic">Clínica</label>
-                    <input id="doctorClinic" type="text" placeholder="Clínica ou consultório">
+                <div class="button-row">
+                    <button id="newDoctorButton" class="btn-primary" type="button">Novo doutor</button>
+                    <button id="refreshDoctorsButton" class="btn-secondary" type="button">Atualizar</button>
                 </div>
-                <div class="form-group">
-                    <label for="doctorPhone">Telefone</label>
-                    <input id="doctorPhone" type="text" placeholder="(xx) xxxx-xxxx">
+            </div>
+
+            <form id="doctorForm" class="context-form" hidden novalidate>
+                <div class="form-header">
+                    <h3 id="doctorFormTitle">Novo doutor</h3>
+                    <button class="btn-secondary btn-small" type="button" data-action="close-doctor-form">Fechar</button>
                 </div>
-                <div class="form-group">
-                    <label for="doctorNotes">Observações</label>
-                    <textarea id="doctorNotes" placeholder="Informações adicionais"></textarea>
+                <input id="doctorId" type="hidden">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="doctorName">Nome *</label>
+                        <input id="doctorName" type="text">
+                        <span class="field-error" data-error-for="doctorName"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="doctorClinic">Clinica</label>
+                        <input id="doctorClinic" type="text">
+                        <span class="field-error" data-error-for="doctorClinic"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="doctorPhone">Telefone</label>
+                    <input id="doctorPhone" type="text" inputmode="numeric" autocomplete="tel" maxlength="14" placeholder="(xx)9xxxx-xxxx">
+                        <span class="field-error" data-error-for="doctorPhone"></span>
+                    </div>
+                    <div class="form-group full">
+                        <label for="doctorNotes">Observacoes</label>
+                        <textarea id="doctorNotes"></textarea>
+                        <span class="field-error" data-error-for="doctorNotes"></span>
+                    </div>
                 </div>
-                <div class="actions">
-                    <button class="btn-primary" type="submit" id="doctorSubmitButton">Salvar doutor</button>
-                    <button class="btn-secondary" type="button" id="doctorCancelButton" hidden>Cancelar edição</button>
+                <div class="button-row" style="margin-top: 12px;">
+                    <button id="doctorSubmitButton" class="btn-primary" type="submit">Salvar doutor</button>
+                    <button class="btn-secondary" type="button" data-action="close-doctor-form">Cancelar</button>
                 </div>
             </form>
 
-            <div class="split">
-                <div>
-                    <p class="meta">Selecione os doutores aqui e use a lista para editar/excluir.</p>
-                </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Clinica</th>
+                        <th>Telefone</th>
+                        <th>Acoes</th>
+                    </tr>
+                    </thead>
+                    <tbody id="doctorsTableBody">
+                    <tr><td colspan="4" class="empty">Carregando doutores...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </section>
 
-        <section class="card">
-            <div class="toolbar">
-                <div class="toolbar-left">
-                    <h2>Casos</h2>
-                    <span id="caseFormMode" class="mode-label">Modo: criação</span>
+        <section id="casesLevel" class="card level-panel" hidden>
+            <div class="level-header">
+                <div class="level-title">
+                    <h2 id="casesLevelTitle">Casos</h2>
+                    <p id="casesLevelMeta">Doutor selecionado</p>
                 </div>
-                <div class="mode-toggle">
-                    <button id="caseSimpleModeButton" class="btn-primary btn-small" type="button">Caso simples</button>
-                    <button id="caseFullModeButton" class="btn-secondary btn-small" type="button">Caso completo</button>
-                    <button id="refreshCasesButton" class="btn-secondary btn-small" type="button">Atualizar</button>
+                <div class="button-row">
+                    <button class="btn-secondary" type="button" data-action="back-to-doctors">Voltar</button>
+                    <button id="newCaseButton" class="btn-primary" type="button">Novo caso</button>
                 </div>
             </div>
-            <p id="caseMessage" class="message"></p>
 
-            <form id="caseForm">
-                <input type="hidden" id="caseId">
-                <div class="form-group">
-                    <label for="caseDoctorId">Doutor *</label>
-                    <select id="caseDoctorId" required></select>
+            <form id="caseForm" class="context-form" hidden novalidate>
+                <div class="form-header">
+                    <h3 id="caseFormTitle">Novo caso</h3>
+                    <button class="btn-secondary btn-small" type="button" data-action="close-case-form">Fechar</button>
                 </div>
-                <div class="form-group">
-                    <label for="casePatientRef">Referência do paciente *</label>
-                    <input id="casePatientRef" type="text" required placeholder="Nome ou código">
-                </div>
-                <div id="caseAdvancedFields" class="case-advanced">
+                <input id="caseId" type="hidden">
+                <input id="caseDoctorId" type="hidden">
+                <div class="form-grid">
                     <div class="form-group">
-                        <label for="caseDeadline">Prazo</label>
-                        <input id="caseDeadline" type="date">
+                        <label for="caseMode">Modo do formulario</label>
+                        <select id="caseMode">
+                            <option value="simple">Simples</option>
+                            <option value="full">Completo</option>
+                        </select>
+                        <span class="field-error" data-error-for="caseMode"></span>
                     </div>
                     <div class="form-group">
+                        <label for="casePatientRef">Referencia do paciente *</label>
+                        <input id="casePatientRef" type="text">
+                        <span class="field-error" data-error-for="casePatientRef"></span>
+                    </div>
+                    <div class="form-group case-full-field">
+                        <label for="caseDeadline">Prazo</label>
+                        <input id="caseDeadline" type="date">
+                        <span class="field-error" data-error-for="caseDeadline"></span>
+                    </div>
+                    <div class="form-group case-full-field">
                         <label for="casePriority">Prioridade</label>
                         <select id="casePriority">
                             <option value="normal">Normal</option>
                             <option value="urgent">Urgente</option>
                         </select>
+                        <span class="field-error" data-error-for="casePriority"></span>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group case-full-field">
                         <label for="caseTotalValue">Valor combinado</label>
                         <input id="caseTotalValue" type="text" inputmode="decimal" autocomplete="off" placeholder="0,00">
+                        <span class="field-error" data-error-for="caseTotalValue"></span>
                     </div>
-                    <div class="form-group">
-                        <label for="caseNotes">Observações</label>
-                        <textarea id="caseNotes" placeholder="Detalhes do caso"></textarea>
+                    <div class="form-group full case-full-field">
+                        <label for="caseNotes">Observacoes</label>
+                        <textarea id="caseNotes"></textarea>
+                        <span class="field-error" data-error-for="caseNotes"></span>
                     </div>
                 </div>
-                <div class="actions">
-                    <button class="btn-primary" type="submit" id="caseSubmitButton">Salvar caso</button>
-                    <button class="btn-secondary" type="button" id="caseCancelButton" hidden>Cancelar edição</button>
-                </div>
-                <p id="caseModeNote" class="meta case-mode-note">Modo simples: cria o caso e direciona para itens. Modo completo: registra os detalhes técnicos na criação.</p>
-            </form>
-        </section>
-
-        <section class="card">
-            <div class="toolbar">
-                <div class="toolbar-left">
-                    <h2>Itens do caso</h2>
-                    <span id="itemFormMode" class="mode-label">Modo: criação</span>
-                </div>
-                <button id="refreshItemsButton" class="btn-secondary btn-small" type="button">Atualizar</button>
-            </div>
-            <p id="itemMessage" class="message"></p>
-
-                <div class="form-group">
-                    <label for="itemCaseId">Caso selecionado *</label>
-                    <select id="itemCaseId" required></select>
-                </div>
-
-            <form id="itemForm">
-                <input type="hidden" id="itemId">
-                <div class="form-group">
-                    <label for="itemTooth">Dente / descrição *</label>
-                    <input id="itemTooth" type="text" required placeholder="11, 21, 36 ou descrição livre">
-                </div>
-                <div class="form-group">
-                    <label for="itemServiceType">Tipo de serviço *</label>
-                    <input id="itemServiceType" type="text" required placeholder="Coroa, faceta, prótese...">
-                </div>
-                <div class="form-group">
-                    <label for="itemMaterial">Material</label>
-                    <input id="itemMaterial" type="text" placeholder="Zircônia, metal-cerâmica...">
-                </div>
-                <div class="form-group">
-                    <label for="itemColor">Cor / tonalidade</label>
-                    <input id="itemColor" type="text" placeholder="A1, B2...">
-                </div>
-                <div class="form-group">
-                    <label for="itemNotes">Observações</label>
-                    <textarea id="itemNotes" placeholder="Detalhes técnicos"></textarea>
-                </div>
-                <div class="actions">
-                    <button class="btn-primary" type="submit" id="itemSubmitButton">Salvar item</button>
-                    <button class="btn-secondary" type="button" id="itemCancelButton" hidden>Cancelar edição</button>
+                <div class="button-row" style="margin-top: 12px;">
+                    <button id="caseSubmitButton" class="btn-primary" type="submit">Salvar caso</button>
+                    <button class="btn-secondary" type="button" data-action="close-case-form">Cancelar</button>
                 </div>
             </form>
-        </section>
-    </div>
 
-    <div class="split">
-        <section class="card">
-            <div class="toolbar">
-                <div class="toolbar-left">
-                    <h2>Lista de doutores</h2>
-                </div>
-            </div>
-            <p id="doctorListMessage" class="message"></p>
             <div class="table-wrap">
                 <table>
                     <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Nome</th>
-                        <th>Clínica</th>
-                        <th>Telefone</th>
-                        <th>Ações</th>
-                    </tr>
-                    </thead>
-                    <tbody id="doctorsTableBody">
-                        <tr><td colspan="5" class="empty">Carregando doutores...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <section class="card">
-            <div class="toolbar">
-                <div class="toolbar-left">
-                    <h2>Lista de casos</h2>
-                </div>
-            </div>
-            <div class="filter-bar">
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label for="caseListStatusFilter">Status</label>
-                    <select id="caseListStatusFilter">
-                        <option value="">Todos</option>
-                        <option value="pending">Pending</option>
-                        <option value="completed">Completed</option>
-                        <option value="delivered">Delivered</option>
-                    </select>
-                </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label for="caseListDoctorFilter">Doutor</label>
-                    <select id="caseListDoctorFilter">
-                        <option value="">Todos</option>
-                    </select>
-                </div>
-                <button id="applyCaseFiltersButton" class="btn-primary btn-small" type="button">Aplicar</button>
-                <button id="clearCaseFiltersButton" class="btn-secondary btn-small" type="button">Limpar</button>
-            </div>
-            <p id="caseListMessage" class="message"></p>
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Doutor</th>
                         <th>Paciente</th>
                         <th>Status</th>
                         <th>Prazo</th>
-                        <th>Ações</th>
+                        <th>Prioridade</th>
+                        <th>Valor</th>
+                        <th>Acoes</th>
                     </tr>
                     </thead>
                     <tbody id="casesTableBody">
-                        <tr><td colspan="6" class="empty">Carregando casos...</td></tr>
+                    <tr><td colspan="6" class="empty">Selecione um doutor.</td></tr>
                     </tbody>
                 </table>
             </div>
         </section>
-    </div>
 
-    <section class="card" id="selectedCaseSection" style="margin-top: 20px;">
-        <div class="toolbar">
-            <div class="toolbar-left">
-                <h2>Detalhe do caso</h2>
-                <span id="selectedCaseLabel" class="mode-label">Nenhum caso selecionado</span>
+        <section id="itemsLevel" class="card level-panel" hidden>
+            <div class="level-header">
+                <div class="level-title">
+                    <h2 id="itemsLevelTitle">Itens do caso</h2>
+                    <p id="itemsLevelMeta">Caso selecionado</p>
+                </div>
+                <div class="button-row">
+                    <button class="btn-secondary" type="button" data-action="back-to-cases">Voltar</button>
+                    <button id="newItemButton" class="btn-primary" type="button">Novo item</button>
+                </div>
             </div>
-            <div class="mode-toggle">
-                <button id="selectedCaseEditButton" class="btn-secondary btn-small" type="button">Editar caso</button>
-                <button id="selectedCaseDeleteButton" class="btn-danger btn-small" type="button">Excluir caso</button>
-                <button id="selectedCaseAddItemButton" class="btn-primary btn-small" type="button">Novo item</button>
+
+            <div id="caseSummary" class="case-summary"></div>
+
+            <form id="itemForm" class="context-form" hidden novalidate>
+                <div class="form-header">
+                    <h3 id="itemFormTitle">Novo item</h3>
+                    <button class="btn-secondary btn-small" type="button" data-action="close-item-form">Fechar</button>
+                </div>
+                <input id="itemId" type="hidden">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="itemTooth">Dente / descricao *</label>
+                        <input id="itemTooth" type="text" placeholder="11, 21, 36 ou descricao livre">
+                        <span class="field-error" data-error-for="itemTooth"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemServiceType">Servico *</label>
+                        <input id="itemServiceType" type="text" placeholder="Coroa, faceta, protese...">
+                        <span class="field-error" data-error-for="itemServiceType"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemMaterial">Material</label>
+                        <input id="itemMaterial" type="text" placeholder="Zirconia, metal-ceramica...">
+                        <span class="field-error" data-error-for="itemMaterial"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemColor">Cor</label>
+                        <input id="itemColor" type="text" placeholder="A1, B2...">
+                        <span class="field-error" data-error-for="itemColor"></span>
+                    </div>
+                    <div class="form-group full">
+                        <label for="itemNotes">Observacoes</label>
+                        <textarea id="itemNotes"></textarea>
+                        <span class="field-error" data-error-for="itemNotes"></span>
+                    </div>
+                </div>
+                <div class="button-row" style="margin-top: 12px;">
+                    <button id="itemSubmitButton" class="btn-primary" type="submit">Salvar item</button>
+                    <button class="btn-secondary" type="button" data-action="close-item-form">Cancelar</button>
+                </div>
+            </form>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Dente</th>
+                        <th>Servico</th>
+                        <th>Material</th>
+                        <th>Cor</th>
+                        <th>Acoes</th>
+                    </tr>
+                    </thead>
+                    <tbody id="itemsTableBody">
+                    <tr><td colspan="5" class="empty">Selecione um caso.</td></tr>
+                    </tbody>
+                </table>
             </div>
-        </div>
-        <p id="itemListMessage" class="message"></p>
-        <div id="caseDetailPanel" class="card" style="padding: 16px; margin-bottom: 18px; box-shadow: none;">
-            <div class="empty">Selecione um caso na lista para ver os detalhes completos.</div>
-        </div>
-        <div class="toolbar" style="margin-top: 4px;">
-            <div class="toolbar-left">
-                <h3 style="margin: 0;">Itens do caso</h3>
-            </div>
-        </div>
-        <div class="table-wrap">
-            <table>
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Dente / descrição</th>
-                    <th>Serviço</th>
-                    <th>Material</th>
-                    <th>Cor</th>
-                    <th>Ações</th>
-                </tr>
-                </thead>
-                <tbody id="itemsTableBody">
-                    <tr><td colspan="6" class="empty">Selecione um caso para listar os itens.</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
-</div>
+        </section>
+    </main>
 </div>
 
 <script>
-    const API_BASE_URL = "http://127.0.0.1:8001";
+    const API_BASE_URL = window.CADISTA_API_BASE_URL || "http://127.0.0.1:8000";
     const AUTH_SESSION_KEY = "cadista.auth.session";
+    const STATUS_FLOW = {
+        pending: "completed",
+        completed: "delivered",
+        delivered: null,
+    };
+
     const state = {
+        viewLevel: "doctors",
         doctors: [],
         cases: [],
+        selectedDoctorId: null,
         selectedCaseId: null,
-        editingDoctorId: null,
-        editingCaseId: null,
-        editingItemId: null,
-        caseCreationMode: "simple",
-        caseFilters: {
-            status: "",
-            doctorId: "",
+        editing: {
+            doctorId: null,
+            caseId: null,
+            itemId: null,
+        },
+        forms: {
+            doctorOpen: false,
+            caseOpen: false,
+            itemOpen: false,
         },
         auth: {
             token: "",
@@ -665,37 +803,55 @@
         logoutButton: document.getElementById("logoutButton"),
         sessionStatus: document.getElementById("sessionStatus"),
         sessionMeta: document.getElementById("sessionMeta"),
+        authCard: document.getElementById("authCard"),
         appContent: document.getElementById("appContent"),
-        doctorMessage: document.getElementById("doctorMessage"),
-        caseMessage: document.getElementById("caseMessage"),
-        itemMessage: document.getElementById("itemMessage"),
-        doctorListMessage: document.getElementById("doctorListMessage"),
-        caseListMessage: document.getElementById("caseListMessage"),
-        itemListMessage: document.getElementById("itemListMessage"),
+        appSessionStatus: document.getElementById("appSessionStatus"),
+        appLogoutButton: document.getElementById("appLogoutButton"),
+        breadcrumb: document.getElementById("breadcrumb"),
+        appMessage: document.getElementById("appMessage"),
+        doctorsLevel: document.getElementById("doctorsLevel"),
+        casesLevel: document.getElementById("casesLevel"),
+        itemsLevel: document.getElementById("itemsLevel"),
         doctorsTableBody: document.getElementById("doctorsTableBody"),
         casesTableBody: document.getElementById("casesTableBody"),
         itemsTableBody: document.getElementById("itemsTableBody"),
-        caseDetailPanel: document.getElementById("caseDetailPanel"),
-        doctorFormMode: document.getElementById("doctorFormMode"),
-        caseFormMode: document.getElementById("caseFormMode"),
-        caseModeNote: document.getElementById("caseModeNote"),
-        caseAdvancedFields: document.getElementById("caseAdvancedFields"),
-        caseSimpleModeButton: document.getElementById("caseSimpleModeButton"),
-        caseFullModeButton: document.getElementById("caseFullModeButton"),
-        selectedCaseEditButton: document.getElementById("selectedCaseEditButton"),
-        selectedCaseDeleteButton: document.getElementById("selectedCaseDeleteButton"),
-        selectedCaseAddItemButton: document.getElementById("selectedCaseAddItemButton"),
-        caseListStatusFilter: document.getElementById("caseListStatusFilter"),
-        caseListDoctorFilter: document.getElementById("caseListDoctorFilter"),
-        applyCaseFiltersButton: document.getElementById("applyCaseFiltersButton"),
-        clearCaseFiltersButton: document.getElementById("clearCaseFiltersButton"),
-        itemFormMode: document.getElementById("itemFormMode"),
-        selectedCaseLabel: document.getElementById("selectedCaseLabel"),
-        caseDoctorId: document.getElementById("caseDoctorId"),
-        itemCaseId: document.getElementById("itemCaseId"),
         doctorForm: document.getElementById("doctorForm"),
         caseForm: document.getElementById("caseForm"),
         itemForm: document.getElementById("itemForm"),
+        doctorFormTitle: document.getElementById("doctorFormTitle"),
+        caseFormTitle: document.getElementById("caseFormTitle"),
+        itemFormTitle: document.getElementById("itemFormTitle"),
+        doctorSubmitButton: document.getElementById("doctorSubmitButton"),
+        caseSubmitButton: document.getElementById("caseSubmitButton"),
+        itemSubmitButton: document.getElementById("itemSubmitButton"),
+        casesLevelTitle: document.getElementById("casesLevelTitle"),
+        casesLevelMeta: document.getElementById("casesLevelMeta"),
+        itemsLevelTitle: document.getElementById("itemsLevelTitle"),
+        itemsLevelMeta: document.getElementById("itemsLevelMeta"),
+        caseSummary: document.getElementById("caseSummary"),
+        caseMode: document.getElementById("caseMode"),
+        caseTotalValue: document.getElementById("caseTotalValue"),
+    };
+
+    const fields = {
+        doctorId: document.getElementById("doctorId"),
+        doctorName: document.getElementById("doctorName"),
+        doctorClinic: document.getElementById("doctorClinic"),
+        doctorPhone: document.getElementById("doctorPhone"),
+        doctorNotes: document.getElementById("doctorNotes"),
+        caseId: document.getElementById("caseId"),
+        caseDoctorId: document.getElementById("caseDoctorId"),
+        casePatientRef: document.getElementById("casePatientRef"),
+        caseDeadline: document.getElementById("caseDeadline"),
+        casePriority: document.getElementById("casePriority"),
+        caseTotalValue: document.getElementById("caseTotalValue"),
+        caseNotes: document.getElementById("caseNotes"),
+        itemId: document.getElementById("itemId"),
+        itemTooth: document.getElementById("itemTooth"),
+        itemServiceType: document.getElementById("itemServiceType"),
+        itemMaterial: document.getElementById("itemMaterial"),
+        itemColor: document.getElementById("itemColor"),
+        itemNotes: document.getElementById("itemNotes"),
     };
 
     function setMessage(target, text, type = "") {
@@ -716,7 +872,7 @@
         if (!value) return "-";
         const date = new Date(value);
         if (Number.isNaN(date.getTime())) return "-";
-        return date.toLocaleString("pt-BR");
+        return date.toLocaleDateString("pt-BR");
     }
 
     function formatDateInput(value) {
@@ -729,10 +885,10 @@
     }
 
     function formatMoneyDisplay(value) {
-        if (value === null || value === undefined || value === "") return "";
+        if (value === null || value === undefined || value === "") return "-";
         const normalized = String(value).trim().replace(/\./g, "").replace(",", ".");
         const numeric = Number(normalized);
-        if (Number.isNaN(numeric)) return "";
+        if (Number.isNaN(numeric)) return "-";
         return numeric.toLocaleString("pt-BR", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
@@ -742,12 +898,23 @@
     function formatMoneyMask(value) {
         const digits = String(value ?? "").replace(/\D/g, "");
         if (!digits) return "";
-
         const cents = digits.padStart(3, "0");
         const integerPart = cents.slice(0, -2);
         const decimalPart = cents.slice(-2);
-        const formattedInteger = Number(integerPart || "0").toLocaleString("pt-BR");
-        return `${formattedInteger},${decimalPart}`;
+        return `${Number(integerPart || "0").toLocaleString("pt-BR")},${decimalPart}`;
+    }
+
+    function formatBrazilianMobileMask(value) {
+        const digits = String(value ?? "").replace(/\D/g, "").slice(0, 11);
+        if (!digits) return "";
+        if (digits.length <= 2) return `(${digits}`;
+        if (digits.length <= 7) return `(${digits.slice(0, 2)})${digits.slice(2)}`;
+        return `(${digits.slice(0, 2)})${digits.slice(2, 7)}-${digits.slice(7)}`;
+    }
+
+    function isValidBrazilianMobile(value) {
+        if (!value.trim()) return true;
+        return /^\(\d{2}\)9\d{4}-\d{4}$/.test(value.trim());
     }
 
     function moneyToDecimal(value) {
@@ -762,45 +929,83 @@
             .catch(() => `HTTP ${response.status}`);
     }
 
-    function updateAuthUi() {
-        const isAuthenticated = Boolean(state.auth.token);
+    function clearFieldErrors(form) {
+        form.querySelectorAll(".form-group").forEach(group => group.classList.remove("has-error"));
+        form.querySelectorAll(".field-error").forEach(error => {
+            error.textContent = "";
+        });
+    }
 
-        el.sessionStatus.textContent = isAuthenticated
-            ? `Sessão ativa: ${state.auth.username}`
-            : "Sessão: desconectada";
-        el.sessionMeta.textContent = isAuthenticated
-            ? `Usuário autenticado: ${state.auth.username} (${state.auth.email || "sem email"}). O token fica salvo localmente neste navegador.`
-            : "Nenhuma sessão ativa.";
-        el.logoutButton.hidden = !isAuthenticated;
-        el.appContent.hidden = !isAuthenticated;
+    function setFieldError(input, text) {
+        const group = input.closest(".form-group");
+        const error = document.querySelector(`[data-error-for="${input.id}"]`);
+        if (group) group.classList.add("has-error");
+        if (error) error.textContent = text;
+    }
 
-        if (isAuthenticated) {
-            setMessage(el.authMessage, "Sessão autenticada com sucesso.", "success");
+    function requireField(input, label) {
+        if (input.value.trim()) return true;
+        setFieldError(input, `${label} e obrigatorio.`);
+        return false;
+    }
+
+    function validateRegisterForm() {
+        clearFieldErrors(el.registerForm);
+        let valid = true;
+        valid = requireField(el.registerEmail, "Email") && valid;
+        valid = requireField(el.registerUsername, "Usuario") && valid;
+        valid = requireField(el.registerPassword, "Senha") && valid;
+        if (el.registerPassword.value && el.registerPassword.value.length < 6) {
+            setFieldError(el.registerPassword, "Senha deve ter ao menos 6 caracteres.");
+            valid = false;
         }
+        return valid;
     }
 
-    function saveSession(token, username, email = "") {
-        state.auth.token = token;
-        state.auth.username = username;
-        state.auth.email = email;
-        localStorage.setItem(
-            AUTH_SESSION_KEY,
-            JSON.stringify({
-                token,
-                username,
-                email,
-            }),
-        );
-        updateAuthUi();
+    function validateLoginForm() {
+        clearFieldErrors(el.loginForm);
+        let valid = true;
+        valid = requireField(el.authIdentifier, "Usuario ou email") && valid;
+        valid = requireField(el.authPassword, "Senha") && valid;
+        return valid;
     }
 
-    function clearSession(message = "Sessão encerrada.") {
-        state.auth.token = "";
-        state.auth.username = "";
-        state.auth.email = "";
-        localStorage.removeItem(AUTH_SESSION_KEY);
-        updateAuthUi();
-        setMessage(el.authMessage, message, "warning");
+    function validateDoctorForm() {
+        clearFieldErrors(el.doctorForm);
+        let valid = true;
+        valid = requireField(fields.doctorName, "Nome") && valid;
+        if (!isValidBrazilianMobile(fields.doctorPhone.value)) {
+            setFieldError(fields.doctorPhone, "Telefone deve ficar em branco ou seguir o padrao (xx)9xxxx-xxxx.");
+            valid = false;
+        }
+        return valid;
+    }
+
+    function validateCaseForm() {
+        clearFieldErrors(el.caseForm);
+        let valid = true;
+        valid = requireField(fields.casePatientRef, "Referencia do paciente") && valid;
+        if (!Number(fields.caseDoctorId.value)) {
+            setMessage(el.appMessage, "Selecione um doutor antes de criar o caso.", "error");
+            valid = false;
+        }
+        return valid;
+    }
+
+    function validateItemForm() {
+        clearFieldErrors(el.itemForm);
+        let valid = true;
+        valid = requireField(fields.itemTooth, "Dente / descricao") && valid;
+        valid = requireField(fields.itemServiceType, "Servico") && valid;
+        const tooth = fields.itemTooth.value.trim();
+        if (/^\d+$/.test(tooth)) {
+            const toothNumber = Number(tooth);
+            if (toothNumber < 11 || toothNumber > 48) {
+                setFieldError(fields.itemTooth, "Quando numerico, use um dente entre 11 e 48.");
+                valid = false;
+            }
+        }
+        return valid;
     }
 
     function authHeaders(extraHeaders = {}) {
@@ -812,15 +1017,54 @@
     }
 
     async function authFetch(url, options = {}) {
-        const headers = authHeaders(options.headers || {});
         const response = await fetch(url, {
             ...options,
-            headers,
+            headers: authHeaders(options.headers || {}),
         });
         if (response.status === 401 && state.auth.token) {
-            clearSession("Sessão expirada. Faça login novamente.");
+            clearSession("Sessao expirada. Faca login novamente.");
         }
         return response;
+    }
+
+    async function apiRequest(path, options = {}) {
+        const response = await authFetch(`${API_BASE_URL}${path}`, options);
+        if (!response.ok) throw new Error(await readError(response));
+        if (response.status === 204) return null;
+        return response.json();
+    }
+
+    function updateAuthUi() {
+        const isAuthenticated = Boolean(state.auth.token);
+        el.sessionStatus.textContent = isAuthenticated
+            ? `Sessao ativa: ${state.auth.username}`
+            : "Sessao: desconectada";
+        el.sessionMeta.textContent = isAuthenticated
+            ? `Usuario autenticado: ${state.auth.username} (${state.auth.email || "sem email"}).`
+            : "Nenhuma sessao ativa.";
+        el.appSessionStatus.textContent = isAuthenticated
+            ? `Sessao ativa: ${state.auth.username}`
+            : "";
+        el.logoutButton.hidden = !isAuthenticated;
+        el.authCard.hidden = isAuthenticated;
+        el.appContent.hidden = !isAuthenticated;
+    }
+
+    function saveSession(token, username, email = "") {
+        state.auth.token = token;
+        state.auth.username = username;
+        state.auth.email = email;
+        localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({ token, username, email }));
+        updateAuthUi();
+    }
+
+    function clearSession(message = "Sessao encerrada.") {
+        state.auth.token = "";
+        state.auth.username = "";
+        state.auth.email = "";
+        localStorage.removeItem(AUTH_SESSION_KEY);
+        updateAuthUi();
+        setMessage(el.authMessage, message, "warning");
     }
 
     async function restoreSession() {
@@ -842,13 +1086,11 @@
             state.auth.username = parsed.username;
             state.auth.email = parsed.email || "";
 
-            const response = await authFetch(`${API_BASE_URL}/auth/me`);
-            if (!response.ok) throw new Error(await readError(response));
-
-            const data = await response.json();
-            state.auth.username = data.username || parsed.username;
-            state.auth.email = data.email || parsed.email || "";
+            const profile = await apiRequest("/auth/me");
+            state.auth.username = profile.username || parsed.username;
+            state.auth.email = profile.email || parsed.email || "";
             updateAuthUi();
+            setMessage(el.authMessage, "Sessao restaurada.", "success");
             return true;
         } catch (error) {
             localStorage.removeItem(AUTH_SESSION_KEY);
@@ -856,618 +1098,578 @@
             state.auth.username = "";
             state.auth.email = "";
             updateAuthUi();
-            setMessage(el.authMessage, error.message || "A sessão salva expirou.", "warning");
+            setMessage(el.authMessage, error.message || "A sessao salva expirou.", "warning");
             return false;
         }
     }
 
-    function doctorNameById(doctorId) {
-        const doctor = state.doctors.find(item => item.id === doctorId);
-        return doctor ? doctor.name : `#${doctorId}`;
+    function selectedDoctor() {
+        return state.doctors.find(doctor => doctor.id === state.selectedDoctorId) || null;
     }
 
-    function caseLabelById(caseId) {
-        const item = state.cases.find(entry => entry.id === caseId);
-        if (!item) return `#${caseId}`;
-        return `#${item.id} - ${item.patient_ref}`;
+    function selectedCase() {
+        return state.cases.find(caseItem => caseItem.id === state.selectedCaseId) || null;
     }
 
-    function currentSelectedCase() {
-        return state.cases.find(item => item.id === state.selectedCaseId) || null;
+    function doctorNameById(id) {
+        const doctor = state.doctors.find(item => item.id === id);
+        return doctor ? doctor.name : `#${id}`;
     }
 
-    function resetDoctorForm() {
-        el.doctorForm.reset();
-        document.getElementById("doctorId").value = "";
-        document.getElementById("doctorSubmitButton").textContent = "Salvar doutor";
-        document.getElementById("doctorCancelButton").hidden = true;
-        el.doctorFormMode.textContent = "Modo: criação";
-        state.editingDoctorId = null;
+    function casesForSelectedDoctor() {
+        if (!state.selectedDoctorId) return [];
+        return state.cases.filter(caseItem => caseItem.doctor_id === state.selectedDoctorId);
     }
 
-    function resetCaseForm() {
-        el.caseForm.reset();
-        document.getElementById("caseId").value = "";
-        document.getElementById("caseCancelButton").hidden = true;
-        el.caseFormMode.textContent = "Modo: criação";
-        state.editingCaseId = null;
-        document.getElementById("casePriority").value = "normal";
-        document.getElementById("caseTotalValue").value = "";
-        updateCaseModeUi(state.caseCreationMode);
+    function actionMenu(buttons) {
+        return `
+            <details class="row-menu">
+                <summary>Acoes</summary>
+                <div class="row-menu-list">
+                    ${buttons.join("")}
+                </div>
+            </details>
+        `;
     }
 
-    function resetItemForm() {
-        el.itemForm.reset();
-        document.getElementById("itemId").value = "";
-        document.getElementById("itemSubmitButton").textContent = "Salvar item";
-        document.getElementById("itemCancelButton").hidden = true;
-        el.itemFormMode.textContent = "Modo: criação";
-        state.editingItemId = null;
+    function menuButton(action, id, label, extraClass = "") {
+        const classes = extraClass ? ` class="${extraClass}"` : "";
+        return `<button type="button" data-action="${action}" data-id="${id}"${classes}>${label}</button>`;
     }
 
-    function setSelectedCase(caseId) {
-        state.selectedCaseId = caseId;
-        el.selectedCaseLabel.textContent = caseId ? caseLabelById(caseId) : "Nenhum caso selecionado";
-        el.itemCaseId.value = caseId ? String(caseId) : "";
-        renderSelectedCaseDetails();
+    function statusBadge(status) {
+        return `<span class="status-badge ${escapeText(status)}">${escapeText(status)}</span>`;
     }
 
-    function updateCaseModeUi(mode) {
-        state.caseCreationMode = mode;
-        const isSimple = mode === "simple";
-        el.caseAdvancedFields.hidden = isSimple;
-        el.caseFormMode.textContent = isSimple ? "Modo: criação simples" : "Modo: criação completa";
-        el.caseModeNote.textContent = isSimple
-            ? "Modo simples: cria o caso e direciona para itens."
-            : "Modo completo: registra os detalhes técnicos na criação.";
-        document.getElementById("caseSubmitButton").textContent = state.editingCaseId
-            ? "Atualizar caso"
-            : (isSimple ? "Criar caso simples" : "Salvar caso");
-        el.caseSimpleModeButton.classList.toggle("active", isSimple);
-        el.caseFullModeButton.classList.toggle("active", !isSimple);
+    function priorityBadge(priority) {
+        const value = priority || "normal";
+        return `<span class="priority-badge ${escapeText(value)}">${escapeText(value)}</span>`;
     }
 
-    function renderDoctorSelect() {
-        const options = state.doctors.length
-            ? state.doctors.map(doctor => `<option value="${doctor.id}">${escapeText(doctor.name)}</option>`).join("")
-            : `<option value="">Nenhum doutor cadastrado</option>`;
-        el.caseDoctorId.innerHTML = options;
-    }
-
-    function renderCaseFilterSelects() {
-        const doctorOptions = [
-            `<option value="">Todos</option>`,
-            ...state.doctors.map(doctor => (
-                `<option value="${doctor.id}">${escapeText(doctor.name)}</option>`
-            )),
-        ].join("");
-
-        el.caseListDoctorFilter.innerHTML = doctorOptions;
-        el.caseListStatusFilter.value = state.caseFilters.status;
-        el.caseListDoctorFilter.value = state.caseFilters.doctorId;
-    }
-
-    function buildCaseQueryParams() {
-        const params = new URLSearchParams();
-        if (state.caseFilters.status) {
-            params.set("status", state.caseFilters.status);
-        }
-        if (state.caseFilters.doctorId) {
-            params.set("doctor_id", state.caseFilters.doctorId);
-        }
-        return params.toString();
-    }
-
-    function renderSelectedCaseDetails() {
-        const currentCase = currentSelectedCase();
-
-        const disabled = !currentCase;
-        el.selectedCaseEditButton.disabled = disabled;
-        el.selectedCaseDeleteButton.disabled = disabled;
-        el.selectedCaseAddItemButton.disabled = disabled;
-
-        if (!currentCase) {
-            el.caseDetailPanel.innerHTML = `<div class="empty">Selecione um caso na lista para ver os detalhes completos.</div>`;
+    function renderTable(tbody, rows, columns, emptyText) {
+        if (!rows.length) {
+            tbody.innerHTML = `<tr><td colspan="${columns.length}" class="empty">${escapeText(emptyText)}</td></tr>`;
             return;
         }
 
-        const items = currentCase.items || [];
-        el.caseDetailPanel.innerHTML = `
-            <div class="split" style="margin-top: 0;">
-                <div>
-                    <h3 style="margin-top: 0;">#${currentCase.id} - ${escapeText(currentCase.patient_ref)}</h3>
-                    <div class="meta">Doutor: ${escapeText(doctorNameById(currentCase.doctor_id))}</div>
-                    <div class="meta">Status: <span class="badge-status ${currentCase.status}">${escapeText(currentCase.status)}</span></div>
-                    <div class="meta">Prioridade: ${escapeText(currentCase.priority || "normal")}</div>
-                    <div class="meta">Prazo: ${formatDate(currentCase.deadline)}</div>
-                    <div class="meta">Valor combinado: ${formatMoneyDisplay(currentCase.total_value) || "-"}</div>
-                    <div class="meta">Itens vinculados: ${items.length}</div>
-                </div>
-                <div>
-                    <div class="meta">Criado em: ${formatDate(currentCase.created_at)}</div>
-                    <div class="meta">Entregue em: ${formatDate(currentCase.delivered_at)}</div>
-                    <div class="meta">Removido em: ${formatDate(currentCase.deleted_at)}</div>
-                    <div class="meta">Motivo de reversão: ${escapeText(currentCase.status_revert_reason || "-")}</div>
-                    <div class="meta" style="margin-top: 10px;">Observações:</div>
-                    <div>${escapeText(currentCase.notes || "-")}</div>
-                </div>
+        tbody.innerHTML = rows.map(row => `
+            <tr>
+                ${columns.map(column => `<td>${column.render(row)}</td>`).join("")}
+            </tr>
+        `).join("");
+    }
+
+    function renderDoctorsTable() {
+        renderTable(
+            el.doctorsTableBody,
+            state.doctors,
+            [
+                { render: doctor => `<strong>${escapeText(doctor.name)}</strong>` },
+                { render: doctor => escapeText(doctor.clinic_name || "-") },
+                { render: doctor => escapeText(doctor.phone || "-") },
+                {
+                    render: doctor => actionMenu([
+                        menuButton("view-doctor-cases", doctor.id, "Ver casos"),
+                        menuButton("edit-doctor", doctor.id, "Editar"),
+                        menuButton("delete-doctor", doctor.id, "Excluir", "danger"),
+                    ]),
+                },
+            ],
+            "Nenhum doutor cadastrado.",
+        );
+    }
+
+    function renderCasesTable() {
+        const rows = casesForSelectedDoctor();
+        renderTable(
+            el.casesTableBody,
+            rows,
+            [
+                { render: caseItem => `<strong>${escapeText(caseItem.patient_ref)}</strong><div class="meta">#${caseItem.id}</div>` },
+                { render: caseItem => statusBadge(caseItem.status) },
+                { render: caseItem => formatDate(caseItem.deadline) },
+                { render: caseItem => priorityBadge(caseItem.priority) },
+                { render: caseItem => formatMoneyDisplay(caseItem.total_value) },
+                {
+                    render: caseItem => {
+                        const nextStatus = STATUS_FLOW[caseItem.status];
+                        return actionMenu([
+                            menuButton("view-case-items", caseItem.id, "Ver itens"),
+                            menuButton("edit-case", caseItem.id, "Editar"),
+                            nextStatus
+                                ? menuButton("advance-case-status", caseItem.id, `Avancar para ${nextStatus}`)
+                                : `<button type="button" disabled>Status final</button>`,
+                            menuButton("delete-case", caseItem.id, "Excluir", "danger"),
+                        ]);
+                    },
+                },
+            ],
+            "Este doutor ainda nao possui casos.",
+        );
+    }
+
+    function renderItemsTable() {
+        const caseItem = selectedCase();
+        const items = caseItem?.items || [];
+        renderTable(
+            el.itemsTableBody,
+            items,
+            [
+                { render: item => escapeText(item.tooth) },
+                { render: item => escapeText(item.service_type) },
+                { render: item => escapeText(item.material || "-") },
+                { render: item => escapeText(item.color || "-") },
+                {
+                    render: item => actionMenu([
+                        menuButton("edit-item", item.id, "Editar"),
+                        menuButton("delete-item", item.id, "Excluir", "danger"),
+                    ]),
+                },
+            ],
+            "Este caso ainda nao possui itens.",
+        );
+    }
+
+    function renderBreadcrumb() {
+        const doctor = selectedDoctor();
+        const caseItem = selectedCase();
+        const parts = ["<strong>Doutores</strong>"];
+
+        if (doctor) {
+            parts.push(escapeText(doctor.name));
+        }
+        if (caseItem) {
+            parts.push(`Caso #${caseItem.id} - ${escapeText(caseItem.patient_ref)}`);
+        }
+
+        el.breadcrumb.innerHTML = parts.join("<span>&gt;</span>");
+    }
+
+    function renderCaseSummary() {
+        const caseItem = selectedCase();
+        if (!caseItem) {
+            el.caseSummary.innerHTML = "";
+            return;
+        }
+
+        el.caseSummary.innerHTML = `
+            <div class="summary-item">
+                <div class="summary-label">Paciente</div>
+                <div class="summary-value">${escapeText(caseItem.patient_ref)}</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Status</div>
+                <div class="summary-value">${statusBadge(caseItem.status)}</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Prazo</div>
+                <div class="summary-value">${formatDate(caseItem.deadline)}</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Valor</div>
+                <div class="summary-value">${formatMoneyDisplay(caseItem.total_value)}</div>
             </div>
         `;
     }
 
-    function renderCaseSelect() {
-        if (!state.cases.length) {
-            el.itemCaseId.innerHTML = `<option value="">Nenhum caso cadastrado</option>`;
-            setSelectedCase(null);
-            return;
+    function renderLevel() {
+        el.doctorsLevel.hidden = state.viewLevel !== "doctors";
+        el.casesLevel.hidden = state.viewLevel !== "cases";
+        el.itemsLevel.hidden = state.viewLevel !== "items";
+
+        const doctor = selectedDoctor();
+        const caseItem = selectedCase();
+
+        if (doctor) {
+            el.casesLevelTitle.textContent = `Casos de ${doctor.name}`;
+            el.casesLevelMeta.textContent = `${doctor.clinic_name || "Sem clinica"} · ${doctor.phone || "Sem telefone"}`;
         }
 
-        el.itemCaseId.innerHTML = state.cases
-            .map(caseItem => `<option value="${caseItem.id}">#${caseItem.id} - ${escapeText(caseItem.patient_ref)}</option>`)
-            .join("");
-
-        if (!state.selectedCaseId || !state.cases.some(item => item.id === state.selectedCaseId)) {
-            state.selectedCaseId = state.cases[0].id;
+        if (caseItem) {
+            el.itemsLevelTitle.textContent = `Caso #${caseItem.id} - ${caseItem.patient_ref}`;
+            el.itemsLevelMeta.innerHTML = `${statusBadge(caseItem.status)} <span class="meta">Doutor: ${escapeText(doctorNameById(caseItem.doctor_id))}</span>`;
         }
 
-        setSelectedCase(state.selectedCaseId);
+        renderBreadcrumb();
+        renderFormVisibility();
+        renderDoctorsTable();
+        renderCasesTable();
+        renderCaseSummary();
+        renderItemsTable();
     }
 
-    function renderDoctorsTable() {
-        if (!state.doctors.length) {
-            el.doctorsTableBody.innerHTML = `<tr><td colspan="5" class="empty">Nenhum doutor cadastrado.</td></tr>`;
-            return;
-        }
-
-        el.doctorsTableBody.innerHTML = state.doctors.map(doctor => `
-            <tr>
-                <td>${doctor.id}</td>
-                <td>${escapeText(doctor.name)}</td>
-                <td>${escapeText(doctor.clinic_name || "-")}</td>
-                <td>${escapeText(doctor.phone || "-")}</td>
-                <td>
-                    <div class="row-actions">
-                        <button class="btn-secondary btn-small" type="button" data-edit-doctor="${doctor.id}">Editar</button>
-                        <button class="btn-danger btn-small" type="button" data-delete-doctor="${doctor.id}">Excluir</button>
-                    </div>
-                </td>
-            </tr>
-        `).join("");
-
-        document.querySelectorAll("[data-edit-doctor]").forEach(button => {
-            button.addEventListener("click", () => editDoctor(Number(button.dataset.editDoctor)));
-        });
-        document.querySelectorAll("[data-delete-doctor]").forEach(button => {
-            button.addEventListener("click", () => deleteDoctor(Number(button.dataset.deleteDoctor)));
+    function renderFormVisibility() {
+        el.doctorForm.hidden = !state.forms.doctorOpen;
+        el.caseForm.hidden = !state.forms.caseOpen;
+        el.itemForm.hidden = !state.forms.itemOpen;
+        document.querySelectorAll(".case-full-field").forEach(field => {
+            field.hidden = el.caseMode.value === "simple" && !state.editing.caseId;
         });
     }
 
-    function renderCasesTable() {
-        if (!state.cases.length) {
-            el.casesTableBody.innerHTML = `<tr><td colspan="6" class="empty">Nenhum caso cadastrado.</td></tr>`;
-            return;
-        }
-
-        el.casesTableBody.innerHTML = state.cases.map(caseItem => `
-            <tr>
-                <td>${caseItem.id}</td>
-                <td>${escapeText(doctorNameById(caseItem.doctor_id))}</td>
-                <td>
-                    <div><strong>${escapeText(caseItem.patient_ref)}</strong></div>
-                    <div class="meta">Valor: ${formatMoneyDisplay(caseItem.total_value) || "-"}</div>
-                </td>
-                <td><span class="badge-status ${caseItem.status}">${escapeText(caseItem.status)}</span></td>
-                <td>
-                    <div>${formatDate(caseItem.deadline)}</div>
-                    <div class="meta">Criado: ${formatDate(caseItem.created_at)}</div>
-                    ${caseItem.delivered_at ? `<div class="meta">Entregue: ${formatDate(caseItem.delivered_at)}</div>` : ""}
-                    ${caseItem.deleted_at ? `<div class="meta">Removido: ${formatDate(caseItem.deleted_at)}</div>` : ""}
-                </td>
-                <td>
-                    <div class="row-actions">
-                        <button class="btn-primary btn-small" type="button" data-view-case="${caseItem.id}">Itens</button>
-                        <button class="btn-secondary btn-small" type="button" data-edit-case="${caseItem.id}">Editar</button>
-                        <button class="btn-warning btn-small" type="button" data-complete-case="${caseItem.id}">Concluir</button>
-                        <button class="btn-primary btn-small" type="button" data-deliver-case="${caseItem.id}">Entregar</button>
-                        <button class="btn-danger btn-small" type="button" data-delete-case="${caseItem.id}">Excluir</button>
-                    </div>
-                </td>
-            </tr>
-        `).join("");
-
-        document.querySelectorAll("[data-edit-case]").forEach(button => {
-            button.addEventListener("click", () => editCase(Number(button.dataset.editCase)));
-        });
-        document.querySelectorAll("[data-view-case]").forEach(button => {
-            button.addEventListener("click", () => openCaseDetails(Number(button.dataset.viewCase)));
-        });
-        document.querySelectorAll("[data-complete-case]").forEach(button => {
-            button.addEventListener("click", () => updateCaseStatus(Number(button.dataset.completeCase), "completed"));
-        });
-        document.querySelectorAll("[data-deliver-case]").forEach(button => {
-            button.addEventListener("click", () => updateCaseStatus(Number(button.dataset.deliverCase), "delivered"));
-        });
-        document.querySelectorAll("[data-delete-case]").forEach(button => {
-            button.addEventListener("click", () => deleteCase(Number(button.dataset.deleteCase)));
-        });
+    function resetDoctorForm() {
+        el.doctorForm.reset();
+        clearFieldErrors(el.doctorForm);
+        fields.doctorId.value = "";
+        state.editing.doctorId = null;
+        el.doctorFormTitle.textContent = "Novo doutor";
+        el.doctorSubmitButton.textContent = "Salvar doutor";
     }
 
-    function renderItemsTable() {
-        if (!state.selectedCaseId) {
-            el.itemsTableBody.innerHTML = `<tr><td colspan="6" class="empty">Selecione um caso para listar os itens.</td></tr>`;
-            return;
+    function resetCaseForm() {
+        el.caseForm.reset();
+        clearFieldErrors(el.caseForm);
+        fields.caseId.value = "";
+        fields.caseDoctorId.value = state.selectedDoctorId ? String(state.selectedDoctorId) : "";
+        el.caseMode.value = "simple";
+        fields.casePriority.value = "normal";
+        fields.caseTotalValue.value = "";
+        state.editing.caseId = null;
+        el.caseFormTitle.textContent = "Novo caso";
+        el.caseSubmitButton.textContent = "Salvar caso";
+        renderFormVisibility();
+    }
+
+    function resetItemForm() {
+        el.itemForm.reset();
+        clearFieldErrors(el.itemForm);
+        fields.itemId.value = "";
+        state.editing.itemId = null;
+        el.itemFormTitle.textContent = "Novo item";
+        el.itemSubmitButton.textContent = "Salvar item";
+    }
+
+    function openDoctorForm(id = null) {
+        resetDoctorForm();
+        if (id) {
+            const doctor = state.doctors.find(item => item.id === id);
+            if (!doctor) return;
+            state.editing.doctorId = id;
+            fields.doctorId.value = String(id);
+            fields.doctorName.value = doctor.name || "";
+            fields.doctorClinic.value = doctor.clinic_name || "";
+            fields.doctorPhone.value = doctor.phone || "";
+            fields.doctorNotes.value = doctor.notes || "";
+            el.doctorFormTitle.textContent = `Editar doutor #${id}`;
+            el.doctorSubmitButton.textContent = "Atualizar doutor";
+        }
+        state.forms.doctorOpen = true;
+        renderFormVisibility();
+        fields.doctorName.focus();
+    }
+
+    function openCaseForm(id = null) {
+        resetCaseForm();
+        if (id) {
+            const caseItem = state.cases.find(item => item.id === id);
+            if (!caseItem) return;
+            state.editing.caseId = id;
+            fields.caseId.value = String(id);
+            fields.caseDoctorId.value = String(caseItem.doctor_id);
+            fields.casePatientRef.value = caseItem.patient_ref || "";
+            fields.caseDeadline.value = formatDateInput(caseItem.deadline);
+            fields.casePriority.value = caseItem.priority || "normal";
+            fields.caseTotalValue.value = formatMoneyDisplay(caseItem.total_value).replace("-", "");
+            fields.caseNotes.value = caseItem.notes || "";
+            el.caseMode.value = "full";
+            el.caseFormTitle.textContent = `Editar caso #${id}`;
+            el.caseSubmitButton.textContent = "Atualizar caso";
+        }
+        state.forms.caseOpen = true;
+        renderFormVisibility();
+        fields.casePatientRef.focus();
+    }
+
+    function openItemForm(id = null) {
+        resetItemForm();
+        const caseItem = selectedCase();
+        if (!caseItem) return;
+
+        if (id) {
+            const item = caseItem.items?.find(entry => entry.id === id);
+            if (!item) return;
+            state.editing.itemId = id;
+            fields.itemId.value = String(id);
+            fields.itemTooth.value = item.tooth || "";
+            fields.itemServiceType.value = item.service_type || "";
+            fields.itemMaterial.value = item.material || "";
+            fields.itemColor.value = item.color || "";
+            fields.itemNotes.value = item.notes || "";
+            el.itemFormTitle.textContent = `Editar item #${id}`;
+            el.itemSubmitButton.textContent = "Atualizar item";
         }
 
-        const currentCase = state.cases.find(item => item.id === state.selectedCaseId);
-        const items = currentCase?.items || [];
-
-        if (!items.length) {
-            el.itemsTableBody.innerHTML = `<tr><td colspan="6" class="empty">Este caso ainda não possui itens.</td></tr>`;
-            return;
-        }
-
-        el.itemsTableBody.innerHTML = items.map(item => `
-            <tr>
-                <td>${item.id}</td>
-                <td>${escapeText(item.tooth)}</td>
-                <td>${escapeText(item.service_type)}</td>
-                <td>${escapeText(item.material || "-")}</td>
-                <td>${escapeText(item.color || "-")}</td>
-                <td>
-                    <div class="row-actions">
-                        <button class="btn-secondary btn-small" type="button" data-edit-item="${item.id}">Editar</button>
-                        <button class="btn-danger btn-small" type="button" data-delete-item="${item.id}">Excluir</button>
-                    </div>
-                </td>
-            </tr>
-        `).join("");
-
-        document.querySelectorAll("[data-edit-item]").forEach(button => {
-            button.addEventListener("click", () => editItem(Number(button.dataset.editItem)));
-        });
-        document.querySelectorAll("[data-delete-item]").forEach(button => {
-            button.addEventListener("click", () => deleteItem(Number(button.dataset.deleteItem)));
-        });
+        state.forms.itemOpen = true;
+        renderFormVisibility();
+        fields.itemTooth.focus();
     }
 
     async function loadDoctors() {
-        try {
-            const response = await authFetch(`${API_BASE_URL}/doctors/`);
-            if (!response.ok) throw new Error(await readError(response));
-            state.doctors = await response.json();
-            renderDoctorSelect();
-            renderCaseFilterSelects();
-            renderDoctorsTable();
-            setMessage(el.doctorListMessage, `Carregados ${state.doctors.length} doutores.`, "success");
-        } catch (error) {
-            setMessage(el.doctorListMessage, error.message || "Falha ao carregar doutores.", "error");
-        }
+        state.doctors = await apiRequest("/doctors/");
+        renderLevel();
     }
 
     async function loadCases() {
-        try {
-            const query = buildCaseQueryParams();
-            const response = await authFetch(
-                query ? `${API_BASE_URL}/cases/?${query}` : `${API_BASE_URL}/cases/`
-            );
-            if (!response.ok) throw new Error(await readError(response));
-            state.cases = await response.json();
-            renderCaseSelect();
-            renderSelectedCaseDetails();
-            renderCasesTable();
-            renderItemsTable();
-            const activeFilters = [
-                state.caseFilters.status ? `status=${state.caseFilters.status}` : null,
-                state.caseFilters.doctorId ? `doctor=${doctorNameById(Number(state.caseFilters.doctorId))}` : null,
-            ].filter(Boolean);
-            const filterLabel = activeFilters.length ? ` (${activeFilters.join(", ")})` : "";
-            setMessage(
-                el.caseListMessage,
-                `Carregados ${state.cases.length} casos${filterLabel}.`,
-                "success"
-            );
-        } catch (error) {
-            setMessage(el.caseListMessage, error.message || "Falha ao carregar casos.", "error");
-        }
+        state.cases = await apiRequest("/cases/");
+        renderLevel();
     }
 
-    async function loadItemsForSelectedCase() {
-        if (!state.selectedCaseId) {
-            renderItemsTable();
-            renderSelectedCaseDetails();
-            return;
-        }
-
-        try {
-            const response = await authFetch(`${API_BASE_URL}/cases/${state.selectedCaseId}/items/`);
-            if (!response.ok) throw new Error(await readError(response));
-            const items = await response.json();
-            const currentCase = state.cases.find(item => item.id === state.selectedCaseId);
-            if (currentCase) {
-                currentCase.items = items;
-            }
-            renderSelectedCaseDetails();
-            renderItemsTable();
-            setMessage(el.itemListMessage, `Carregados ${items.length} itens do caso selecionado.`, "success");
-        } catch (error) {
-            setMessage(el.itemListMessage, error.message || "Falha ao carregar itens.", "error");
-        }
+    async function loadItemsForCase(caseId) {
+        const items = await apiRequest(`/cases/${caseId}/items/`);
+        const caseItem = state.cases.find(item => item.id === caseId);
+        if (caseItem) caseItem.items = items;
+        renderLevel();
     }
 
-    async function refreshAll() {
+    async function refreshData() {
         await loadDoctors();
         await loadCases();
-        await loadItemsForSelectedCase();
+        const caseItem = selectedCase();
+        if (caseItem) await loadItemsForCase(caseItem.id);
     }
 
-    function editDoctor(id) {
+    async function showDoctorCases(id) {
         const doctor = state.doctors.find(item => item.id === id);
         if (!doctor) return;
-
-        state.editingDoctorId = id;
-        document.getElementById("doctorId").value = String(id);
-        document.getElementById("doctorName").value = doctor.name || "";
-        document.getElementById("doctorClinic").value = doctor.clinic_name || "";
-        document.getElementById("doctorPhone").value = doctor.phone || "";
-        document.getElementById("doctorNotes").value = doctor.notes || "";
-        document.getElementById("doctorSubmitButton").textContent = "Atualizar doutor";
-        document.getElementById("doctorCancelButton").hidden = false;
-        el.doctorFormMode.textContent = `Modo: edição #${id}`;
-        setMessage(el.doctorMessage, `Editando doutor #${id}.`, "warning");
+        state.selectedDoctorId = id;
+        state.selectedCaseId = null;
+        state.viewLevel = "cases";
+        state.forms.doctorOpen = false;
+        state.forms.caseOpen = false;
+        setMessage(el.appMessage, `Casos de ${doctor.name}.`, "success");
+        renderLevel();
     }
 
-    function editCase(id) {
+    async function showCaseItems(id) {
         const caseItem = state.cases.find(item => item.id === id);
         if (!caseItem) return;
-
-        state.editingCaseId = id;
-        updateCaseModeUi("full");
-        document.getElementById("caseId").value = String(id);
-        document.getElementById("caseDoctorId").value = String(caseItem.doctor_id);
-        document.getElementById("casePatientRef").value = caseItem.patient_ref || "";
-        document.getElementById("caseDeadline").value = formatDateInput(caseItem.deadline);
-        document.getElementById("casePriority").value = caseItem.priority || "normal";
-        document.getElementById("caseTotalValue").value = formatMoneyDisplay(caseItem.total_value);
-        document.getElementById("caseNotes").value = caseItem.notes || "";
-        document.getElementById("caseSubmitButton").textContent = "Atualizar caso";
-        document.getElementById("caseCancelButton").hidden = false;
-        el.caseFormMode.textContent = `Modo: edição #${id}`;
-        setMessage(el.caseMessage, `Editando caso #${id}.`, "warning");
+        state.selectedDoctorId = caseItem.doctor_id;
+        state.selectedCaseId = id;
+        state.viewLevel = "items";
+        state.forms.caseOpen = false;
+        state.forms.itemOpen = false;
+        renderLevel();
+        await loadItemsForCase(id);
+        setMessage(el.appMessage, `Itens do caso #${id}.`, "success");
     }
 
-    async function openCaseDetails(id) {
-        const caseItem = state.cases.find(item => item.id === id);
-        if (!caseItem) return;
-
-        setSelectedCase(id);
-        setMessage(el.itemMessage, `Itens do caso #${id} selecionados para revisão.`, "success");
-        document.getElementById("selectedCaseSection").scrollIntoView({ behavior: "smooth", block: "start" });
-        await loadItemsForSelectedCase();
-        document.getElementById("itemTooth").focus();
+    function backToDoctors() {
+        state.viewLevel = "doctors";
+        state.selectedDoctorId = null;
+        state.selectedCaseId = null;
+        state.forms.caseOpen = false;
+        state.forms.itemOpen = false;
+        setMessage(el.appMessage, "Lista de doutores.", "");
+        renderLevel();
     }
 
-    function editItem(id) {
-        if (!state.selectedCaseId) return;
-        const caseItem = state.cases.find(item => item.id === state.selectedCaseId);
-        const item = caseItem?.items?.find(entry => entry.id === id);
-        if (!item) return;
-
-        state.editingItemId = id;
-        document.getElementById("itemId").value = String(id);
-        document.getElementById("itemCaseId").value = String(state.selectedCaseId);
-        document.getElementById("itemTooth").value = item.tooth || "";
-        document.getElementById("itemServiceType").value = item.service_type || "";
-        document.getElementById("itemMaterial").value = item.material || "";
-        document.getElementById("itemColor").value = item.color || "";
-        document.getElementById("itemNotes").value = item.notes || "";
-        document.getElementById("itemSubmitButton").textContent = "Atualizar item";
-        document.getElementById("itemCancelButton").hidden = false;
-        el.itemFormMode.textContent = `Modo: edição #${id}`;
-        setMessage(el.itemMessage, `Editando item #${id}.`, "warning");
+    function backToCases() {
+        state.viewLevel = "cases";
+        state.selectedCaseId = null;
+        state.forms.itemOpen = false;
+        setMessage(el.appMessage, "Lista de casos do doutor selecionado.", "");
+        renderLevel();
     }
 
     async function submitDoctor(event) {
         event.preventDefault();
-        const doctorId = document.getElementById("doctorId").value.trim();
+        if (!validateDoctorForm()) return;
+
+        const id = fields.doctorId.value.trim();
         const payload = {
-            name: document.getElementById("doctorName").value.trim(),
-            clinic_name: document.getElementById("doctorClinic").value.trim() || null,
-            phone: document.getElementById("doctorPhone").value.trim() || null,
-            notes: document.getElementById("doctorNotes").value.trim() || null,
+            name: fields.doctorName.value.trim(),
+            clinic_name: fields.doctorClinic.value.trim() || null,
+            phone: fields.doctorPhone.value.trim() || null,
+            notes: fields.doctorNotes.value.trim() || null,
         };
 
-        const url = doctorId ? `${API_BASE_URL}/doctors/${doctorId}` : `${API_BASE_URL}/doctors/`;
-        const method = doctorId ? "PUT" : "POST";
-
         try {
-            setMessage(el.doctorMessage, doctorId ? "Atualizando doutor..." : "Salvando doutor...", "");
-            const response = await authFetch(url, {
-                method,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
+            const saved = await saveEntity({
+                path: id ? `/doctors/${id}` : "/doctors/",
+                method: id ? "PUT" : "POST",
+                payload,
             });
-            if (!response.ok) throw new Error(await readError(response));
-
-            setMessage(el.doctorMessage, doctorId ? "Doutor atualizado com sucesso." : "Doutor criado com sucesso.", "success");
+            upsertById(state.doctors, saved);
+            state.forms.doctorOpen = false;
             resetDoctorForm();
-            await refreshAll();
+            renderLevel();
+            setMessage(el.appMessage, id ? "Doutor atualizado." : "Doutor criado.", "success");
         } catch (error) {
-            setMessage(el.doctorMessage, error.message || "Falha ao salvar doutor.", "error");
+            setMessage(el.appMessage, error.message || "Falha ao salvar doutor.", "error");
         }
     }
 
     async function submitCase(event) {
         event.preventDefault();
-        const caseId = document.getElementById("caseId").value.trim();
+        if (!validateCaseForm()) return;
 
+        const id = fields.caseId.value.trim();
         const payload = {
-            doctor_id: Number(document.getElementById("caseDoctorId").value),
-            patient_ref: document.getElementById("casePatientRef").value.trim(),
+            doctor_id: Number(fields.caseDoctorId.value),
+            patient_ref: fields.casePatientRef.value.trim(),
         };
 
-        if (state.caseCreationMode === "full") {
-            const deadlineValue = document.getElementById("caseDeadline").value;
+        if (el.caseMode.value === "full" || id) {
+            const deadlineValue = fields.caseDeadline.value;
             payload.deadline = deadlineValue ? new Date(`${deadlineValue}T00:00:00`).toISOString() : null;
-            payload.priority = document.getElementById("casePriority").value;
-            payload.total_value = moneyToDecimal(document.getElementById("caseTotalValue").value);
-            payload.notes = document.getElementById("caseNotes").value.trim() || null;
+            payload.priority = fields.casePriority.value;
+            payload.total_value = moneyToDecimal(fields.caseTotalValue.value);
+            payload.notes = fields.caseNotes.value.trim() || null;
         }
 
-        const url = caseId ? `${API_BASE_URL}/cases/${caseId}` : `${API_BASE_URL}/cases/`;
-        const method = caseId ? "PUT" : "POST";
-
         try {
-            setMessage(el.caseMessage, caseId ? "Atualizando caso..." : "Salvando caso...", "");
-            const response = await authFetch(url, {
-                method,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
+            const saved = await saveEntity({
+                path: id ? `/cases/${id}` : "/cases/",
+                method: id ? "PUT" : "POST",
+                payload,
             });
-            if (!response.ok) throw new Error(await readError(response));
-
-            const savedCase = await response.json();
-            setMessage(el.caseMessage, caseId ? "Caso atualizado com sucesso." : "Caso criado com sucesso.", "success");
+            upsertById(state.cases, saved);
+            state.forms.caseOpen = false;
             resetCaseForm();
-            await refreshAll();
-            if (!caseId) {
-                setSelectedCase(savedCase.id);
-                await loadItemsForSelectedCase();
-                document.getElementById("selectedCaseSection").scrollIntoView({ behavior: "smooth", block: "start" });
-                document.getElementById("itemTooth").focus();
-            }
+            renderLevel();
+            setMessage(el.appMessage, id ? "Caso atualizado." : "Caso criado.", "success");
         } catch (error) {
-            setMessage(el.caseMessage, error.message || "Falha ao salvar caso.", "error");
+            setMessage(el.appMessage, error.message || "Falha ao salvar caso.", "error");
         }
     }
 
     async function submitItem(event) {
         event.preventDefault();
-        const caseId = Number(document.getElementById("itemCaseId").value);
-        const itemId = document.getElementById("itemId").value.trim();
+        if (!validateItemForm()) return;
 
-        if (!caseId || Number.isNaN(caseId)) {
-            setMessage(el.itemMessage, "Selecione um caso válido antes de salvar o item.", "error");
+        const caseItem = selectedCase();
+        if (!caseItem) {
+            setMessage(el.appMessage, "Selecione um caso antes de salvar o item.", "error");
             return;
         }
 
+        const id = fields.itemId.value.trim();
         const payload = {
-            tooth: document.getElementById("itemTooth").value.trim(),
-            service_type: document.getElementById("itemServiceType").value.trim(),
-            material: document.getElementById("itemMaterial").value.trim() || null,
-            color: document.getElementById("itemColor").value.trim() || null,
-            notes: document.getElementById("itemNotes").value.trim() || null,
+            tooth: fields.itemTooth.value.trim(),
+            service_type: fields.itemServiceType.value.trim(),
+            material: fields.itemMaterial.value.trim() || null,
+            color: fields.itemColor.value.trim() || null,
+            notes: fields.itemNotes.value.trim() || null,
         };
 
-        const url = itemId
-            ? `${API_BASE_URL}/cases/${caseId}/items/${itemId}`
-            : `${API_BASE_URL}/cases/${caseId}/items/`;
-        const method = itemId ? "PUT" : "POST";
-
         try {
-            setMessage(el.itemMessage, itemId ? "Atualizando item..." : "Salvando item...", "");
-            const response = await authFetch(url, {
-                method,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
+            const saved = await saveEntity({
+                path: id ? `/cases/${caseItem.id}/items/${id}` : `/cases/${caseItem.id}/items/`,
+                method: id ? "PUT" : "POST",
+                payload,
             });
-            if (!response.ok) throw new Error(await readError(response));
-
-            setMessage(el.itemMessage, itemId ? "Item atualizado com sucesso." : "Item criado com sucesso.", "success");
+            caseItem.items = caseItem.items || [];
+            upsertById(caseItem.items, saved);
+            state.forms.itemOpen = false;
             resetItemForm();
-            await loadCases();
-            setSelectedCase(caseId);
-            await loadItemsForSelectedCase();
-            document.getElementById("itemTooth").focus();
+            renderLevel();
+            setMessage(el.appMessage, id ? "Item atualizado." : "Item criado.", "success");
         } catch (error) {
-            setMessage(el.itemMessage, error.message || "Falha ao salvar item.", "error");
+            setMessage(el.appMessage, error.message || "Falha ao salvar item.", "error");
         }
     }
 
-    async function deleteDoctor(id) {
-        if (!confirm(`Excluir o doutor #${id}? A API vai bloquear se houver casos vinculados.`)) return;
+    async function saveEntity({ path, method, payload }) {
+        return apiRequest(path, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
+    }
 
+    function upsertById(collection, item) {
+        const index = collection.findIndex(entry => entry.id === item.id);
+        if (index >= 0) {
+            collection[index] = { ...collection[index], ...item };
+        } else {
+            collection.push(item);
+        }
+    }
+
+    async function deleteEntity({ id, path, collection, confirmText, successText }) {
+        if (!confirm(confirmText)) return;
+        await apiRequest(path, { method: "DELETE" });
+        const index = collection.findIndex(item => item.id === id);
+        if (index >= 0) collection.splice(index, 1);
+        setMessage(el.appMessage, successText, "success");
+        renderLevel();
+    }
+
+    async function deleteDoctor(id) {
         try {
-            const response = await authFetch(`${API_BASE_URL}/doctors/${id}`, { method: "DELETE" });
-            if (!response.ok) throw new Error(await readError(response));
-            setMessage(el.doctorListMessage, `Doutor #${id} excluído com sucesso.`, "success");
-            await refreshAll();
+            await deleteEntity({
+                id,
+                path: `/doctors/${id}`,
+                collection: state.doctors,
+                confirmText: `Excluir o doutor #${id}? A API bloqueia se houver casos vinculados.`,
+                successText: `Doutor #${id} excluido.`,
+            });
         } catch (error) {
-            setMessage(el.doctorListMessage, error.message || "Falha ao excluir doutor.", "error");
+            setMessage(el.appMessage, error.message || "Falha ao excluir doutor.", "error");
         }
     }
 
     async function deleteCase(id) {
-        if (!confirm(`Excluir o caso #${id}? Casos não pendentes serão removidos por soft delete.`)) return;
-
         try {
-            const response = await authFetch(`${API_BASE_URL}/cases/${id}`, { method: "DELETE" });
-            if (!response.ok) throw new Error(await readError(response));
-            setMessage(el.caseListMessage, `Caso #${id} removido com sucesso.`, "success");
-            await refreshAll();
+            await deleteEntity({
+                id,
+                path: `/cases/${id}`,
+                collection: state.cases,
+                confirmText: `Excluir o caso #${id}? Casos nao pendentes podem ser removidos por soft delete.`,
+                successText: `Caso #${id} removido.`,
+            });
         } catch (error) {
-            setMessage(el.caseListMessage, error.message || "Falha ao excluir caso.", "error");
+            setMessage(el.appMessage, error.message || "Falha ao excluir caso.", "error");
         }
     }
 
     async function deleteItem(id) {
-        if (!state.selectedCaseId) return;
-        if (!confirm(`Excluir o item #${id}?`)) return;
-
+        const caseItem = selectedCase();
+        if (!caseItem) return;
         try {
-            const response = await authFetch(`${API_BASE_URL}/cases/${state.selectedCaseId}/items/${id}`, { method: "DELETE" });
-            if (!response.ok) throw new Error(await readError(response));
-            setMessage(el.itemListMessage, `Item #${id} excluído com sucesso.`, "success");
-            await loadCases();
-            setSelectedCase(state.selectedCaseId);
-            await loadItemsForSelectedCase();
+            await deleteEntity({
+                id,
+                path: `/cases/${caseItem.id}/items/${id}`,
+                collection: caseItem.items || [],
+                confirmText: `Excluir o item #${id}?`,
+                successText: `Item #${id} excluido.`,
+            });
         } catch (error) {
-            setMessage(el.itemListMessage, error.message || "Falha ao excluir item.", "error");
+            setMessage(el.appMessage, error.message || "Falha ao excluir item.", "error");
         }
     }
 
-    async function updateCaseStatus(id, newStatus) {
-        const caseItem = state.cases.find(entry => entry.id === id);
-        if (!caseItem) return;
-
-        const payload = { status: newStatus };
-
-        if (caseItem.status === "delivered" && newStatus !== "delivered") {
-            const reason = prompt("Informe o motivo da reversão do status:");
-            if (!reason || !reason.trim()) {
-                setMessage(el.caseListMessage, "A reversão foi cancelada porque o motivo é obrigatório.", "warning");
-                return;
-            }
-            payload.status_revert_reason = reason.trim();
-        }
+    async function advanceCaseStatus(id) {
+        const caseItem = state.cases.find(item => item.id === id);
+        const nextStatus = caseItem ? STATUS_FLOW[caseItem.status] : null;
+        if (!caseItem || !nextStatus) return;
 
         try {
-            const response = await authFetch(`${API_BASE_URL}/cases/${id}`, {
+            const saved = await saveEntity({
+                path: `/cases/${id}`,
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
+                payload: { status: nextStatus },
             });
-            if (!response.ok) throw new Error(await readError(response));
-            setMessage(el.caseListMessage, `Caso #${id} atualizado para ${newStatus}.`, "success");
-            await refreshAll();
+            upsertById(state.cases, saved);
+            setMessage(el.appMessage, `Caso #${id} atualizado para ${nextStatus}.`, "success");
+            renderLevel();
         } catch (error) {
-            setMessage(el.caseListMessage, error.message || "Falha ao atualizar status do caso.", "error");
+            setMessage(el.appMessage, error.message || "Falha ao atualizar status.", "error");
         }
     }
 
     async function submitRegister(event) {
         event.preventDefault();
+        if (!validateRegisterForm()) return;
+
         const payload = {
             email: el.registerEmail.value.trim(),
             username: el.registerUsername.value.trim(),
             password: el.registerPassword.value,
         };
 
-        setMessage(
-            el.authMessage,
-            "Criando usuário...",
-        );
-
         try {
+            setMessage(el.authMessage, "Criando usuario...");
             const response = await fetch(`${API_BASE_URL}/auth/register`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -1478,37 +1680,38 @@
             const result = await response.json();
             saveSession(result.access_token, result.username || payload.username, result.email || payload.email);
             el.registerForm.reset();
-            setMessage(el.authMessage, "Usuário cadastrado com sucesso e sessão iniciada.", "success");
-            await refreshAll();
-            await loadItemsForSelectedCase();
+            clearFieldErrors(el.registerForm);
+            setMessage(el.authMessage, "Usuario cadastrado e sessao iniciada.", "success");
+            await refreshData();
         } catch (error) {
-            setMessage(el.authMessage, error.message || "Falha ao cadastrar usuário.", "error");
+            setMessage(el.authMessage, error.message || "Falha ao cadastrar usuario.", "error");
         }
     }
 
     async function submitLogin(event) {
         event.preventDefault();
+        if (!validateLoginForm()) return;
+
         const identifier = el.authIdentifier.value.trim();
         const password = el.authPassword.value;
 
         try {
-            setMessage(el.authMessage, "Validando credenciais...", "");
+            setMessage(el.authMessage, "Validando credenciais...");
             const response = await fetch(`${API_BASE_URL}/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ identifier, password }),
             });
-
             if (!response.ok) throw new Error(await readError(response));
 
             const payload = await response.json();
             saveSession(payload.access_token, payload.username || identifier, payload.email || "");
             el.loginForm.reset();
-            setMessage(el.authMessage, "Login realizado com sucesso.", "success");
-            await refreshAll();
-            await loadItemsForSelectedCase();
+            clearFieldErrors(el.loginForm);
+            setMessage(el.authMessage, "Login realizado.", "success");
+            await refreshData();
         } catch (error) {
-            clearSession("Nenhuma sessão ativa.");
+            clearSession("Nenhuma sessao ativa.");
             setMessage(el.authMessage, error.message || "Falha ao autenticar.", "error");
         }
     }
@@ -1517,103 +1720,10 @@
         clearSession();
         state.doctors = [];
         state.cases = [];
+        state.selectedDoctorId = null;
         state.selectedCaseId = null;
-        renderDoctorsTable();
-        renderCasesTable();
-        renderItemsTable();
-        renderSelectedCaseDetails();
-        renderDoctorSelect();
-        renderCaseFilterSelects();
-        setMessage(el.doctorListMessage, "Faça login para carregar a lista de doutores.", "warning");
-        setMessage(el.caseListMessage, "Faça login para carregar a lista de casos.", "warning");
-        setMessage(el.itemListMessage, "Faça login para carregar os itens do caso.", "warning");
-    }
-
-    function bindFormEvents() {
-        el.doctorForm.addEventListener("submit", submitDoctor);
-        el.caseForm.addEventListener("submit", submitCase);
-        el.itemForm.addEventListener("submit", submitItem);
-        el.loginForm.addEventListener("submit", submitLogin);
-        el.registerForm.addEventListener("submit", submitRegister);
-
-        document.getElementById("doctorCancelButton").addEventListener("click", () => {
-            resetDoctorForm();
-            setMessage(el.doctorMessage, "Edição de doutor cancelada.", "");
-        });
-
-        document.getElementById("caseCancelButton").addEventListener("click", () => {
-            resetCaseForm();
-            setMessage(el.caseMessage, "Edição de caso cancelada.", "");
-        });
-
-        document.getElementById("caseSimpleModeButton").addEventListener("click", () => {
-            state.editingCaseId = null;
-            resetCaseForm();
-            updateCaseModeUi("simple");
-        });
-
-        document.getElementById("caseFullModeButton").addEventListener("click", () => {
-            state.editingCaseId = null;
-            resetCaseForm();
-            updateCaseModeUi("full");
-        });
-
-        el.applyCaseFiltersButton.addEventListener("click", async () => {
-            state.caseFilters.status = el.caseListStatusFilter.value;
-            state.caseFilters.doctorId = el.caseListDoctorFilter.value;
-            await loadCases();
-            await loadItemsForSelectedCase();
-        });
-
-        el.clearCaseFiltersButton.addEventListener("click", async () => {
-            state.caseFilters.status = "";
-            state.caseFilters.doctorId = "";
-            el.caseListStatusFilter.value = "";
-            el.caseListDoctorFilter.value = "";
-            await loadCases();
-            await loadItemsForSelectedCase();
-        });
-
-        el.selectedCaseEditButton.addEventListener("click", () => {
-            if (state.selectedCaseId) {
-                editCase(state.selectedCaseId);
-                document.getElementById("caseForm").scrollIntoView({ behavior: "smooth", block: "start" });
-            }
-        });
-
-        el.selectedCaseDeleteButton.addEventListener("click", () => {
-            if (state.selectedCaseId) {
-                deleteCase(state.selectedCaseId);
-            }
-        });
-
-        el.selectedCaseAddItemButton.addEventListener("click", () => {
-            if (!state.selectedCaseId) return;
-            setSelectedCase(state.selectedCaseId);
-            document.getElementById("itemTooth").focus();
-            document.getElementById("itemForm").scrollIntoView({ behavior: "smooth", block: "start" });
-        });
-
-        document.getElementById("itemCancelButton").addEventListener("click", () => {
-            resetItemForm();
-            setMessage(el.itemMessage, "Edição de item cancelada.", "");
-        });
-
-        document.getElementById("refreshDoctorsButton").addEventListener("click", loadDoctors);
-        document.getElementById("refreshCasesButton").addEventListener("click", loadCases);
-        document.getElementById("refreshItemsButton").addEventListener("click", loadItemsForSelectedCase);
-
-        el.itemCaseId.addEventListener("change", async () => {
-            state.selectedCaseId = Number(el.itemCaseId.value) || null;
-            el.selectedCaseLabel.textContent = state.selectedCaseId ? caseLabelById(state.selectedCaseId) : "Nenhum caso selecionado";
-            await loadItemsForSelectedCase();
-        });
-
-        document.getElementById("caseTotalValue").addEventListener("input", event => {
-            event.target.value = formatMoneyMask(event.target.value);
-        });
-
-        el.logoutButton.addEventListener("click", logoutSession);
+        state.viewLevel = "doctors";
+        renderLevel();
     }
 
     async function checkApi() {
@@ -1628,21 +1738,84 @@
         }
     }
 
+    function bindEvents() {
+        el.registerForm.addEventListener("submit", submitRegister);
+        el.loginForm.addEventListener("submit", submitLogin);
+        el.doctorForm.addEventListener("submit", submitDoctor);
+        el.caseForm.addEventListener("submit", submitCase);
+        el.itemForm.addEventListener("submit", submitItem);
+        el.logoutButton.addEventListener("click", logoutSession);
+        el.appLogoutButton.addEventListener("click", logoutSession);
+
+        document.getElementById("newDoctorButton").addEventListener("click", () => openDoctorForm());
+        document.getElementById("newCaseButton").addEventListener("click", () => openCaseForm());
+        document.getElementById("newItemButton").addEventListener("click", () => openItemForm());
+        document.getElementById("refreshDoctorsButton").addEventListener("click", async () => {
+            try {
+                await refreshData();
+                setMessage(el.appMessage, "Dados atualizados.", "success");
+            } catch (error) {
+                setMessage(el.appMessage, error.message || "Falha ao atualizar dados.", "error");
+            }
+        });
+
+        el.caseMode.addEventListener("change", renderFormVisibility);
+        el.caseTotalValue.addEventListener("input", event => {
+            event.target.value = formatMoneyMask(event.target.value);
+        });
+        fields.doctorPhone.addEventListener("input", event => {
+            event.target.value = formatBrazilianMobileMask(event.target.value);
+        });
+
+        el.appContent.addEventListener("click", async event => {
+            const button = event.target.closest("[data-action]");
+            if (!button) return;
+            const action = button.dataset.action;
+            const id = Number(button.dataset.id);
+
+            if (button.closest(".row-menu")) {
+                button.closest(".row-menu").open = false;
+            }
+
+            if (action === "view-doctor-cases") await showDoctorCases(id);
+            if (action === "edit-doctor") openDoctorForm(id);
+            if (action === "delete-doctor") await deleteDoctor(id);
+            if (action === "back-to-doctors") backToDoctors();
+            if (action === "close-doctor-form") {
+                state.forms.doctorOpen = false;
+                resetDoctorForm();
+                renderFormVisibility();
+            }
+            if (action === "view-case-items") await showCaseItems(id);
+            if (action === "edit-case") openCaseForm(id);
+            if (action === "advance-case-status") await advanceCaseStatus(id);
+            if (action === "delete-case") await deleteCase(id);
+            if (action === "back-to-cases") backToCases();
+            if (action === "close-case-form") {
+                state.forms.caseOpen = false;
+                resetCaseForm();
+                renderFormVisibility();
+            }
+            if (action === "edit-item") openItemForm(id);
+            if (action === "delete-item") await deleteItem(id);
+            if (action === "close-item-form") {
+                state.forms.itemOpen = false;
+                resetItemForm();
+                renderFormVisibility();
+            }
+        });
+    }
+
     async function bootstrap() {
-        bindFormEvents();
-        updateCaseModeUi("simple");
+        bindEvents();
+        renderLevel();
         await checkApi();
         const hasSession = await restoreSession();
         if (hasSession) {
-            await refreshAll();
+            await refreshData();
         } else {
-            renderDoctorsTable();
-            renderCasesTable();
-            renderItemsTable();
-            renderSelectedCaseDetails();
-            renderDoctorSelect();
-            renderCaseFilterSelects();
             updateAuthUi();
+            setMessage(el.appMessage, "Faca login para carregar os dados.", "warning");
         }
     }
 

@@ -88,22 +88,43 @@ def test_business_routes_require_bearer_token(monkeypatch) -> None:
     assert authorized_cases.json() == []
 
 
-def test_registration_rejects_duplicate_user(monkeypatch) -> None:
+def test_registration_allows_multiple_users_and_rejects_duplicate_identity(monkeypatch) -> None:
     _configure_test_security(monkeypatch)
     client = TestClient(app)
 
     first_response = _register_user(client)
     assert first_response["username"] == "admin"
 
+    second_response = client.post(
+        "/auth/register",
+        json={
+            "email": "operator@cadista.local",
+            "username": "operator",
+            "password": "secret123",
+        },
+    )
+    assert second_response.status_code == 201, second_response.text
+    assert second_response.json()["username"] == "operator"
+
     duplicate_response = client.post(
         "/auth/register",
         json={
             "email": "admin@cadista.local",
-            "username": "admin",
+            "username": "another-admin",
             "password": "secret123",
         },
     )
     assert duplicate_response.status_code == 409, duplicate_response.text
+
+    duplicate_username_response = client.post(
+        "/auth/register",
+        json={
+            "email": "another@cadista.local",
+            "username": "admin",
+            "password": "secret123",
+        },
+    )
+    assert duplicate_username_response.status_code == 409, duplicate_username_response.text
 
 
 def test_login_rejects_invalid_credentials(monkeypatch) -> None:

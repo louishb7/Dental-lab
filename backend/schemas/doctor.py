@@ -4,9 +4,31 @@ Responsável pela validação de dados de entrada e formatação de saída dos c
 """
 
 from datetime import datetime
+import re
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+
+PHONE_PATTERN = re.compile(r"^\(\d{2}\)9\d{4}-\d{4}$")
+
+
+def normalize_brazilian_mobile(value: Optional[str]) -> Optional[str]:
+    if value is None:
+        return None
+
+    normalized = value.strip()
+    if not normalized:
+        return None
+
+    if PHONE_PATTERN.fullmatch(normalized):
+        return normalized
+
+    digits = re.sub(r"\D", "", normalized)
+    if len(digits) == 11 and digits[2] == "9":
+        return f"({digits[:2]}){digits[2:7]}-{digits[7:]}"
+
+    raise ValueError("Telefone deve estar em branco ou seguir o padrão (xx)9xxxx-xxxx")
 
 
 class DoctorBase(BaseModel):
@@ -24,6 +46,11 @@ class DoctorBase(BaseModel):
     notes: Optional[str] = Field(
         default=None, description="Observações gerais sobre o cliente"
     )
+
+    @field_validator("phone")
+    @classmethod
+    def validate_phone(cls, value: Optional[str]) -> Optional[str]:
+        return normalize_brazilian_mobile(value)
 
 
 class DoctorCreate(DoctorBase):
@@ -43,6 +70,11 @@ class DoctorUpdate(BaseModel):
     clinic_name: Optional[str] = None
     phone: Optional[str] = None
     notes: Optional[str] = None
+
+    @field_validator("phone")
+    @classmethod
+    def validate_phone(cls, value: Optional[str]) -> Optional[str]:
+        return normalize_brazilian_mobile(value)
 
 
 class DoctorResponse(DoctorBase):

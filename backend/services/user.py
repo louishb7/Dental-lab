@@ -46,9 +46,6 @@ def get_user_by_identifier(db: Session, identifier: str) -> User | None:
 
 
 def create_user(db: Session, user_data: AuthRegisterRequest) -> User:
-    if db.query(User).first() is not None:
-        raise ValueError("Já existe um usuário cadastrado neste sistema")
-
     normalized_email = user_data.email.strip().lower()
     normalized_username = user_data.username.strip()
 
