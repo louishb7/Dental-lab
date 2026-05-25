@@ -111,6 +111,19 @@ class CaseUpdate(BaseModel):
         return value
 
 
+class CaseBulkDeliverRequest(BaseModel):
+    """Payload para entrega em lote de casos completos."""
+
+    case_ids: list[int] = Field(
+        default_factory=list,
+        description="Lista de IDs de casos a serem entregues",
+    )
+    doctor_id: Optional[int] = Field(
+        default=None,
+        description="Filtra os casos completos de um doutor específico",
+    )
+
+
 class CaseResponse(CaseBase):
     """Resposta serializada de um caso."""
 

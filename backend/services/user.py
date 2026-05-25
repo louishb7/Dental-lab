@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from sqlalchemy import func, or_
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from backend.models.user import User
@@ -61,7 +62,14 @@ def create_user(db: Session, user_data: AuthRegisterRequest) -> User:
         password_hash=auth_service.hash_password(user_data.password),
     )
     db.add(user)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise ValueError(
+            "Já existe um usuário com este email ou nome de usuário"
+        ) from exc
+
     db.refresh(user)
     return user
 

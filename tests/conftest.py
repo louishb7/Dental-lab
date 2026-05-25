@@ -3,18 +3,28 @@ from __future__ import annotations
 from collections.abc import Iterator
 
 import pytest
-from sqlalchemy import text
+from sqlalchemy import create_engine, text
+from sqlalchemy.pool import StaticPool
 
-from backend.database.connection import SessionLocal
+from backend.database.connection import Base, SessionLocal
+from backend.models import Case, CaseItem, Doctor, User  # noqa: F401
+
+
+test_engine = create_engine(
+    "sqlite://",
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+)
+SessionLocal.configure(bind=test_engine)
+Base.metadata.create_all(bind=test_engine)
 
 
 def _truncate_tables() -> None:
     with SessionLocal() as db:
-        db.execute(
-            text(
-                "TRUNCATE TABLE case_items, cases, doctors, users RESTART IDENTITY CASCADE"
-            )
-        )
+        db.execute(text("DELETE FROM case_items"))
+        db.execute(text("DELETE FROM cases"))
+        db.execute(text("DELETE FROM doctors"))
+        db.execute(text("DELETE FROM users"))
         db.commit()
 
 

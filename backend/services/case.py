@@ -262,3 +262,42 @@ def delete_case(db: Session, case_id: int) -> Case:
     db.refresh(db_case)
     _attach_items_count(db, db_case)
     return db_case
+
+
+def bulk_deliver_cases(
+    db: Session,
+    case_ids: list[int] | None = None,
+    doctor_id: int | None = None,
+) -> list[Case]:
+    normalized_ids = list(dict.fromkeys(case_ids or []))
+    query = db.query(Case).filter(Case.deleted_at.is_(None))
+
+    if doctor_id is not None:
+        query = query.filter(Case.doctor_id == doctor_id)
+
+    if normalized_ids:
+        query = query.filter(Case.id.in_(normalized_ids))
+    else:
+        query = query.filter(Case.status == "completed")
+
+    cases = query.order_by(Case.id.asc()).all()
+    if normalized_ids:
+        found_ids = {case.id for case in cases}
+        missing_ids = [case_id for case_id in normalized_ids if case_id not in found_ids]
+        if missing_ids:
+            raise ValueError("Alguns pedidos selecionados não foram encontrados.")
+
+    now = datetime.now(timezone.utc)
+    for case in cases:
+        if case.status == "pending":
+            case.status = "completed"
+        case.status = "delivered"
+        case.delivered_at = case.delivered_at or now
+
+    if cases:
+        db.commit()
+        for case in cases:
+            db.refresh(case)
+            _attach_items_count(db, case)
+
+    return cases

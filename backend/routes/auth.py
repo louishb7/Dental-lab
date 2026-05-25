@@ -5,6 +5,7 @@ Rotas HTTP para autenticação.
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from backend.database.connection import get_db
@@ -30,7 +31,11 @@ def _build_token_response(user) -> AuthTokenResponse:
     )
 
 
-@router.post("/register", response_model=AuthTokenResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    response_model=AuthTokenResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def register(payload: AuthRegisterRequest, db: Session = Depends(get_db)):
     try:
         user = user_service.create_user(db, payload)
@@ -38,6 +43,12 @@ def register(payload: AuthRegisterRequest, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=str(exc),
+        ) from exc
+    except SQLAlchemyError as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Banco de dados indisponível para cadastrar usuário",
         ) from exc
 
     return _build_token_response(user)

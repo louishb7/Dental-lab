@@ -269,6 +269,24 @@ Auditoria resumida antes da reorganizacao:
             font-size: 0.82rem;
         }
 
+        .money-input {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .money-input-prefix {
+            color: var(--muted);
+            font-weight: 700;
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        .money-input input {
+            flex: 1;
+            min-width: 0;
+        }
+
         .has-error input,
         .has-error textarea,
         .has-error select {
@@ -301,6 +319,113 @@ Auditoria resumida antes da reorganizacao:
         .btn-danger { background: var(--danger); color: #fff; }
         .btn-warning { background: #f59e0b; color: #111827; }
         .btn-small { padding: 7px 10px; font-size: 0.9rem; }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(15, 23, 42, 0.58);
+            backdrop-filter: blur(2px);
+            z-index: 60;
+        }
+
+        .modal-backdrop[hidden] {
+            display: none !important;
+        }
+
+        .modal-card {
+            width: min(780px, 100%);
+            max-height: min(82vh, 760px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            background: #fff;
+            box-shadow: 0 24px 80px rgba(15, 23, 42, 0.26);
+            padding: 18px;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .modal-header p {
+            margin: 4px 0 0;
+            color: var(--muted);
+        }
+
+        .modal-tools {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .batch-delivery-list {
+            overflow-y: auto;
+            display: grid;
+            gap: 10px;
+            padding-right: 2px;
+        }
+
+        .batch-delivery-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: #f8fafc;
+        }
+
+        .batch-delivery-item.selected {
+            border-color: rgba(37, 99, 235, 0.28);
+            background: #eff6ff;
+        }
+
+        .batch-delivery-item.disabled {
+            opacity: 0.72;
+        }
+
+        .batch-delivery-copy {
+            display: grid;
+            gap: 4px;
+        }
+
+        .batch-delivery-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+        }
+
+        .batch-delivery-meta {
+            color: var(--muted);
+            font-size: 0.88rem;
+        }
+
+        .modal-empty {
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: #fffbeb;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
 
         .table-wrap {
             overflow-x: auto;
@@ -396,6 +521,16 @@ Auditoria resumida antes da reorganizacao:
 
         .row-action.primary:hover {
             background: var(--accent-dark);
+        }
+
+        .row-action.success {
+            border-color: transparent;
+            background: var(--success);
+            color: #fff;
+        }
+
+        .row-action.success:hover {
+            background: #065f46;
         }
 
         .row-action.danger {
@@ -784,8 +919,9 @@ Auditoria resumida antes da reorganizacao:
                     <p id="casesLevelMeta">Doutor selecionado</p>
                 </div>
                 <div class="button-row">
-                    <button class="btn-secondary" type="button" data-action="back-to-doctors">Voltar</button>
                     <button id="newCaseButton" class="btn-primary" type="button">Novo caso</button>
+                    <button id="batchDeliverButton" class="btn-secondary" type="button">Entregar pedidos</button>
+                    <button class="btn-secondary" type="button" data-action="back-to-doctors">Voltar</button>
                 </div>
             </div>
 
@@ -834,7 +970,10 @@ Auditoria resumida antes da reorganizacao:
                     </div>
                     <div class="form-group pricing-fixed-field">
                         <label for="caseTotalValue">Valor fixo do caso</label>
-                        <input id="caseTotalValue" type="text" inputmode="decimal" autocomplete="off" placeholder="0,00">
+                        <div class="money-input">
+                            <span class="money-input-prefix">R$</span>
+                            <input id="caseTotalValue" type="text" inputmode="decimal" autocomplete="off" placeholder="0,00">
+                        </div>
                         <span class="field-error" data-error-for="caseTotalValue"></span>
                     </div>
                     <div class="form-group full case-full-field">
@@ -881,7 +1020,6 @@ Auditoria resumida antes da reorganizacao:
             </div>
 
             <div id="caseSummary" class="case-summary"></div>
-            <div id="deliveryControl"></div>
 
             <form id="itemForm" class="context-form" hidden novalidate>
                 <div class="form-header">
@@ -902,7 +1040,10 @@ Auditoria resumida antes da reorganizacao:
                     </div>
                     <div class="form-group item-services-field">
                         <label for="itemUnitValue">Valor unitário</label>
-                        <input id="itemUnitValue" type="text" inputmode="decimal" autocomplete="off" placeholder="0,00">
+                        <div class="money-input">
+                            <span class="money-input-prefix">R$</span>
+                            <input id="itemUnitValue" type="text" inputmode="decimal" autocomplete="off" placeholder="0,00">
+                        </div>
                         <span class="field-error" data-error-for="itemUnitValue"></span>
                     </div>
                     <div class="form-group">
@@ -946,6 +1087,28 @@ Auditoria resumida antes da reorganizacao:
             </div>
         </section>
     </main>
+
+    <div id="batchDeliveryModal" class="modal-backdrop" hidden>
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="batchDeliveryTitle">
+            <div class="modal-header">
+                <div>
+                    <h3 id="batchDeliveryTitle">Entregar pedidos</h3>
+                    <p id="batchDeliveryInfo">Selecione os pedidos que devem ir para entregue.</p>
+                </div>
+                <button class="btn-secondary btn-small" type="button" data-action="close-batch-delivery">Fechar</button>
+            </div>
+            <div class="modal-tools">
+                <button id="batchDeliverySelectAll" class="btn-secondary" type="button">Selecionar todos os pedidos abertos</button>
+                <span id="batchDeliveryCount" class="meta"></span>
+            </div>
+            <div id="batchDeliveryEmpty" class="modal-empty" hidden></div>
+            <div id="batchDeliveryList" class="batch-delivery-list"></div>
+            <div class="button-row">
+                <button id="batchDeliverySubmit" class="btn-primary" type="button">Entregar selecionados</button>
+                <button class="btn-secondary" type="button" data-action="close-batch-delivery">Cancelar</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -976,6 +1139,10 @@ Auditoria resumida antes da reorganizacao:
             },
             delivery: {
                 selectedCaseId: null,
+                batch: {
+                    open: false,
+                    selectedCaseIds: [],
+                },
             },
             selectedDoctorId: null,
             selectedCaseId: null,
@@ -1023,7 +1190,6 @@ Auditoria resumida antes da reorganizacao:
             dashboardFinanceList: document.getElementById("dashboardFinanceList"),
             dashboardFinanceTotal: document.getElementById("dashboardFinanceTotal"),
             refreshDashboardButton: document.getElementById("refreshDashboardButton"),
-            deliveryControl: document.getElementById("deliveryControl"),
             doctorsLevel: document.getElementById("doctorsLevel"),
             casesLevel: document.getElementById("casesLevel"),
             itemsLevel: document.getElementById("itemsLevel"),
@@ -1047,6 +1213,13 @@ Auditoria resumida antes da reorganizacao:
         caseMode: document.getElementById("caseMode"),
         casePricingMode: document.getElementById("casePricingMode"),
         caseTotalValue: document.getElementById("caseTotalValue"),
+        batchDeliveryModal: document.getElementById("batchDeliveryModal"),
+        batchDeliveryInfo: document.getElementById("batchDeliveryInfo"),
+        batchDeliverySelectAll: document.getElementById("batchDeliverySelectAll"),
+        batchDeliveryCount: document.getElementById("batchDeliveryCount"),
+        batchDeliveryEmpty: document.getElementById("batchDeliveryEmpty"),
+        batchDeliveryList: document.getElementById("batchDeliveryList"),
+        batchDeliverySubmit: document.getElementById("batchDeliverySubmit"),
     };
 
     const fields = {
@@ -1101,11 +1274,23 @@ Auditoria resumida antes da reorganizacao:
             .slice(0, 10);
     }
 
+    function parseMoneyValue(value) {
+        if (value === null || value === undefined || value === "") return null;
+        if (typeof value === "number") return value;
+
+        const normalized = String(value).trim();
+        if (!normalized) return null;
+
+        const candidate = normalized.includes(",")
+            ? normalized.replace(/\./g, "").replace(",", ".")
+            : normalized;
+        const numeric = Number(candidate);
+        return Number.isNaN(numeric) ? null : numeric;
+    }
+
     function formatMoneyDisplay(value) {
-        if (value === null || value === undefined || value === "") return "-";
-        const normalized = String(value).trim().replace(/\./g, "").replace(",", ".");
-        const numeric = Number(normalized);
-        if (Number.isNaN(numeric)) return "-";
+        const numeric = parseMoneyValue(value);
+        if (numeric === null) return "-";
         return numeric.toLocaleString("pt-BR", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
@@ -1358,6 +1543,29 @@ Auditoria resumida antes da reorganizacao:
         return state.cases.filter(caseItem => caseItem.doctor_id === state.selectedDoctorId);
     }
 
+    function batchDeliveryCases() {
+        return casesForSelectedDoctor()
+            .filter(caseItem => caseItem.status !== "delivered")
+            .slice()
+            .sort((left, right) => {
+                const statusRank = value => (value === "completed" ? 0 : 1);
+                return statusRank(left.status) - statusRank(right.status) || left.id - right.id;
+            });
+    }
+
+    function batchDeliverySelectedIds() {
+        return new Set(state.delivery.batch.selectedCaseIds);
+    }
+
+    function setBatchDeliverySelection(caseIds) {
+        state.delivery.batch.selectedCaseIds = listUniqueCaseIds(caseIds);
+        renderBatchDeliveryModal();
+    }
+
+    function listUniqueCaseIds(caseIds) {
+        return [...new Set((caseIds || []).map(Number).filter(Number.isFinite))];
+    }
+
     function actionMenu(buttons) {
         return `<div class="row-actions">${buttons.join("")}</div>`;
     }
@@ -1402,10 +1610,10 @@ Auditoria resumida antes da reorganizacao:
                 { render: doctor => escapeText(doctor.phone || "-") },
                 {
                     render: doctor => actionMenu([
+                        menuButton("create-doctor-case", doctor.id, "Criar caso", "primary"),
                         Number(doctor.cases_count || 0) > 0
                             ? menuButton("view-doctor-cases", doctor.id, "Ver casos")
                             : "",
-                        menuButton("create-doctor-case", doctor.id, "Criar caso", "primary"),
                         menuButton("edit-doctor", doctor.id, "Editar"),
                         menuButton("delete-doctor", doctor.id, "Excluir", "danger"),
                     ].filter(Boolean)),
@@ -1429,17 +1637,15 @@ Auditoria resumida antes da reorganizacao:
                 {
                     render: caseItem => {
                         return actionMenu([
+                            menuButton("create-case-item", caseItem.id, "Criar item", "primary"),
                             Number(caseItem.items_count || 0) > 0
                                 ? menuButton("view-case-items", caseItem.id, "Ver itens")
                                 : "",
-                            menuButton("create-case-item", caseItem.id, "Criar item", "primary"),
                             menuButton("edit-case", caseItem.id, "Editar"),
-                            caseItem.status === "pending"
-                                ? menuButton("advance-case-status", caseItem.id, "Feito!", "primary")
-                                : caseItem.status === "completed"
-                                    ? menuButton("select-delivery-case", caseItem.id, "Selecionar entrega", "primary")
-                                    : menuButton(null, caseItem.id, "Entregue", "", true),
                             menuButton("delete-case", caseItem.id, "Excluir", "danger"),
+                            caseItem.status === "pending"
+                                ? menuButton("advance-case-status", caseItem.id, "Feito!", "success")
+                                : "",
                         ].filter(Boolean));
                     },
                 },
@@ -1490,7 +1696,6 @@ Auditoria resumida antes da reorganizacao:
         const caseItem = selectedCase();
         if (!caseItem) {
             el.caseSummary.innerHTML = "";
-            el.deliveryControl.innerHTML = "";
             return;
         }
 
@@ -1516,33 +1721,130 @@ Auditoria resumida antes da reorganizacao:
                 <div class="summary-value">${formatMoneyDisplay(caseItem.total_value)}</div>
             </div>
         `;
-
-        renderDeliveryControl(caseItem);
     }
 
-    function renderDeliveryControl(caseItem) {
-        if (caseItem.status !== "completed") {
-            el.deliveryControl.innerHTML = "";
+    function renderBatchDeliveryModal() {
+        const isOpen = state.delivery.batch.open;
+        el.batchDeliveryModal.hidden = !isOpen;
+        el.batchDeliveryModal.style.display = isOpen ? "flex" : "none";
+        if (!isOpen) return;
+
+        const cases = batchDeliveryCases();
+        const selectedIds = batchDeliverySelectedIds();
+        const completedCases = cases.filter(caseItem => caseItem.status === "completed");
+        const selectedCount = cases.filter(caseItem => selectedIds.has(caseItem.id)).length;
+
+        el.batchDeliveryInfo.textContent = completedCases.length
+            ? "Pedidos completos já vêm selecionados. Confirme para marcar como entregues."
+            : "Não há pedidos completos. Selecione os pedidos que deseja entregar.";
+
+        el.batchDeliveryCount.textContent = cases.length
+            ? `${selectedCount} selecionado(s) de ${cases.length} pedido(s).`
+            : "Nenhum pedido disponível para entrega.";
+
+        el.batchDeliverySelectAll.disabled = !cases.length;
+        el.batchDeliverySubmit.disabled = !selectedCount;
+
+        if (!cases.length) {
+            el.batchDeliveryEmpty.hidden = false;
+            el.batchDeliveryEmpty.textContent = "Este doutor não possui pedidos abertos para entrega.";
+            el.batchDeliveryList.innerHTML = "";
             return;
         }
 
-        const isSelected = state.delivery.selectedCaseId === caseItem.id;
-        el.deliveryControl.innerHTML = `
-            <div class="delivery-control ${isSelected ? "selected" : ""}">
-                <div class="delivery-control-copy">
-                    <strong>${isSelected ? "Entrega selecionada." : "Selecione a entrega."}</strong>
-                    <div>Revise os dentes do caso antes de marcar como entregue.</div>
-                </div>
-                <div class="button-row">
-                    ${
-                        isSelected
-                            ? `<button type="button" class="row-action primary" data-action="confirm-delivery-case" data-id="${caseItem.id}">Entregue</button>
-                               <button type="button" class="row-action" data-action="cancel-delivery-selection" data-id="${caseItem.id}">Cancelar</button>`
-                            : `<button type="button" class="row-action primary" data-action="select-delivery-case" data-id="${caseItem.id}">Selecionar entrega</button>`
-                    }
-                </div>
-            </div>
-        `;
+        el.batchDeliveryEmpty.hidden = completedCases.length > 0;
+        el.batchDeliveryEmpty.textContent = completedCases.length
+            ? ""
+            : "Nenhum pedido está marcado como completo. Selecione os pedidos que deseja entregar.";
+
+        el.batchDeliveryList.innerHTML = cases.map(caseItem => {
+            const checked = selectedIds.has(caseItem.id) ? "checked" : "";
+            const selectedClass = selectedIds.has(caseItem.id) ? "selected" : "";
+            const pendingNote = caseItem.status === "pending"
+                ? "<div class=\"batch-delivery-meta\">Será concluído antes de ser entregue.</div>"
+                : "";
+            return `
+                <label class="batch-delivery-item ${selectedClass}">
+                    <div class="batch-delivery-copy">
+                        <div class="batch-delivery-title">
+                            <input type="checkbox" data-batch-case-id="${caseItem.id}" ${checked}>
+                            <span>${escapeText(caseItem.patient_ref)}</span>
+                        </div>
+                        <div class="batch-delivery-meta">
+                            #${caseItem.id} · ${escapeText(caseItem.doctor_name || doctorNameById(caseItem.doctor_id))} · ${statusBadge(caseItem.status)}
+                        </div>
+                        ${pendingNote}
+                    </div>
+                    <div class="batch-delivery-meta">${formatMoneyDisplay(caseItem.total_value)}</div>
+                </label>
+            `;
+        }).join("");
+    }
+
+    function openBatchDeliveryModal() {
+        const cases = batchDeliveryCases();
+        if (!cases.length) {
+            setMessage(el.appMessage, "Nao ha pedidos em aberto para entregar.", "warning");
+            state.delivery.batch.open = true;
+            state.delivery.batch.selectedCaseIds = [];
+            renderBatchDeliveryModal();
+            return;
+        }
+
+        const completedIds = cases
+            .filter(caseItem => caseItem.status === "completed")
+            .map(caseItem => caseItem.id);
+
+        state.delivery.batch.open = true;
+        state.delivery.batch.selectedCaseIds = completedIds;
+        renderBatchDeliveryModal();
+    }
+
+    function closeBatchDeliveryModal() {
+        state.delivery.batch.open = false;
+        state.delivery.batch.selectedCaseIds = [];
+        renderBatchDeliveryModal();
+    }
+
+    function toggleBatchDeliveryCase(id, checked) {
+        const current = new Set(state.delivery.batch.selectedCaseIds);
+        if (checked) {
+            current.add(id);
+        } else {
+            current.delete(id);
+        }
+        state.delivery.batch.selectedCaseIds = [...current];
+        renderBatchDeliveryModal();
+    }
+
+    function selectAllBatchDeliveryCases() {
+        state.delivery.batch.selectedCaseIds = batchDeliveryCases().map(caseItem => caseItem.id);
+        renderBatchDeliveryModal();
+    }
+
+    async function confirmBatchDelivery() {
+        const caseIds = listUniqueCaseIds(state.delivery.batch.selectedCaseIds);
+        if (!caseIds.length) {
+            setMessage(el.appMessage, "Selecione ao menos um pedido para entregar.", "warning");
+            return;
+        }
+
+        try {
+            const savedCases = await apiRequest("/cases/bulk-deliver", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    case_ids: caseIds,
+                    doctor_id: state.selectedDoctorId,
+                }),
+            });
+            savedCases.forEach(saved => upsertById(state.cases, saved));
+            closeBatchDeliveryModal();
+            await refreshData();
+            setMessage(el.appMessage, "Pedidos entregues.", "success");
+        } catch (error) {
+            setMessage(el.appMessage, error.message || "Falha ao entregar pedidos.", "error");
+        }
     }
 
     function dashboardCount(status) {
@@ -1679,6 +1981,7 @@ Auditoria resumida antes da reorganizacao:
         renderCasesTable();
         renderCaseSummary();
         renderItemsTable();
+        renderBatchDeliveryModal();
     }
 
     function renderFormVisibility() {
@@ -1837,6 +2140,8 @@ Auditoria resumida antes da reorganizacao:
         state.selectedDoctorId = id;
         state.selectedCaseId = null;
         state.delivery.selectedCaseId = null;
+        state.delivery.batch.open = false;
+        state.delivery.batch.selectedCaseIds = [];
         state.viewLevel = "cases";
         state.forms.doctorOpen = false;
         state.forms.caseOpen = false;
@@ -1850,6 +2155,8 @@ Auditoria resumida antes da reorganizacao:
         state.selectedDoctorId = id;
         state.selectedCaseId = null;
         state.delivery.selectedCaseId = null;
+        state.delivery.batch.open = false;
+        state.delivery.batch.selectedCaseIds = [];
         state.viewLevel = "cases";
         state.forms.doctorOpen = false;
         state.forms.caseOpen = false;
@@ -1864,6 +2171,8 @@ Auditoria resumida antes da reorganizacao:
         state.selectedDoctorId = caseItem.doctor_id;
         state.selectedCaseId = id;
         state.delivery.selectedCaseId = null;
+        state.delivery.batch.open = false;
+        state.delivery.batch.selectedCaseIds = [];
         state.viewLevel = "items";
         state.forms.caseOpen = false;
         state.forms.itemOpen = false;
@@ -1878,6 +2187,8 @@ Auditoria resumida antes da reorganizacao:
         state.selectedDoctorId = caseItem.doctor_id;
         state.selectedCaseId = id;
         state.delivery.selectedCaseId = null;
+        state.delivery.batch.open = false;
+        state.delivery.batch.selectedCaseIds = [];
         state.viewLevel = "items";
         state.forms.caseOpen = false;
         state.forms.itemOpen = false;
@@ -1887,56 +2198,12 @@ Auditoria resumida antes da reorganizacao:
         setMessage(el.appMessage, `Criar um novo item para o caso #${id}.`, "success");
     }
 
-    async function selectDeliveryCase(id) {
-        const caseItem = state.cases.find(item => item.id === id);
-        if (!caseItem) return;
-
-        state.selectedDoctorId = caseItem.doctor_id;
-        state.selectedCaseId = id;
-        state.delivery.selectedCaseId = id;
-        state.viewLevel = "items";
-        state.forms.caseOpen = false;
-        state.forms.itemOpen = false;
-        renderLevel();
-        await loadItemsForCase(id);
-        setMessage(
-            el.appMessage,
-            `Caso #${id} selecionado para entrega. Revise os itens e clique em Entregue.`,
-            "success"
-        );
-    }
-
-    async function confirmDeliveryCase(id) {
-        const caseItem = state.cases.find(item => item.id === id);
-        if (!caseItem || state.delivery.selectedCaseId !== id) return;
-
-        try {
-            const saved = await saveEntity({
-                path: `/cases/${id}`,
-                method: "PUT",
-                payload: { status: "delivered" },
-            });
-            upsertById(state.cases, saved);
-            state.delivery.selectedCaseId = null;
-            await refreshData();
-            setMessage(el.appMessage, `Caso #${id} entregue.`, "success");
-        } catch (error) {
-            setMessage(el.appMessage, error.message || "Falha ao entregar o caso.", "error");
-        }
-    }
-
-    function cancelDeliverySelection(id) {
-        if (state.delivery.selectedCaseId !== id) return;
-        state.delivery.selectedCaseId = null;
-        renderLevel();
-        setMessage(el.appMessage, `Seleção de entrega do caso #${id} cancelada.`, "");
-    }
-
     function backToDoctors() {
         state.viewLevel = "doctors";
         state.selectedDoctorId = null;
         state.selectedCaseId = null;
-        state.delivery.selectedCaseId = null;
+        state.delivery.batch.open = false;
+        state.delivery.batch.selectedCaseIds = [];
         state.forms.caseOpen = false;
         state.forms.itemOpen = false;
         setMessage(el.appMessage, "Lista de doutores.", "");
@@ -1946,7 +2213,8 @@ Auditoria resumida antes da reorganizacao:
     function backToCases() {
         state.viewLevel = "cases";
         state.selectedCaseId = null;
-        state.delivery.selectedCaseId = null;
+        state.delivery.batch.open = false;
+        state.delivery.batch.selectedCaseIds = [];
         state.forms.itemOpen = false;
         setMessage(el.appMessage, "Lista de casos do doutor selecionado.", "");
         renderLevel();
@@ -2001,7 +2269,7 @@ Auditoria resumida antes da reorganizacao:
         }
 
         if (pricingMode === "fixed") {
-            payload.total_value = moneyToDecimal(fields.caseTotalValue.value);
+            payload.total_value = parseMoneyValue(fields.caseTotalValue.value);
         }
 
         try {
@@ -2035,7 +2303,7 @@ Auditoria resumida antes da reorganizacao:
         const payload = {
             tooth: fields.itemTooth.value.trim(),
             service_type: fields.itemServiceType.value.trim(),
-            unit_value: moneyToDecimal(fields.itemUnitValue.value),
+            unit_value: parseMoneyValue(fields.itemUnitValue.value),
             material: fields.itemMaterial.value.trim() || null,
             color: fields.itemColor.value.trim() || null,
             notes: fields.itemNotes.value.trim() || null,
@@ -2215,7 +2483,8 @@ Auditoria resumida antes da reorganizacao:
         state.cases = [];
         state.selectedDoctorId = null;
         state.selectedCaseId = null;
-        state.delivery.selectedCaseId = null;
+        state.delivery.batch.open = false;
+        state.delivery.batch.selectedCaseIds = [];
         state.viewLevel = "doctors";
         renderLevel();
     }
@@ -2251,6 +2520,7 @@ Auditoria resumida antes da reorganizacao:
 
         document.getElementById("newDoctorButton").addEventListener("click", () => openDoctorForm());
         document.getElementById("newCaseButton").addEventListener("click", () => openCaseForm());
+        document.getElementById("batchDeliverButton").addEventListener("click", openBatchDeliveryModal);
         document.getElementById("newItemButton").addEventListener("click", () => openItemForm());
         document.getElementById("refreshDoctorsButton").addEventListener("click", async () => {
             try {
@@ -2271,6 +2541,13 @@ Auditoria resumida antes da reorganizacao:
         });
         fields.doctorPhone.addEventListener("input", event => {
             event.target.value = formatBrazilianPhoneMask(event.target.value);
+        });
+        el.batchDeliverySelectAll.addEventListener("click", selectAllBatchDeliveryCases);
+        el.batchDeliverySubmit.addEventListener("click", confirmBatchDelivery);
+        el.batchDeliveryList.addEventListener("change", event => {
+            const checkbox = event.target.closest("input[type=\"checkbox\"][data-batch-case-id]");
+            if (!checkbox) return;
+            toggleBatchDeliveryCase(Number(checkbox.dataset.batchCaseId), checkbox.checked);
         });
 
         el.appContent.addEventListener("click", async event => {
@@ -2293,9 +2570,6 @@ Auditoria resumida antes da reorganizacao:
             if (action === "create-case-item") await createItemForCase(id);
             if (action === "edit-case") openCaseForm(id);
             if (action === "advance-case-status") await advanceCaseStatus(id);
-            if (action === "select-delivery-case") await selectDeliveryCase(id);
-            if (action === "confirm-delivery-case") await confirmDeliveryCase(id);
-            if (action === "cancel-delivery-selection") cancelDeliverySelection(id);
             if (action === "delete-case") await deleteCase(id);
             if (action === "back-to-cases") backToCases();
             if (action === "close-case-form") {
@@ -2309,6 +2583,17 @@ Auditoria resumida antes da reorganizacao:
                 state.forms.itemOpen = false;
                 resetItemForm();
                 renderFormVisibility();
+            }
+        });
+
+        el.batchDeliveryModal.addEventListener("click", event => {
+            const button = event.target.closest("[data-action]");
+            if (button?.dataset.action === "close-batch-delivery") {
+                closeBatchDeliveryModal();
+                return;
+            }
+            if (event.target === el.batchDeliveryModal) {
+                closeBatchDeliveryModal();
             }
         });
     }

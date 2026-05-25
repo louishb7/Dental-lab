@@ -9,7 +9,12 @@ from sqlalchemy.orm import Session
 
 from backend.dependencies.auth import get_current_user
 from backend.database.connection import get_db
-from backend.schemas.case import CaseCreate, CaseResponse, CaseUpdate
+from backend.schemas.case import (
+    CaseBulkDeliverRequest,
+    CaseCreate,
+    CaseResponse,
+    CaseUpdate,
+)
 from backend.services import case as case_service
 
 router = APIRouter(
@@ -50,6 +55,20 @@ def read_case(case_id: int, db: Session = Depends(get_db)):
     if db_case is None:
         raise HTTPException(status_code=404, detail="Caso não encontrado")
     return db_case
+
+
+@router.post("/bulk-deliver", response_model=list[CaseResponse])
+def bulk_deliver_cases(
+    payload: CaseBulkDeliverRequest, db: Session = Depends(get_db)
+):
+    try:
+        return case_service.bulk_deliver_cases(
+            db,
+            case_ids=payload.case_ids,
+            doctor_id=payload.doctor_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 @router.put("/{case_id}", response_model=CaseResponse)

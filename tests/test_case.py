@@ -3,7 +3,10 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from fastapi.testclient import TestClient
 
+from backend.core import settings
+from backend.main import app
 from backend.database.connection import SessionLocal
 from backend.schemas.case import CaseCreate, CaseUpdate
 from backend.schemas.case_item import CaseItemCreate
@@ -21,6 +24,25 @@ def _create_doctor(db: SessionLocal):
             clinic_name="Clínica Caso",
         ),
     )
+
+
+def _configure_test_security(monkeypatch) -> None:
+    monkeypatch.setattr(settings, "SECRET_KEY", "test-secret")
+    monkeypatch.setattr(settings, "ALGORITHM", "HS256")
+    monkeypatch.setattr(settings, "ACCESS_TOKEN_EXPIRE_MINUTES", 60)
+
+
+def _register_user(client: TestClient) -> dict:
+    response = client.post(
+        "/auth/register",
+        json={
+            "email": "case@cadista.local",
+            "username": "case",
+            "password": "secret123",
+        },
+    )
+    assert response.status_code == 201, response.text
+    return response.json()
 
 
 def test_create_case_and_normalize_money() -> None:
@@ -116,6 +138,107 @@ def test_case_status_flow_is_linear() -> None:
                 case.id,
                 CaseUpdate(status="pending"),
             )
+
+
+def test_bulk_deliver_cases_delivers_completed_cases_by_default() -> None:
+    with SessionLocal() as db:
+        doctor = _create_doctor(db)
+        pending_case = case_service.create_case(
+            db,
+            CaseCreate(doctor_id=doctor.id, patient_ref="Paciente Pendente"),
+        )
+        completed_case = case_service.create_case(
+            db,
+            CaseCreate(doctor_id=doctor.id, patient_ref="Paciente Completo"),
+        )
+        case_service.update_case(
+            db,
+            completed_case.id,
+            CaseUpdate(status="completed"),
+        )
+
+        delivered_cases = case_service.bulk_deliver_cases(db, doctor_id=doctor.id)
+
+        assert [case.id for case in delivered_cases] == [completed_case.id]
+        assert delivered_cases[0].status == "delivered"
+        assert delivered_cases[0].delivered_at is not None
+
+        refreshed_pending = case_service.get_case_by_id(db, pending_case.id)
+        assert refreshed_pending is not None
+        assert refreshed_pending.status == "pending"
+
+
+def test_bulk_deliver_cases_allows_manual_selection() -> None:
+    with SessionLocal() as db:
+        doctor = _create_doctor(db)
+        pending_case = case_service.create_case(
+            db,
+            CaseCreate(doctor_id=doctor.id, patient_ref="Paciente Manual"),
+        )
+        completed_case = case_service.create_case(
+            db,
+            CaseCreate(doctor_id=doctor.id, patient_ref="Paciente Pronto"),
+        )
+        case_service.update_case(
+            db,
+            completed_case.id,
+            CaseUpdate(status="completed"),
+        )
+
+        delivered_cases = case_service.bulk_deliver_cases(
+            db,
+            case_ids=[pending_case.id, completed_case.id],
+            doctor_id=doctor.id,
+        )
+
+        assert {case.id for case in delivered_cases} == {
+            pending_case.id,
+            completed_case.id,
+        }
+        assert all(case.status == "delivered" for case in delivered_cases)
+        assert all(case.delivered_at is not None for case in delivered_cases)
+
+
+def test_bulk_deliver_cases_route_accepts_selected_cases(monkeypatch) -> None:
+    _configure_test_security(monkeypatch)
+    client = TestClient(app)
+    token = _register_user(client)["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    with SessionLocal() as db:
+        doctor = _create_doctor(db)
+        pending_case = case_service.create_case(
+            db,
+            CaseCreate(doctor_id=doctor.id, patient_ref="Paciente Rota"),
+        )
+        completed_case = case_service.create_case(
+            db,
+            CaseCreate(doctor_id=doctor.id, patient_ref="Paciente Rota Completo"),
+        )
+        case_service.update_case(
+            db,
+            completed_case.id,
+            CaseUpdate(status="completed"),
+        )
+        doctor_id = doctor.id
+        pending_case_id = pending_case.id
+        completed_case_id = completed_case.id
+
+    response = client.post(
+        "/cases/bulk-deliver",
+        headers=headers,
+        json={
+            "case_ids": [pending_case_id, completed_case_id],
+            "doctor_id": doctor_id,
+        },
+    )
+    assert response.status_code == 200, response.text
+
+    payload = response.json()
+    assert {case["id"] for case in payload} == {
+        pending_case_id,
+        completed_case_id,
+    }
 
 
 def test_service_mode_case_recalculates_total_from_items() -> None:
