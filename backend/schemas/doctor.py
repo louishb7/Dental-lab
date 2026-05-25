@@ -89,5 +89,8 @@ class DoctorResponse(DoctorBase):
     deleted_at: Optional[datetime] = Field(
         default=None, description="Data de soft delete do doutor"
     )
+    cases_count: int = Field(
+        default=0, description="Quantidade de casos ativos vinculados ao doutor"
+    )
 
     model_config = ConfigDict(from_attributes=True)

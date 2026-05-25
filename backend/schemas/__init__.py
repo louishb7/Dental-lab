@@ -24,6 +24,10 @@ from backend.schemas.auth import (
     AuthTokenResponse,
     AuthUserResponse,
 )
+from backend.schemas.dashboard import (
+    DashboardCaseResponse,
+    DashboardSummaryResponse,
+)
 
 __all__ = [
     "DoctorBase",
@@ -42,4 +46,6 @@ __all__ = [
     "AuthLoginRequest",
     "AuthTokenResponse",
     "AuthUserResponse",
+    "DashboardCaseResponse",
+    "DashboardSummaryResponse",
 ]

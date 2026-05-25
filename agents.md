@@ -203,6 +203,12 @@ cadista/
 - O frontend deve consumir a API, não renderizar lógica de domínio.
 - Toda regra descrita aqui precisa de teste automatizado.
 
+## Pendências internas
+
+- Antes de iniciar qualquer tarefa, o agente deve ler `decisoes.md`.
+- Se uma pendência ou assunto registrado em `decisoes.md` já tiver sido concluído, implementado ou alterado, o agente deve atualizar o arquivo e remover o item da lista de pendências ativas.
+- `decisoes.md` é um arquivo interno de trabalho e não deve ser tratado como documentação pública.
+
 ## Protocolo obrigatório de resposta do agent
 
 Sempre que trabalhar neste projeto, o agent deve seguir estas regras de comunicação e entrega:

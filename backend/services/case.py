@@ -6,11 +6,41 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
+from sqlalchemy.orm import selectinload
 
 from backend.models.case import Case
+from backend.models.case_item import CaseItem
 from backend.models.doctor import Doctor
 from backend.schemas.case import CaseCreate, CaseUpdate
+
+
+def _item_counts_by_case(db: Session, case_ids: list[int]) -> dict[int, int]:
+    if not case_ids:
+        return {}
+
+    rows = (
+        db.query(CaseItem.case_id, func.count(CaseItem.id))
+        .join(Case, Case.id == CaseItem.case_id)
+        .filter(Case.deleted_at.is_(None), CaseItem.case_id.in_(case_ids))
+        .group_by(CaseItem.case_id)
+        .all()
+    )
+    return {case_id: int(count) for case_id, count in rows}
+
+
+def _attach_items_count(db: Session, case: Case) -> Case:
+    counts = _item_counts_by_case(db, [case.id])
+    setattr(case, "items_count", counts.get(case.id, 0))
+    return case
+
+
+def _attach_items_counts(db: Session, cases: list[Case]) -> list[Case]:
+    counts = _item_counts_by_case(db, [case.id for case in cases])
+    for case in cases:
+        setattr(case, "items_count", counts.get(case.id, 0))
+    return cases
 
 
 def _get_active_doctor(db: Session, doctor_id: int) -> Doctor | None:
@@ -37,15 +67,19 @@ def create_case(db: Session, case_data: CaseCreate) -> Case:
     db.add(db_case)
     db.commit()
     db.refresh(db_case)
-    return db_case
+    return _attach_items_count(db, db_case)
 
 
 def get_case_by_id(db: Session, case_id: int) -> Case | None:
-    return (
+    db_case = (
         db.query(Case)
+        .options(selectinload(Case.items))
         .filter(Case.id == case_id, Case.deleted_at.is_(None))
         .first()
     )
+    if db_case is None:
+        return None
+    return _attach_items_count(db, db_case)
 
 
 def get_all_cases(
@@ -55,7 +89,11 @@ def get_all_cases(
     doctor_id: int | None = None,
     status: str | None = None,
 ) -> list[Case]:
-    query = db.query(Case).filter(Case.deleted_at.is_(None))
+    query = (
+        db.query(Case)
+        .options(selectinload(Case.items))
+        .filter(Case.deleted_at.is_(None))
+    )
 
     if doctor_id is not None:
         query = query.filter(Case.doctor_id == doctor_id)
@@ -63,7 +101,8 @@ def get_all_cases(
     if status is not None:
         query = query.filter(Case.status == status)
 
-    return query.order_by(Case.id.desc()).offset(skip).limit(limit).all()
+    cases = query.order_by(Case.id.desc()).offset(skip).limit(limit).all()
+    return _attach_items_counts(db, cases)
 
 
 def update_case(db: Session, case_id: int, case_data: CaseUpdate) -> Case | None:
@@ -91,7 +130,8 @@ def update_case(db: Session, case_id: int, case_data: CaseUpdate) -> Case | None
         if db_case.status == "delivered" and new_status != "delivered":
             if not new_reason or not new_reason.strip():
                 raise ValueError(
-                    "Para reverter um caso entregue, é obrigatório informar um motivo."
+                    "Para reverter um caso entregue, é obrigatório "
+                    "informar um motivo."
                 )
             db_case.status_revert_reason = new_reason.strip()
         elif new_reason:
@@ -111,6 +151,7 @@ def update_case(db: Session, case_id: int, case_data: CaseUpdate) -> Case | None
 
     db.commit()
     db.refresh(db_case)
+    _attach_items_count(db, db_case)
     return db_case
 
 
@@ -135,4 +176,5 @@ def delete_case(db: Session, case_id: int) -> Case:
     db_case.deleted_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(db_case)
+    _attach_items_count(db, db_case)
     return db_case

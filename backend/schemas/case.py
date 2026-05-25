@@ -124,6 +124,9 @@ class CaseResponse(CaseBase):
     status_revert_reason: Optional[str] = Field(
         default=None, description="Motivo para reverter um caso entregue"
     )
+    items_count: int = Field(
+        default=0, description="Quantidade de itens vinculados ao caso"
+    )
     items: List[CaseItemResponse] = Field(
         default_factory=list, description="Lista de itens do caso"
     )

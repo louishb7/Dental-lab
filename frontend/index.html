@@ -361,56 +361,165 @@ Auditoria resumida antes da reorganizacao:
             color: #991b1b;
         }
 
-        .row-menu {
-            position: relative;
-            width: max-content;
+        .row-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
         }
 
-        .row-menu summary {
-            list-style: none;
-            border-radius: 8px;
-            background: #e7eaee;
-            padding: 7px 10px;
-            font-weight: 700;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .row-menu summary::-webkit-details-marker {
-            display: none;
-        }
-
-        .row-menu[open] summary {
-            background: #d8dee6;
-        }
-
-        .row-menu-list {
-            min-width: 150px;
-            margin-top: 6px;
-            padding: 6px;
+        .row-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 999px;
             background: #fff;
-            box-shadow: var(--shadow);
-        }
-
-        .row-menu-list button {
-            display: block;
-            width: 100%;
-            border-radius: 6px;
-            background: transparent;
             color: var(--text);
-            text-align: left;
-            padding: 8px 9px;
+            padding: 7px 11px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            line-height: 1;
+            white-space: nowrap;
         }
 
-        .row-menu-list button:hover {
+        .row-action:hover {
+            transform: translateY(-1px);
             background: var(--soft);
+        }
+
+        .row-action.primary {
+            border-color: transparent;
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .row-action.primary:hover {
+            background: var(--accent-dark);
+        }
+
+        .row-action.danger {
+            border-color: #fecaca;
+            background: #fff5f5;
+            color: var(--danger);
+        }
+
+        .row-action:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
             transform: none;
         }
 
-        .row-menu-list .danger {
-            color: var(--danger);
+        .dashboard-card {
+            margin-bottom: 18px;
+        }
+
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        .dashboard-stat {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #fbfcfe;
+            padding: 14px;
+            min-height: 104px;
+        }
+
+        .dashboard-stat.primary {
+            background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+        }
+
+        .dashboard-stat.success {
+            background: linear-gradient(180deg, #ecfdf3 0%, #ffffff 100%);
+        }
+
+        .dashboard-stat.warning {
+            background: linear-gradient(180deg, #fffbeb 0%, #ffffff 100%);
+        }
+
+        .dashboard-stat.danger {
+            background: linear-gradient(180deg, #fef2f2 0%, #ffffff 100%);
+        }
+
+        .dashboard-stat-label {
+            color: var(--muted);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .dashboard-stat-value {
+            margin-top: 8px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .dashboard-stat-hint {
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 0.88rem;
+            line-height: 1.35;
+        }
+
+        .dashboard-lists {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        .dashboard-list-card {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #fbfcfe;
+            padding: 14px;
+        }
+
+        .dashboard-list-card h3 {
+            margin: 0 0 12px;
+            font-size: 1rem;
+        }
+
+        .dashboard-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 10px;
+        }
+
+        .dashboard-list-item {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #fff;
+            padding: 10px 12px;
+        }
+
+        .dashboard-list-title {
+            font-weight: 700;
+        }
+
+        .dashboard-list-meta {
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 0.84rem;
+            line-height: 1.35;
+        }
+
+        .dashboard-list-empty {
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        .dashboard-total {
+            margin-bottom: 12px;
+            font-weight: 800;
+            font-size: 1.15rem;
         }
 
         .case-summary {
@@ -443,7 +552,9 @@ Auditoria resumida antes da reorganizacao:
             .hero,
             .auth-grid,
             .form-grid,
-            .case-summary {
+            .case-summary,
+            .dashboard-stats,
+            .dashboard-lists {
                 grid-template-columns: 1fr;
             }
 
@@ -530,20 +641,49 @@ Auditoria resumida antes da reorganizacao:
         </div>
     </section>
 
-    <main id="appContent" hidden>
-        <div class="toolbar">
-            <div class="toolbar-left">
-                <span id="appSessionStatus" class="session-chip"></span>
+        <main id="appContent" hidden>
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <span id="appSessionStatus" class="session-chip"></span>
+                </div>
+                <button id="appLogoutButton" class="btn-danger btn-small" type="button">Sair</button>
             </div>
-            <button id="appLogoutButton" class="btn-danger btn-small" type="button">Sair</button>
-        </div>
-        <nav id="breadcrumb" class="breadcrumb"></nav>
-        <p id="appMessage" class="message"></p>
+            <nav id="breadcrumb" class="breadcrumb"></nav>
+            <p id="appMessage" class="message"></p>
 
-        <section id="doctorsLevel" class="card level-panel">
-            <div class="level-header">
-                <div class="level-title">
-                    <h2>Doutores</h2>
+            <section id="dashboardPanel" class="card dashboard-card">
+                <div class="level-header">
+                    <div class="level-title">
+                        <h2>Painel</h2>
+                        <p>Resumo de abertura, pendências e financeiro do mês atual.</p>
+                    </div>
+                    <div class="button-row">
+                        <span id="dashboardUpdatedAt" class="meta"></span>
+                        <button id="refreshDashboardButton" class="btn-secondary" type="button">Atualizar painel</button>
+                    </div>
+                </div>
+                <div id="dashboardStats" class="dashboard-stats"></div>
+                <div class="dashboard-lists">
+                    <article class="dashboard-list-card">
+                        <h3>Vencidos</h3>
+                        <ul id="dashboardOverdueList" class="dashboard-list"></ul>
+                    </article>
+                    <article class="dashboard-list-card">
+                        <h3>Urgentes em aberto</h3>
+                        <ul id="dashboardUrgentList" class="dashboard-list"></ul>
+                    </article>
+                    <article class="dashboard-list-card">
+                        <h3>Financeiro do mês</h3>
+                        <div id="dashboardFinanceTotal" class="dashboard-total"></div>
+                        <ul id="dashboardFinanceList" class="dashboard-list"></ul>
+                    </article>
+                </div>
+            </section>
+
+            <section id="doctorsLevel" class="card level-panel">
+                <div class="level-header">
+                    <div class="level-title">
+                        <h2>Doutores</h2>
                     <p>Escolha um doutor para ver os casos vinculados.</p>
                 </div>
                 <div class="button-row">
@@ -767,15 +907,28 @@ Auditoria resumida antes da reorganizacao:
         delivered: null,
     };
 
-    const state = {
-        viewLevel: "doctors",
-        doctors: [],
-        cases: [],
-        selectedDoctorId: null,
-        selectedCaseId: null,
-        editing: {
-            doctorId: null,
-            caseId: null,
+        const state = {
+            viewLevel: "doctors",
+            doctors: [],
+            cases: [],
+            dashboard: {
+                generated_at: "",
+                status_counts: {
+                    pending: 0,
+                    completed: 0,
+                    delivered: 0,
+                },
+                overdue_cases: [],
+                urgent_open_cases: [],
+                delivered_cases_month: [],
+                delivered_total_month: "0.00",
+                delivered_count_month: 0,
+            },
+            selectedDoctorId: null,
+            selectedCaseId: null,
+            editing: {
+                doctorId: null,
+                caseId: null,
             itemId: null,
         },
         forms: {
@@ -790,9 +943,9 @@ Auditoria resumida antes da reorganizacao:
         },
     };
 
-    const el = {
-        apiStatus: document.getElementById("apiStatus"),
-        authMessage: document.getElementById("authMessage"),
+        const el = {
+            apiStatus: document.getElementById("apiStatus"),
+            authMessage: document.getElementById("authMessage"),
         authIdentifier: document.getElementById("authIdentifier"),
         authPassword: document.getElementById("authPassword"),
         registerEmail: document.getElementById("registerEmail"),
@@ -805,13 +958,21 @@ Auditoria resumida antes da reorganizacao:
         sessionMeta: document.getElementById("sessionMeta"),
         authCard: document.getElementById("authCard"),
         appContent: document.getElementById("appContent"),
-        appSessionStatus: document.getElementById("appSessionStatus"),
-        appLogoutButton: document.getElementById("appLogoutButton"),
-        breadcrumb: document.getElementById("breadcrumb"),
-        appMessage: document.getElementById("appMessage"),
-        doctorsLevel: document.getElementById("doctorsLevel"),
-        casesLevel: document.getElementById("casesLevel"),
-        itemsLevel: document.getElementById("itemsLevel"),
+            appSessionStatus: document.getElementById("appSessionStatus"),
+            appLogoutButton: document.getElementById("appLogoutButton"),
+            breadcrumb: document.getElementById("breadcrumb"),
+            appMessage: document.getElementById("appMessage"),
+            dashboardPanel: document.getElementById("dashboardPanel"),
+            dashboardUpdatedAt: document.getElementById("dashboardUpdatedAt"),
+            dashboardStats: document.getElementById("dashboardStats"),
+            dashboardOverdueList: document.getElementById("dashboardOverdueList"),
+            dashboardUrgentList: document.getElementById("dashboardUrgentList"),
+            dashboardFinanceList: document.getElementById("dashboardFinanceList"),
+            dashboardFinanceTotal: document.getElementById("dashboardFinanceTotal"),
+            refreshDashboardButton: document.getElementById("refreshDashboardButton"),
+            doctorsLevel: document.getElementById("doctorsLevel"),
+            casesLevel: document.getElementById("casesLevel"),
+            itemsLevel: document.getElementById("itemsLevel"),
         doctorsTableBody: document.getElementById("doctorsTableBody"),
         casesTableBody: document.getElementById("casesTableBody"),
         itemsTableBody: document.getElementById("itemsTableBody"),
@@ -1122,19 +1283,15 @@ Auditoria resumida antes da reorganizacao:
     }
 
     function actionMenu(buttons) {
-        return `
-            <details class="row-menu">
-                <summary>Acoes</summary>
-                <div class="row-menu-list">
-                    ${buttons.join("")}
-                </div>
-            </details>
-        `;
+        return `<div class="row-actions">${buttons.join("")}</div>`;
     }
 
-    function menuButton(action, id, label, extraClass = "") {
-        const classes = extraClass ? ` class="${extraClass}"` : "";
-        return `<button type="button" data-action="${action}" data-id="${id}"${classes}>${label}</button>`;
+    function menuButton(action, id, label, extraClass = "", disabled = false) {
+        const classes = extraClass ? ` ${extraClass}` : "";
+        if (disabled || !action) {
+            return `<button type="button" class="row-action${classes}" disabled>${label}</button>`;
+        }
+        return `<button type="button" class="row-action${classes}" data-action="${action}" data-id="${id}">${label}</button>`;
     }
 
     function statusBadge(status) {
@@ -1169,10 +1326,13 @@ Auditoria resumida antes da reorganizacao:
                 { render: doctor => escapeText(doctor.phone || "-") },
                 {
                     render: doctor => actionMenu([
-                        menuButton("view-doctor-cases", doctor.id, "Ver casos"),
+                        Number(doctor.cases_count || 0) > 0
+                            ? menuButton("view-doctor-cases", doctor.id, "Ver casos")
+                            : "",
+                        menuButton("create-doctor-case", doctor.id, "Criar caso", "primary"),
                         menuButton("edit-doctor", doctor.id, "Editar"),
                         menuButton("delete-doctor", doctor.id, "Excluir", "danger"),
-                    ]),
+                    ].filter(Boolean)),
                 },
             ],
             "Nenhum doutor cadastrado.",
@@ -1194,13 +1354,16 @@ Auditoria resumida antes da reorganizacao:
                     render: caseItem => {
                         const nextStatus = STATUS_FLOW[caseItem.status];
                         return actionMenu([
-                            menuButton("view-case-items", caseItem.id, "Ver itens"),
+                            Number(caseItem.items_count || 0) > 0
+                                ? menuButton("view-case-items", caseItem.id, "Ver itens")
+                                : "",
+                            menuButton("create-case-item", caseItem.id, "Criar item", "primary"),
                             menuButton("edit-case", caseItem.id, "Editar"),
                             nextStatus
                                 ? menuButton("advance-case-status", caseItem.id, `Avancar para ${nextStatus}`)
-                                : `<button type="button" disabled>Status final</button>`,
+                                : menuButton(null, caseItem.id, "Status final", "", true),
                             menuButton("delete-case", caseItem.id, "Excluir", "danger"),
-                        ]);
+                        ].filter(Boolean));
                     },
                 },
             ],
@@ -1270,6 +1433,116 @@ Auditoria resumida antes da reorganizacao:
                 <div class="summary-value">${formatMoneyDisplay(caseItem.total_value)}</div>
             </div>
         `;
+    }
+
+    function dashboardCount(status) {
+        return Number(state.dashboard?.status_counts?.[status] || 0);
+    }
+
+    function renderDashboardList(target, items, emptyText, renderItem) {
+        if (!items.length) {
+            target.innerHTML = `<li class="dashboard-list-empty">${escapeText(emptyText)}</li>`;
+            return;
+        }
+
+        target.innerHTML = items.map(renderItem).join("");
+    }
+
+    function renderDashboard() {
+        const overdueCases = state.dashboard.overdue_cases || [];
+        const urgentCases = state.dashboard.urgent_open_cases || [];
+        const financeCases = state.dashboard.delivered_cases_month || [];
+        const openCases = dashboardCount("pending") + dashboardCount("completed");
+        const deliveredTotal = formatMoneyDisplay(state.dashboard.delivered_total_month);
+
+        el.dashboardUpdatedAt.textContent = state.dashboard.generated_at
+            ? `Atualizado em ${formatDate(state.dashboard.generated_at)}`
+            : "Painel ainda nao carregado.";
+
+        el.dashboardStats.innerHTML = [
+            {
+                label: "Em aberto",
+                value: openCases,
+                hint: `${dashboardCount("pending")} pendentes e ${dashboardCount("completed")} prontos.`,
+                variant: "primary",
+            },
+            {
+                label: "Entregues",
+                value: dashboardCount("delivered"),
+                hint: "Casos finalizados e contabilizados.",
+                variant: "success",
+            },
+            {
+                label: "Vencidos",
+                value: overdueCases.length,
+                hint: "Casos com prazo expirado e ainda nao entregues.",
+                variant: "danger",
+            },
+            {
+                label: "Urgentes",
+                value: urgentCases.length,
+                hint: "Casos urgentes ainda em aberto.",
+                variant: "warning",
+            },
+            {
+                label: "Faturado no mês",
+                value: deliveredTotal,
+                hint: `${state.dashboard.delivered_count_month} entregas com valor.`,
+                variant: "primary",
+            },
+        ].map(card => `
+            <article class="dashboard-stat ${card.variant}">
+                <div class="dashboard-stat-label">${escapeText(card.label)}</div>
+                <div class="dashboard-stat-value">${escapeText(card.value)}</div>
+                <div class="dashboard-stat-hint">${escapeText(card.hint)}</div>
+            </article>
+        `).join("");
+
+        renderDashboardList(
+            el.dashboardOverdueList,
+            overdueCases,
+            "Nenhum caso vencido no momento.",
+            caseItem => `
+                <li class="dashboard-list-item">
+                    <div class="dashboard-list-title">${escapeText(caseItem.patient_ref)}</div>
+                    <div class="dashboard-list-meta">
+                        #${caseItem.id} · ${escapeText(caseItem.doctor_name)} · ${formatDate(caseItem.deadline)}
+                    </div>
+                </li>
+            `,
+        );
+
+        renderDashboardList(
+            el.dashboardUrgentList,
+            urgentCases,
+            "Nenhum caso urgente em aberto.",
+            caseItem => `
+                <li class="dashboard-list-item">
+                    <div class="dashboard-list-title">${escapeText(caseItem.patient_ref)}</div>
+                    <div class="dashboard-list-meta">
+                        #${caseItem.id} · ${escapeText(caseItem.doctor_name)} · ${statusBadge(caseItem.status)}
+                    </div>
+                </li>
+            `,
+        );
+
+        el.dashboardFinanceTotal.textContent = financeCases.length
+            ? `Total do mês: ${deliveredTotal}`
+            : "Sem entregas com valor no mês atual.";
+
+        renderDashboardList(
+            el.dashboardFinanceList,
+            financeCases,
+            "Nenhuma entrega com valor no mês atual.",
+            caseItem => `
+                <li class="dashboard-list-item">
+                    <div class="dashboard-list-title">${escapeText(caseItem.patient_ref)}</div>
+                    <div class="dashboard-list-meta">
+                        ${escapeText(caseItem.doctor_name)} · ${formatDate(caseItem.delivered_at)} · ${formatMoneyDisplay(caseItem.total_value)}
+                    </div>
+                </li>
+            `,
+        );
     }
 
     function renderLevel() {
@@ -1414,6 +1687,11 @@ Auditoria resumida antes da reorganizacao:
         renderLevel();
     }
 
+    async function loadDashboard() {
+        state.dashboard = await apiRequest("/dashboard/overview");
+        renderDashboard();
+    }
+
     async function loadItemsForCase(caseId) {
         const items = await apiRequest(`/cases/${caseId}/items/`);
         const caseItem = state.cases.find(item => item.id === caseId);
@@ -1422,10 +1700,14 @@ Auditoria resumida antes da reorganizacao:
     }
 
     async function refreshData() {
-        await loadDoctors();
-        await loadCases();
+        await Promise.all([
+            loadDashboard(),
+            loadDoctors(),
+            loadCases(),
+        ]);
         const caseItem = selectedCase();
         if (caseItem) await loadItemsForCase(caseItem.id);
+        renderDashboard();
     }
 
     async function showDoctorCases(id) {
@@ -1440,6 +1722,19 @@ Auditoria resumida antes da reorganizacao:
         renderLevel();
     }
 
+    async function createCaseForDoctor(id) {
+        const doctor = state.doctors.find(item => item.id === id);
+        if (!doctor) return;
+        state.selectedDoctorId = id;
+        state.selectedCaseId = null;
+        state.viewLevel = "cases";
+        state.forms.doctorOpen = false;
+        state.forms.caseOpen = false;
+        renderLevel();
+        openCaseForm();
+        setMessage(el.appMessage, `Criar um novo caso para ${doctor.name}.`, "success");
+    }
+
     async function showCaseItems(id) {
         const caseItem = state.cases.find(item => item.id === id);
         if (!caseItem) return;
@@ -1451,6 +1746,20 @@ Auditoria resumida antes da reorganizacao:
         renderLevel();
         await loadItemsForCase(id);
         setMessage(el.appMessage, `Itens do caso #${id}.`, "success");
+    }
+
+    async function createItemForCase(id) {
+        const caseItem = state.cases.find(item => item.id === id);
+        if (!caseItem) return;
+        state.selectedDoctorId = caseItem.doctor_id;
+        state.selectedCaseId = id;
+        state.viewLevel = "items";
+        state.forms.caseOpen = false;
+        state.forms.itemOpen = false;
+        renderLevel();
+        await loadItemsForCase(id);
+        openItemForm();
+        setMessage(el.appMessage, `Criar um novo item para o caso #${id}.`, "success");
     }
 
     function backToDoctors() {
@@ -1493,6 +1802,7 @@ Auditoria resumida antes da reorganizacao:
             state.forms.doctorOpen = false;
             resetDoctorForm();
             renderLevel();
+            await refreshData();
             setMessage(el.appMessage, id ? "Doutor atualizado." : "Doutor criado.", "success");
         } catch (error) {
             setMessage(el.appMessage, error.message || "Falha ao salvar doutor.", "error");
@@ -1527,6 +1837,7 @@ Auditoria resumida antes da reorganizacao:
             state.forms.caseOpen = false;
             resetCaseForm();
             renderLevel();
+            await refreshData();
             setMessage(el.appMessage, id ? "Caso atualizado." : "Caso criado.", "success");
         } catch (error) {
             setMessage(el.appMessage, error.message || "Falha ao salvar caso.", "error");
@@ -1563,6 +1874,7 @@ Auditoria resumida antes da reorganizacao:
             state.forms.itemOpen = false;
             resetItemForm();
             renderLevel();
+            await refreshData();
             setMessage(el.appMessage, id ? "Item atualizado." : "Item criado.", "success");
         } catch (error) {
             setMessage(el.appMessage, error.message || "Falha ao salvar item.", "error");
@@ -1604,6 +1916,7 @@ Auditoria resumida antes da reorganizacao:
                 confirmText: `Excluir o doutor #${id}? A API bloqueia se houver casos vinculados.`,
                 successText: `Doutor #${id} excluido.`,
             });
+            await refreshData();
         } catch (error) {
             setMessage(el.appMessage, error.message || "Falha ao excluir doutor.", "error");
         }
@@ -1618,6 +1931,7 @@ Auditoria resumida antes da reorganizacao:
                 confirmText: `Excluir o caso #${id}? Casos nao pendentes podem ser removidos por soft delete.`,
                 successText: `Caso #${id} removido.`,
             });
+            await refreshData();
         } catch (error) {
             setMessage(el.appMessage, error.message || "Falha ao excluir caso.", "error");
         }
@@ -1634,6 +1948,7 @@ Auditoria resumida antes da reorganizacao:
                 confirmText: `Excluir o item #${id}?`,
                 successText: `Item #${id} excluido.`,
             });
+            await refreshData();
         } catch (error) {
             setMessage(el.appMessage, error.message || "Falha ao excluir item.", "error");
         }
@@ -1653,6 +1968,7 @@ Auditoria resumida antes da reorganizacao:
             upsertById(state.cases, saved);
             setMessage(el.appMessage, `Caso #${id} atualizado para ${nextStatus}.`, "success");
             renderLevel();
+            await refreshData();
         } catch (error) {
             setMessage(el.appMessage, error.message || "Falha ao atualizar status.", "error");
         }
@@ -1746,6 +2062,14 @@ Auditoria resumida antes da reorganizacao:
         el.itemForm.addEventListener("submit", submitItem);
         el.logoutButton.addEventListener("click", logoutSession);
         el.appLogoutButton.addEventListener("click", logoutSession);
+        el.refreshDashboardButton.addEventListener("click", async () => {
+            try {
+                await loadDashboard();
+                setMessage(el.appMessage, "Painel atualizado.", "success");
+            } catch (error) {
+                setMessage(el.appMessage, error.message || "Falha ao atualizar painel.", "error");
+            }
+        });
 
         document.getElementById("newDoctorButton").addEventListener("click", () => openDoctorForm());
         document.getElementById("newCaseButton").addEventListener("click", () => openCaseForm());
@@ -1773,11 +2097,8 @@ Auditoria resumida antes da reorganizacao:
             const action = button.dataset.action;
             const id = Number(button.dataset.id);
 
-            if (button.closest(".row-menu")) {
-                button.closest(".row-menu").open = false;
-            }
-
             if (action === "view-doctor-cases") await showDoctorCases(id);
+            if (action === "create-doctor-case") await createCaseForDoctor(id);
             if (action === "edit-doctor") openDoctorForm(id);
             if (action === "delete-doctor") await deleteDoctor(id);
             if (action === "back-to-doctors") backToDoctors();
@@ -1787,6 +2108,7 @@ Auditoria resumida antes da reorganizacao:
                 renderFormVisibility();
             }
             if (action === "view-case-items") await showCaseItems(id);
+            if (action === "create-case-item") await createItemForCase(id);
             if (action === "edit-case") openCaseForm(id);
             if (action === "advance-case-status") await advanceCaseStatus(id);
             if (action === "delete-case") await deleteCase(id);
