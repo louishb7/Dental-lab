@@ -1693,7 +1693,7 @@ Auditoria resumida antes da reorganizacao:
             field.hidden = el.casePricingMode.value !== "fixed";
         });
         document.querySelectorAll(".item-services-field").forEach(field => {
-            field.hidden = selectedCase()?.pricing_mode !== "services";
+            field.hidden = false;
         });
     }
 
@@ -2035,9 +2035,7 @@ Auditoria resumida antes da reorganizacao:
         const payload = {
             tooth: fields.itemTooth.value.trim(),
             service_type: fields.itemServiceType.value.trim(),
-            unit_value: selectedCase()?.pricing_mode === "services"
-                ? moneyToDecimal(fields.itemUnitValue.value)
-                : null,
+            unit_value: moneyToDecimal(fields.itemUnitValue.value),
             material: fields.itemMaterial.value.trim() || null,
             color: fields.itemColor.value.trim() || null,
             notes: fields.itemNotes.value.trim() || null,
