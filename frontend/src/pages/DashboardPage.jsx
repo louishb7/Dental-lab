@@ -67,6 +67,7 @@ export default function DashboardPage({ dashboard, loading }) {
   const urgentCases = dashboard?.urgent_open_cases ?? [];
   const overdueCases = dashboard?.overdue_cases ?? [];
   const deliveredCases = dashboard?.delivered_cases_month ?? [];
+  const secondaryCases = overdueCases.length ? overdueCases : deliveredCases;
 
   return (
     <PageContainer
@@ -107,57 +108,19 @@ export default function DashboardPage({ dashboard, loading }) {
 
         <div className="split-grid">
           <DashboardCaseList
-            title="Casos urgentes"
-            description="Prioridades que continuam em aberto."
+            title="Próximos prazos e urgentes"
+            description="O que deve entrar no seu radar agora."
             cases={urgentCases}
             emptyTitle="Nenhum caso urgente."
           />
           <DashboardCaseList
-            title="Casos atrasados"
-            description="Prazos vencidos que precisam de atenção."
-            cases={overdueCases}
-            emptyTitle="Nenhum caso atrasado."
+            title={overdueCases.length ? "Casos atrasados" : "Entregas recentes"}
+            description={overdueCases.length ? "Prazos vencidos que precisam de atenção." : "Últimas entregas registradas no mês."}
+            cases={secondaryCases}
+            emptyTitle={overdueCases.length ? "Nenhum caso atrasado." : "Nenhuma entrega neste mês."}
           />
         </div>
-
-        <section className="panel">
-          <div className="panel-header">
-            <div className="panel-title">
-              <h3>Entregas do mês</h3>
-              <p>Resumo recente do que já foi finalizado e entregue.</p>
-            </div>
-            <span className="badge badge-success">{formatCurrency(dashboard?.delivered_total_month)}</span>
-          </div>
-          <div className="panel-body">
-            {deliveredCases.length ? (
-              <div className="case-list">
-                {deliveredCases.slice(0, 6).map((caseItem) => (
-                  <article className="case-card" key={caseItem.id}>
-                    <div className="case-card-top">
-                      <div className="cell-main">
-                        <strong>#{caseItem.id} · {caseItem.patient_ref}</strong>
-                        <small>{caseItem.doctor_name}</small>
-                      </div>
-                      <StatusBadge status={caseItem.status} />
-                    </div>
-                    <div className="case-meta">
-                      <span>Entregue em {formatDate(caseItem.delivered_at)}</span>
-                      <span>{formatCurrency(caseItem.total_value)}</span>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                icon={CheckCircle2}
-                title="Nenhuma entrega neste mês."
-                description="Quando casos forem entregues, eles aparecerão aqui."
-              />
-            )}
-          </div>
-        </section>
       </div>
     </PageContainer>
   );
 }
-

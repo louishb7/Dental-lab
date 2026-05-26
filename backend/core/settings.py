@@ -95,6 +95,15 @@ CORS_ORIGINS = [
     for origin in _parse_csv_env("CORS_ORIGINS", DEFAULT_CORS_ORIGINS)
 ]
 
+# Em desenvolvimento, o Vite pode trocar automaticamente de porta quando a
+# 5173 estiver ocupada. Aceitamos apenas hosts locais para evitar 400 no
+# preflight CORS sem liberar origens externas.
+DEV_CORS_ORIGIN_REGEX = r"^http://(localhost|127\.0\.0\.1):[0-9]+$"
+CORS_ORIGIN_REGEX = (
+    os.getenv("CORS_ORIGIN_REGEX")
+    or (DEV_CORS_ORIGIN_REGEX if APP_ENV == "development" else None)
+)
+
 DEFAULT_TRUSTED_HOSTS = "localhost,127.0.0.1,testserver"
 TRUSTED_HOSTS = [
     _validate_trusted_host(host)

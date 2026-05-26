@@ -1,7 +1,7 @@
 .app-layout {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 264px minmax(0, 1fr);
+  grid-template-columns: 252px minmax(0, 1fr);
 }
 
 .app-sidebar {
@@ -15,21 +15,21 @@
 }
 
 .sidebar-brand {
-  min-height: 72px;
+  min-height: 66px;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 18px 20px;
+  padding: 16px 18px;
   border-bottom: 1px solid var(--color-border);
 }
 
 .brand-mark {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   display: grid;
   place-items: center;
   border-radius: var(--radius-sm);
-  color: var(--color-bg);
+  color: var(--color-primary-contrast);
   background: var(--color-primary);
   font-weight: 900;
 }
@@ -49,11 +49,11 @@
 .sidebar-nav {
   display: grid;
   gap: 4px;
-  padding: 14px 12px;
+  padding: 12px 10px;
 }
 
 .sidebar-item {
-  min-height: 42px;
+  min-height: 39px;
   display: flex;
   align-items: center;
   gap: 11px;
@@ -94,15 +94,15 @@
 }
 
 .app-header {
-  min-height: 72px;
+  min-height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 24px;
+  padding: 13px 22px;
   border-bottom: 1px solid var(--color-border);
-  background: rgba(17, 24, 39, 0.78);
-  backdrop-filter: blur(12px);
+  background: var(--color-header);
+  backdrop-filter: blur(8px);
 }
 
 .header-title {
@@ -111,7 +111,7 @@
 }
 
 .header-title h1 {
-  font-size: 1.25rem;
+  font-size: 1.12rem;
   letter-spacing: 0;
 }
 
@@ -123,7 +123,7 @@
 }
 
 .session-pill {
-  min-height: 34px;
+  min-height: 32px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -131,13 +131,13 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text-soft);
-  background: rgba(31, 41, 55, 0.58);
+  background: var(--color-subtle);
 }
 
 .page-container {
   width: 100%;
-  max-width: 1440px;
-  padding: 24px;
+  max-width: 1500px;
+  padding: 18px 22px 24px;
 }
 
 .page-heading {
@@ -145,24 +145,24 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .page-heading h2 {
   margin-top: 4px;
-  font-size: 1.55rem;
+  font-size: 1.34rem;
   letter-spacing: 0;
 }
 
 .content-grid {
   display: grid;
-  gap: 16px;
+  gap: 12px;
 }
 
 .split-grid {
   display: grid;
   grid-template-columns: minmax(320px, 400px) minmax(0, 1fr);
-  gap: 16px;
+  gap: 12px;
   align-items: start;
 }
 
@@ -205,4 +205,3 @@
     grid-template-columns: 1fr 1fr;
   }
 }
-

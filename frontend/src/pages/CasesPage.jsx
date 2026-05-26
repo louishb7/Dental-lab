@@ -45,6 +45,11 @@ export default function CasesPage({
     doctorId: selectedDoctorId ? String(selectedDoctorId) : "",
   });
 
+  function clearFilters() {
+    setFilters({ search: "", status: "", priority: "", doctorId: "" });
+    setSelectedDoctorId(null);
+  }
+
   useEffect(() => {
     if (!selectedDoctorId) return;
 
@@ -76,7 +81,7 @@ export default function CasesPage({
   const columns = [
     {
       key: "patient_ref",
-      header: "Referência/paciente",
+      header: "Caso / Referência",
       render: (caseItem) => (
         <span className="cell-main">
           <strong>#{caseItem.id} · {caseItem.patient_ref}</strong>
@@ -126,7 +131,7 @@ export default function CasesPage({
     <PageContainer
       kicker="Produção"
       title="Casos"
-      description="Acompanhe prazos, prioridade, status e itens solicitados."
+      description="Controle seus prazos, prioridades e entregas."
       action={
         <Button variant="primary" onClick={() => setShowCaseModal(true)}>
           <Plus size={18} />
@@ -173,9 +178,12 @@ export default function CasesPage({
               <option key={doctor.id} value={doctor.id}>{doctor.name}</option>
             ))}
           </select>
+          <Button variant="ghost" size="sm" onClick={clearFilters}>
+            Limpar
+          </Button>
         </div>
 
-        <section className="panel">
+        <section className="panel panel-strong">
           <div className="panel-body">
             <DataTable
               columns={columns}

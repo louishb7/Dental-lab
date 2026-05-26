@@ -1,7 +1,15 @@
-import { CalendarDays, LogOut, RefreshCw, User } from "lucide-react";
+import { CalendarDays, LogOut, Moon, RefreshCw, Sun, User } from "lucide-react";
 import Button from "../ui/Button.jsx";
 
-export default function AppHeader({ title, subtitle, user, onRefresh, onLogout }) {
+export default function AppHeader({
+  title,
+  subtitle,
+  user,
+  theme,
+  onToggleTheme,
+  onRefresh,
+  onLogout,
+}) {
   const today = new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "short",
@@ -23,6 +31,16 @@ export default function AppHeader({ title, subtitle, user, onRefresh, onLogout }
           <User size={16} />
           {user?.username}
         </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={theme === "dark" ? "Ativar tema claro" : "Ativar tema escuro"}
+          title={theme === "dark" ? "Tema claro" : "Tema escuro"}
+          onClick={onToggleTheme}
+        >
+          {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+          {theme === "dark" ? "Claro" : "Escuro"}
+        </Button>
         <Button variant="ghost" size="sm" onClick={onRefresh}>
           <RefreshCw size={16} />
           Atualizar
@@ -35,4 +53,3 @@ export default function AppHeader({ title, subtitle, user, onRefresh, onLogout }
     </header>
   );
 }
-

@@ -8,7 +8,7 @@ const PAGE_META = {
   },
   cases: {
     title: "Casos",
-    subtitle: "Tabela operacional para acompanhar produção e status.",
+    subtitle: "Controle seus prazos, prioridades e entregas.",
   },
   doctors: {
     title: "Dentistas",
@@ -20,6 +20,8 @@ export default function AppLayout({
   activePage,
   onNavigate,
   session,
+  theme,
+  onToggleTheme,
   onRefresh,
   onLogout,
   children,
@@ -34,6 +36,8 @@ export default function AppLayout({
           title={meta.title}
           subtitle={meta.subtitle}
           user={session}
+          theme={theme}
+          onToggleTheme={onToggleTheme}
           onRefresh={onRefresh}
           onLogout={onLogout}
         />
@@ -42,4 +46,3 @@ export default function AppLayout({
     </div>
   );
 }
-

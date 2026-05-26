@@ -17,6 +17,21 @@ def test_security_headers_are_present() -> None:
     assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
 
 
+def test_dev_vite_fallback_port_is_allowed_for_cors_preflight() -> None:
+    client = TestClient(app)
+    response = client.options(
+        "/auth/login",
+        headers={
+            "Origin": "http://localhost:5174",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type",
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    assert response.headers["access-control-allow-origin"] == "http://localhost:5174"
+
+
 def test_unapproved_origin_is_not_reflected() -> None:
     client = TestClient(app)
     response = client.get("/", headers={"Origin": "http://evil.example"})

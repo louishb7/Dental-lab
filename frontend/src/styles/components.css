@@ -5,12 +5,16 @@
   box-shadow: var(--shadow-soft);
 }
 
+.panel-strong {
+  border-color: var(--color-border-strong);
+}
+
 .panel-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 14px;
-  padding: 16px 16px 0;
+  padding: 14px 14px 0;
 }
 
 .panel-title {
@@ -29,23 +33,23 @@
 }
 
 .panel-body {
-  padding: 16px;
+  padding: 14px;
 }
 
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
+  gap: 12px;
 }
 
 .stat-card {
   display: grid;
-  gap: 12px;
-  min-height: 132px;
-  padding: 16px;
+  gap: 9px;
+  min-height: 112px;
+  padding: 13px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: linear-gradient(180deg, rgba(31, 41, 55, 0.74), rgba(23, 32, 51, 0.96));
+  background: var(--color-surface);
 }
 
 .stat-card-header {
@@ -56,8 +60,8 @@
 }
 
 .stat-icon {
-  width: 38px;
-  height: 38px;
+  width: 30px;
+  height: 30px;
   display: grid;
   place-items: center;
   border-radius: var(--radius-sm);
@@ -66,7 +70,7 @@
 }
 
 .stat-card strong {
-  font-size: 1.8rem;
+  font-size: 1.42rem;
   line-height: 1;
 }
 
@@ -112,7 +116,7 @@
 }
 
 .button-primary {
-  color: #082f49;
+  color: var(--color-primary-contrast);
   background: var(--color-primary);
 }
 
@@ -127,7 +131,7 @@
 }
 
 .button-danger {
-  color: #ffe4e6;
+  color: var(--color-danger-soft);
   border-color: rgba(251, 113, 133, 0.32);
   background: rgba(251, 113, 133, 0.12);
 }
@@ -156,20 +160,20 @@
 
 .badge-status.pending,
 .badge-priority.urgent {
-  color: #fde68a;
+  color: var(--color-warning-soft);
   border-color: rgba(251, 191, 36, 0.28);
   background: rgba(251, 191, 36, 0.1);
 }
 
 .badge-status.completed {
-  color: #bfdbfe;
+  color: var(--color-info-soft);
   border-color: rgba(96, 165, 250, 0.3);
   background: rgba(96, 165, 250, 0.1);
 }
 
 .badge-status.delivered,
 .badge-success {
-  color: #bbf7d0;
+  color: var(--color-success-soft);
   border-color: rgba(52, 211, 153, 0.28);
   background: rgba(52, 211, 153, 0.1);
 }
@@ -182,19 +186,19 @@
 
 .table-wrap {
   overflow-x: auto;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-sm);
 }
 
 .data-table {
   width: 100%;
-  min-width: 760px;
+  min-width: 820px;
   border-collapse: collapse;
 }
 
 .data-table th,
 .data-table td {
-  padding: 12px 13px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--color-border);
   text-align: left;
   vertical-align: top;
@@ -202,13 +206,13 @@
 
 .data-table th {
   color: var(--color-text-muted);
-  background: rgba(15, 23, 42, 0.34);
+  background: var(--color-table-head);
   font-size: 0.74rem;
   text-transform: uppercase;
 }
 
 .data-table tr:hover td {
-  background: rgba(148, 163, 184, 0.045);
+  background: var(--color-table-hover);
 }
 
 .data-table tr:last-child td {
@@ -246,7 +250,7 @@
   padding: 14px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: rgba(15, 23, 42, 0.18);
+  background: var(--color-subtle);
 }
 
 .form-section h3 {
@@ -276,7 +280,7 @@
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-sm);
   color: var(--color-text);
-  background: rgba(15, 23, 42, 0.42);
+  background: var(--color-input-bg);
   padding: 9px 10px;
 }
 
@@ -286,11 +290,11 @@
 
 .filter-bar {
   display: grid;
-  grid-template-columns: minmax(180px, 1.6fr) repeat(3, minmax(140px, 1fr));
-  gap: 10px;
-  padding: 14px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  grid-template-columns: minmax(220px, 1.8fr) repeat(3, minmax(132px, 1fr)) auto;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
   background: var(--color-surface);
 }
 
@@ -302,13 +306,13 @@
 }
 
 .feedback.success {
-  color: #bbf7d0;
+  color: var(--color-success-soft);
   border-color: rgba(52, 211, 153, 0.24);
   background: rgba(52, 211, 153, 0.1);
 }
 
 .feedback.error {
-  color: #fecdd3;
+  color: var(--color-danger-soft);
   border-color: rgba(251, 113, 133, 0.24);
   background: rgba(251, 113, 133, 0.1);
 }
@@ -340,10 +344,10 @@
 .case-card {
   display: grid;
   gap: 8px;
-  padding: 13px;
+  padding: 11px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: rgba(15, 23, 42, 0.18);
+  background: var(--color-subtle);
 }
 
 .case-card-top {
@@ -376,7 +380,7 @@
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgba(2, 6, 23, 0.72);
+  background: var(--color-overlay);
 }
 
 .modal-panel {
@@ -444,4 +448,3 @@
     grid-template-columns: 1fr;
   }
 }
-

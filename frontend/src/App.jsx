@@ -34,6 +34,13 @@ import {
   formatBrazilianPhone,
 } from "./utils/forms.js";
 
+const THEME_STORAGE_KEY = "app-ui-theme";
+
+function getStoredTheme() {
+  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+  return storedTheme === "light" ? "light" : "dark";
+}
+
 export default function App() {
   const [session, setSession] = useState(() => getStoredSession());
   const [authMode, setAuthMode] = useState("login");
@@ -42,7 +49,8 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(false);
   const [authMessage, setAuthMessage] = useState(null);
 
-  const [activePage, setActivePage] = useState("dashboard");
+  const [activePage, setActivePage] = useState("cases");
+  const [theme, setTheme] = useState(() => getStoredTheme());
   const [dashboard, setDashboard] = useState(null);
   const [doctors, setDoctors] = useState([]);
   const [cases, setCases] = useState([]);
@@ -64,6 +72,15 @@ export default function App() {
     () => cases.find((caseItem) => caseItem.id === selectedCaseId) || null,
     [cases, selectedCaseId],
   );
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  }, [theme]);
+
+  function toggleTheme() {
+    setTheme((current) => (current === "dark" ? "light" : "dark"));
+  }
 
   async function loadAppData() {
     setLoading(true);
@@ -348,6 +365,8 @@ export default function App() {
       activePage={activePage}
       onNavigate={setActivePage}
       session={session}
+      theme={theme}
+      onToggleTheme={toggleTheme}
       onRefresh={loadAppData}
       onLogout={handleLogout}
     >
@@ -402,4 +421,3 @@ export default function App() {
     </AppLayout>
   );
 }
-
