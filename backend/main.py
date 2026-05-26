@@ -2,9 +2,21 @@
 Ponto de entrada principal da API Cadista.
 """
 
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.routes import auth, case, case_item, dashboard, doctor
+
+# Permite executar tanto `uvicorn backend.main:app` na raiz do projeto quanto
+# `uvicorn main:app` dentro de `backend/` sem quebrar a resolução do pacote.
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from backend.routes import auth, case, case_item, dashboard, doctor
+else:
+    from .routes import auth, case, case_item, dashboard, doctor
 
 app = FastAPI(
     title="API Cadista",

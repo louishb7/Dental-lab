@@ -490,7 +490,32 @@ Auditoria resumida antes da reorganizacao:
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            align-items: center;
+            align-items: flex-start;
+        }
+
+        .row-menu {
+            display: inline-grid;
+            align-items: start;
+        }
+
+        .row-menu > summary {
+            list-style: none;
+        }
+
+        .row-menu > summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .row-menu-panel {
+            margin-top: 8px;
+            display: grid;
+            gap: 6px;
+            min-width: 160px;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 18px 34px rgba(16, 24, 40, 0.12);
         }
 
         .row-action {
@@ -557,19 +582,23 @@ Auditoria resumida antes da reorganizacao:
             margin-bottom: 18px;
         }
 
+        .dashboard-shell {
+            display: grid;
+            gap: 12px;
+        }
+
         .dashboard-stats {
             display: grid;
             grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 12px;
-            margin-top: 14px;
         }
 
         .dashboard-stat {
             border: 1px solid var(--border);
             border-radius: 10px;
             background: #fbfcfe;
-            padding: 14px;
-            min-height: 104px;
+            padding: 12px;
+            min-height: 88px;
         }
 
         .dashboard-stat.primary {
@@ -609,11 +638,29 @@ Auditoria resumida antes da reorganizacao:
             line-height: 1.35;
         }
 
+        .dashboard-card.compact .dashboard-stat-hint {
+            display: none;
+        }
+
+        .dashboard-card.compact .dashboard-stat {
+            min-height: 72px;
+            padding: 10px 11px;
+        }
+
+        .dashboard-card.expanded .dashboard-stat {
+            min-height: 104px;
+            padding: 14px;
+        }
+
+        .dashboard-details {
+            display: grid;
+            gap: 12px;
+        }
+
         .dashboard-lists {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 12px;
-            margin-top: 14px;
         }
 
         .dashboard-list-card {
@@ -693,8 +740,8 @@ Auditoria resumida antes da reorganizacao:
 
         .case-summary {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 8px;
             margin-bottom: 14px;
         }
 
@@ -702,19 +749,20 @@ Auditoria resumida antes da reorganizacao:
             border: 1px solid var(--border);
             border-radius: 8px;
             background: #fbfcfe;
-            padding: 10px;
+            padding: 8px 10px;
         }
 
         .summary-label {
             color: var(--muted);
-            font-size: 0.78rem;
+            font-size: 0.72rem;
             text-transform: uppercase;
             letter-spacing: 0.04em;
         }
 
         .summary-value {
-            margin-top: 5px;
+            margin-top: 4px;
             font-weight: 700;
+            font-size: 0.94rem;
         }
 
         @media (max-width: 840px) {
@@ -820,32 +868,37 @@ Auditoria resumida antes da reorganizacao:
             <nav id="breadcrumb" class="breadcrumb"></nav>
             <p id="appMessage" class="message"></p>
 
-            <section id="dashboardPanel" class="card dashboard-card">
-                <div class="level-header">
-                    <div class="level-title">
-                        <h2>Painel</h2>
-                        <p>Resumo de abertura, pendências e financeiro do mês atual.</p>
+            <section id="dashboardPanel" class="card dashboard-card compact">
+                <div class="dashboard-shell">
+                    <div class="level-header">
+                        <div class="level-title">
+                            <h2>Painel</h2>
+                            <p>Resumo rápido. Abra detalhes apenas quando precisar investigar.</p>
+                        </div>
+                        <div class="button-row">
+                            <span id="dashboardUpdatedAt" class="meta"></span>
+                            <button id="dashboardToggleButton" class="btn-secondary" type="button">Ver detalhes</button>
+                            <button id="refreshDashboardButton" class="btn-secondary" type="button">Atualizar</button>
+                        </div>
                     </div>
-                    <div class="button-row">
-                        <span id="dashboardUpdatedAt" class="meta"></span>
-                        <button id="refreshDashboardButton" class="btn-secondary" type="button">Atualizar painel</button>
+                    <div id="dashboardStats" class="dashboard-stats"></div>
+                    <div id="dashboardDetails" class="dashboard-details" hidden>
+                        <div class="dashboard-lists">
+                            <article class="dashboard-list-card">
+                                <h3>Vencidos</h3>
+                                <ul id="dashboardOverdueList" class="dashboard-list"></ul>
+                            </article>
+                            <article class="dashboard-list-card">
+                                <h3>Urgentes em aberto</h3>
+                                <ul id="dashboardUrgentList" class="dashboard-list"></ul>
+                            </article>
+                            <article class="dashboard-list-card">
+                                <h3>Financeiro do mês</h3>
+                                <div id="dashboardFinanceTotal" class="dashboard-total"></div>
+                                <ul id="dashboardFinanceList" class="dashboard-list"></ul>
+                            </article>
+                        </div>
                     </div>
-                </div>
-                <div id="dashboardStats" class="dashboard-stats"></div>
-                <div class="dashboard-lists">
-                    <article class="dashboard-list-card">
-                        <h3>Vencidos</h3>
-                        <ul id="dashboardOverdueList" class="dashboard-list"></ul>
-                    </article>
-                    <article class="dashboard-list-card">
-                        <h3>Urgentes em aberto</h3>
-                        <ul id="dashboardUrgentList" class="dashboard-list"></ul>
-                    </article>
-                    <article class="dashboard-list-card">
-                        <h3>Financeiro do mês</h3>
-                        <div id="dashboardFinanceTotal" class="dashboard-total"></div>
-                        <ul id="dashboardFinanceList" class="dashboard-list"></ul>
-                    </article>
                 </div>
             </section>
 
@@ -1125,6 +1178,7 @@ Auditoria resumida antes da reorganizacao:
             doctors: [],
             cases: [],
             dashboard: {
+                detailsOpen: false,
                 generated_at: "",
                 status_counts: {
                     pending: 0,
@@ -1184,7 +1238,9 @@ Auditoria resumida antes da reorganizacao:
             appMessage: document.getElementById("appMessage"),
             dashboardPanel: document.getElementById("dashboardPanel"),
             dashboardUpdatedAt: document.getElementById("dashboardUpdatedAt"),
+            dashboardToggleButton: document.getElementById("dashboardToggleButton"),
             dashboardStats: document.getElementById("dashboardStats"),
+            dashboardDetails: document.getElementById("dashboardDetails"),
             dashboardOverdueList: document.getElementById("dashboardOverdueList"),
             dashboardUrgentList: document.getElementById("dashboardUrgentList"),
             dashboardFinanceList: document.getElementById("dashboardFinanceList"),
@@ -1578,6 +1634,23 @@ Auditoria resumida antes da reorganizacao:
         return `<button type="button" class="row-action${classes}" data-action="${action}" data-id="${id}">${label}</button>`;
     }
 
+    function overflowMenu(buttons) {
+        const items = buttons.filter(Boolean);
+        if (!items.length) return "";
+        return `
+            <details class="row-menu">
+                <summary class="row-action">Mais</summary>
+                <div class="row-menu-panel">
+                    ${items.join("")}
+                </div>
+            </details>
+        `;
+    }
+
+    function actionSet(primaryButton, secondaryButtons = []) {
+        return actionMenu([primaryButton, overflowMenu(secondaryButtons)]);
+    }
+
     function statusBadge(status) {
         return `<span class="status-badge ${escapeText(status)}">${escapeText(status)}</span>`;
     }
@@ -1609,14 +1682,14 @@ Auditoria resumida antes da reorganizacao:
                 { render: doctor => escapeText(doctor.clinic_name || "-") },
                 { render: doctor => escapeText(doctor.phone || "-") },
                 {
-                    render: doctor => actionMenu([
-                        menuButton("create-doctor-case", doctor.id, "Criar caso", "primary"),
-                        Number(doctor.cases_count || 0) > 0
-                            ? menuButton("view-doctor-cases", doctor.id, "Ver casos")
-                            : "",
-                        menuButton("edit-doctor", doctor.id, "Editar"),
-                        menuButton("delete-doctor", doctor.id, "Excluir", "danger"),
-                    ].filter(Boolean)),
+                    render: doctor => actionSet(
+                        menuButton("view-doctor-cases", doctor.id, "Abrir", "primary"),
+                        [
+                            menuButton("create-doctor-case", doctor.id, "Novo caso"),
+                            menuButton("edit-doctor", doctor.id, "Editar"),
+                            menuButton("delete-doctor", doctor.id, "Excluir", "danger"),
+                        ],
+                    ),
                 },
             ],
             "Nenhum doutor cadastrado.",
@@ -1635,19 +1708,17 @@ Auditoria resumida antes da reorganizacao:
                 { render: caseItem => priorityBadge(caseItem.priority) },
                 { render: caseItem => formatMoneyDisplay(caseItem.total_value) },
                 {
-                    render: caseItem => {
-                        return actionMenu([
-                            menuButton("create-case-item", caseItem.id, "Criar item", "primary"),
-                            Number(caseItem.items_count || 0) > 0
-                                ? menuButton("view-case-items", caseItem.id, "Ver itens")
-                                : "",
-                            menuButton("edit-case", caseItem.id, "Editar"),
-                            menuButton("delete-case", caseItem.id, "Excluir", "danger"),
+                    render: caseItem => actionSet(
+                        menuButton("view-case-items", caseItem.id, "Abrir", "primary"),
+                        [
+                            menuButton("create-case-item", caseItem.id, "Novo item"),
                             caseItem.status === "pending"
                                 ? menuButton("advance-case-status", caseItem.id, "Feito!", "success")
                                 : "",
-                        ].filter(Boolean));
-                    },
+                            menuButton("edit-case", caseItem.id, "Editar"),
+                            menuButton("delete-case", caseItem.id, "Excluir", "danger"),
+                        ],
+                    ),
                 },
             ],
             "Este doutor ainda nao possui casos.",
@@ -1866,10 +1937,15 @@ Auditoria resumida antes da reorganizacao:
         const financeCases = state.dashboard.delivered_cases_month || [];
         const openCases = dashboardCount("pending") + dashboardCount("completed");
         const deliveredTotal = formatMoneyDisplay(state.dashboard.delivered_total_month);
+        const compactMode = !state.dashboard.detailsOpen;
 
         el.dashboardUpdatedAt.textContent = state.dashboard.generated_at
             ? `Atualizado em ${formatDate(state.dashboard.generated_at)}`
             : "Painel ainda nao carregado.";
+        el.dashboardToggleButton.textContent = state.dashboard.detailsOpen ? "Ocultar detalhes" : "Ver detalhes";
+        el.dashboardPanel.classList.toggle("compact", compactMode);
+        el.dashboardPanel.classList.toggle("expanded", !compactMode);
+        el.dashboardDetails.hidden = compactMode;
 
         el.dashboardStats.innerHTML = [
             {
@@ -1955,6 +2031,11 @@ Auditoria resumida antes da reorganizacao:
                 </li>
             `,
         );
+    }
+
+    function toggleDashboardDetails() {
+        state.dashboard.detailsOpen = !state.dashboard.detailsOpen;
+        renderDashboard();
     }
 
     function renderLevel() {
@@ -2112,7 +2193,11 @@ Auditoria resumida antes da reorganizacao:
     }
 
     async function loadDashboard() {
-        state.dashboard = await apiRequest("/dashboard/overview");
+        const detailsOpen = state.dashboard.detailsOpen;
+        state.dashboard = {
+            ...await apiRequest("/dashboard/overview"),
+            detailsOpen,
+        };
         renderDashboard();
     }
 
@@ -2517,6 +2602,7 @@ Auditoria resumida antes da reorganizacao:
                 setMessage(el.appMessage, error.message || "Falha ao atualizar painel.", "error");
             }
         });
+        el.dashboardToggleButton.addEventListener("click", toggleDashboardDetails);
 
         document.getElementById("newDoctorButton").addEventListener("click", () => openDoctorForm());
         document.getElementById("newCaseButton").addEventListener("click", () => openCaseForm());
