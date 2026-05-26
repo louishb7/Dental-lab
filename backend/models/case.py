@@ -17,7 +17,7 @@ from sqlalchemy.sql import func
 from backend.database.connection import Base
 
 
-class Case(Base):
+class DentalCase(Base):
     """
     Modelo ORM que representa um caso enviado ao laboratório.
 
@@ -62,3 +62,6 @@ class Case(Base):
     items = relationship(
         "CaseItem", back_populates="case", cascade="all, delete-orphan"
     )
+
+
+Case = DentalCase

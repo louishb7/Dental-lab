@@ -20,7 +20,7 @@ class Doctor(Base):
         phone (str): Telefone de contato.
         notes (str): Observações gerais sobre o doutor.
         created_at (datetime): Data e hora da criação do registro.
-        cases (list[Case]): Relacionamento 1:N indicando os casos vinculados a este doutor.
+        cases (list[DentalCase]): Relacionamento 1:N indicando os casos vinculados a este doutor.
     """
 
     __tablename__ = "doctors"
@@ -32,4 +32,8 @@ class Doctor(Base):
     notes = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     deleted_at = Column(DateTime(timezone=True), nullable=True, index=True)
-    cases = relationship("Case", back_populates="doctor")
+    cases = relationship(
+        "DentalCase",
+        back_populates="doctor",
+        cascade="all, delete-orphan",
+    )

@@ -1,5 +1,5 @@
 """
-Pacote de modelos ORM do sistema Kadista.
+Pacote de modelos ORM do sistema Cadista.
 
 Este módulo importa e expõe explicitamente a classe Base e os modelos
 para garantir que o SQLAlchemy registre as tabelas na ordem correta,

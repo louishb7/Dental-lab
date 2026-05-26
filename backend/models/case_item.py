@@ -14,14 +14,14 @@ class CaseItem(Base):
 
     Atributos:
         id (int): Identificador único do item.
-        case_id (int): Chave estrangeira vinculando este item a um Case.
+        case_id (int): Chave estrangeira vinculando este item a um DentalCase.
         tooth (str): Número do dente em FDI ou descrição livre.
         service_type (str): Tipo de serviço executado.
         unit_value (Decimal | None): Valor unitário do serviço.
         material (str): Material utilizado.
         color (str): Cor ou tonalidade.
         notes (str): Observações específicas do item.
-        case (Case): Relacionamento N:1 com o modelo Case.
+        case (DentalCase): Relacionamento N:1 com o modelo DentalCase.
     """
 
     __tablename__ = "case_items"
@@ -40,4 +40,4 @@ class CaseItem(Base):
     color = Column(String(50))
     notes = Column(Text)
 
-    case = relationship("Case", back_populates="items")
+    case = relationship("DentalCase", back_populates="items")

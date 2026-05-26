@@ -14,9 +14,16 @@ from fastapi.middleware.cors import CORSMiddleware
 # `uvicorn main:app` dentro de `backend/` sem quebrar a resolução do pacote.
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from backend.models import Base
     from backend.routes import auth, case, case_item, dashboard, doctor
 else:
+    from backend.models import Base
     from .routes import auth, case, case_item, dashboard, doctor
+
+# Manter a metadata em uma constante de modulo garante que `backend.models.__init__`
+# seja executado durante o bootstrap da API, registrando todos os mappers antes
+# de qualquer chamada futura a `Base.metadata.create_all(...)`.
+ORM_METADATA = Base.metadata
 
 app = FastAPI(
     title="API Cadista",
