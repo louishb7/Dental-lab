@@ -37,6 +37,7 @@ def _fetch_cases(query) -> list[Case]:
 
 def get_dashboard_summary(db: Session) -> DashboardSummaryResponse:
     now = datetime.now(timezone.utc)
+    today = now.date()
     month_start, next_month = _month_window(now)
 
     active_cases_query = db.query(Case).filter(Case.deleted_at.is_(None))
@@ -57,7 +58,7 @@ def get_dashboard_summary(db: Session) -> DashboardSummaryResponse:
             Case.deleted_at.is_(None),
             Case.status != "delivered",
             Case.deadline.is_not(None),
-            Case.deadline < now,
+            func.date(Case.deadline) < today,
         )
         .order_by(Case.deadline.asc(), Case.id.desc())
     )

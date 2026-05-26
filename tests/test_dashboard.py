@@ -69,6 +69,15 @@ def test_dashboard_overview_and_list_counts(monkeypatch) -> None:
                 priority="normal",
             ),
         )
+        today_case = case_service.create_case(
+            db,
+            CaseCreate(
+                doctor_id=doctor_a.id,
+                patient_ref="Paciente hoje",
+                deadline=now,
+                priority="normal",
+            ),
+        )
         urgent_case = case_service.create_case(
             db,
             CaseCreate(
@@ -123,13 +132,14 @@ def test_dashboard_overview_and_list_counts(monkeypatch) -> None:
         )
 
         assert overdue_case.id != urgent_case.id
+        assert today_case.id != overdue_case.id
 
     auth_headers = {"Authorization": f"Bearer {token}"}
 
     doctors_response = client.get("/doctors/", headers=auth_headers)
     assert doctors_response.status_code == 200, doctors_response.text
     doctors_payload = {doctor["name"]: doctor for doctor in doctors_response.json()}
-    assert doctors_payload["Dr. Dashboard A"]["cases_count"] == 2
+    assert doctors_payload["Dr. Dashboard A"]["cases_count"] == 3
     assert doctors_payload["Dr. Dashboard B"]["cases_count"] == 2
 
     cases_response = client.get("/cases/", headers=auth_headers)
@@ -143,7 +153,7 @@ def test_dashboard_overview_and_list_counts(monkeypatch) -> None:
 
     payload = dashboard_response.json()
     assert payload["status_counts"] == {
-        "pending": 2,
+        "pending": 3,
         "completed": 1,
         "delivered": 1,
     }

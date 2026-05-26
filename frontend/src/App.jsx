@@ -21,6 +21,7 @@ import {
   login,
   register,
   updateCase,
+  updateDoctor,
 } from "./services/api.js";
 import {
   buildCasePayload,
@@ -33,6 +34,7 @@ import {
   EMPTY_REGISTER,
   formatBrazilianPhone,
 } from "./utils/forms.js";
+import { formatCurrencyInput } from "./utils/formatters.js";
 
 const THEME_STORAGE_KEY = "app-ui-theme";
 
@@ -64,6 +66,7 @@ export default function App() {
   const [selectedCaseId, setSelectedCaseId] = useState(null);
   const [showDoctorModal, setShowDoctorModal] = useState(false);
   const [showCaseModal, setShowCaseModal] = useState(false);
+  const [editingDoctorId, setEditingDoctorId] = useState(null);
   const [loading, setLoading] = useState(Boolean(session));
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState(null);
@@ -122,12 +125,18 @@ export default function App() {
 
   function handleCaseChange(event) {
     const { name, value } = event.target;
-    setCaseForm((current) => ({ ...current, [name]: value }));
+    setCaseForm((current) => ({
+      ...current,
+      [name]: name === "total_value" ? formatCurrencyInput(value) : value,
+    }));
   }
 
   function handleItemChange(event) {
     const { name, value } = event.target;
-    setItemForm((current) => ({ ...current, [name]: value }));
+    setItemForm((current) => ({
+      ...current,
+      [name]: name === "unit_value" ? formatCurrencyInput(value) : value,
+    }));
   }
 
   async function handleLogin(event) {
@@ -182,16 +191,42 @@ export default function App() {
     setBusy(true);
     setMessage(null);
     try {
-      const created = await createDoctor(buildDoctorPayload(doctorForm));
-      setDoctors((current) => [created, ...current]);
+      if (editingDoctorId) {
+        const updated = await updateDoctor(editingDoctorId, buildDoctorPayload(doctorForm));
+        setDoctors((current) =>
+          current.map((doctor) => (doctor.id === updated.id ? updated : doctor)),
+        );
+        setMessage({ type: "success", text: "Dentista atualizado." });
+      } else {
+        const created = await createDoctor(buildDoctorPayload(doctorForm));
+        setDoctors((current) => [created, ...current]);
+        setMessage({ type: "success", text: "Dentista cadastrado." });
+      }
       setDoctorForm(EMPTY_DOCTOR);
       setShowDoctorModal(false);
-      setMessage({ type: "success", text: "Dentista cadastrado." });
+      setEditingDoctorId(null);
     } catch (error) {
       setMessage({ type: "error", text: error.message });
     } finally {
       setBusy(false);
     }
+  }
+
+  function openNewDoctorModal() {
+    setEditingDoctorId(null);
+    setDoctorForm(EMPTY_DOCTOR);
+    setShowDoctorModal(true);
+  }
+
+  function openEditDoctorModal(doctor) {
+    setEditingDoctorId(doctor.id);
+    setDoctorForm({
+      name: doctor.name || "",
+      clinic_name: doctor.clinic_name || "",
+      phone: doctor.phone || "",
+      notes: doctor.notes || "",
+    });
+    setShowDoctorModal(true);
   }
 
   async function handleCaseSubmit(event) {
@@ -216,22 +251,24 @@ export default function App() {
 
   async function handleItemSubmit(event) {
     event.preventDefault();
-    if (!selectedCaseId) return;
+    if (!selectedCaseId) return false;
 
     setBusy(true);
     setMessage(null);
     try {
       const created = await createCaseItem(
         selectedCaseId,
-        buildItemPayload(itemForm, itemAdvanced),
+        buildItemPayload(itemForm, itemAdvanced, selectedCase?.pricing_mode),
       );
       setItems((current) => [created, ...current]);
       setItemForm(EMPTY_ITEM);
       setCases(await getCases());
       setDashboard(await getDashboardOverview());
       setMessage({ type: "success", text: "Item/serviço criado." });
+      return true;
     } catch (error) {
       setMessage({ type: "error", text: error.message });
+      return false;
     } finally {
       setBusy(false);
     }
@@ -258,6 +295,10 @@ export default function App() {
 
   async function advanceCase(caseItem) {
     const nextStatus = caseItem.status === "pending" ? "completed" : "delivered";
+    if (nextStatus === "delivered" && !window.confirm("Confirmar entrega deste caso?")) {
+      return;
+    }
+
     setBusy(true);
     setMessage(null);
     try {
@@ -370,7 +411,14 @@ export default function App() {
       onRefresh={loadAppData}
       onLogout={handleLogout}
     >
-      {activePage === "dashboard" && <DashboardPage dashboard={dashboard} loading={loading} />}
+      {activePage === "dashboard" && (
+        <DashboardPage
+          dashboard={dashboard}
+          cases={cases}
+          doctors={doctors}
+          loading={loading}
+        />
+      )}
 
       {activePage === "cases" && (
         <CasesPage
@@ -410,8 +458,11 @@ export default function App() {
           busy={busy}
           message={message}
           doctorForm={doctorForm}
+          editingDoctorId={editingDoctorId}
           showDoctorModal={showDoctorModal}
           setShowDoctorModal={setShowDoctorModal}
+          onNewDoctor={openNewDoctorModal}
+          onEditDoctor={openEditDoctorModal}
           onDoctorChange={handleDoctorChange}
           onDoctorSubmit={handleDoctorSubmit}
           onOpenDoctorCases={openDoctorCases}

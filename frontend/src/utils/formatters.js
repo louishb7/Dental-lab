@@ -7,6 +7,26 @@ export function formatCurrency(value) {
   }).format(Number.isFinite(amount) ? amount : 0);
 }
 
+export function formatCurrencyInput(value) {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  if (!digits) return "";
+
+  const amount = Number(digits) / 100;
+  return formatCurrency(amount);
+}
+
+export function parseCurrencyToNumber(value) {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  if (!digits) return null;
+
+  return Number(digits) / 100;
+}
+
+export function parseCurrencyToApiValue(value) {
+  const amount = parseCurrencyToNumber(value);
+  return amount === null ? null : amount.toFixed(2);
+}
+
 export function formatDate(value) {
   if (!value) return "Sem prazo";
 
@@ -36,6 +56,29 @@ export function getDeadlineTone(deadline, status) {
   return "neutral";
 }
 
+export function getLocalDateKey(value) {
+  const date = value ? new Date(value) : new Date();
+  if (Number.isNaN(date.getTime())) return null;
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export function getRelativeDeadlineLabel(deadline) {
+  if (!deadline) return null;
+
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+
+  const deadlineKey = getLocalDateKey(deadline);
+  if (deadlineKey === getLocalDateKey(today)) return "Hoje";
+  if (deadlineKey === getLocalDateKey(tomorrow)) return "Amanhã";
+  return null;
+}
+
 export function formatDeadline(deadline, status) {
   const tone = getDeadlineTone(deadline, status);
   const label = formatDate(deadline);
@@ -44,4 +87,3 @@ export function formatDeadline(deadline, status) {
   if (tone === "warning") return `${label} · Vence em breve`;
   return label;
 }
-

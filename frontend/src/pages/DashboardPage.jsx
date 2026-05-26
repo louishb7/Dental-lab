@@ -5,13 +5,18 @@ import LoadingState from "../components/ui/LoadingState.jsx";
 import StatCard from "../components/ui/StatCard.jsx";
 import PriorityBadge from "../components/ui/PriorityBadge.jsx";
 import StatusBadge from "../components/ui/StatusBadge.jsx";
-import { formatCurrency, formatDate } from "../utils/formatters.js";
+import {
+  formatCurrency,
+  formatDate,
+  getLocalDateKey,
+  getRelativeDeadlineLabel,
+} from "../utils/formatters.js";
 
 function statusCount(dashboard, key) {
   return dashboard?.status_counts?.[key] ?? 0;
 }
 
-function DashboardCaseList({ title, description, cases, emptyTitle }) {
+function DashboardCaseList({ title, description, cases, emptyTitle, showRelativeDeadline = false }) {
   return (
     <section className="panel">
       <div className="panel-header">
@@ -33,7 +38,11 @@ function DashboardCaseList({ title, description, cases, emptyTitle }) {
                   <PriorityBadge priority={caseItem.priority} />
                 </div>
                 <div className="case-meta">
-                  <span>{formatDate(caseItem.deadline)}</span>
+                  <span>
+                    {showRelativeDeadline && getRelativeDeadlineLabel(caseItem.deadline)
+                      ? getRelativeDeadlineLabel(caseItem.deadline)
+                      : formatDate(caseItem.deadline)}
+                  </span>
                   <StatusBadge status={caseItem.status} />
                   <span>{formatCurrency(caseItem.total_value)}</span>
                 </div>
@@ -52,7 +61,7 @@ function DashboardCaseList({ title, description, cases, emptyTitle }) {
   );
 }
 
-export default function DashboardPage({ dashboard, loading }) {
+export default function DashboardPage({ dashboard, cases = [], doctors = [], loading }) {
   if (loading) {
     return (
       <PageContainer title="Visão geral" description="Carregando panorama operacional.">
@@ -68,6 +77,26 @@ export default function DashboardPage({ dashboard, loading }) {
   const overdueCases = dashboard?.overdue_cases ?? [];
   const deliveredCases = dashboard?.delivered_cases_month ?? [];
   const secondaryCases = overdueCases.length ? overdueCases : deliveredCases;
+  const doctorById = new Map(doctors.map((doctor) => [doctor.id, doctor]));
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  const todayKey = getLocalDateKey(today);
+  const tomorrowKey = getLocalDateKey(tomorrow);
+  const nextDeadlineCases = cases
+    .filter((caseItem) => {
+      if (!caseItem.deadline || caseItem.status === "delivered") return false;
+      const deadlineKey = getLocalDateKey(caseItem.deadline);
+      return deadlineKey === todayKey || deadlineKey === tomorrowKey;
+    })
+    .map((caseItem) => ({
+      ...caseItem,
+      doctor_name: doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`,
+    }))
+    .sort((a, b) => {
+      if (a.priority !== b.priority) return a.priority === "urgent" ? -1 : 1;
+      return String(a.deadline).localeCompare(String(b.deadline));
+    });
 
   return (
     <PageContainer
@@ -110,8 +139,9 @@ export default function DashboardPage({ dashboard, loading }) {
           <DashboardCaseList
             title="Próximos prazos e urgentes"
             description="O que deve entrar no seu radar agora."
-            cases={urgentCases}
-            emptyTitle="Nenhum caso urgente."
+            cases={nextDeadlineCases}
+            emptyTitle="Nenhum prazo para hoje ou amanhã."
+            showRelativeDeadline
           />
           <DashboardCaseList
             title={overdueCases.length ? "Casos atrasados" : "Entregas recentes"}

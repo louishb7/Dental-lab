@@ -1,3 +1,5 @@
+import { parseCurrencyToApiValue } from "./formatters.js";
+
 export const EMPTY_DOCTOR = { name: "", clinic_name: "", phone: "", notes: "" };
 export const EMPTY_LOGIN = { identifier: "", password: "" };
 export const EMPTY_REGISTER = { email: "", username: "", password: "" };
@@ -50,7 +52,7 @@ export function buildCasePayload(doctorId, form, advanced) {
   };
 
   if (form.pricing_mode === "fixed") {
-    payload.total_value = form.total_value.trim();
+    payload.total_value = parseCurrencyToApiValue(form.total_value);
   }
 
   if (advanced) {
@@ -62,11 +64,11 @@ export function buildCasePayload(doctorId, form, advanced) {
   return payload;
 }
 
-export function buildItemPayload(form, advanced) {
+export function buildItemPayload(form, advanced, pricingMode = "services") {
   const payload = {
     tooth: form.tooth.trim(),
     service_type: form.service_type.trim(),
-    unit_value: form.unit_value.trim() || null,
+    unit_value: pricingMode === "fixed" ? null : parseCurrencyToApiValue(form.unit_value),
   };
 
   if (advanced) {
@@ -77,4 +79,3 @@ export function buildItemPayload(form, advanced) {
 
   return payload;
 }
-

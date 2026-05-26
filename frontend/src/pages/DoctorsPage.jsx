@@ -1,4 +1,4 @@
-import { Eye, Plus, Stethoscope, Trash2 } from "lucide-react";
+import { Edit3, Eye, Plus, Stethoscope, Trash2 } from "lucide-react";
 import Button from "../components/ui/Button.jsx";
 import DataTable from "../components/ui/DataTable.jsx";
 import FormField from "../components/ui/FormField.jsx";
@@ -11,8 +11,11 @@ export default function DoctorsPage({
   busy,
   message,
   doctorForm,
+  editingDoctorId,
   showDoctorModal,
   setShowDoctorModal,
+  onNewDoctor,
+  onEditDoctor,
   onDoctorChange,
   onDoctorSubmit,
   onOpenDoctorCases,
@@ -46,6 +49,14 @@ export default function DoctorsPage({
             <Eye size={16} />
           </Button>
           <Button
+            variant="ghost"
+            iconOnly
+            aria-label="Editar dentista"
+            onClick={() => onEditDoctor(doctor)}
+          >
+            <Edit3 size={16} />
+          </Button>
+          <Button
             variant="danger"
             iconOnly
             aria-label="Excluir dentista"
@@ -64,7 +75,7 @@ export default function DoctorsPage({
       title="Dentistas"
       description="Contatos profissionais vinculados aos casos do laboratório."
       action={
-        <Button variant="primary" onClick={() => setShowDoctorModal(true)}>
+        <Button variant="primary" onClick={onNewDoctor}>
           <Plus size={18} />
           Novo dentista
         </Button>
@@ -88,8 +99,8 @@ export default function DoctorsPage({
 
       {showDoctorModal && (
         <Modal
-          title="Novo dentista"
-          description="Cadastre o cliente profissional que envia casos para o laboratório."
+          title={editingDoctorId ? "Editar dentista" : "Novo dentista"}
+          description={editingDoctorId ? "Atualize os dados do cliente profissional." : "Cadastre o cliente profissional que envia casos para o laboratório."}
           onClose={() => setShowDoctorModal(false)}
         >
           <form className="form-grid" onSubmit={onDoctorSubmit}>
@@ -130,7 +141,7 @@ export default function DoctorsPage({
             </FormField>
             <Button variant="primary" disabled={busy} type="submit">
               <Plus size={18} />
-              Cadastrar dentista
+              {editingDoctorId ? "Salvar alterações" : "Cadastrar dentista"}
             </Button>
           </form>
         </Modal>
@@ -138,4 +149,3 @@ export default function DoctorsPage({
     </PageContainer>
   );
 }
-

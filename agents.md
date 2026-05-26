@@ -1,104 +1,151 @@
-# Cadista - Governanca de Agentes
+# Cadista - Governança de Agentes
 
-## Nomenclatura Oficial
+Este arquivo define regras obrigatórias para qualquer agente que altere, revise ou gere código neste repositório.
 
-O nome oficial e unico do produto e **Cadista**.
+Antes de executar uma tarefa, o agente deve considerar estas regras como parte do contrato da tarefa. Em caso de conflito entre uma sugestão genérica do agente e este arquivo, este arquivo prevalece, exceto quando o usuário der uma instrução explícita em contrário.
 
-E proibido usar qualquer variante com `K` em codigo, documentacao, comentarios,
- mensagens de interface, commits, nomes de modulos ou descricoes tecnicas.
-Quando um agente encontrar a grafia incorreta, deve corrigi-la no mesmo escopo
-da tarefa, desde que isso nao gere refatoracao ampla fora do objetivo atual.
+---
+
+## Nomenclatura do Projeto
+
+O nome de trabalho atual do produto é **Cadista**.
+
+Neste repositório, use `Cadista` como nome padrão em documentação, mensagens de interface, comentários e descrições técnicas enquanto não houver decisão formal de renomeação.
+
+Evite variantes como `Kadista`, `K-dista` ou outras grafias inconsistentes, especialmente em arquivos novos, mensagens de interface e documentação.
+
+Quando encontrar uma grafia incorreta no mesmo arquivo ou escopo da tarefa atual, corrija se isso for seguro e não gerar refatoração ampla. Não faça varreduras globais apenas para renomear termos, a menos que a tarefa peça explicitamente.
+
+Observação: “cadista” também é o nome da profissão/público-alvo. Portanto, diferencie quando necessário:
+
+- **Cadista**: nome de trabalho do produto;
+- **cadista**: profissional que utiliza o sistema.
+
+---
 
 ## Arquitetura Desacoplada
 
-O repositorio e dividido estritamente em duas aplicacoes independentes:
+O repositório é dividido estritamente em duas aplicações independentes:
 
-- `backend/`: API FastAPI funcional, responsavel por regras de negocio,
-  persistencia e trafego exclusivamente em JSON.
-- `frontend/`: SPA React autonoma, responsavel pela experiencia de usuario e
-  pelo consumo da API via HTTP.
+- `backend/`: API FastAPI funcional, responsável por regras de negócio, persistência e tráfego exclusivamente em JSON.
+- `frontend/`: SPA React autônoma, responsável pela experiência de usuário e pelo consumo da API via HTTP.
 
-O backend nao deve renderizar HTML, templates ou assets do frontend. O frontend
-nao deve acessar banco de dados, arquivos internos do backend ou regras de
-persistencia diretamente.
+O backend não deve renderizar HTML, templates ou assets do frontend.
 
-## Padrao Backend
+O frontend não deve acessar banco de dados, arquivos internos do backend ou regras de persistência diretamente.
+
+O contrato entre as camadas é HTTP + JSON.
+
+---
+
+## Padrão Backend
 
 O backend deve seguir FastAPI, SQLAlchemy, Pydantic e Alembic.
 
-Regras obrigatorias:
+Regras obrigatórias:
 
-- Rotas em `backend/routes/` recebem requisicoes, validam dependencias, chamam
-  services e retornam JSON.
-- Persistencia CRUD deve permanecer procedural em `backend/services/`, usando
-  funcoes explicitas para criar, listar, atualizar e excluir entidades.
-- Modelos ORM ficam em `backend/models/` e devem manter relacionamentos
-  simetricos com `relationship(..., back_populates=...)`.
-- Schemas Pydantic ficam em `backend/schemas/` e definem entrada e saida da API.
-- Toda alteracao estrutural de banco deve possuir migration Alembic.
-- Dados financeiros devem usar `Decimal` no dominio Python/Pydantic e
-  `Numeric(10, 2)` no SQLAlchemy.
-- Todas as funcoes publicas ou auxiliares relevantes devem possuir docstrings
-  explicando objetivo, argumentos, retorno e excecoes quando aplicavel.
+- Rotas em `backend/routes/` recebem requisições, validam dependências, chamam services e retornam JSON.
+- Persistência CRUD deve permanecer procedural em `backend/services/`, usando funções explícitas para criar, listar, atualizar e excluir entidades.
+- Modelos ORM ficam em `backend/models/` e devem manter relacionamentos simétricos com `relationship(..., back_populates=...)`.
+- Schemas Pydantic ficam em `backend/schemas/` e definem entrada e saída da API.
+- Toda alteração estrutural de banco deve possuir migration Alembic.
+- Dados financeiros devem usar `Decimal` no domínio Python/Pydantic e `Numeric(10, 2)` no SQLAlchemy.
+- Funções públicas, services, handlers relevantes e utilitários reutilizáveis devem possuir docstrings objetivas.
+- Funções internas triviais podem dispensar docstring se o nome e o contexto forem autoexplicativos.
 
-## Padrao Frontend
+---
 
-O frontend oficial e React gerenciado por Vite.
+## Padrão Frontend
 
-Regras obrigatorias:
+O frontend oficial é React gerenciado por Vite.
 
-- `frontend/src/main.jsx` e o ponto de entrada da SPA.
-- `frontend/src/App.jsx` contem o container principal da interface ou delega
-  para componentes menores quando o modulo crescer.
-- Chamadas HTTP devem ficar isoladas em services, com cliente centralizado em
-  `frontend/src/services/api.js`.
-- Componentes React devem ser funcionais, com estado explicito via hooks e
-  efeitos controlados por `useEffect`.
-- Funcoes JavaScript exportadas, handlers relevantes e utilitarios devem ter
-  JSDoc objetivo.
-- A interface deve consumir JSON da API; dados de dominio nao devem ser
-  duplicados como fonte de verdade no frontend.
+Regras obrigatórias:
+
+- `frontend/src/main.jsx` é o ponto de entrada da SPA.
+- `frontend/src/App.jsx` contém o container principal da interface ou delega para componentes menores quando o módulo crescer.
+- Chamadas HTTP devem ficar isoladas em services, com cliente centralizado em `frontend/src/services/api.js`.
+- Componentes React devem ser funcionais, com estado explícito via hooks e efeitos controlados por `useEffect`.
+- Funções JavaScript exportadas, handlers relevantes e utilitários devem ter JSDoc objetivo.
+- A interface deve consumir JSON da API.
+- Dados de domínio não devem ser duplicados como fonte de verdade no frontend.
+
+---
+
+## Direção de UX/UI
+
+O frontend deve priorizar uma experiência de ferramenta operacional para cadistas/laboratórios.
+
+O sistema é uma segunda ferramenta de trabalho. A ferramenta principal do usuário tende a ser o software de modelagem 3D.
+
+A interface deve ser:
+
+- objetiva;
+- sóbria;
+- rápida de consultar;
+- focada em casos, prazos, dentistas, serviços e entregas;
+- adequada para uso diário como painel operacional.
+
+Evitar:
+
+- aparência de landing page odontológica;
+- excesso de gráficos;
+- widgets decorativos;
+- linguagem genérica de template;
+- elementos visuais que desviem atenção da operação principal.
+
+A tabela de casos é uma das áreas centrais do produto.
+
+---
 
 ## Contrato Entre Camadas
 
-O contrato entre frontend e backend e HTTP + JSON.
+O contrato entre frontend e backend é HTTP + JSON.
 
-O frontend deve tratar estados de carregamento, sucesso, erro e listas vazias.
-O backend deve retornar status HTTP e mensagens de erro claras para permitir que
-a SPA apresente feedback consistente ao usuario.
+O frontend deve tratar:
 
-## Qualidade Obrigatoria
+- carregamento;
+- sucesso;
+- erro;
+- listas vazias;
+- falhas de rede;
+- mensagens de validação.
 
-- Manter codigo simples, legivel e modular.
-- Preferir padroes ja existentes no repositorio.
-- Nao introduzir dependencias sem necessidade tecnica clara.
-- Nao misturar responsabilidades entre camadas.
-- Garantir testes automatizados para regras de negocio criticas.
-- Nao quebrar compatibilidade de rotas sem atualizar o frontend e os testes.
+O backend deve retornar status HTTP e mensagens de erro claras para permitir que a SPA apresente feedback consistente ao usuário.
 
-## Protocolo Permanente de Resposta e Revisao
+---
 
-Esta secao e permanente e nao deve ser removida por agentes futuros.
+## Controle de Escopo
 
-Sempre que executar qualquer tarefa neste repositorio, o agente deve entregar
-uma revisao completa e detalhada da tarefa executada. A resposta final deve
-explicar, de forma objetiva e rastreavel:
+O agente deve resolver a tarefa solicitada com a menor mudança segura possível.
 
-- qual foi o erro encontrado, quando a tarefa for uma correcao de erro;
-- o que foi feito, quando a tarefa nao for uma correcao de erro;
-- por que a mudanca foi feita;
-- por que a decisao tecnica adotada foi escolhida;
-- qual linha de raciocinio levou a solucao implementada;
-- quais consideracoes importantes, impactos, limitacoes ou riscos permanecem;
-- quais arquivos foram alterados, quando houver mudanca no repositorio;
-- quais comandos de validacao foram executados e seus resultados;
-- o que nao pode ser validado, quando alguma verificacao nao for possivel.
+Não deve realizar refatorações amplas, renomeações globais, troca de bibliotecas, alteração de arquitetura ou mudanças de modelo de dados sem necessidade direta para a tarefa atual.
 
-O objetivo desta regra e impedir respostas finais excessivamente resumidas.
-Mesmo em tarefas simples, o agente deve registrar o raciocinio tecnico essencial
-e deixar claro se a tarefa tratava um defeito, uma evolucao funcional, uma
-mudanca de documentacao ou uma decisao arquitetural.
+Melhorias oportunistas são permitidas apenas dentro do mesmo arquivo ou escopo imediato da tarefa, desde que não aumentem risco nem dificultem revisão.
 
-Ao final de tarefas com alteracao de codigo, estrutura ou governanca, o agente
-deve sugerir uma mensagem de commit curta, natural e especifica que represente o
-conjunto das mudancas realizadas.
+Quando uma melhoria relevante estiver fora do escopo, o agente deve registrá-la como recomendação, não implementá-la automaticamente.
+
+---
+
+## Qualidade Obrigatória
+
+- Manter código simples, legível e modular.
+- Preferir padrões já existentes no repositório.
+- Não introduzir dependências sem necessidade técnica clara.
+- Não misturar responsabilidades entre camadas.
+- Garantir testes automatizados para regras de negócio críticas.
+- Não quebrar compatibilidade de rotas sem atualizar o frontend e os testes.
+- Não remover funcionalidades existentes sem substituição equivalente ou justificativa clara.
+- Não criar funcionalidade falsa apenas visualmente se a API ou o domínio ainda não suportarem.
+
+---
+
+## Validação
+
+O agente deve validar as mudanças sempre que possível.
+
+Validações comuns:
+
+Backend:
+
+```bash
+pytest

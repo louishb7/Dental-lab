@@ -1,4 +1,4 @@
-import { Eye, Layers3, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { CheckCircle2, Eye, Layers3, PackageCheck, Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import Button from "../components/ui/Button.jsx";
 import DataTable from "../components/ui/DataTable.jsx";
@@ -114,9 +114,26 @@ export default function CasesPage({
           <Button variant="secondary" iconOnly aria-label="Abrir detalhes" onClick={() => onOpenCaseItems(caseItem.id)}>
             <Eye size={16} />
           </Button>
-          {caseItem.status !== "delivered" && (
-            <Button variant="ghost" iconOnly aria-label="Avançar status" onClick={() => onAdvanceCase(caseItem)}>
-              <RefreshCw size={16} />
+          {caseItem.status === "pending" && (
+            <Button
+              variant="ghost"
+              iconOnly
+              aria-label="Marcar como pronto"
+              title="Marcar como pronto"
+              onClick={() => onAdvanceCase(caseItem)}
+            >
+              <CheckCircle2 size={16} />
+            </Button>
+          )}
+          {caseItem.status === "completed" && (
+            <Button
+              variant="ghost"
+              iconOnly
+              aria-label="Marcar como entregue"
+              title="Marcar como entregue"
+              onClick={() => onAdvanceCase(caseItem)}
+            >
+              <PackageCheck size={16} />
             </Button>
           )}
           <Button variant="danger" iconOnly aria-label="Excluir caso" onClick={() => onRemoveCase(caseItem.id)}>

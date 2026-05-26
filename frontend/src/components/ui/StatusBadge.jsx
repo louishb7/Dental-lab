@@ -1,6 +1,6 @@
 const STATUS_LABELS = {
   pending: "Pendente",
-  completed: "Pronto",
+  completed: "Pronto para entrega",
   delivered: "Entregue",
 };
 
@@ -13,4 +13,3 @@ export default function StatusBadge({ status }) {
     </span>
   );
 }
-

@@ -184,6 +184,23 @@ export async function createDoctor(data) {
 }
 
 /**
+ * Updates an active doctor using the backend JSON contract.
+ *
+ * @param {number} id Unique doctor identifier.
+ * @param {object} data Partial doctor data.
+ * @returns {Promise<object>} Updated doctor returned by the backend.
+ */
+export async function updateDoctor(id, data) {
+  const response = await fetch(`${DOCTORS_URL}/${id}`, {
+    method: "PUT",
+    headers: buildHeaders(),
+    body: JSON.stringify(data),
+  });
+
+  return parseResponse(response);
+}
+
+/**
  * Deletes a doctor by id and lets the backend enforce business constraints.
  *
  * @param {number} id Unique doctor identifier.
