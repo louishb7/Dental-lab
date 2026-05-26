@@ -1,4 +1,6 @@
-const API_BASE_URL = "http://localhost:8000/doctors";
+const API_ROOT_URL = "http://localhost:8000";
+const DOCTORS_URL = `${API_ROOT_URL}/doctors`;
+const CASES_URL = `${API_ROOT_URL}/cases`;
 
 /**
  * Builds default request headers for the Cadista API.
@@ -41,12 +43,122 @@ async function parseResponse(response) {
 }
 
 /**
+ * Saves the authenticated user session in browser storage.
+ *
+ * @param {{access_token: string, username: string, email: string}} payload
+ * Token payload returned by the backend.
+ * @returns {{username: string, email: string}} Public session data for the UI.
+ */
+export function saveSession(payload) {
+  window.localStorage.setItem("cadista_token", payload.access_token);
+  window.localStorage.setItem(
+    "cadista_user",
+    JSON.stringify({ username: payload.username, email: payload.email }),
+  );
+
+  return { username: payload.username, email: payload.email };
+}
+
+/**
+ * Reads the saved Cadista user session from browser storage.
+ *
+ * @returns {{username: string, email: string}|null} Stored user data or null.
+ */
+export function getStoredSession() {
+  const rawUser = window.localStorage.getItem("cadista_user");
+  const token = window.localStorage.getItem("cadista_token");
+
+  if (!rawUser || !token) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(rawUser);
+  } catch {
+    clearSession();
+    return null;
+  }
+}
+
+/**
+ * Removes the current Cadista authentication data from browser storage.
+ *
+ * @returns {void}
+ */
+export function clearSession() {
+  window.localStorage.removeItem("cadista_token");
+  window.localStorage.removeItem("cadista_user");
+}
+
+/**
+ * Authenticates a user with username/email and password.
+ *
+ * @param {{identifier: string, password: string}} credentials Login credentials.
+ * @returns {Promise<{username: string, email: string}>} Public session data.
+ */
+export async function login(credentials) {
+  const response = await fetch(`${API_ROOT_URL}/auth/login`, {
+    method: "POST",
+    headers: buildHeaders(),
+    body: JSON.stringify(credentials),
+  });
+  const payload = await parseResponse(response);
+
+  return saveSession(payload);
+}
+
+/**
+ * Creates a user account and stores the returned authentication token.
+ *
+ * @param {{email: string, username: string, password: string}} data New account data.
+ * @returns {Promise<{username: string, email: string}>} Public session data.
+ */
+export async function register(data) {
+  const response = await fetch(`${API_ROOT_URL}/auth/register`, {
+    method: "POST",
+    headers: buildHeaders(),
+    body: JSON.stringify(data),
+  });
+  const payload = await parseResponse(response);
+
+  return saveSession(payload);
+}
+
+/**
+ * Fetches the current authenticated user from the backend.
+ *
+ * @returns {Promise<{id: number, username: string, email: string}>} User profile.
+ */
+export async function getCurrentUser() {
+  const response = await fetch(`${API_ROOT_URL}/auth/me`, {
+    method: "GET",
+    headers: buildHeaders(),
+  });
+
+  return parseResponse(response);
+}
+
+/**
+ * Fetches the operational dashboard summary for the authenticated user.
+ *
+ * @returns {Promise<object>} Dashboard summary returned by the backend.
+ */
+export async function getDashboardOverview() {
+  const response = await fetch(`${API_ROOT_URL}/dashboard/overview`, {
+    method: "GET",
+    headers: buildHeaders(),
+  });
+
+  return parseResponse(response);
+}
+
+/**
  * Fetches the active doctors registered in Cadista.
  *
  * @returns {Promise<Array>} List of doctors returned by the backend.
  */
 export async function getDoctors() {
-  const response = await fetch(`${API_BASE_URL}/`, {
+  const response = await fetch(`${DOCTORS_URL}/`, {
     method: "GET",
     headers: buildHeaders(),
   });
@@ -62,7 +174,7 @@ export async function getDoctors() {
  * @returns {Promise<object>} Doctor created by the backend.
  */
 export async function createDoctor(data) {
-  const response = await fetch(`${API_BASE_URL}/`, {
+  const response = await fetch(`${DOCTORS_URL}/`, {
     method: "POST",
     headers: buildHeaders(),
     body: JSON.stringify(data),
@@ -78,7 +190,129 @@ export async function createDoctor(data) {
  * @returns {Promise<null>} Null when the backend confirms deletion.
  */
 export async function deleteDoctor(id) {
-  const response = await fetch(`${API_BASE_URL}/${id}`, {
+  const response = await fetch(`${DOCTORS_URL}/${id}`, {
+    method: "DELETE",
+    headers: buildHeaders(),
+  });
+
+  return parseResponse(response);
+}
+
+/**
+ * Fetches cases, optionally scoped to a doctor.
+ *
+ * @param {{doctorId?: number, status?: string}} filters Optional query filters.
+ * @returns {Promise<Array>} List of cases returned by the backend.
+ */
+export async function getCases(filters = {}) {
+  const params = new URLSearchParams();
+
+  if (filters.doctorId) {
+    params.set("doctor_id", String(filters.doctorId));
+  }
+
+  if (filters.status) {
+    params.set("status", filters.status);
+  }
+
+  const query = params.toString() ? `?${params.toString()}` : "";
+  const response = await fetch(`${CASES_URL}/${query}`, {
+    method: "GET",
+    headers: buildHeaders(),
+  });
+
+  return parseResponse(response);
+}
+
+/**
+ * Creates a case linked to a doctor.
+ *
+ * @param {object} data Case payload compatible with the backend schema.
+ * @returns {Promise<object>} Case created by the backend.
+ */
+export async function createCase(data) {
+  const response = await fetch(`${CASES_URL}/`, {
+    method: "POST",
+    headers: buildHeaders(),
+    body: JSON.stringify(data),
+  });
+
+  return parseResponse(response);
+}
+
+/**
+ * Updates a case by id.
+ *
+ * @param {number} id Unique case identifier.
+ * @param {object} data Partial case payload.
+ * @returns {Promise<object>} Updated case.
+ */
+export async function updateCase(id, data) {
+  const response = await fetch(`${CASES_URL}/${id}`, {
+    method: "PUT",
+    headers: buildHeaders(),
+    body: JSON.stringify(data),
+  });
+
+  return parseResponse(response);
+}
+
+/**
+ * Deletes a case by id.
+ *
+ * @param {number} id Unique case identifier.
+ * @returns {Promise<object>} Deleted or soft-deleted case returned by the API.
+ */
+export async function deleteCase(id) {
+  const response = await fetch(`${CASES_URL}/${id}`, {
+    method: "DELETE",
+    headers: buildHeaders(),
+  });
+
+  return parseResponse(response);
+}
+
+/**
+ * Fetches items/services linked to a case.
+ *
+ * @param {number} caseId Unique case identifier.
+ * @returns {Promise<Array>} List of case items.
+ */
+export async function getCaseItems(caseId) {
+  const response = await fetch(`${CASES_URL}/${caseId}/items/`, {
+    method: "GET",
+    headers: buildHeaders(),
+  });
+
+  return parseResponse(response);
+}
+
+/**
+ * Creates an item/service linked to a case.
+ *
+ * @param {number} caseId Unique case identifier.
+ * @param {object} data Item payload compatible with the backend schema.
+ * @returns {Promise<object>} Created item.
+ */
+export async function createCaseItem(caseId, data) {
+  const response = await fetch(`${CASES_URL}/${caseId}/items/`, {
+    method: "POST",
+    headers: buildHeaders(),
+    body: JSON.stringify(data),
+  });
+
+  return parseResponse(response);
+}
+
+/**
+ * Deletes an item/service from a case.
+ *
+ * @param {number} caseId Unique case identifier.
+ * @param {number} itemId Unique item identifier.
+ * @returns {Promise<null>} Null when deletion succeeds.
+ */
+export async function deleteCaseItem(caseId, itemId) {
+  const response = await fetch(`${CASES_URL}/${caseId}/items/${itemId}`, {
     method: "DELETE",
     headers: buildHeaders(),
   });

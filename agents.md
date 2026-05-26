@@ -75,3 +75,30 @@ a SPA apresente feedback consistente ao usuario.
 - Nao misturar responsabilidades entre camadas.
 - Garantir testes automatizados para regras de negocio criticas.
 - Nao quebrar compatibilidade de rotas sem atualizar o frontend e os testes.
+
+## Protocolo Permanente de Resposta e Revisao
+
+Esta secao e permanente e nao deve ser removida por agentes futuros.
+
+Sempre que executar qualquer tarefa neste repositorio, o agente deve entregar
+uma revisao completa e detalhada da tarefa executada. A resposta final deve
+explicar, de forma objetiva e rastreavel:
+
+- qual foi o erro encontrado, quando a tarefa for uma correcao de erro;
+- o que foi feito, quando a tarefa nao for uma correcao de erro;
+- por que a mudanca foi feita;
+- por que a decisao tecnica adotada foi escolhida;
+- qual linha de raciocinio levou a solucao implementada;
+- quais consideracoes importantes, impactos, limitacoes ou riscos permanecem;
+- quais arquivos foram alterados, quando houver mudanca no repositorio;
+- quais comandos de validacao foram executados e seus resultados;
+- o que nao pode ser validado, quando alguma verificacao nao for possivel.
+
+O objetivo desta regra e impedir respostas finais excessivamente resumidas.
+Mesmo em tarefas simples, o agente deve registrar o raciocinio tecnico essencial
+e deixar claro se a tarefa tratava um defeito, uma evolucao funcional, uma
+mudanca de documentacao ou uma decisao arquitetural.
+
+Ao final de tarefas com alteracao de codigo, estrutura ou governanca, o agente
+deve sugerir uma mensagem de commit curta, natural e especifica que represente o
+conjunto das mudancas realizadas.
