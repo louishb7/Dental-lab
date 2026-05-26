@@ -1,0 +1,163 @@
+import { AlertTriangle, CheckCircle2, CircleDollarSign, ClipboardList } from "lucide-react";
+import PageContainer from "../components/layout/PageContainer.jsx";
+import EmptyState from "../components/ui/EmptyState.jsx";
+import LoadingState from "../components/ui/LoadingState.jsx";
+import StatCard from "../components/ui/StatCard.jsx";
+import PriorityBadge from "../components/ui/PriorityBadge.jsx";
+import StatusBadge from "../components/ui/StatusBadge.jsx";
+import { formatCurrency, formatDate } from "../utils/formatters.js";
+
+function statusCount(dashboard, key) {
+  return dashboard?.status_counts?.[key] ?? 0;
+}
+
+function DashboardCaseList({ title, description, cases, emptyTitle }) {
+  return (
+    <section className="panel">
+      <div className="panel-header">
+        <div className="panel-title">
+          <h3>{title}</h3>
+          <p>{description}</p>
+        </div>
+      </div>
+      <div className="panel-body">
+        {cases?.length ? (
+          <div className="case-list">
+            {cases.slice(0, 5).map((caseItem) => (
+              <article className="case-card" key={caseItem.id}>
+                <div className="case-card-top">
+                  <div className="cell-main">
+                    <strong>#{caseItem.id} · {caseItem.patient_ref}</strong>
+                    <small>{caseItem.doctor_name}</small>
+                  </div>
+                  <PriorityBadge priority={caseItem.priority} />
+                </div>
+                <div className="case-meta">
+                  <span>{formatDate(caseItem.deadline)}</span>
+                  <StatusBadge status={caseItem.status} />
+                  <span>{formatCurrency(caseItem.total_value)}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            icon={CheckCircle2}
+            title={emptyTitle}
+            description="Nenhuma ação imediata para este bloco."
+          />
+        )}
+      </div>
+    </section>
+  );
+}
+
+export default function DashboardPage({ dashboard, loading }) {
+  if (loading) {
+    return (
+      <PageContainer title="Visão geral" description="Carregando panorama operacional.">
+        <section className="panel">
+          <LoadingState message="Carregando dashboard..." />
+        </section>
+      </PageContainer>
+    );
+  }
+
+  const openCases = statusCount(dashboard, "pending") + statusCount(dashboard, "completed");
+  const urgentCases = dashboard?.urgent_open_cases ?? [];
+  const overdueCases = dashboard?.overdue_cases ?? [];
+  const deliveredCases = dashboard?.delivered_cases_month ?? [];
+
+  return (
+    <PageContainer
+      kicker="Operação"
+      title="Visão geral"
+      description="Panorama dos seus casos, prazos e entregas."
+    >
+      <div className="content-grid">
+        <div className="stat-grid">
+          <StatCard
+            title="Casos abertos"
+            value={openCases}
+            description="Pendentes ou prontos, ainda não entregues"
+            icon={ClipboardList}
+          />
+          <StatCard
+            title="Urgentes"
+            value={urgentCases.length}
+            description="Casos marcados como prioridade"
+            icon={AlertTriangle}
+            tone="warning"
+          />
+          <StatCard
+            title="Atrasados"
+            value={overdueCases.length}
+            description="Vencidos e ainda não entregues"
+            icon={AlertTriangle}
+            tone="danger"
+          />
+          <StatCard
+            title="Entregue no mês"
+            value={formatCurrency(dashboard?.delivered_total_month)}
+            description={`${dashboard?.delivered_count_month ?? 0} casos entregues`}
+            icon={CircleDollarSign}
+            tone="success"
+          />
+        </div>
+
+        <div className="split-grid">
+          <DashboardCaseList
+            title="Casos urgentes"
+            description="Prioridades que continuam em aberto."
+            cases={urgentCases}
+            emptyTitle="Nenhum caso urgente."
+          />
+          <DashboardCaseList
+            title="Casos atrasados"
+            description="Prazos vencidos que precisam de atenção."
+            cases={overdueCases}
+            emptyTitle="Nenhum caso atrasado."
+          />
+        </div>
+
+        <section className="panel">
+          <div className="panel-header">
+            <div className="panel-title">
+              <h3>Entregas do mês</h3>
+              <p>Resumo recente do que já foi finalizado e entregue.</p>
+            </div>
+            <span className="badge badge-success">{formatCurrency(dashboard?.delivered_total_month)}</span>
+          </div>
+          <div className="panel-body">
+            {deliveredCases.length ? (
+              <div className="case-list">
+                {deliveredCases.slice(0, 6).map((caseItem) => (
+                  <article className="case-card" key={caseItem.id}>
+                    <div className="case-card-top">
+                      <div className="cell-main">
+                        <strong>#{caseItem.id} · {caseItem.patient_ref}</strong>
+                        <small>{caseItem.doctor_name}</small>
+                      </div>
+                      <StatusBadge status={caseItem.status} />
+                    </div>
+                    <div className="case-meta">
+                      <span>Entregue em {formatDate(caseItem.delivered_at)}</span>
+                      <span>{formatCurrency(caseItem.total_value)}</span>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={CheckCircle2}
+                title="Nenhuma entrega neste mês."
+                description="Quando casos forem entregues, eles aparecerão aqui."
+              />
+            )}
+          </div>
+        </section>
+      </div>
+    </PageContainer>
+  );
+}
+

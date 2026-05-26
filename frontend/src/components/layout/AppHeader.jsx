@@ -1,0 +1,38 @@
+import { CalendarDays, LogOut, RefreshCw, User } from "lucide-react";
+import Button from "../ui/Button.jsx";
+
+export default function AppHeader({ title, subtitle, user, onRefresh, onLogout }) {
+  const today = new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date());
+
+  return (
+    <header className="app-header">
+      <div className="header-title">
+        <h1>{title}</h1>
+        {subtitle && <p className="header-subtitle">{subtitle}</p>}
+      </div>
+      <div className="header-actions">
+        <span className="session-pill">
+          <CalendarDays size={16} />
+          {today}
+        </span>
+        <span className="session-pill">
+          <User size={16} />
+          {user?.username}
+        </span>
+        <Button variant="ghost" size="sm" onClick={onRefresh}>
+          <RefreshCw size={16} />
+          Atualizar
+        </Button>
+        <Button variant="ghost" size="sm" onClick={onLogout}>
+          <LogOut size={16} />
+          Sair
+        </Button>
+      </div>
+    </header>
+  );
+}
+
