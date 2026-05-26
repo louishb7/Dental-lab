@@ -9,6 +9,10 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
+
+from backend.core import settings
+from backend.middleware.security import SecurityHeadersMiddleware
 
 # Permite executar tanto `uvicorn backend.main:app` na raiz do projeto quanto
 # `uvicorn main:app` dentro de `backend/` sem quebrar a resolução do pacote.
@@ -29,15 +33,25 @@ app = FastAPI(
     title="API Cadista",
     description="API para gestão operacional de laboratórios odontológicos e cadistas independentes",
     version="1.0.0",
+    docs_url=None if settings.APP_ENV == "production" else "/docs",
+    redoc_url=None if settings.APP_ENV == "production" else "/redoc",
+    openapi_url=None if settings.APP_ENV == "production" else "/openapi.json",
+)
+
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=settings.TRUSTED_HOSTS,
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "Origin"],
 )
+
+app.add_middleware(SecurityHeadersMiddleware)
 
 app.include_router(doctor.router)
 app.include_router(case.router)

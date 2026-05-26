@@ -1,15 +1,25 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
+
 from fastapi.testclient import TestClient
 
 from backend.core import settings
+from backend.database.connection import SessionLocal
+from backend.models.user import User
 from backend.main import app
+
+STRONG_PASSWORD = "StrongPass123!"
 
 
 def _configure_test_security(monkeypatch) -> None:
     monkeypatch.setattr(settings, "SECRET_KEY", "test-secret")
     monkeypatch.setattr(settings, "ALGORITHM", "HS256")
     monkeypatch.setattr(settings, "ACCESS_TOKEN_EXPIRE_MINUTES", 60)
+    monkeypatch.setattr(settings, "LOGIN_MAX_ATTEMPTS", 3)
+    monkeypatch.setattr(settings, "LOGIN_LOCKOUT_MINUTES", 1)
+    monkeypatch.setattr(settings, "LOGIN_RATE_LIMIT_ATTEMPTS", 100)
+    monkeypatch.setattr(settings, "LOGIN_RATE_LIMIT_WINDOW_SECONDS", 60)
 
 
 def _register_user(client: TestClient) -> dict:
@@ -18,7 +28,7 @@ def _register_user(client: TestClient) -> dict:
         json={
             "email": "admin@cadista.local",
             "username": "admin",
-            "password": "secret123",
+            "password": STRONG_PASSWORD,
         },
     )
     assert response.status_code == 201, response.text
@@ -48,14 +58,14 @@ def test_register_login_and_me_endpoint(monkeypatch) -> None:
 
     login_response = client.post(
         "/auth/login",
-        json={"identifier": "admin", "password": "secret123"},
+        json={"identifier": "admin", "password": STRONG_PASSWORD},
     )
     assert login_response.status_code == 200, login_response.text
     assert login_response.json()["username"] == "admin"
 
     login_by_email = client.post(
         "/auth/login",
-        json={"identifier": "admin@cadista.local", "password": "secret123"},
+        json={"identifier": "admin@cadista.local", "password": STRONG_PASSWORD},
     )
     assert login_by_email.status_code == 200, login_by_email.text
     assert login_by_email.json()["email"] == "admin@cadista.local"
@@ -100,7 +110,7 @@ def test_registration_allows_multiple_users_and_rejects_duplicate_identity(monke
         json={
             "email": "operator@cadista.local",
             "username": "operator",
-            "password": "secret123",
+            "password": STRONG_PASSWORD,
         },
     )
     assert second_response.status_code == 201, second_response.text
@@ -111,7 +121,7 @@ def test_registration_allows_multiple_users_and_rejects_duplicate_identity(monke
         json={
             "email": "admin@cadista.local",
             "username": "another-admin",
-            "password": "secret123",
+            "password": STRONG_PASSWORD,
         },
     )
     assert duplicate_response.status_code == 409, duplicate_response.text
@@ -121,7 +131,7 @@ def test_registration_allows_multiple_users_and_rejects_duplicate_identity(monke
         json={
             "email": "another@cadista.local",
             "username": "admin",
-            "password": "secret123",
+            "password": STRONG_PASSWORD,
         },
     )
     assert duplicate_username_response.status_code == 409, duplicate_username_response.text
@@ -147,8 +157,78 @@ def test_registered_user_can_login_again_in_a_new_client_session(monkeypatch) ->
     second_client = TestClient(app)
     response = second_client.post(
         "/auth/login",
-        json={"identifier": "admin", "password": "secret123"},
+        json={"identifier": "admin", "password": STRONG_PASSWORD},
     )
 
     assert response.status_code == 200, response.text
     assert response.json()["username"] == "admin"
+
+
+def test_registration_rejects_weak_password(monkeypatch) -> None:
+    _configure_test_security(monkeypatch)
+    client = TestClient(app)
+
+    response = client.post(
+        "/auth/register",
+        json={
+            "email": "weak@cadista.local",
+            "username": "weak",
+            "password": "weakpass",
+        },
+    )
+
+    assert response.status_code == 422, response.text
+
+
+def test_login_locks_after_repeated_failures(monkeypatch) -> None:
+    _configure_test_security(monkeypatch)
+    client = TestClient(app)
+    _register_user(client)
+
+    for _ in range(settings.LOGIN_MAX_ATTEMPTS):
+        response = client.post(
+            "/auth/login",
+            json={"identifier": "admin", "password": "wrong-password"},
+        )
+        if _ < settings.LOGIN_MAX_ATTEMPTS - 1:
+            assert response.status_code == 401, response.text
+        else:
+            assert response.status_code == 423, response.text
+            assert int(response.headers["retry-after"]) >= 1
+
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.username == "admin").one()
+        assert user.locked_until is not None
+        user.locked_until = datetime.now(timezone.utc) - timedelta(seconds=1)
+        user.failed_login_attempts = 0
+        db.commit()
+
+    recovered_response = client.post(
+        "/auth/login",
+        json={"identifier": "admin", "password": STRONG_PASSWORD},
+    )
+    assert recovered_response.status_code == 200, recovered_response.text
+
+
+def test_login_rate_limit_blocks_repeated_requests(monkeypatch) -> None:
+    _configure_test_security(monkeypatch)
+    monkeypatch.setattr(settings, "LOGIN_MAX_ATTEMPTS", 100)
+    monkeypatch.setattr(settings, "LOGIN_RATE_LIMIT_ATTEMPTS", 3)
+    monkeypatch.setattr(settings, "LOGIN_RATE_LIMIT_WINDOW_SECONDS", 60)
+
+    client = TestClient(app)
+    _register_user(client)
+
+    for _ in range(3):
+        response = client.post(
+            "/auth/login",
+            json={"identifier": "admin", "password": "wrong-password"},
+        )
+        assert response.status_code == 401, response.text
+
+    limited_response = client.post(
+        "/auth/login",
+        json={"identifier": "admin", "password": "wrong-password"},
+    )
+    assert limited_response.status_code == 429, limited_response.text
+    assert int(limited_response.headers["retry-after"]) >= 1

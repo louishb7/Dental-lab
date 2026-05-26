@@ -1,5 +1,8 @@
 .env
 .env.*
+.envrc.local
+.direnv/
+repomix-output*.xml
 .venv/
 __pycache__/
 .pytest_cache/

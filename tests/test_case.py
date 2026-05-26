@@ -15,6 +15,8 @@ from backend.services import case as case_service
 from backend.services import case_item as case_item_service
 from backend.services import doctor as doctor_service
 
+STRONG_PASSWORD = "StrongPass123!"
+
 
 def _create_doctor(db: SessionLocal):
     return doctor_service.create_doctor(
@@ -38,7 +40,7 @@ def _register_user(client: TestClient) -> dict:
         json={
             "email": "case@cadista.local",
             "username": "case",
-            "password": "secret123",
+            "password": STRONG_PASSWORD,
         },
     )
     assert response.status_code == 201, response.text

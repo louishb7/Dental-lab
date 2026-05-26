@@ -4,7 +4,9 @@ Rotas HTTP para autenticação.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from datetime import datetime, timezone
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -18,7 +20,9 @@ from backend.schemas.auth import (
     AuthUserResponse,
 )
 from backend.services import auth as auth_service
+from backend.services import login_rate_limit
 from backend.services import user as user_service
+from backend.services.user import AccountLockedError
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -55,8 +59,42 @@ def register(payload: AuthRegisterRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=AuthTokenResponse)
-def login(payload: AuthLoginRequest, db: Session = Depends(get_db)):
-    user = user_service.authenticate_user(db, payload.identifier, payload.password)
+def login(
+    payload: AuthLoginRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    client_id = request.client.host if request.client is not None else "unknown"
+    retry_after = login_rate_limit.register_login_attempt(client_id)
+    if retry_after is not None:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Muitas tentativas. Tente novamente mais tarde.",
+            headers={"Retry-After": str(retry_after)},
+        )
+
+    try:
+        user = user_service.authenticate_user(db, payload.identifier, payload.password)
+    except AccountLockedError as exc:
+        remaining_seconds = max(
+            1,
+            int((exc.locked_until - datetime.now(timezone.utc)).total_seconds()),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_423_LOCKED,
+            detail="Conta temporariamente bloqueada. Tente novamente mais tarde.",
+            headers={
+                "Retry-After": str(remaining_seconds),
+                "WWW-Authenticate": "Bearer",
+            },
+        ) from exc
+    except SQLAlchemyError as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Banco de dados indisponível para autenticar usuário",
+        ) from exc
+
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

@@ -15,6 +15,8 @@ from backend.services import case as case_service
 from backend.services import case_item as case_item_service
 from backend.services import doctor as doctor_service
 
+STRONG_PASSWORD = "StrongPass123!"
+
 
 def _configure_test_security(monkeypatch) -> None:
     monkeypatch.setattr(settings, "SECRET_KEY", "test-secret")
@@ -28,7 +30,7 @@ def _register_user(client: TestClient) -> dict:
         json={
             "email": "dashboard@cadista.local",
             "username": "dashboard",
-            "password": "secret123",
+            "password": STRONG_PASSWORD,
         },
     )
     assert response.status_code == 201, response.text
