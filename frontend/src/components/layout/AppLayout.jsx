@@ -3,15 +3,15 @@ import AppSidebar from "./AppSidebar.jsx";
 
 const PAGE_META = {
   dashboard: {
-    title: "Visão geral",
+    title: "Cadista",
     subtitle: "Panorama dos seus casos, prazos e entregas.",
   },
   cases: {
-    title: "Casos",
+    title: "Cadista",
     subtitle: "Controle seus prazos, prioridades e entregas.",
   },
   doctors: {
-    title: "Dentistas",
+    title: "Cadista",
     subtitle: "Clientes profissionais vinculados aos casos.",
   },
 };

@@ -61,7 +61,6 @@ export default function App() {
   const [caseForm, setCaseForm] = useState(EMPTY_CASE);
   const [itemForm, setItemForm] = useState(EMPTY_ITEM);
   const [caseAdvanced, setCaseAdvanced] = useState(false);
-  const [itemAdvanced, setItemAdvanced] = useState(false);
   const [selectedDoctorId, setSelectedDoctorId] = useState(null);
   const [selectedCaseId, setSelectedCaseId] = useState(null);
   const [showDoctorModal, setShowDoctorModal] = useState(false);
@@ -258,7 +257,7 @@ export default function App() {
     try {
       const created = await createCaseItem(
         selectedCaseId,
-        buildItemPayload(itemForm, itemAdvanced, selectedCase?.pricing_mode),
+        buildItemPayload(itemForm, true, selectedCase?.pricing_mode),
       );
       setItems((current) => [created, ...current]);
       setItemForm(EMPTY_ITEM);
@@ -431,12 +430,10 @@ export default function App() {
           caseForm={caseForm}
           itemForm={itemForm}
           caseAdvanced={caseAdvanced}
-          itemAdvanced={itemAdvanced}
           selectedCase={selectedCase}
           showCaseModal={showCaseModal}
           setShowCaseModal={setShowCaseModal}
           setCaseAdvanced={setCaseAdvanced}
-          setItemAdvanced={setItemAdvanced}
           selectedDoctorId={selectedDoctorId}
           setSelectedDoctorId={setSelectedDoctorId}
           onCaseChange={handleCaseChange}

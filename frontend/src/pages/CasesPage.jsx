@@ -2,13 +2,18 @@ import { CheckCircle2, Eye, Layers3, PackageCheck, Plus, Trash2 } from "lucide-r
 import { useEffect, useMemo, useState } from "react";
 import Button from "../components/ui/Button.jsx";
 import DataTable from "../components/ui/DataTable.jsx";
+import DeadlineBadge from "../components/ui/DeadlineBadge.jsx";
 import FormField from "../components/ui/FormField.jsx";
 import Modal from "../components/ui/Modal.jsx";
 import PageContainer from "../components/layout/PageContainer.jsx";
 import PriorityBadge from "../components/ui/PriorityBadge.jsx";
 import StatusBadge from "../components/ui/StatusBadge.jsx";
-import { formatCurrency, formatDeadline, getDeadlineTone } from "../utils/formatters.js";
+import { formatCurrency, formatDeadline } from "../utils/formatters.js";
 import CaseDetailsPage from "./CaseDetailsPage.jsx";
+
+function formatCaseCount(count, singular, plural) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
 
 export default function CasesPage({
   cases,
@@ -20,12 +25,10 @@ export default function CasesPage({
   caseForm,
   itemForm,
   caseAdvanced,
-  itemAdvanced,
   selectedCase,
   showCaseModal,
   setShowCaseModal,
   setCaseAdvanced,
-  setItemAdvanced,
   selectedDoctorId,
   setSelectedDoctorId,
   onCaseChange,
@@ -78,6 +81,8 @@ export default function CasesPage({
     });
   }, [cases, doctorById, filters]);
 
+  const visibleOpenCases = filteredCases.filter((caseItem) => caseItem.status !== "delivered").length;
+
   const columns = [
     {
       key: "patient_ref",
@@ -97,10 +102,12 @@ export default function CasesPage({
     {
       key: "deadline",
       header: "Prazo",
-      render: (caseItem) => {
-        const tone = getDeadlineTone(caseItem.deadline, caseItem.status);
-        return <span className={`deadline-${tone}`}>{formatDeadline(caseItem.deadline, caseItem.status)}</span>;
-      },
+      render: (caseItem) => (
+        <span className="cell-main">
+          <DeadlineBadge deadline={caseItem.deadline} status={caseItem.status} />
+          <small>{formatDeadline(caseItem.deadline, caseItem.status)}</small>
+        </span>
+      ),
     },
     { key: "status", header: "Status", render: (caseItem) => <StatusBadge status={caseItem.status} /> },
     { key: "priority", header: "Prioridade", render: (caseItem) => <PriorityBadge priority={caseItem.priority} /> },
@@ -127,7 +134,7 @@ export default function CasesPage({
           )}
           {caseItem.status === "completed" && (
             <Button
-              variant="ghost"
+              variant="success"
               iconOnly
               aria-label="Marcar como entregue"
               title="Marcar como entregue"
@@ -159,45 +166,51 @@ export default function CasesPage({
       <div className="content-grid">
         {message && <p className={`feedback ${message.type}`}>{message.text}</p>}
 
-        <div className="filter-bar">
-          <input
-            value={filters.search}
-            onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))}
-            placeholder="Buscar por caso, paciente ou dentista"
-            aria-label="Buscar casos"
-          />
-          <select
-            value={filters.status}
-            onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))}
-            aria-label="Filtrar por status"
-          >
-            <option value="">Todos os status</option>
-            <option value="pending">Pendente</option>
-            <option value="completed">Pronto</option>
-            <option value="delivered">Entregue</option>
-          </select>
-          <select
-            value={filters.priority}
-            onChange={(event) => setFilters((current) => ({ ...current, priority: event.target.value }))}
-            aria-label="Filtrar por prioridade"
-          >
-            <option value="">Todas prioridades</option>
-            <option value="normal">Normal</option>
-            <option value="urgent">Urgente</option>
-          </select>
-          <select
-            value={filters.doctorId}
-            onChange={(event) => setFilters((current) => ({ ...current, doctorId: event.target.value }))}
-            aria-label="Filtrar por dentista"
-          >
-            <option value="">Todos dentistas</option>
-            {doctors.map((doctor) => (
-              <option key={doctor.id} value={doctor.id}>{doctor.name}</option>
-            ))}
-          </select>
-          <Button variant="ghost" size="sm" onClick={clearFilters}>
-            Limpar
-          </Button>
+        <div className="case-toolbar">
+          <div className="filter-bar">
+            <input
+              value={filters.search}
+              onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))}
+              placeholder="Buscar por caso, paciente ou dentista"
+              aria-label="Buscar casos"
+            />
+            <select
+              value={filters.status}
+              onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))}
+              aria-label="Filtrar por status"
+            >
+              <option value="">Todos os status</option>
+              <option value="pending">Pendente</option>
+              <option value="completed">Pronto</option>
+              <option value="delivered">Entregue</option>
+            </select>
+            <select
+              value={filters.priority}
+              onChange={(event) => setFilters((current) => ({ ...current, priority: event.target.value }))}
+              aria-label="Filtrar por prioridade"
+            >
+              <option value="">Todas prioridades</option>
+              <option value="normal">Normal</option>
+              <option value="urgent">Urgente</option>
+            </select>
+            <select
+              value={filters.doctorId}
+              onChange={(event) => setFilters((current) => ({ ...current, doctorId: event.target.value }))}
+              aria-label="Filtrar por dentista"
+            >
+              <option value="">Todos dentistas</option>
+              {doctors.map((doctor) => (
+                <option key={doctor.id} value={doctor.id}>{doctor.name}</option>
+              ))}
+            </select>
+            <Button variant="ghost" size="sm" onClick={clearFilters}>
+              Limpar
+            </Button>
+          </div>
+          <div className="case-toolbar-meta" aria-live="polite">
+            <span>{formatCaseCount(filteredCases.length, "caso na lista", "casos na lista")}</span>
+            <span>{formatCaseCount(visibleOpenCases, "aberto", "abertos")}</span>
+          </div>
         </div>
 
         <section className="panel panel-strong">
@@ -306,8 +319,6 @@ export default function CasesPage({
           doctor={doctorById.get(selectedCase.doctor_id)}
           items={items}
           itemForm={itemForm}
-          itemAdvanced={itemAdvanced}
-          setItemAdvanced={setItemAdvanced}
           busy={busy}
           onItemChange={onItemChange}
           onItemSubmit={onItemSubmit}

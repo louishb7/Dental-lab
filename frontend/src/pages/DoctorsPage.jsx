@@ -83,7 +83,7 @@ export default function DoctorsPage({
     >
       <div className="content-grid">
         {message && <p className={`feedback ${message.type}`}>{message.text}</p>}
-        <section className="panel">
+        <section className="panel panel-strong">
           <div className="panel-body">
             <DataTable
               columns={columns}

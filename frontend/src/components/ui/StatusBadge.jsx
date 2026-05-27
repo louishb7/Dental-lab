@@ -1,6 +1,6 @@
 const STATUS_LABELS = {
   pending: "Pendente",
-  completed: "Pronto para entrega",
+  completed: "Pronto",
   delivered: "Entregue",
 };
 

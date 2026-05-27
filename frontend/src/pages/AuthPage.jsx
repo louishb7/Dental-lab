@@ -16,9 +16,10 @@ export default function AuthPage({
 }) {
   return (
     <main className="auth-shell">
-      <section className="panel auth-card">
+      <section className="panel panel-strong auth-card">
         <div className="panel-body">
           <div className="auth-brand">
+            <span className="brand-mark auth-mark">C</span>
             <span className="page-kicker">Acesso operacional</span>
             <h1>{PRODUCT_NAME}</h1>
             <p className="muted">Entre para acompanhar casos, prazos e entregas.</p>
@@ -107,4 +108,3 @@ export default function AuthPage({
     </main>
   );
 }
-

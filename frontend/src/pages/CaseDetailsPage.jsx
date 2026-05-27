@@ -2,6 +2,7 @@ import { Layers3, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import Button from "../components/ui/Button.jsx";
 import DataTable from "../components/ui/DataTable.jsx";
+import DeadlineBadge from "../components/ui/DeadlineBadge.jsx";
 import FormField from "../components/ui/FormField.jsx";
 import Modal from "../components/ui/Modal.jsx";
 import PriorityBadge from "../components/ui/PriorityBadge.jsx";
@@ -85,7 +86,10 @@ export default function CaseDetailsPage({
             </div>
             <div className="cell-main">
               <small>Prazo</small>
-              <strong>{formatDeadline(caseItem.deadline, caseItem.status)}</strong>
+              <span className="case-meta">
+                <DeadlineBadge deadline={caseItem.deadline} status={caseItem.status} />
+                <strong>{formatDeadline(caseItem.deadline, caseItem.status)}</strong>
+              </span>
             </div>
             <div className="cell-main">
               <small>Total</small>
@@ -129,69 +133,69 @@ export default function CaseDetailsPage({
                   Cancelar
                 </Button>
               </div>
-            <div className="form-row">
-              <FormField label="Serviço">
-                <input
-                  name="service_type"
-                  value={itemForm.service_type}
+              <div className="form-row">
+                <FormField label="Serviço">
+                  <input
+                    name="service_type"
+                    value={itemForm.service_type}
+                    onChange={onItemChange}
+                    placeholder="Coroa, faceta, placa..."
+                    required
+                  />
+                </FormField>
+                <FormField label="Dente/área">
+                  <input
+                    name="tooth"
+                    value={itemForm.tooth}
+                    onChange={onItemChange}
+                    placeholder="11 ou prótese total"
+                    required
+                  />
+                </FormField>
+              </div>
+              <div className="form-row">
+                <FormField label="Material">
+                  <input
+                    name="material"
+                    value={itemForm.material}
+                    onChange={onItemChange}
+                    placeholder="Zircônia, resina..."
+                  />
+                </FormField>
+                <FormField label="Cor">
+                  <input
+                    name="color"
+                    value={itemForm.color}
+                    onChange={onItemChange}
+                    placeholder="A2, BL1..."
+                  />
+                </FormField>
+              </div>
+              {!isFixedPrice && (
+                <FormField label="Valor unitário">
+                  <input
+                    name="unit_value"
+                    value={itemForm.unit_value}
+                    onChange={onItemChange}
+                    placeholder="R$ 120,00"
+                    required
+                  />
+                </FormField>
+              )}
+              <FormField label="Observações">
+                <textarea
+                  name="notes"
+                  rows="3"
+                  value={itemForm.notes}
                   onChange={onItemChange}
-                  placeholder="Coroa, faceta, placa..."
-                  required
                 />
               </FormField>
-              <FormField label="Dente/área">
-                <input
-                  name="tooth"
-                  value={itemForm.tooth}
-                  onChange={onItemChange}
-                  placeholder="11 ou prótese total"
-                  required
-                />
-              </FormField>
+              <Button variant="primary" disabled={busy} type="submit">
+                <Plus size={18} />
+                Adicionar serviço
+              </Button>
             </div>
-            <div className="form-row">
-              <FormField label="Material">
-                <input
-                  name="material"
-                  value={itemForm.material}
-                  onChange={onItemChange}
-                  placeholder="Zircônia, resina..."
-                />
-              </FormField>
-              <FormField label="Cor">
-                <input
-                  name="color"
-                  value={itemForm.color}
-                  onChange={onItemChange}
-                  placeholder="A2, BL1..."
-                />
-              </FormField>
-            </div>
-            {!isFixedPrice && (
-              <FormField label="Valor unitário">
-                <input
-                  name="unit_value"
-                  value={itemForm.unit_value}
-                  onChange={onItemChange}
-                  placeholder="R$ 120,00"
-                  required
-                />
-              </FormField>
-            )}
-            <FormField label="Observações">
-              <textarea
-                name="notes"
-                rows="3"
-                value={itemForm.notes}
-                onChange={onItemChange}
-              />
-            </FormField>
-            <Button variant="primary" disabled={busy} type="submit">
-              <Plus size={18} />
-              Adicionar serviço
-            </Button>
-          </div>
-        </form>
+          </form>
         )}
       </div>
     </Modal>

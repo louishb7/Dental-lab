@@ -1,5 +1,6 @@
 import { AlertTriangle, CheckCircle2, CircleDollarSign, ClipboardList } from "lucide-react";
 import PageContainer from "../components/layout/PageContainer.jsx";
+import DeadlineBadge from "../components/ui/DeadlineBadge.jsx";
 import EmptyState from "../components/ui/EmptyState.jsx";
 import LoadingState from "../components/ui/LoadingState.jsx";
 import StatCard from "../components/ui/StatCard.jsx";
@@ -7,16 +8,14 @@ import PriorityBadge from "../components/ui/PriorityBadge.jsx";
 import StatusBadge from "../components/ui/StatusBadge.jsx";
 import {
   formatCurrency,
-  formatDate,
   getLocalDateKey,
-  getRelativeDeadlineLabel,
 } from "../utils/formatters.js";
 
 function statusCount(dashboard, key) {
   return dashboard?.status_counts?.[key] ?? 0;
 }
 
-function DashboardCaseList({ title, description, cases, emptyTitle, showRelativeDeadline = false }) {
+function DashboardCaseList({ title, description, cases, emptyTitle }) {
   return (
     <section className="panel">
       <div className="panel-header">
@@ -38,11 +37,7 @@ function DashboardCaseList({ title, description, cases, emptyTitle, showRelative
                   <PriorityBadge priority={caseItem.priority} />
                 </div>
                 <div className="case-meta">
-                  <span>
-                    {showRelativeDeadline && getRelativeDeadlineLabel(caseItem.deadline)
-                      ? getRelativeDeadlineLabel(caseItem.deadline)
-                      : formatDate(caseItem.deadline)}
-                  </span>
+                  <DeadlineBadge deadline={caseItem.deadline} status={caseItem.status} />
                   <StatusBadge status={caseItem.status} />
                   <span>{formatCurrency(caseItem.total_value)}</span>
                 </div>
@@ -137,11 +132,10 @@ export default function DashboardPage({ dashboard, cases = [], doctors = [], loa
 
         <div className="split-grid">
           <DashboardCaseList
-            title="Próximos prazos e urgentes"
-            description="O que deve entrar no seu radar agora."
+            title="Prazos de hoje e amanhã"
+            description="Casos próximos, priorizados por urgência."
             cases={nextDeadlineCases}
             emptyTitle="Nenhum prazo para hoje ou amanhã."
-            showRelativeDeadline
           />
           <DashboardCaseList
             title={overdueCases.length ? "Casos atrasados" : "Entregas recentes"}

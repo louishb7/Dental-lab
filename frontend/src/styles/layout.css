@@ -1,7 +1,7 @@
 .app-layout {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 252px minmax(0, 1fr);
+  grid-template-columns: 244px minmax(0, 1fr);
 }
 
 .app-sidebar {
@@ -15,11 +15,11 @@
 }
 
 .sidebar-brand {
-  min-height: 66px;
+  min-height: 64px;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 18px;
+  padding: 15px 18px;
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -37,6 +37,7 @@
 .brand-copy strong {
   display: block;
   font-size: 0.98rem;
+  line-height: 1.2;
 }
 
 .brand-copy span,
@@ -46,14 +47,21 @@
   color: var(--color-text-muted);
 }
 
+.page-kicker {
+  font-size: 0.78rem;
+  font-weight: 760;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .sidebar-nav {
   display: grid;
-  gap: 4px;
-  padding: 12px 10px;
+  gap: 5px;
+  padding: 12px;
 }
 
 .sidebar-item {
-  min-height: 39px;
+  min-height: 40px;
   display: flex;
   align-items: center;
   gap: 11px;
@@ -63,6 +71,7 @@
   background: transparent;
   cursor: pointer;
   text-align: left;
+  font-weight: 650;
 }
 
 .sidebar-item:hover {
@@ -71,7 +80,7 @@
 
 .sidebar-item.active {
   color: var(--color-text);
-  background: rgba(56, 189, 248, 0.14);
+  background: rgba(56, 189, 248, 0.12);
   box-shadow: inset 3px 0 0 var(--color-primary);
 }
 
@@ -94,12 +103,12 @@
 }
 
 .app-header {
-  min-height: 64px;
+  min-height: 62px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 13px 22px;
+  padding: 12px var(--space-page-x);
   border-bottom: 1px solid var(--color-border);
   background: var(--color-header);
   backdrop-filter: blur(8px);
@@ -113,31 +122,34 @@
 .header-title h1 {
   font-size: 1.12rem;
   letter-spacing: 0;
+  line-height: 1.2;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .session-pill {
-  min-height: 32px;
+  min-height: 34px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   padding: 0 10px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text-soft);
   background: var(--color-subtle);
+  min-width: 0;
 }
 
 .page-container {
   width: 100%;
   max-width: 1500px;
-  padding: 18px 22px 24px;
+  padding: var(--space-page-y) var(--space-page-x) 28px;
 }
 
 .page-heading {
@@ -145,24 +157,25 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .page-heading h2 {
   margin-top: 4px;
-  font-size: 1.34rem;
+  font-size: 1.3rem;
   letter-spacing: 0;
+  line-height: 1.2;
 }
 
 .content-grid {
   display: grid;
-  gap: 12px;
+  gap: var(--space-grid);
 }
 
 .split-grid {
   display: grid;
-  grid-template-columns: minmax(320px, 400px) minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: minmax(320px, 410px) minmax(0, 1fr);
+  gap: var(--space-grid);
   align-items: start;
 }
 
@@ -178,6 +191,7 @@
 
   .sidebar-nav {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 10px;
   }
 
   .sidebar-footer {
@@ -190,9 +204,18 @@
 }
 
 @media (max-width: 640px) {
+  :root {
+    --space-page-x: 14px;
+    --space-page-y: 14px;
+    --space-card: 14px;
+    --space-card-sm: 12px;
+    --space-grid: 12px;
+  }
+
   .page-container,
   .app-header {
-    padding: 16px;
+    padding-left: var(--space-page-x);
+    padding-right: var(--space-page-x);
   }
 
   .app-header,
@@ -203,5 +226,24 @@
 
   .sidebar-nav {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .sidebar-brand {
+    min-height: 58px;
+  }
+
+  .header-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .header-actions .button,
+  .header-actions .session-pill {
+    width: 100%;
+  }
+
+  .page-heading .button {
+    width: 100%;
   }
 }

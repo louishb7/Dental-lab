@@ -79,11 +79,33 @@ export function getRelativeDeadlineLabel(deadline) {
   return null;
 }
 
-export function formatDeadline(deadline, status) {
+/**
+ * Returns the operational label and tone used by deadline badges.
+ *
+ * @param {string|null|undefined} deadline Deadline returned by the API.
+ * @param {string|null|undefined} status Case status.
+ * @returns {{label: string, tone: "danger"|"warning"|"info"|"neutral"}}
+ */
+export function getDeadlineBadge(deadline, status) {
+  if (!deadline) return { label: "Sem prazo", tone: "neutral" };
+  if (status === "delivered") return { label: formatDate(deadline), tone: "neutral" };
+
+  const relativeLabel = getRelativeDeadlineLabel(deadline);
   const tone = getDeadlineTone(deadline, status);
+
+  if (tone === "danger") return { label: "Atrasado", tone: "danger" };
+  if (relativeLabel === "Hoje") return { label: "Hoje", tone: "warning" };
+  if (relativeLabel === "Amanhã") return { label: "Amanhã", tone: "info" };
+
+  return { label: formatDate(deadline), tone: "neutral" };
+}
+
+export function formatDeadline(deadline, status) {
+  const badge = getDeadlineBadge(deadline, status);
   const label = formatDate(deadline);
 
-  if (tone === "danger") return `${label} · Atrasado`;
-  if (tone === "warning") return `${label} · Vence em breve`;
+  if (badge.label === "Atrasado") return `${label} · Atrasado`;
+  if (badge.label === "Hoje") return `${label} · Hoje`;
+  if (badge.label === "Amanhã") return `${label} · Amanhã`;
   return label;
 }
