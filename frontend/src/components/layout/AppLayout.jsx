@@ -1,18 +1,27 @@
 import AppHeader from "./AppHeader.jsx";
 import AppSidebar from "./AppSidebar.jsx";
+import Toast from "../ui/Toast.jsx";
 
 const PAGE_META = {
   dashboard: {
-    title: "Cadista",
-    subtitle: "Panorama dos seus casos, prazos e entregas.",
+    title: "Visão geral",
+    subtitle: null,
   },
   cases: {
-    title: "Cadista",
-    subtitle: "Controle seus prazos, prioridades e entregas.",
+    title: "Casos",
+    subtitle: null,
   },
   doctors: {
-    title: "Cadista",
-    subtitle: "Clientes profissionais vinculados aos casos.",
+    title: "Dentistas",
+    subtitle: null,
+  },
+  finance: {
+    title: "Painel financeiro",
+    subtitle: null,
+  },
+  services: {
+    title: "Serviços",
+    subtitle: null,
   },
 };
 
@@ -24,6 +33,8 @@ export default function AppLayout({
   onToggleTheme,
   onRefresh,
   onLogout,
+  message,
+  onDismiss,
   children,
 }) {
   const meta = PAGE_META[activePage] || PAGE_META.dashboard;
@@ -31,10 +42,10 @@ export default function AppLayout({
   return (
     <div className="app-layout">
       <AppSidebar activePage={activePage} onNavigate={onNavigate} />
+      <Toast message={message} onDismiss={onDismiss} />
       <main className="app-main">
         <AppHeader
           title={meta.title}
-          subtitle={meta.subtitle}
           user={session}
           theme={theme}
           onToggleTheme={onToggleTheme}

@@ -3,7 +3,6 @@ import Button from "../ui/Button.jsx";
 
 export default function AppHeader({
   title,
-  subtitle,
   user,
   theme,
   onToggleTheme,
@@ -20,7 +19,6 @@ export default function AppHeader({
     <header className="app-header">
       <div className="header-title">
         <h1>{title}</h1>
-        {subtitle && <p className="header-subtitle">{subtitle}</p>}
       </div>
       <div className="header-actions">
         <span className="session-pill">

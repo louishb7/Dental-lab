@@ -9,7 +9,6 @@ export default function DoctorsPage({
   doctors,
   loading,
   busy,
-  message,
   doctorForm,
   editingDoctorId,
   showDoctorModal,
@@ -82,7 +81,6 @@ export default function DoctorsPage({
       }
     >
       <div className="content-grid">
-        {message && <p className={`feedback ${message.type}`}>{message.text}</p>}
         <section className="panel panel-strong">
           <div className="panel-body">
             <DataTable

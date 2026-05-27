@@ -2,7 +2,6 @@ import {
   BarChart3,
   ClipboardList,
   CreditCard,
-  Settings,
   Stethoscope,
   Wrench,
 } from "lucide-react";
@@ -12,9 +11,8 @@ const NAV_ITEMS = [
   { id: "dashboard", label: "Visão geral", icon: BarChart3 },
   { id: "cases", label: "Casos", icon: ClipboardList },
   { id: "doctors", label: "Dentistas", icon: Stethoscope },
-  { id: "services", label: "Serviços", icon: Wrench, disabled: true },
-  { id: "finance", label: "Financeiro", icon: CreditCard, disabled: true },
-  { id: "settings", label: "Configurações", icon: Settings, disabled: true },
+  { id: "services", label: "Serviços", icon: Wrench },
+  { id: "finance", label: "Financeiro", icon: CreditCard },
 ];
 
 export default function AppSidebar({ activePage, onNavigate }) {
@@ -53,9 +51,8 @@ export default function AppSidebar({ activePage, onNavigate }) {
       </nav>
 
       <div className="sidebar-footer">
-        Segunda ferramenta de trabalho para acompanhar casos, prazos e entregas.
+        <span>v0.1</span>
       </div>
     </aside>
   );
 }
-

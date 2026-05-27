@@ -149,3 +149,18 @@ Backend:
 
 ```bash
 pytest
+```
+
+---
+
+## Formato Da Resposta Final
+
+Ao concluir qualquer tarefa, o agente deve encerrar a resposta com a explicação final do que foi feito.
+
+Regras obrigatórias:
+
+- A resposta final deve começar pelo resultado objetivo da tarefa.
+- A explicação, o resumo das mudanças e os comentários finais devem aparecer somente no final da resposta.
+- Não iniciar a resposta final com metacomentários, saudações ou justificativas genéricas.
+- Se houver validação, os resultados devem aparecer antes da explicação final.
+- Em tarefas com múltiplos passos, a conclusão deve sempre terminar com o resumo explicativo, nunca antes.

@@ -258,6 +258,22 @@ export async function createCase(data) {
 }
 
 /**
+ * Delivers multiple completed cases in a single request.
+ *
+ * @param {{case_ids: number[], doctor_id?: number|null}} data Delivery payload.
+ * @returns {Promise<Array>} List of delivered cases.
+ */
+export async function bulkDeliverCases(data) {
+  const response = await fetch(`${CASES_URL}/bulk-deliver`, {
+    method: "POST",
+    headers: buildHeaders(),
+    body: JSON.stringify(data),
+  });
+
+  return parseResponse(response);
+}
+
+/**
  * Updates a case by id.
  *
  * @param {number} id Unique case identifier.

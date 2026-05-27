@@ -22,6 +22,7 @@ export default function CaseDetailsPage({
 }) {
   const [showItemForm, setShowItemForm] = useState(false);
   const isFixedPrice = caseItem?.pricing_mode === "fixed";
+
   const columns = [
     { key: "tooth", header: "Dente/área" },
     {
@@ -108,19 +109,19 @@ export default function CaseDetailsPage({
           <div className="case-card-top">
             <div className="panel-title">
               <h3>Serviços do caso</h3>
-              <p>{items.length ? "Itens que compõem este caso." : "Nenhum serviço adicionado ainda."}</p>
+              <p>{items.length ? "Itens que compõem este caso." : "Nenhum serviço acoplado ainda."}</p>
             </div>
             <Button variant="primary" size="sm" onClick={() => setShowItemForm(true)}>
               <Plus size={16} />
-              Adicionar serviço
+              Adicionar serviço ao caso
             </Button>
           </div>
           <DataTable
             columns={columns}
             data={items}
             emptyIcon={Layers3}
-            emptyTitle="Nenhum serviço adicionado ainda."
-            emptyDescription="Adicione os serviços que compõem este caso."
+            emptyTitle="Nenhum serviço acoplado ainda."
+            emptyDescription="Abra a área de adição para acoplar serviços ao pedido."
           />
         </section>
 
@@ -128,7 +129,10 @@ export default function CaseDetailsPage({
           <form className="form-grid" onSubmit={handleSubmit}>
             <div className="form-section">
               <div className="case-card-top">
-                <h3>Adicionar serviço</h3>
+                <div className="panel-title">
+                  <h3>Acoplar serviço ao caso</h3>
+                  <p>Preencha os dados do serviço que será cobrado neste pedido.</p>
+                </div>
                 <Button variant="ghost" size="sm" onClick={() => setShowItemForm(false)}>
                   Cancelar
                 </Button>

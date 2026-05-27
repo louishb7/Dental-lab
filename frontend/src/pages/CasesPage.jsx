@@ -1,18 +1,23 @@
-import { CheckCircle2, Eye, Layers3, PackageCheck, Plus, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Eye, Layers3, PackageCheck, Plus, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Button from "../components/ui/Button.jsx";
 import DataTable from "../components/ui/DataTable.jsx";
 import DeadlineBadge from "../components/ui/DeadlineBadge.jsx";
+import EmptyState from "../components/ui/EmptyState.jsx";
 import FormField from "../components/ui/FormField.jsx";
 import Modal from "../components/ui/Modal.jsx";
 import PageContainer from "../components/layout/PageContainer.jsx";
 import PriorityBadge from "../components/ui/PriorityBadge.jsx";
 import StatusBadge from "../components/ui/StatusBadge.jsx";
-import { formatCurrency, formatDeadline } from "../utils/formatters.js";
+import { formatCurrency, formatDate, formatDeadline } from "../utils/formatters.js";
 import CaseDetailsPage from "./CaseDetailsPage.jsx";
 
 function formatCaseCount(count, singular, plural) {
   return `${count} ${count === 1 ? singular : plural}`;
+}
+
+function getServiceCount(caseItem) {
+  return caseItem.items_count ?? caseItem.items?.length ?? 0;
 }
 
 export default function CasesPage({
@@ -21,7 +26,6 @@ export default function CasesPage({
   items,
   loading,
   busy,
-  message,
   caseForm,
   itemForm,
   caseAdvanced,
@@ -37,6 +41,7 @@ export default function CasesPage({
   onItemSubmit,
   onOpenCaseItems,
   onAdvanceCase,
+  onBulkDeliverCases,
   onRemoveCase,
   onRemoveItem,
   onCloseDetails,
@@ -47,6 +52,9 @@ export default function CasesPage({
     priority: "",
     doctorId: selectedDoctorId ? String(selectedDoctorId) : "",
   });
+  const [showDeliverModal, setShowDeliverModal] = useState(false);
+  const [selectedDeliveryIds, setSelectedDeliveryIds] = useState([]);
+  const lastReadyCaseIdsRef = useRef(new Set());
 
   function clearFilters() {
     setFilters({ search: "", status: "", priority: "", doctorId: "" });
@@ -81,23 +89,85 @@ export default function CasesPage({
     });
   }, [cases, doctorById, filters]);
 
-  const visibleOpenCases = filteredCases.filter((caseItem) => caseItem.status !== "delivered").length;
+  const openCases = filteredCases.filter((caseItem) => caseItem.status !== "delivered");
+  const historyCases = filteredCases.filter((caseItem) => caseItem.status === "delivered");
+  const readyCases = openCases.filter((caseItem) => caseItem.status === "completed");
 
-  const columns = [
+  useEffect(() => {
+    if (!showDeliverModal) {
+      lastReadyCaseIdsRef.current = new Set();
+      return;
+    }
+
+    setSelectedDeliveryIds((current) => {
+      const currentSet = new Set(current);
+      let changed = false;
+
+      readyCases.forEach((caseItem) => {
+        if (!lastReadyCaseIdsRef.current.has(caseItem.id) && !currentSet.has(caseItem.id)) {
+          currentSet.add(caseItem.id);
+          changed = true;
+        }
+      });
+
+      return changed ? Array.from(currentSet) : current;
+    });
+    lastReadyCaseIdsRef.current = new Set(readyCases.map((caseItem) => caseItem.id));
+  }, [readyCases, showDeliverModal]);
+
+  function openDeliverModal() {
+    setSelectedDeliveryIds(readyCases.map((caseItem) => caseItem.id));
+    setShowDeliverModal(true);
+  }
+
+  function toggleDeliverySelection(caseId) {
+    setSelectedDeliveryIds((current) =>
+      current.includes(caseId)
+        ? current.filter((itemId) => itemId !== caseId)
+        : [...current, caseId],
+    );
+  }
+
+  async function handleDeliverSubmit(event) {
+    event.preventDefault();
+    const ok = await onBulkDeliverCases(selectedDeliveryIds);
+    if (ok) {
+      setShowDeliverModal(false);
+      setSelectedDeliveryIds([]);
+    }
+  }
+
+  const openColumns = [
     {
       key: "patient_ref",
       header: "Caso / Referência",
       render: (caseItem) => (
         <span className="cell-main">
           <strong>#{caseItem.id} · {caseItem.patient_ref}</strong>
-          {caseItem.notes && <small>{caseItem.notes}</small>}
+          <small>{doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`}</small>
         </span>
       ),
     },
     {
-      key: "doctor",
-      header: "Dentista",
-      render: (caseItem) => doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`,
+      key: "services",
+      header: "Serviços",
+      render: (caseItem) => {
+        const serviceCount = getServiceCount(caseItem);
+        return (
+          <span className="cell-main">
+            <strong>{formatCaseCount(serviceCount, "serviço", "serviços")}</strong>
+            <small>Acople um serviço neste pedido</small>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => onOpenCaseItems(caseItem.id)}
+            >
+              <Plus size={14} />
+              Acoplar serviço
+            </Button>
+          </span>
+        );
+      },
     },
     {
       key: "deadline",
@@ -112,37 +182,39 @@ export default function CasesPage({
     { key: "status", header: "Status", render: (caseItem) => <StatusBadge status={caseItem.status} /> },
     { key: "priority", header: "Prioridade", render: (caseItem) => <PriorityBadge priority={caseItem.priority} /> },
     { key: "total_value", header: "Valor", render: (caseItem) => formatCurrency(caseItem.total_value) },
-    { key: "items", header: "Itens", render: (caseItem) => caseItem.items_count ?? caseItem.items?.length ?? 0 },
+    {
+      key: "ready",
+      header: "Pronto",
+      render: (caseItem) =>
+        caseItem.status === "pending" ? (
+          <Button
+            className="vertical-ready-button"
+            variant="success"
+            aria-label="Marcar como pronto"
+            title="Marcar como pronto"
+            onClick={() => onAdvanceCase(caseItem)}
+          >
+            Pronto
+          </Button>
+        ) : (
+          <span className="vertical-ready-label" aria-label="Pedido pronto para entrega">
+            Pronto
+          </span>
+        ),
+    },
     {
       key: "actions",
       header: "Ações",
       render: (caseItem) => (
         <div className="row-actions">
-          <Button variant="secondary" iconOnly aria-label="Abrir detalhes" onClick={() => onOpenCaseItems(caseItem.id)}>
+          <Button
+            variant="secondary"
+            iconOnly
+            aria-label="Abrir detalhes"
+            onClick={() => onOpenCaseItems(caseItem.id)}
+          >
             <Eye size={16} />
           </Button>
-          {caseItem.status === "pending" && (
-            <Button
-              variant="ghost"
-              iconOnly
-              aria-label="Marcar como pronto"
-              title="Marcar como pronto"
-              onClick={() => onAdvanceCase(caseItem)}
-            >
-              <CheckCircle2 size={16} />
-            </Button>
-          )}
-          {caseItem.status === "completed" && (
-            <Button
-              variant="success"
-              iconOnly
-              aria-label="Marcar como entregue"
-              title="Marcar como entregue"
-              onClick={() => onAdvanceCase(caseItem)}
-            >
-              <PackageCheck size={16} />
-            </Button>
-          )}
           <Button variant="danger" iconOnly aria-label="Excluir caso" onClick={() => onRemoveCase(caseItem.id)}>
             <Trash2 size={16} />
           </Button>
@@ -151,21 +223,72 @@ export default function CasesPage({
     },
   ];
 
+  const historyColumns = [
+    {
+      key: "patient_ref",
+      header: "Caso / Referência",
+      render: (caseItem) => (
+        <span className="cell-main">
+          <strong>#{caseItem.id} · {caseItem.patient_ref}</strong>
+          <small>{doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`}</small>
+        </span>
+      ),
+    },
+    {
+      key: "services",
+      header: "Serviços",
+      render: (caseItem) => (
+        <span className="cell-main">
+          <strong>{formatCaseCount(getServiceCount(caseItem), "serviço", "serviços")}</strong>
+          <small>Histórico de entrega</small>
+        </span>
+      ),
+    },
+    {
+      key: "delivered_at",
+      header: "Entregue em",
+      render: (caseItem) => formatDate(caseItem.delivered_at),
+    },
+    {
+      key: "total_value",
+      header: "Valor",
+      render: (caseItem) => formatCurrency(caseItem.total_value),
+    },
+    {
+      key: "actions",
+      header: "Ações",
+      render: (caseItem) => (
+        <Button
+          variant="secondary"
+          iconOnly
+          aria-label="Abrir detalhes"
+          onClick={() => onOpenCaseItems(caseItem.id)}
+        >
+          <Eye size={16} />
+        </Button>
+      ),
+    },
+  ];
+
   return (
     <PageContainer
       kicker="Produção"
       title="Casos"
-      description="Controle seus prazos, prioridades e entregas."
+      description="Pedidos em aberto, prontos para entrega e histórico de entregas."
       action={
-        <Button variant="primary" onClick={() => setShowCaseModal(true)}>
-          <Plus size={18} />
-          Novo caso
-        </Button>
+        <div className="case-page-actions">
+          <Button variant="success" onClick={openDeliverModal}>
+            <PackageCheck size={18} />
+            Entregar pedidos
+          </Button>
+          <Button variant="primary" onClick={() => setShowCaseModal(true)}>
+            <Plus size={18} />
+            Novo caso
+          </Button>
+        </div>
       }
     >
       <div className="content-grid">
-        {message && <p className={`feedback ${message.type}`}>{message.text}</p>}
-
         <div className="case-toolbar">
           <div className="filter-bar">
             <input
@@ -200,7 +323,9 @@ export default function CasesPage({
             >
               <option value="">Todos dentistas</option>
               {doctors.map((doctor) => (
-                <option key={doctor.id} value={doctor.id}>{doctor.name}</option>
+                <option key={doctor.id} value={doctor.id}>
+                  {doctor.name}
+                </option>
               ))}
             </select>
             <Button variant="ghost" size="sm" onClick={clearFilters}>
@@ -208,20 +333,40 @@ export default function CasesPage({
             </Button>
           </div>
           <div className="case-toolbar-meta" aria-live="polite">
-            <span>{formatCaseCount(filteredCases.length, "caso na lista", "casos na lista")}</span>
-            <span>{formatCaseCount(visibleOpenCases, "aberto", "abertos")}</span>
+            <span>{formatCaseCount(openCases.length, "pedido em aberto", "pedidos em aberto")}</span>
+            <span>{formatCaseCount(readyCases.length, "pronto para entrega", "prontos para entrega")}</span>
+            <span>{formatCaseCount(historyCases.length, "entrega no histórico", "entregas no histórico")}</span>
           </div>
         </div>
 
         <section className="panel panel-strong">
           <div className="panel-body">
             <DataTable
-              columns={columns}
-              data={filteredCases}
+              columns={openColumns}
+              data={openCases}
               loading={loading}
               emptyIcon={Layers3}
-              emptyTitle="Nenhum caso cadastrado."
-              emptyDescription="Crie o primeiro caso para começar a acompanhar sua produção."
+              emptyTitle="Nenhum pedido em aberto."
+              emptyDescription="Os pedidos pendentes e prontos aparecem aqui antes da entrega."
+            />
+          </div>
+        </section>
+
+        <section className="panel">
+          <div className="panel-header">
+            <div className="panel-title">
+              <h3>Histórico de entregas</h3>
+              <p>Pedidos que já saíram da fila operacional.</p>
+            </div>
+          </div>
+          <div className="panel-body">
+            <DataTable
+              columns={historyColumns}
+              data={historyCases}
+              loading={loading}
+              emptyIcon={Layers3}
+              emptyTitle="Nenhuma entrega registrada."
+              emptyDescription="Os pedidos entregues ficam arquivados aqui."
             />
           </div>
         </section>
@@ -244,7 +389,9 @@ export default function CasesPage({
                 >
                   <option value="">Selecione um dentista</option>
                   {doctors.map((doctor) => (
-                    <option key={doctor.id} value={doctor.id}>{doctor.name}</option>
+                    <option key={doctor.id} value={doctor.id}>
+                      {doctor.name}
+                    </option>
                   ))}
                 </select>
               </FormField>
@@ -309,6 +456,55 @@ export default function CasesPage({
               <Plus size={18} />
               Criar caso
             </Button>
+          </form>
+        </Modal>
+      )}
+
+      {showDeliverModal && (
+        <Modal
+          title="Entregar pedidos"
+          description="Selecione os pedidos prontos que devem sair da fila operacional."
+          onClose={() => setShowDeliverModal(false)}
+        >
+          <form className="form-grid" onSubmit={handleDeliverSubmit}>
+            <div className="deliver-list">
+              {readyCases.length ? (
+                readyCases.map((caseItem) => (
+                  <label key={caseItem.id} className="deliver-choice">
+                    <input
+                      type="checkbox"
+                      checked={selectedDeliveryIds.includes(caseItem.id)}
+                      onChange={() => toggleDeliverySelection(caseItem.id)}
+                    />
+                    <span className="deliver-choice-copy">
+                      <strong>
+                        #{caseItem.id} · {caseItem.patient_ref}
+                      </strong>
+                      <small>
+                        {doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`} ·{" "}
+                        {formatCaseCount(getServiceCount(caseItem), "serviço", "serviços")}
+                      </small>
+                    </span>
+                    <strong>{formatCurrency(caseItem.total_value)}</strong>
+                  </label>
+                ))
+              ) : (
+                <EmptyState
+                  icon={PackageCheck}
+                  title="Nenhum pedido pronto para entrega."
+                  description="Marque um pedido como pronto para habilitá-lo aqui."
+                />
+              )}
+            </div>
+            <div className="confirm-modal-actions">
+              <Button variant="ghost" onClick={() => setShowDeliverModal(false)}>
+                Cancelar
+              </Button>
+              <Button variant="success" type="submit" disabled={!selectedDeliveryIds.length || busy}>
+                <PackageCheck size={18} />
+                Entregar selecionados
+              </Button>
+            </div>
           </form>
         </Modal>
       )}

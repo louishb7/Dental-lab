@@ -1,14 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import AppLayout from "./components/layout/AppLayout.jsx";
+import ConfirmModal from "./components/ui/ConfirmModal.jsx";
 import AuthPage from "./pages/AuthPage.jsx";
 import CasesPage from "./pages/CasesPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import DoctorsPage from "./pages/DoctorsPage.jsx";
+import FinancePage from "./pages/FinancePage.jsx";
+import ServicesPage from "./pages/ServicesPage.jsx";
 import {
   clearSession,
   createCase,
   createCaseItem,
   createDoctor,
+  bulkDeliverCases,
   deleteCase,
   deleteCaseItem,
   deleteDoctor,
@@ -69,6 +73,7 @@ export default function App() {
   const [loading, setLoading] = useState(Boolean(session));
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState(null);
+  const [confirmPending, setConfirmPending] = useState(null);
 
   const selectedCase = useMemo(
     () => cases.find((caseItem) => caseItem.id === selectedCaseId) || null,
@@ -84,7 +89,11 @@ export default function App() {
     setTheme((current) => (current === "dark" ? "light" : "dark"));
   }
 
-  async function loadAppData() {
+  async function loadAppData(options = {}) {
+    const selectedCaseIdSnapshot = Object.prototype.hasOwnProperty.call(options, "selectedCaseId")
+      ? options.selectedCaseId
+      : selectedCaseId;
+
     setLoading(true);
     setMessage(null);
     try {
@@ -93,9 +102,25 @@ export default function App() {
         getCases(),
         getDashboardOverview(),
       ]);
-      setDoctors(Array.isArray(doctorData) ? doctorData : []);
-      setCases(Array.isArray(caseData) ? caseData : []);
+      const doctorList = Array.isArray(doctorData) ? doctorData : [];
+      const caseList = Array.isArray(caseData) ? caseData : [];
+
+      setDoctors(doctorList);
+      setCases(caseList);
       setDashboard(dashboardData);
+
+      if (selectedCaseIdSnapshot && caseList.some((caseItem) => caseItem.id === selectedCaseIdSnapshot)) {
+        try {
+          const itemData = await getCaseItems(selectedCaseIdSnapshot);
+          setItems(Array.isArray(itemData) ? itemData : []);
+        } catch {
+          setItems([]);
+        }
+      } else {
+        setItems([]);
+      }
+
+      return true;
     } catch (error) {
       clearSession();
       setSession(null);
@@ -103,9 +128,19 @@ export default function App() {
         type: "error",
         text: "Sessão expirada ou API indisponível. Faça login novamente.",
       });
+      return false;
     } finally {
       setLoading(false);
     }
+  }
+
+  function requestConfirm({ title, description, confirmLabel, action }) {
+    setConfirmPending({
+      title,
+      description,
+      confirmLabel,
+      onConfirm: action,
+    });
   }
 
   function handleAuthChange(event, mode) {
@@ -183,6 +218,9 @@ export default function App() {
     setItems([]);
     setDashboard(null);
     setSelectedCaseId(null);
+    setMessage(null);
+    setConfirmPending(null);
+    setAuthMessage(null);
   }
 
   async function handleDoctorSubmit(event) {
@@ -190,20 +228,18 @@ export default function App() {
     setBusy(true);
     setMessage(null);
     try {
+      const isEditing = Boolean(editingDoctorId);
       if (editingDoctorId) {
-        const updated = await updateDoctor(editingDoctorId, buildDoctorPayload(doctorForm));
-        setDoctors((current) =>
-          current.map((doctor) => (doctor.id === updated.id ? updated : doctor)),
-        );
-        setMessage({ type: "success", text: "Dentista atualizado." });
+        await updateDoctor(editingDoctorId, buildDoctorPayload(doctorForm));
       } else {
-        const created = await createDoctor(buildDoctorPayload(doctorForm));
-        setDoctors((current) => [created, ...current]);
-        setMessage({ type: "success", text: "Dentista cadastrado." });
+        await createDoctor(buildDoctorPayload(doctorForm));
       }
+      const refreshed = await loadAppData();
+      if (!refreshed) return;
       setDoctorForm(EMPTY_DOCTOR);
       setShowDoctorModal(false);
       setEditingDoctorId(null);
+      setMessage({ type: "success", text: isEditing ? "Dentista atualizado." : "Dentista cadastrado." });
     } catch (error) {
       setMessage({ type: "error", text: error.message });
     } finally {
@@ -235,11 +271,11 @@ export default function App() {
     setBusy(true);
     setMessage(null);
     try {
-      const created = await createCase(buildCasePayload(selectedDoctorId, caseForm, true));
-      setCases((current) => [created, ...current]);
+      await createCase(buildCasePayload(selectedDoctorId, caseForm, true));
+      const refreshed = await loadAppData();
+      if (!refreshed) return;
       setCaseForm(EMPTY_CASE);
       setShowCaseModal(false);
-      setDashboard(await getDashboardOverview());
       setMessage({ type: "success", text: "Caso criado." });
     } catch (error) {
       setMessage({ type: "error", text: error.message });
@@ -255,15 +291,45 @@ export default function App() {
     setBusy(true);
     setMessage(null);
     try {
-      const created = await createCaseItem(
+      await createCaseItem(
         selectedCaseId,
         buildItemPayload(itemForm, true, selectedCase?.pricing_mode),
       );
-      setItems((current) => [created, ...current]);
+      const refreshed = await loadAppData();
+      if (!refreshed) return false;
       setItemForm(EMPTY_ITEM);
-      setCases(await getCases());
-      setDashboard(await getDashboardOverview());
       setMessage({ type: "success", text: "Item/serviço criado." });
+      return true;
+    } catch (error) {
+      setMessage({ type: "error", text: error.message });
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleBulkDeliverCases(caseIds) {
+    if (!caseIds.length) return false;
+
+    setBusy(true);
+    setMessage(null);
+    try {
+      const deliveredCases = await bulkDeliverCases({ case_ids: caseIds });
+      const deliveredIds = new Set(deliveredCases.map((caseItem) => caseItem.id));
+      const shouldClearSelection = selectedCaseId && deliveredIds.has(selectedCaseId);
+
+      const refreshed = await loadAppData({
+        selectedCaseId: shouldClearSelection ? null : selectedCaseId,
+      });
+      if (!refreshed) return false;
+      if (shouldClearSelection) {
+        setSelectedCaseId(null);
+        setItems([]);
+      }
+      setMessage({
+        type: "success",
+        text: `${deliveredCases.length} ${deliveredCases.length === 1 ? "pedido entregue" : "pedidos entregues"}.`,
+      });
       return true;
     } catch (error) {
       setMessage({ type: "error", text: error.message });
@@ -292,18 +358,13 @@ export default function App() {
     setActivePage("cases");
   }
 
-  async function advanceCase(caseItem) {
-    const nextStatus = caseItem.status === "pending" ? "completed" : "delivered";
-    if (nextStatus === "delivered" && !window.confirm("Confirmar entrega deste caso?")) {
-      return;
-    }
-
+  async function commitCaseStatus(caseItem, nextStatus) {
     setBusy(true);
     setMessage(null);
     try {
-      const updated = await updateCase(caseItem.id, { status: nextStatus });
-      setCases((current) => current.map((item) => (item.id === updated.id ? updated : item)));
-      setDashboard(await getDashboardOverview());
+      await updateCase(caseItem.id, { status: nextStatus });
+      const refreshed = await loadAppData();
+      if (!refreshed) return;
       setMessage({ type: "success", text: "Status do caso atualizado." });
     } catch (error) {
       setMessage({ type: "error", text: error.message });
@@ -312,15 +373,21 @@ export default function App() {
     }
   }
 
-  async function removeDoctor(doctorId) {
-    if (!window.confirm("Excluir este dentista?")) return;
+  async function advanceCase(caseItem) {
+    if (caseItem.status !== "pending") return;
 
+    await commitCaseStatus(caseItem, "completed");
+  }
+
+  async function commitDoctorRemoval(doctorId) {
     setBusy(true);
     setMessage(null);
     try {
       await deleteDoctor(doctorId);
-      setDoctors((current) => current.filter((doctor) => doctor.id !== doctorId));
-      if (selectedDoctorId === doctorId) setSelectedDoctorId(null);
+      const shouldClearDoctor = selectedDoctorId === doctorId;
+      if (shouldClearDoctor) setSelectedDoctorId(null);
+      const refreshed = await loadAppData();
+      if (!refreshed) return;
       setMessage({ type: "success", text: "Dentista removido." });
     } catch (error) {
       setMessage({ type: "error", text: error.message });
@@ -329,19 +396,29 @@ export default function App() {
     }
   }
 
-  async function removeCase(caseId) {
-    if (!window.confirm("Excluir este caso?")) return;
+  function removeDoctor(doctorId) {
+    requestConfirm({
+      title: "Excluir dentista",
+      description: "Esta ação não pode ser desfeita.",
+      confirmLabel: "Excluir",
+      action: () => {
+        void commitDoctorRemoval(doctorId);
+      },
+    });
+  }
 
+  async function commitCaseRemoval(caseId) {
     setBusy(true);
     setMessage(null);
     try {
       await deleteCase(caseId);
-      setCases((current) => current.filter((caseItem) => caseItem.id !== caseId));
+      const selectedRemoved = selectedCaseId === caseId;
       if (selectedCaseId === caseId) {
         setSelectedCaseId(null);
         setItems([]);
       }
-      setDashboard(await getDashboardOverview());
+      const refreshed = await loadAppData({ selectedCaseId: selectedRemoved ? null : selectedCaseId });
+      if (!refreshed) return;
       setMessage({ type: "success", text: "Caso removido." });
     } catch (error) {
       setMessage({ type: "error", text: error.message });
@@ -350,22 +427,43 @@ export default function App() {
     }
   }
 
-  async function removeItem(itemId) {
-    if (!selectedCaseId || !window.confirm("Excluir este item?")) return;
+  function removeCase(caseId) {
+    requestConfirm({
+      title: "Excluir caso",
+      description: "Esta ação não pode ser desfeita.",
+      confirmLabel: "Excluir",
+      action: () => {
+        void commitCaseRemoval(caseId);
+      },
+    });
+  }
 
+  async function commitItemRemoval(itemId) {
     setBusy(true);
     setMessage(null);
     try {
       await deleteCaseItem(selectedCaseId, itemId);
-      setItems((current) => current.filter((item) => item.id !== itemId));
-      setCases(await getCases());
-      setDashboard(await getDashboardOverview());
+      const refreshed = await loadAppData();
+      if (!refreshed) return;
       setMessage({ type: "success", text: "Item/serviço removido." });
     } catch (error) {
       setMessage({ type: "error", text: error.message });
     } finally {
       setBusy(false);
     }
+  }
+
+  function removeItem(itemId) {
+    if (!selectedCaseId) return;
+
+    requestConfirm({
+      title: "Excluir item",
+      description: "Esta ação não pode ser desfeita.",
+      confirmLabel: "Excluir",
+      action: () => {
+        void commitItemRemoval(itemId);
+      },
+    });
   }
 
   useEffect(() => {
@@ -409,6 +507,8 @@ export default function App() {
       onToggleTheme={toggleTheme}
       onRefresh={loadAppData}
       onLogout={handleLogout}
+      message={message}
+      onDismiss={() => setMessage(null)}
     >
       {activePage === "dashboard" && (
         <DashboardPage
@@ -426,7 +526,6 @@ export default function App() {
           items={items}
           loading={loading}
           busy={busy}
-          message={message}
           caseForm={caseForm}
           itemForm={itemForm}
           caseAdvanced={caseAdvanced}
@@ -442,6 +541,7 @@ export default function App() {
           onItemSubmit={handleItemSubmit}
           onOpenCaseItems={openCaseItems}
           onAdvanceCase={advanceCase}
+          onBulkDeliverCases={handleBulkDeliverCases}
           onRemoveCase={removeCase}
           onRemoveItem={removeItem}
           onCloseDetails={() => setSelectedCaseId(null)}
@@ -453,7 +553,6 @@ export default function App() {
           doctors={doctors}
           loading={loading}
           busy={busy}
-          message={message}
           doctorForm={doctorForm}
           editingDoctorId={editingDoctorId}
           showDoctorModal={showDoctorModal}
@@ -464,6 +563,38 @@ export default function App() {
           onDoctorSubmit={handleDoctorSubmit}
           onOpenDoctorCases={openDoctorCases}
           onRemoveDoctor={removeDoctor}
+        />
+      )}
+
+      {activePage === "finance" && <FinancePage dashboard={dashboard} cases={cases} loading={loading} />}
+
+      {activePage === "services" && (
+        <ServicesPage
+          cases={cases}
+          doctors={doctors}
+          loading={loading}
+          busy={busy}
+          selectedCase={selectedCase}
+          items={items}
+          itemForm={itemForm}
+          onOpenCaseItems={openCaseItems}
+          onItemChange={handleItemChange}
+          onItemSubmit={handleItemSubmit}
+          onRemoveItem={removeItem}
+          onCloseDetails={() => setSelectedCaseId(null)}
+        />
+      )}
+
+      {confirmPending && (
+        <ConfirmModal
+          title={confirmPending.title}
+          description={confirmPending.description}
+          confirmLabel={confirmPending.confirmLabel}
+          onConfirm={() => {
+            confirmPending.onConfirm();
+            setConfirmPending(null);
+          }}
+          onCancel={() => setConfirmPending(null)}
         />
       )}
     </AppLayout>
