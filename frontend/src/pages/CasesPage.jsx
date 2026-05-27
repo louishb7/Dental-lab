@@ -9,7 +9,7 @@ import Modal from "../components/ui/Modal.jsx";
 import PageContainer from "../components/layout/PageContainer.jsx";
 import PriorityBadge from "../components/ui/PriorityBadge.jsx";
 import StatusBadge from "../components/ui/StatusBadge.jsx";
-import { formatCurrency, formatDate, formatDeadline } from "../utils/formatters.js";
+import { formatCurrency, formatDate } from "../utils/formatters.js";
 import CaseDetailsPage from "./CaseDetailsPage.jsx";
 
 function formatCaseCount(count, singular, plural) {
@@ -175,7 +175,6 @@ export default function CasesPage({
       render: (caseItem) => (
         <span className="cell-main">
           <DeadlineBadge deadline={caseItem.deadline} status={caseItem.status} />
-          <small>{formatDeadline(caseItem.deadline, caseItem.status)}</small>
         </span>
       ),
     },
@@ -183,43 +182,46 @@ export default function CasesPage({
     { key: "priority", header: "Prioridade", render: (caseItem) => <PriorityBadge priority={caseItem.priority} /> },
     { key: "total_value", header: "Valor", render: (caseItem) => formatCurrency(caseItem.total_value) },
     {
-      key: "ready",
-      header: "Pronto",
-      render: (caseItem) =>
-        caseItem.status === "pending" ? (
-          <Button
-            className="vertical-ready-button"
-            variant="success"
-            aria-label="Marcar como pronto"
-            title="Marcar como pronto"
-            onClick={() => onAdvanceCase(caseItem)}
-          >
-            Pronto
-          </Button>
-        ) : (
-          <span className="vertical-ready-label" aria-label="Pedido pronto para entrega">
-            Pronto
-          </span>
-        ),
-    },
-    {
       key: "actions",
       header: "Ações",
       render: (caseItem) => (
         <div className="row-actions">
           <Button
             variant="secondary"
-            iconOnly
-            aria-label="Abrir detalhes"
+            size="sm"
             onClick={() => onOpenCaseItems(caseItem.id)}
           >
-            <Eye size={16} />
+            Exibir detalhes
           </Button>
           <Button variant="danger" iconOnly aria-label="Excluir caso" onClick={() => onRemoveCase(caseItem.id)}>
             <Trash2 size={16} />
           </Button>
         </div>
       ),
+    },
+    {
+      key: "ready",
+      header: "Pronto",
+      render: (caseItem) =>
+        caseItem.status === "pending" ? (
+          <div className="ready-cell">
+            <Button
+              className="vertical-ready-button"
+              variant="success"
+              aria-label="Marcar como pronto"
+              title="Marcar como pronto"
+              onClick={() => onAdvanceCase(caseItem)}
+            >
+              Pronto
+            </Button>
+          </div>
+        ) : (
+          <div className="ready-cell">
+            <span className="vertical-ready-label" aria-label="Pedido pronto para entrega">
+              Pronto
+            </span>
+          </div>
+        ),
     },
   ];
 
@@ -276,16 +278,10 @@ export default function CasesPage({
       title="Casos"
       description="Pedidos em aberto, prontos para entrega e histórico de entregas."
       action={
-        <div className="case-page-actions">
-          <Button variant="success" onClick={openDeliverModal}>
-            <PackageCheck size={18} />
-            Entregar pedidos
-          </Button>
-          <Button variant="primary" onClick={() => setShowCaseModal(true)}>
-            <Plus size={18} />
-            Novo caso
-          </Button>
-        </div>
+        <Button variant="primary" onClick={() => setShowCaseModal(true)}>
+          <Plus size={18} />
+          Novo caso
+        </Button>
       }
     >
       <div className="content-grid">
@@ -340,6 +336,16 @@ export default function CasesPage({
         </div>
 
         <section className="panel panel-strong">
+          <div className="panel-header">
+            <div className="panel-title">
+              <h3>Pedidos em aberto</h3>
+              <p>Casos pendentes e prontos aguardando a entrega final.</p>
+            </div>
+            <Button variant="success" onClick={openDeliverModal}>
+              <PackageCheck size={18} />
+              Entregar pedidos
+            </Button>
+          </div>
           <div className="panel-body">
             <DataTable
               columns={openColumns}

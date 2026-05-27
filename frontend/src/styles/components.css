@@ -41,7 +41,7 @@
 
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: var(--space-grid);
 }
 
@@ -162,14 +162,29 @@
 }
 
 .button-success {
-  color: var(--color-success-soft);
-  border-color: rgba(16, 185, 129, 0.28);
-  background: rgba(16, 185, 129, 0.1);
+  color: #ecfdf5;
+  border-color: rgba(16, 185, 129, 0.34);
+  background:
+    linear-gradient(180deg, rgba(34, 197, 94, 0.98), rgba(21, 128, 61, 0.98));
 }
 
 .button-success:hover:not(:disabled) {
-  border-color: rgba(16, 185, 129, 0.4);
-  background: rgba(16, 185, 129, 0.16);
+  border-color: rgba(74, 222, 128, 0.42);
+  background:
+    linear-gradient(180deg, rgba(74, 222, 128, 1), rgba(22, 163, 74, 1));
+}
+
+.button-warning {
+  color: #fffaf0;
+  border-color: rgba(245, 158, 11, 0.32);
+  background:
+    linear-gradient(180deg, rgba(245, 158, 11, 0.96), rgba(217, 119, 6, 0.96));
+}
+
+.button-warning:hover:not(:disabled) {
+  border-color: rgba(251, 191, 36, 0.45);
+  background:
+    linear-gradient(180deg, rgba(251, 191, 36, 1), rgba(245, 158, 11, 1));
 }
 
 .button:disabled {
@@ -235,11 +250,23 @@
   white-space: nowrap;
 }
 
-.badge-status.pending,
+.badge-status.pending {
+  color: var(--color-warning-soft);
+  border-color: rgba(245, 158, 11, 0.44);
+  background: rgba(245, 158, 11, 0.22);
+  font-weight: 800;
+}
+
+.badge-status.pending::before {
+  content: "!";
+  margin-right: 4px;
+  font-weight: 900;
+}
+
 .badge-priority.urgent {
   color: var(--color-warning-soft);
   border-color: rgba(251, 191, 36, 0.28);
-  background: rgba(251, 191, 36, 0.1);
+  background: rgba(251, 191, 36, 0.12);
 }
 
 .badge-priority.urgent::before {
@@ -295,6 +322,11 @@
 .badge-deadline.neutral {
   color: var(--color-text-soft);
   background: rgba(148, 163, 184, 0.08);
+}
+
+.badge-deadline {
+  min-height: 32px;
+  padding: 0 10px;
 }
 
 .table-wrap {
@@ -541,6 +573,18 @@
 .ranking-item > strong:last-child {
   margin-left: auto;
   white-space: nowrap;
+}
+
+.ready-cell {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.service-mode-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .table-scroll-compact {

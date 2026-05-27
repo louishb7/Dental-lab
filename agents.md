@@ -4,6 +4,18 @@ Este arquivo define regras obrigatórias para qualquer agente que altere, revise
 
 Antes de executar uma tarefa, o agente deve considerar estas regras como parte do contrato da tarefa. Em caso de conflito entre uma sugestão genérica do agente e este arquivo, este arquivo prevalece, exceto quando o usuário der uma instrução explícita em contrário.
 
+## Bootstrap Obrigatório
+
+Antes de qualquer outra ação em uma tarefa neste repositório, o agente deve abrir e ler este arquivo por completo.
+
+Regras obrigatórias:
+
+- Nenhuma busca, inspeção de código, edição ou execução de comando deve acontecer antes da leitura integral deste arquivo.
+- Em cada tarefa nova, a leitura deste arquivo deve acontecer novamente, mesmo que a conversa anterior já tenha tratado do projeto.
+- Se a leitura não estiver explicitamente evidente na sessão corrente, o agente deve parar e ler este arquivo antes de prosseguir.
+- O agente não deve confiar apenas em memória, contexto anterior ou instruções genéricas do sistema para substituir esta leitura.
+- Esta regra vale para toda interação no repositório, inclusive revisões, correções rápidas e ajustes pontuais.
+
 ---
 
 ## Nomenclatura do Projeto
@@ -161,6 +173,7 @@ Regras obrigatórias:
 
 - A resposta final deve começar pelo resultado objetivo da tarefa.
 - A explicação, o resumo das mudanças e os comentários finais devem aparecer somente no final da resposta.
+- O último bloco não vazio da resposta deve ser sempre a explicação final; não encerrar com uma resposta curta sem esse fechamento.
 - Não iniciar a resposta final com metacomentários, saudações ou justificativas genéricas.
 - Se houver validação, os resultados devem aparecer antes da explicação final.
 - Em tarefas com múltiplos passos, a conclusão deve sempre terminar com o resumo explicativo, nunca antes.

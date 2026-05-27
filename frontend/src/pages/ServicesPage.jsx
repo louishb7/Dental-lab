@@ -4,7 +4,7 @@ import DataTable from "../components/ui/DataTable.jsx";
 import DeadlineBadge from "../components/ui/DeadlineBadge.jsx";
 import PageContainer from "../components/layout/PageContainer.jsx";
 import CaseDetailsPage from "./CaseDetailsPage.jsx";
-import { formatCurrency, formatDeadline } from "../utils/formatters.js";
+import { formatCurrency } from "../utils/formatters.js";
 import PriorityBadge from "../components/ui/PriorityBadge.jsx";
 import StatusBadge from "../components/ui/StatusBadge.jsx";
 
@@ -57,7 +57,6 @@ export default function ServicesPage({
       render: (caseItem) => (
         <span className="cell-main">
           <DeadlineBadge deadline={caseItem.deadline} status={caseItem.status} />
-          <small>{formatDeadline(caseItem.deadline, caseItem.status)}</small>
         </span>
       ),
     },

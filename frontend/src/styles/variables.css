@@ -1,15 +1,15 @@
 :root,
 [data-theme="dark"] {
-  --color-bg: #111827;
-  --color-sidebar: #0f172a;
-  --color-surface: #172033;
-  --color-surface-soft: #1f2937;
-  --color-surface-muted: #263246;
-  --color-border: rgba(148, 163, 184, 0.16);
-  --color-border-strong: rgba(148, 163, 184, 0.28);
+  --color-bg: #0f172a;
+  --color-sidebar: #0b1220;
+  --color-surface: #1a2436;
+  --color-surface-soft: #202c42;
+  --color-surface-muted: #2a3850;
+  --color-border: rgba(148, 163, 184, 0.18);
+  --color-border-strong: rgba(148, 163, 184, 0.3);
   --color-text: #f8fafc;
-  --color-text-muted: #94a3b8;
-  --color-text-soft: #cbd5e1;
+  --color-text-muted: #a8b6ca;
+  --color-text-soft: #d7e2f0;
   --color-primary: #38bdf8;
   --color-primary-strong: #0ea5e9;
   --color-danger: #fb7185;
@@ -18,9 +18,9 @@
   --color-info: #60a5fa;
   --color-header: rgba(17, 24, 39, 0.94);
   --color-input-bg: rgba(15, 23, 42, 0.42);
-  --color-table-head: rgba(15, 23, 42, 0.34);
-  --color-table-hover: rgba(148, 163, 184, 0.045);
-  --color-subtle: rgba(15, 23, 42, 0.18);
+  --color-table-head: rgba(15, 23, 42, 0.42);
+  --color-table-hover: rgba(148, 163, 184, 0.06);
+  --color-subtle: rgba(15, 23, 42, 0.26);
   --color-overlay: rgba(2, 6, 23, 0.72);
   --color-primary-contrast: #082f49;
   --color-danger-soft: #fecdd3;
@@ -39,27 +39,27 @@
 }
 
 [data-theme="light"] {
-  --color-bg: #f4f7fb;
+  --color-bg: #f8fbff;
   --color-sidebar: #ffffff;
   --color-surface: #ffffff;
-  --color-surface-soft: #f8fafc;
-  --color-surface-muted: #eef3f8;
-  --color-border: rgba(15, 23, 42, 0.12);
-  --color-border-strong: rgba(15, 23, 42, 0.2);
+  --color-surface-soft: #fbfdff;
+  --color-surface-muted: #eef4fb;
+  --color-border: rgba(15, 23, 42, 0.1);
+  --color-border-strong: rgba(15, 23, 42, 0.18);
   --color-text: #0f172a;
-  --color-text-muted: #64748b;
-  --color-text-soft: #334155;
+  --color-text-muted: #546376;
+  --color-text-soft: #223041;
   --color-primary: #0284c7;
   --color-primary-strong: #0369a1;
   --color-danger: #dc2626;
   --color-warning: #d97706;
   --color-success: #059669;
   --color-info: #2563eb;
-  --color-header: rgba(244, 247, 251, 0.94);
+  --color-header: rgba(248, 251, 255, 0.94);
   --color-input-bg: #ffffff;
-  --color-table-head: #f8fafc;
-  --color-table-hover: rgba(2, 132, 199, 0.045);
-  --color-subtle: #f8fafc;
+  --color-table-head: #f6f9fc;
+  --color-table-hover: rgba(2, 132, 199, 0.06);
+  --color-subtle: #f8fbff;
   --color-overlay: rgba(15, 23, 42, 0.44);
   --color-primary-contrast: #ffffff;
   --color-danger-soft: #991b1b;

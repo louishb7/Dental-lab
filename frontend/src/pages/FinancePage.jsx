@@ -2,7 +2,6 @@ import {
   CheckCircle2,
   CircleDollarSign,
   PackageCheck,
-  TrendingUp,
   Wrench,
 } from "lucide-react";
 import PageContainer from "../components/layout/PageContainer.jsx";
@@ -23,7 +22,6 @@ export default function FinancePage({ dashboard, cases, loading }) {
 
   const totalMes = Number(dashboard?.delivered_total_month ?? 0);
   const countMes = dashboard?.delivered_count_month ?? 0;
-  const ticketMedio = countMes > 0 ? totalMes / countMes : 0;
   const deliveredCases = dashboard?.delivered_cases_month ?? [];
   const topDoctorsMap = {};
 
@@ -84,7 +82,6 @@ export default function FinancePage({ dashboard, cases, loading }) {
             tone="info"
             description="Itens/serviços somados em todos os casos"
           />
-          <StatCard title="Ticket médio" value={formatCurrency(ticketMedio)} icon={TrendingUp} tone="info" />
         </div>
 
         <div className="split-grid">

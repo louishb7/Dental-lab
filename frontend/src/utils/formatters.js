@@ -93,19 +93,15 @@ export function getDeadlineBadge(deadline, status) {
   const relativeLabel = getRelativeDeadlineLabel(deadline);
   const tone = getDeadlineTone(deadline, status);
 
-  if (tone === "danger") return { label: "Atrasado", tone: "danger" };
   if (relativeLabel === "Hoje") return { label: "Hoje", tone: "warning" };
   if (relativeLabel === "Amanhã") return { label: "Amanhã", tone: "info" };
+
+  if (tone === "danger") return { label: formatDate(deadline), tone: "danger" };
 
   return { label: formatDate(deadline), tone: "neutral" };
 }
 
 export function formatDeadline(deadline, status) {
   const badge = getDeadlineBadge(deadline, status);
-  const label = formatDate(deadline);
-
-  if (badge.label === "Atrasado") return `${label} · Atrasado`;
-  if (badge.label === "Hoje") return `${label} · Hoje`;
-  if (badge.label === "Amanhã") return `${label} · Amanhã`;
-  return label;
+  return badge.label;
 }

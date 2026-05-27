@@ -338,6 +338,24 @@ export async function createCaseItem(caseId, data) {
 }
 
 /**
+ * Updates an item/service linked to a case.
+ *
+ * @param {number} caseId Unique case identifier.
+ * @param {number} itemId Unique item identifier.
+ * @param {object} data Partial item payload.
+ * @returns {Promise<object>} Updated item.
+ */
+export async function updateCaseItem(caseId, itemId, data) {
+  const response = await fetch(`${CASES_URL}/${caseId}/items/${itemId}`, {
+    method: "PUT",
+    headers: buildHeaders(),
+    body: JSON.stringify(data),
+  });
+
+  return parseResponse(response);
+}
+
+/**
  * Deletes an item/service from a case.
  *
  * @param {number} caseId Unique case identifier.

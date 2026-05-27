@@ -24,6 +24,7 @@ import {
   getStoredSession,
   login,
   register,
+  updateCaseItem,
   updateCase,
   updateDoctor,
 } from "./services/api.js";
@@ -284,21 +285,31 @@ export default function App() {
     }
   }
 
-  async function handleItemSubmit(event) {
+  async function handleItemSubmit(event, options = {}) {
     event.preventDefault();
     if (!selectedCaseId) return false;
 
     setBusy(true);
     setMessage(null);
     try {
-      await createCaseItem(
-        selectedCaseId,
-        buildItemPayload(itemForm, true, selectedCase?.pricing_mode),
+      const payload = buildItemPayload(
+        itemForm,
+        options.advanced ?? true,
+        selectedCase?.pricing_mode,
       );
+
+      if (options.itemId) {
+        await updateCaseItem(selectedCaseId, options.itemId, payload);
+      } else {
+        await createCaseItem(selectedCaseId, payload);
+      }
       const refreshed = await loadAppData();
       if (!refreshed) return false;
       setItemForm(EMPTY_ITEM);
-      setMessage({ type: "success", text: "Item/serviço criado." });
+      setMessage({
+        type: "success",
+        text: options.itemId ? "Item/serviço atualizado." : "Item/serviço criado.",
+      });
       return true;
     } catch (error) {
       setMessage({ type: "error", text: error.message });
