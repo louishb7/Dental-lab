@@ -4,11 +4,11 @@ import Toast from "../ui/Toast.jsx";
 
 const PAGE_META = {
   dashboard: {
-    title: "Visão geral",
+    title: "Bancada",
     subtitle: null,
   },
   cases: {
-    title: "Casos",
+    title: "Fila de casos",
     subtitle: null,
   },
   doctors: {
@@ -43,7 +43,7 @@ export default function AppLayout({
     <div className="app-layout">
       <AppSidebar activePage={activePage} onNavigate={onNavigate} />
       <Toast message={message} onDismiss={onDismiss} />
-      <main className="app-main">
+      <main className="app-main tactical-main">
         <AppHeader
           title={meta.title}
           user={session}

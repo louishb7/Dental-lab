@@ -76,11 +76,11 @@ export default function FinancePage({ dashboard, cases, loading }) {
           />
           <StatCard title="Casos entregues" value={countMes} icon={PackageCheck} tone="info" />
           <StatCard
-            title="Serviços unitários"
+            title="Itens lançados"
             value={totalServices}
             icon={Wrench}
             tone="info"
-            description="Itens/serviços somados em todos os casos"
+            description="Itens somados em todos os casos"
           />
         </div>
 

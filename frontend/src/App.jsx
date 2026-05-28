@@ -56,7 +56,7 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(false);
   const [authMessage, setAuthMessage] = useState(null);
 
-  const [activePage, setActivePage] = useState("cases");
+  const [activePage, setActivePage] = useState("dashboard");
   const [theme, setTheme] = useState(() => getStoredTheme());
   const [dashboard, setDashboard] = useState(null);
   const [doctors, setDoctors] = useState([]);
@@ -65,7 +65,6 @@ export default function App() {
   const [doctorForm, setDoctorForm] = useState(EMPTY_DOCTOR);
   const [caseForm, setCaseForm] = useState(EMPTY_CASE);
   const [itemForm, setItemForm] = useState(EMPTY_ITEM);
-  const [caseAdvanced, setCaseAdvanced] = useState(false);
   const [selectedDoctorId, setSelectedDoctorId] = useState(null);
   const [selectedCaseId, setSelectedCaseId] = useState(null);
   const [showDoctorModal, setShowDoctorModal] = useState(false);
@@ -527,6 +526,13 @@ export default function App() {
           cases={cases}
           doctors={doctors}
           loading={loading}
+          busy={busy}
+          caseForm={caseForm}
+          selectedDoctorId={selectedDoctorId}
+          onCaseChange={handleCaseChange}
+          onDoctorChange={setSelectedDoctorId}
+          onCaseSubmit={handleCaseSubmit}
+          onOpenCasesPage={() => setActivePage("cases")}
         />
       )}
 
@@ -539,11 +545,9 @@ export default function App() {
           busy={busy}
           caseForm={caseForm}
           itemForm={itemForm}
-          caseAdvanced={caseAdvanced}
           selectedCase={selectedCase}
           showCaseModal={showCaseModal}
           setShowCaseModal={setShowCaseModal}
-          setCaseAdvanced={setCaseAdvanced}
           selectedDoctorId={selectedDoctorId}
           setSelectedDoctorId={setSelectedDoctorId}
           onCaseChange={handleCaseChange}

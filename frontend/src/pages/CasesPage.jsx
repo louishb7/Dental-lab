@@ -1,10 +1,10 @@
 import { Eye, Layers3, PackageCheck, Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import CaseIntakeForm from "../components/cases/CaseIntakeForm.jsx";
 import Button from "../components/ui/Button.jsx";
 import DataTable from "../components/ui/DataTable.jsx";
 import DeadlineBadge from "../components/ui/DeadlineBadge.jsx";
 import EmptyState from "../components/ui/EmptyState.jsx";
-import FormField from "../components/ui/FormField.jsx";
 import Modal from "../components/ui/Modal.jsx";
 import PageContainer from "../components/layout/PageContainer.jsx";
 import PriorityBadge from "../components/ui/PriorityBadge.jsx";
@@ -28,11 +28,9 @@ export default function CasesPage({
   busy,
   caseForm,
   itemForm,
-  caseAdvanced,
   selectedCase,
   showCaseModal,
   setShowCaseModal,
-  setCaseAdvanced,
   selectedDoctorId,
   setSelectedDoctorId,
   onCaseChange,
@@ -150,20 +148,20 @@ export default function CasesPage({
     },
     {
       key: "services",
-      header: "Serviços",
+      header: "Itens",
       render: (caseItem) => {
         const serviceCount = getServiceCount(caseItem);
         return (
           <span className="cell-main">
-            <strong>{formatCaseCount(serviceCount, "serviço", "serviços")}</strong>
-            <small>Acople um serviço neste pedido</small>
+            <strong>{formatCaseCount(serviceCount, "item", "itens")}</strong>
+            <small>Abra o caso para lançar os trabalhos</small>
             <Button
               variant="primary"
               size="sm"
               onClick={() => onOpenCaseItems(caseItem.id)}
             >
               <Plus size={14} />
-              Acoplar serviço
+              Adicionar item
             </Button>
           </span>
         );
@@ -238,10 +236,10 @@ export default function CasesPage({
     },
     {
       key: "services",
-      header: "Serviços",
+      header: "Itens",
       render: (caseItem) => (
         <span className="cell-main">
-          <strong>{formatCaseCount(getServiceCount(caseItem), "serviço", "serviços")}</strong>
+          <strong>{formatCaseCount(getServiceCount(caseItem), "item", "itens")}</strong>
           <small>Histórico de entrega</small>
         </span>
       ),
@@ -275,8 +273,8 @@ export default function CasesPage({
   return (
     <PageContainer
       kicker="Produção"
-      title="Casos"
-      description="Pedidos em aberto, prontos para entrega e histórico de entregas."
+      title="Fila de casos"
+      description="Controle a produção em aberto, os prontos para saída e o histórico."
       action={
         <Button variant="primary" onClick={() => setShowCaseModal(true)}>
           <Plus size={18} />
@@ -325,7 +323,7 @@ export default function CasesPage({
               ))}
             </select>
             <Button variant="ghost" size="sm" onClick={clearFilters}>
-              Limpar
+              Limpar filtros
             </Button>
           </div>
           <div className="case-toolbar-meta" aria-live="polite">
@@ -339,11 +337,11 @@ export default function CasesPage({
           <div className="panel-header">
             <div className="panel-title">
               <h3>Pedidos em aberto</h3>
-              <p>Casos pendentes e prontos aguardando a entrega final.</p>
+              <p>Casos em produção e casos prontos aguardando expedição.</p>
             </div>
             <Button variant="success" onClick={openDeliverModal}>
               <PackageCheck size={18} />
-              Entregar pedidos
+              Fechar saída
             </Button>
           </div>
           <div className="panel-body">
@@ -381,95 +379,27 @@ export default function CasesPage({
       {showCaseModal && (
         <Modal
           title="Novo caso"
-          description="Registre o caso recebido e vincule ao dentista responsável."
+          description="Cadastre o caso do jeito que a bancada usa no dia a dia."
           onClose={() => setShowCaseModal(false)}
         >
-          <form className="form-grid" onSubmit={onCaseSubmit}>
-            <div className="form-section">
-              <h3>Informações principais</h3>
-              <FormField label="Dentista">
-                <select
-                  value={selectedDoctorId || ""}
-                  onChange={(event) => setSelectedDoctorId(Number(event.target.value) || null)}
-                  required
-                >
-                  <option value="">Selecione um dentista</option>
-                  {doctors.map((doctor) => (
-                    <option key={doctor.id} value={doctor.id}>
-                      {doctor.name}
-                    </option>
-                  ))}
-                </select>
-              </FormField>
-              <FormField label="Referência/paciente">
-                <input
-                  name="patient_ref"
-                  value={caseForm.patient_ref}
-                  onChange={onCaseChange}
-                  placeholder="Paciente ou código"
-                  required
-                />
-              </FormField>
-              <div className="form-row">
-                <FormField label="Prazo">
-                  <input name="deadline" type="date" value={caseForm.deadline} onChange={onCaseChange} />
-                </FormField>
-                <FormField label="Prioridade">
-                  <select name="priority" value={caseForm.priority} onChange={onCaseChange}>
-                    <option value="normal">Normal</option>
-                    <option value="urgent">Urgente</option>
-                  </select>
-                </FormField>
-              </div>
-            </div>
-
-            <div className="form-section">
-              <div className="case-card-top">
-                <h3>Financeiro</h3>
-                <Button variant="ghost" size="sm" onClick={() => setCaseAdvanced((value) => !value)}>
-                  {caseAdvanced ? "Simples" : "Avançado"}
-                </Button>
-              </div>
-              <FormField label="Modo de precificação">
-                <select name="pricing_mode" value={caseForm.pricing_mode} onChange={onCaseChange}>
-                  <option value="services">Por serviços</option>
-                  <option value="fixed">Valor fixo</option>
-                </select>
-              </FormField>
-              {caseForm.pricing_mode === "fixed" && (
-                <FormField label="Valor fixo">
-                  <input
-                    name="total_value"
-                    value={caseForm.total_value}
-                    onChange={onCaseChange}
-                    placeholder="350,00"
-                    required
-                  />
-                </FormField>
-              )}
-            </div>
-
-            {caseAdvanced && (
-              <div className="form-section">
-                <h3>Observações</h3>
-                <FormField label="Observações gerais">
-                  <textarea name="notes" rows="4" value={caseForm.notes} onChange={onCaseChange} />
-                </FormField>
-              </div>
-            )}
-
-            <Button variant="primary" disabled={busy} type="submit">
-              <Plus size={18} />
-              Criar caso
-            </Button>
-          </form>
+          <CaseIntakeForm
+            doctors={doctors}
+            selectedDoctorId={selectedDoctorId}
+            caseForm={caseForm}
+            busy={busy}
+            submitLabel="Criar caso"
+            submitIcon={Plus}
+            onDoctorChange={setSelectedDoctorId}
+            onCaseChange={onCaseChange}
+            onSubmit={onCaseSubmit}
+          />
         </Modal>
       )}
 
       {showDeliverModal && (
         <Modal
           title="Entregar pedidos"
-          description="Selecione os pedidos prontos que devem sair da fila operacional."
+          description="Selecione os casos prontos que devem sair hoje."
           onClose={() => setShowDeliverModal(false)}
         >
           <form className="form-grid" onSubmit={handleDeliverSubmit}>
@@ -508,7 +438,7 @@ export default function CasesPage({
               </Button>
               <Button variant="success" type="submit" disabled={!selectedDeliveryIds.length || busy}>
                 <PackageCheck size={18} />
-                Entregar selecionados
+                Confirmar saída
               </Button>
             </div>
           </form>

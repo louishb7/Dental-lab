@@ -43,11 +43,11 @@ export default function ServicesPage({
     },
     {
       key: "services",
-      header: "Serviços",
+      header: "Itens",
       render: (caseItem) => (
         <span className="cell-main">
-          <strong>{getServiceCount(caseItem)} {getServiceCount(caseItem) === 1 ? "serviço" : "serviços"}</strong>
-          <small>Acoplar serviço ao pedido</small>
+          <strong>{getServiceCount(caseItem)} {getServiceCount(caseItem) === 1 ? "item" : "itens"}</strong>
+          <small>Lançar trabalhos neste caso</small>
         </span>
       ),
     },
@@ -73,7 +73,7 @@ export default function ServicesPage({
             onClick={() => onOpenCaseItems(caseItem.id)}
           >
             <Plus size={16} />
-            Adicionar serviço
+            Adicionar item
           </Button>
           <Button
             variant="secondary"
@@ -92,15 +92,15 @@ export default function ServicesPage({
   return (
     <PageContainer
       kicker="Operação"
-      title="Serviços nos pedidos"
-      description="Acople serviços aos pedidos sem sair da fila operacional."
+      title="Itens dos casos"
+      description="Lance e revise os trabalhos sem sair da operação."
     >
       <div className="content-grid">
         <section className="panel panel-strong">
           <div className="panel-header">
             <div className="panel-title">
               <h3>Selecionar pedido</h3>
-              <p>Clique em “Adicionar serviço” para abrir o pedido e acoplar o item ao caso.</p>
+              <p>Clique em “Adicionar item” para abrir o caso e lançar o trabalho.</p>
             </div>
           </div>
           <div className="panel-body">
@@ -110,7 +110,7 @@ export default function ServicesPage({
               loading={loading}
               emptyIcon={Wrench}
               emptyTitle="Nenhum pedido em aberto."
-              emptyDescription="Pedidos entregues ficam no histórico de casos."
+              emptyDescription="Casos entregues ficam no histórico."
             />
           </div>
         </section>
@@ -120,7 +120,7 @@ export default function ServicesPage({
             <div className="panel-header">
               <div className="panel-title">
                 <h3>Pedido selecionado</h3>
-                <p>O formulário abaixo acopla serviços diretamente neste caso.</p>
+                <p>O formulário abaixo lança itens diretamente neste caso.</p>
               </div>
             </div>
             <div className="panel-body">

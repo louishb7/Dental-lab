@@ -8,18 +8,25 @@ import Modal from "../components/ui/Modal.jsx";
 import PriorityBadge from "../components/ui/PriorityBadge.jsx";
 import StatusBadge from "../components/ui/StatusBadge.jsx";
 import { formatCurrency } from "../utils/formatters.js";
+import { splitItemOperationalNotes } from "../utils/forms.js";
 
 const EMPTY_ITEM_FORM = {
+  name: "",
   tooth: "",
   service_type: "",
+  quantity: "1",
   unit_value: "",
   material: "",
   color: "",
   notes: "",
 };
 
-function hasAdvancedDetails(item) {
-  return Boolean(item?.material || item?.color || item?.notes);
+function getItemView(item) {
+  const operational = splitItemOperationalNotes(item?.notes);
+  return {
+    quantity: operational.quantity,
+    notes: operational.notes,
+  };
 }
 
 export default function CaseDetailsPage({
@@ -34,13 +41,11 @@ export default function CaseDetailsPage({
   onClose,
 }) {
   const [showItemForm, setShowItemForm] = useState(false);
-  const [itemMode, setItemMode] = useState("simple");
   const [editingItemId, setEditingItemId] = useState(null);
   const isFixedPrice = caseItem?.pricing_mode === "fixed";
 
   useEffect(() => {
     setShowItemForm(false);
-    setItemMode("simple");
     setEditingItemId(null);
   }, [caseItem?.id]);
 
@@ -50,8 +55,7 @@ export default function CaseDetailsPage({
     });
   }
 
-  function openItemForm(mode, item = null) {
-    setItemMode(mode);
+  function openItemForm(item = null) {
     setEditingItemId(item?.id ?? null);
     setShowItemForm(true);
 
@@ -60,37 +64,47 @@ export default function CaseDetailsPage({
       return;
     }
 
+    const operational = splitItemOperationalNotes(item.notes);
+
     syncItemForm({
+      name: item.service_type || "",
       tooth: item.tooth || "",
       service_type: item.service_type || "",
+      quantity: operational.quantity,
       unit_value: item.unit_value ? formatCurrency(item.unit_value) : "",
       material: item.material || "",
       color: item.color || "",
-      notes: item.notes || "",
+      notes: operational.notes,
     });
   }
 
   function closeItemForm() {
     setShowItemForm(false);
-    setItemMode("simple");
     setEditingItemId(null);
     syncItemForm(EMPTY_ITEM_FORM);
   }
 
   const columns = [
-    { key: "tooth", header: "Dente/área" },
     {
       key: "service_type",
-      header: "Serviço",
-      render: (item) => (
-        <span className="cell-main">
-          <strong>{item.service_type}</strong>
-          {item.notes && <small>{item.notes}</small>}
-        </span>
-      ),
+      header: "Trabalho",
+      render: (item) => {
+        const view = getItemView(item);
+
+        return (
+          <span className="cell-main">
+            <strong>{item.service_type}</strong>
+            {view.notes && <small>{view.notes}</small>}
+          </span>
+        );
+      },
     },
-    { key: "material", header: "Material", render: (item) => item.material || "-" },
-    { key: "color", header: "Cor", render: (item) => item.color || "-" },
+    { key: "tooth", header: "Dentes / numeração" },
+    {
+      key: "quantity",
+      header: "Qtd.",
+      render: (item) => getItemView(item).quantity,
+    },
     ...(
       isFixedPrice
         ? []
@@ -101,7 +115,7 @@ export default function CaseDetailsPage({
       header: "Ações",
       render: (item) => (
         <div className="row-actions">
-          <Button variant="secondary" size="sm" onClick={() => openItemForm(hasAdvancedDetails(item) ? "advanced" : "simple", item)}>
+          <Button variant="secondary" size="sm" onClick={() => openItemForm(item)}>
             <Edit3 size={16} />
             Editar
           </Button>
@@ -121,10 +135,7 @@ export default function CaseDetailsPage({
   if (!caseItem) return null;
 
   async function handleSubmit(event) {
-    const success = await onItemSubmit(event, {
-      itemId: editingItemId,
-      advanced: itemMode === "advanced",
-    });
+    const success = await onItemSubmit(event, { itemId: editingItemId, advanced: false });
     if (success) {
       closeItemForm();
     }
@@ -133,15 +144,15 @@ export default function CaseDetailsPage({
   return (
     <Modal
       title={`Caso #${caseItem.id}`}
-      description="Detalhes operacionais e itens solicitados."
+      description="Resumo do caso e itens de produção."
       onClose={onClose}
     >
       <div className="content-grid">
-        <section className="form-section">
+        <section className="form-section tactical-form-section">
           <h3>Informações principais</h3>
           <div className="form-row">
             <div className="cell-main">
-              <small>Referência/paciente</small>
+              <small>Paciente</small>
               <strong>{caseItem.patient_ref}</strong>
             </div>
             <div className="cell-main">
@@ -160,134 +171,101 @@ export default function CaseDetailsPage({
           <div className="case-meta">
             <StatusBadge status={caseItem.status} />
             <PriorityBadge priority={caseItem.priority} />
-            <span>{caseItem.pricing_mode === "fixed" ? "Valor fixo" : "Por serviços"}</span>
+            <span>{caseItem.pricing_mode === "fixed" ? "Valor fechado" : "Soma por item"}</span>
           </div>
           {caseItem.notes && <p className="muted">{caseItem.notes}</p>}
         </section>
 
-        <section className="form-section">
+        <section className="form-section tactical-form-section">
           <div className="case-card-top">
             <div className="panel-title">
-              <h3>Serviços do caso</h3>
-              <p>{items.length ? "Itens que compõem este caso." : "Nenhum serviço acoplado ainda."}</p>
+              <h3>Itens do caso</h3>
+              <p>{items.length ? "Trabalhos já vinculados a este caso." : "Nenhum item lançado ainda."}</p>
             </div>
-            <div className="service-mode-actions">
-              <Button variant="primary" size="sm" onClick={() => openItemForm("simple")}>
-                <Plus size={16} />
-                Serviço simples
-              </Button>
-              <Button variant="secondary" size="sm" onClick={() => openItemForm("advanced")}>
-                <Plus size={16} />
-                Serviço avançado
-              </Button>
-            </div>
+            <Button variant="primary" size="sm" onClick={() => openItemForm()}>
+              <Plus size={16} />
+              Novo item
+            </Button>
           </div>
           <DataTable
             columns={columns}
             data={items}
             emptyIcon={Layers3}
-            emptyTitle="Nenhum serviço acoplado ainda."
-            emptyDescription="Abra a área de adição para acoplar serviços ao pedido."
+            emptyTitle="Nenhum item lançado ainda."
+            emptyDescription="Abra o formulário e registre o primeiro trabalho deste caso."
           />
         </section>
 
         {showItemForm && (
           <form className="form-grid" onSubmit={handleSubmit}>
-            <div className="form-section">
-              <div className="case-card-top">
-                <div className="panel-title">
-                  <h3>{editingItemId ? "Editar serviço do caso" : "Acoplar serviço ao caso"}</h3>
-                  <p>
-                    {itemMode === "simple"
-                      ? "Preencha serviço, dente/área e valor do serviço."
-                      : "Preencha todos os detalhes do serviço antes de salvar."}
-                  </p>
-                </div>
-                <div className="service-mode-actions">
-                  <Button
-                    variant={itemMode === "simple" ? "primary" : "secondary"}
-                    size="sm"
-                    onClick={() => setItemMode("simple")}
-                  >
-                    Serviço simples
-                  </Button>
-                  <Button
-                    variant={itemMode === "advanced" ? "primary" : "secondary"}
-                    size="sm"
-                    onClick={() => setItemMode("advanced")}
-                  >
-                    Serviço avançado
-                  </Button>
-                </div>
+            <div className="form-section tactical-form-section">
+              <div className="panel-title">
+                <h3>{editingItemId ? "Editar item" : "Novo item"}</h3>
+                <p>Use o mesmo padrão da bancada: nome, dentes, quantidade e observações.</p>
               </div>
+
               <div className="form-row">
-                <FormField label="Serviço">
+                <FormField label="Nome do trabalho">
                   <input
-                    name="service_type"
-                    value={itemForm.service_type}
+                    name="name"
+                    value={itemForm.name}
                     onChange={onItemChange}
-                    placeholder="Coroa, faceta, placa..."
+                    placeholder="Coroa, faceta, placa, provisório..."
                     required
                   />
                 </FormField>
-                <FormField label="Dente/área">
+                <FormField label="Quantidade">
                   <input
-                    name="tooth"
-                    value={itemForm.tooth}
+                    name="quantity"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={itemForm.quantity}
                     onChange={onItemChange}
-                    placeholder="11 ou prótese total"
+                    placeholder="1"
                     required
                   />
                 </FormField>
               </div>
+
+              <FormField label="Dentes / numeração">
+                <input
+                  name="tooth"
+                  value={itemForm.tooth}
+                  onChange={onItemChange}
+                  placeholder="11, 21, 22-24, PT, moldeira..."
+                  required
+                />
+              </FormField>
+
               {!isFixedPrice && (
-                <FormField label="Valor do serviço">
+                <FormField label="Valor por item">
                   <input
                     name="unit_value"
                     value={itemForm.unit_value}
                     onChange={onItemChange}
-                    placeholder="R$ 120,00"
+                    placeholder="R$ 0,00"
                     required
                   />
                 </FormField>
               )}
-              {itemMode === "advanced" && (
-                <>
-                  <div className="form-row">
-                    <FormField label="Material">
-                      <input
-                        name="material"
-                        value={itemForm.material}
-                        onChange={onItemChange}
-                        placeholder="Zircônia, resina..."
-                      />
-                    </FormField>
-                    <FormField label="Cor">
-                      <input
-                        name="color"
-                        value={itemForm.color}
-                        onChange={onItemChange}
-                        placeholder="A2, BL1..."
-                      />
-                    </FormField>
-                  </div>
-                  <FormField label="Observações">
-                    <textarea
-                      name="notes"
-                      rows="3"
-                      value={itemForm.notes}
-                      onChange={onItemChange}
-                    />
-                  </FormField>
-                </>
-              )}
+
+              <FormField label="Observações">
+                <textarea
+                  name="notes"
+                  rows="4"
+                  value={itemForm.notes}
+                  onChange={onItemChange}
+                  placeholder="Cor, encaixe, material, contato, acabamento..."
+                />
+              </FormField>
+
               <div className="confirm-modal-actions">
-                <Button variant="ghost" size="sm" onClick={closeItemForm}>
+                <Button variant="ghost" onClick={closeItemForm}>
                   Cancelar
                 </Button>
                 <Button variant="primary" disabled={busy} type="submit">
-                  <Plus size={18} />
-                  {editingItemId ? "Salvar alterações" : "Adicionar serviço"}
+                  <Plus size={16} />
+                  {editingItemId ? "Salvar item" : "Adicionar item"}
                 </Button>
               </div>
             </div>

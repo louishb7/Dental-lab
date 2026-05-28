@@ -12,13 +12,17 @@ export const EMPTY_CASE = {
   notes: "",
 };
 export const EMPTY_ITEM = {
+  name: "",
   tooth: "",
   service_type: "",
+  quantity: "1",
   unit_value: "",
   material: "",
   color: "",
   notes: "",
 };
+
+const QUANTITY_LINE_PATTERN = /^Quantidade:\s*(\d+)\s*(?:\n+)?/i;
 
 export function formatBrazilianPhone(value) {
   const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -55,27 +59,56 @@ export function buildCasePayload(doctorId, form, advanced) {
     payload.total_value = parseCurrencyToApiValue(form.total_value);
   }
 
-  if (advanced) {
-    payload.deadline = toIsoDate(form.deadline);
-    payload.priority = form.priority;
-    payload.notes = form.notes.trim() || null;
-  }
+  payload.deadline = toIsoDate(form.deadline);
+  payload.priority = form.priority;
+  payload.notes = form.notes.trim() || null;
 
   return payload;
 }
 
+export function normalizeQuantity(value) {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  if (!digits) return "1";
+
+  return String(Math.max(1, Number(digits)));
+}
+
+export function splitItemOperationalNotes(value) {
+  const rawNotes = String(value ?? "");
+  const match = rawNotes.match(QUANTITY_LINE_PATTERN);
+
+  if (!match) {
+    return {
+      quantity: "1",
+      notes: rawNotes.trim(),
+    };
+  }
+
+  const quantity = normalizeQuantity(match[1]);
+  const notes = rawNotes.replace(QUANTITY_LINE_PATTERN, "").trim();
+
+  return { quantity, notes };
+}
+
 export function buildItemPayload(form, advanced, pricingMode = "services") {
+  const quantity = normalizeQuantity(form.quantity);
+  const serviceName = form.name?.trim() || form.service_type?.trim() || "";
+  const notes = form.notes.trim();
+  const composedNotes = [
+    quantity !== "1" ? `Quantidade: ${quantity}` : null,
+    notes || null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
   const payload = {
     tooth: form.tooth.trim(),
-    service_type: form.service_type.trim(),
+    service_type: serviceName,
     unit_value: pricingMode === "fixed" ? null : parseCurrencyToApiValue(form.unit_value),
+    material: form.material.trim() || null,
+    color: form.color.trim() || null,
+    notes: composedNotes || null,
   };
-
-  if (advanced) {
-    payload.material = form.material.trim() || null;
-    payload.color = form.color.trim() || null;
-    payload.notes = form.notes.trim() || null;
-  }
 
   return payload;
 }
