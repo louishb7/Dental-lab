@@ -57,21 +57,29 @@ function getDayBoardTitle(date) {
 
 function getDayBoardDescription(date, count) {
   if (isToday(date)) {
-    return count ? "Mostrando os casos com prazo para hoje." : "Nenhum caso com prazo para hoje.";
+    return count ? "Casos com prazo para hoje." : "Nenhum caso com prazo para hoje.";
   }
 
   if (isTomorrow(date)) {
-    return count ? "Mostrando os casos que entram amanhã." : "Nenhum caso programado para amanhã.";
+    return count ? "Casos que entram amanhã." : "Nenhum caso programado para amanhã.";
   }
 
   return count
-    ? `Mostrando os casos planejados para ${formatDayMonth(date)}.`
+    ? `Casos planejados para ${formatDayMonth(date)}.`
     : `Nenhum caso planejado para ${formatDayMonth(date)}.`;
 }
 
-function AttentionPanel({ title, description, cases, emptyTitle, emptyIcon = PackageCheck, onOpenCase }) {
+function AttentionPanel({
+  title,
+  description,
+  cases,
+  emptyTitle,
+  emptyIcon = PackageCheck,
+  onOpenCase,
+  className = "",
+}) {
   return (
-    <section className="panel attention-panel">
+    <section className={`panel attention-panel ${className}`.trim()}>
       <div className="panel-header">
         <div className="panel-title">
           <h3>{title}</h3>
@@ -81,7 +89,7 @@ function AttentionPanel({ title, description, cases, emptyTitle, emptyIcon = Pac
       <div className="panel-body">
         {cases.length ? (
           <div className="compact-case-list">
-            {cases.slice(0, 4).map((caseItem) => (
+            {cases.slice(0, 3).map((caseItem) => (
               <button
                 key={caseItem.id}
                 className="compact-case-item"
@@ -226,21 +234,23 @@ export default function DashboardPage({
 
           <AttentionPanel
             title="Prontos para entrega"
-            description="Casos concluídos aguardando saída."
+            description="Saída pendente."
             cases={readyCases}
             emptyTitle="Nenhum caso pronto."
             emptyIcon={PackageCheck}
             onOpenCase={onOpenCase}
+            className="attention-panel-primary"
           />
         </div>
 
         <AttentionPanel
           title="Atrasados"
-          description="Casos fora do prazo e ainda não entregues."
+          description="Casos fora do prazo."
           cases={overdueCases}
           emptyTitle="Nenhum caso atrasado."
           emptyIcon={AlertTriangle}
           onOpenCase={onOpenCase}
+          className="attention-panel-secondary"
         />
       </div>
     </PageContainer>

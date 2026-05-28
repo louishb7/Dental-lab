@@ -1,6 +1,4 @@
-import { AlertTriangle } from "lucide-react";
 import {
-  formatDayMonth,
   formatWeekRange,
   formatWeekdayLabel,
   isToday,
@@ -15,6 +13,7 @@ function DayCard({ day, cases, selected, onSelect }) {
   const urgentCount = cases.filter((caseItem) => caseItem.priority === "urgent").length;
   const isCurrentDay = isToday(day);
   const isOffDay = cases.length === 0;
+  const summary = isOffDay ? "DIA OFF" : `${formatCaseCount(cases.length)}`;
 
   return (
     <button
@@ -34,14 +33,8 @@ function DayCard({ day, cases, selected, onSelect }) {
         <span className="week-day-label">{formatWeekdayLabel(day)}</span>
         {isCurrentDay && <span className="week-day-marker">Hoje</span>}
       </div>
-      <strong>{formatDayMonth(day)}</strong>
-      <small>{cases.length ? formatCaseCount(cases.length) : "DIA OFF"}</small>
-      {urgentCount > 0 && (
-        <span className="week-day-alert">
-          <AlertTriangle size={12} />
-          {urgentCount} urgente{urgentCount > 1 ? "s" : ""}
-        </span>
-      )}
+      <strong>{summary}</strong>
+      <small>{urgentCount > 0 ? `${urgentCount} urg.` : " "}</small>
     </button>
   );
 }
@@ -56,21 +49,23 @@ export default function WeekSchedule({
   onSelectDate,
 }) {
   return (
-    <section className="panel panel-strong">
-      <div className="panel-header week-panel-header">
-        <button className="button button-secondary button-sm" type="button" onClick={onPreviousWeek}>
-          ← Semana
-        </button>
-        <div className="panel-title week-panel-title">
+    <section className="panel panel-strong week-schedule-panel">
+      <div className="panel-header">
+        <div className="panel-title">
           <h3>Semana de produção</h3>
-          <p>Selecione um dia para ver só os casos daquela data.</p>
-          <strong className="week-range-label">{formatWeekRange(weekStart)}</strong>
+          <p>Navegue entre os dias e veja os casos da bancada.</p>
         </div>
-        <button className="button button-secondary button-sm" type="button" onClick={onNextWeek}>
-          Semana →
-        </button>
       </div>
-      <div className="panel-body">
+      <div className="panel-body week-panel-body">
+        <div className="week-panel-nav">
+          <button className="button button-secondary button-sm" type="button" onClick={onPreviousWeek}>
+            ← Semana
+          </button>
+          <strong className="week-range-label">{formatWeekRange(weekStart)}</strong>
+          <button className="button button-secondary button-sm" type="button" onClick={onNextWeek}>
+            Semana →
+          </button>
+        </div>
         <div className="week-days-grid" aria-label="Dias da semana">
           {weekDays.map((day) => {
             const dayKey = getLocalDateKey(day);

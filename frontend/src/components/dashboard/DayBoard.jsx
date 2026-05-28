@@ -8,7 +8,7 @@ export default function DayBoard({
   onOpenCase,
 }) {
   return (
-    <section className="panel panel-strong">
+    <section className="panel panel-strong day-board-panel">
       <div className="panel-header">
         <div className="panel-title">
           <h3>{title}</h3>

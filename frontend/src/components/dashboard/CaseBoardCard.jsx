@@ -26,7 +26,7 @@ export default function CaseBoardCard({ caseItem, onOpenCase }) {
 
       <div className="case-board-meta">
         <span className="case-board-info">
-          <Layers3 size={14} />
+          <Layers3 size={13} />
           {formatItemsLabel(caseItem)}
         </span>
         <DeadlineBadge deadline={caseItem.deadline} status={caseItem.status} />
@@ -34,9 +34,9 @@ export default function CaseBoardCard({ caseItem, onOpenCase }) {
       </div>
 
       <div className="case-board-actions">
-        <Button variant="secondary" size="sm" onClick={() => onOpenCase(caseItem.id)}>
-          <Eye size={16} />
-          Ver caso
+        <Button variant="ghost" size="sm" onClick={() => onOpenCase(caseItem.id)}>
+          <Eye size={14} />
+          Abrir
         </Button>
       </div>
     </article>
