@@ -272,9 +272,9 @@ export default function CasesPage({
 
   return (
     <PageContainer
-      kicker="Produção"
-      title="Fila de casos"
-      description="Controle a produção em aberto, os prontos para saída e o histórico."
+      kicker="Casos"
+      title="Casos"
+      description="Consulte, filtre e acompanhe todos os casos da bancada."
       action={
         <Button variant="primary" onClick={() => setShowCaseModal(true)}>
           <Plus size={18} />
@@ -327,21 +327,21 @@ export default function CasesPage({
             </Button>
           </div>
           <div className="case-toolbar-meta" aria-live="polite">
-            <span>{formatCaseCount(openCases.length, "pedido em aberto", "pedidos em aberto")}</span>
-            <span>{formatCaseCount(readyCases.length, "pronto para entrega", "prontos para entrega")}</span>
-            <span>{formatCaseCount(historyCases.length, "entrega no histórico", "entregas no histórico")}</span>
+            <span>{formatCaseCount(openCases.length, "caso em aberto", "casos em aberto")}</span>
+            <span>{formatCaseCount(readyCases.length, "caso pronto", "casos prontos")}</span>
+            <span>{formatCaseCount(historyCases.length, "caso entregue", "casos entregues")}</span>
           </div>
         </div>
 
         <section className="panel panel-strong">
           <div className="panel-header">
             <div className="panel-title">
-              <h3>Pedidos em aberto</h3>
-              <p>Casos em produção e casos prontos aguardando expedição.</p>
+              <h3>Casos em aberto</h3>
+              <p>Casos em produção e casos prontos aguardando entrega.</p>
             </div>
             <Button variant="success" onClick={openDeliverModal}>
               <PackageCheck size={18} />
-              Fechar saída
+              Registrar entrega
             </Button>
           </div>
           <div className="panel-body">
@@ -350,8 +350,8 @@ export default function CasesPage({
               data={openCases}
               loading={loading}
               emptyIcon={Layers3}
-              emptyTitle="Nenhum pedido em aberto."
-              emptyDescription="Os pedidos pendentes e prontos aparecem aqui antes da entrega."
+              emptyTitle="Nenhum caso em aberto."
+              emptyDescription="Os casos pendentes e prontos aparecem aqui antes da entrega."
             />
           </div>
         </section>
@@ -360,7 +360,7 @@ export default function CasesPage({
           <div className="panel-header">
             <div className="panel-title">
               <h3>Histórico de entregas</h3>
-              <p>Pedidos que já saíram da fila operacional.</p>
+              <p>Casos que já foram entregues.</p>
             </div>
           </div>
           <div className="panel-body">
@@ -370,7 +370,7 @@ export default function CasesPage({
               loading={loading}
               emptyIcon={Layers3}
               emptyTitle="Nenhuma entrega registrada."
-              emptyDescription="Os pedidos entregues ficam arquivados aqui."
+              emptyDescription="Os casos entregues ficam arquivados aqui."
             />
           </div>
         </section>
@@ -398,8 +398,8 @@ export default function CasesPage({
 
       {showDeliverModal && (
         <Modal
-          title="Entregar pedidos"
-          description="Selecione os casos prontos que devem sair hoje."
+          title="Registrar entregas"
+          description="Selecione os casos prontos que devem ser marcados como entregues."
           onClose={() => setShowDeliverModal(false)}
         >
           <form className="form-grid" onSubmit={handleDeliverSubmit}>
@@ -427,8 +427,8 @@ export default function CasesPage({
               ) : (
                 <EmptyState
                   icon={PackageCheck}
-                  title="Nenhum pedido pronto para entrega."
-                  description="Marque um pedido como pronto para habilitá-lo aqui."
+                  title="Nenhum caso pronto para entrega."
+                  description="Marque um caso como pronto para habilitá-lo aqui."
                 />
               )}
             </div>

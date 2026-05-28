@@ -307,7 +307,7 @@ export default function App() {
       setItemForm(EMPTY_ITEM);
       setMessage({
         type: "success",
-        text: options.itemId ? "Item/serviço atualizado." : "Item/serviço criado.",
+        text: options.itemId ? "Serviço atualizado." : "Serviço criado.",
       });
       return true;
     } catch (error) {
@@ -338,7 +338,7 @@ export default function App() {
       }
       setMessage({
         type: "success",
-        text: `${deliveredCases.length} ${deliveredCases.length === 1 ? "pedido entregue" : "pedidos entregues"}.`,
+        text: `${deliveredCases.length} ${deliveredCases.length === 1 ? "caso entregue" : "casos entregues"}.`,
       });
       return true;
     } catch (error) {
@@ -366,6 +366,13 @@ export default function App() {
   function openDoctorCases(doctorId) {
     setSelectedDoctorId(doctorId);
     setActivePage("cases");
+  }
+
+  function openNewCaseFromDashboard() {
+    setCaseForm(EMPTY_CASE);
+    setSelectedDoctorId(null);
+    setActivePage("cases");
+    setShowCaseModal(true);
   }
 
   async function commitCaseStatus(caseItem, nextStatus) {
@@ -455,7 +462,7 @@ export default function App() {
       await deleteCaseItem(selectedCaseId, itemId);
       const refreshed = await loadAppData();
       if (!refreshed) return;
-      setMessage({ type: "success", text: "Item/serviço removido." });
+      setMessage({ type: "success", text: "Serviço removido." });
     } catch (error) {
       setMessage({ type: "error", text: error.message });
     } finally {
@@ -526,12 +533,7 @@ export default function App() {
           cases={cases}
           doctors={doctors}
           loading={loading}
-          busy={busy}
-          caseForm={caseForm}
-          selectedDoctorId={selectedDoctorId}
-          onCaseChange={handleCaseChange}
-          onDoctorChange={setSelectedDoctorId}
-          onCaseSubmit={handleCaseSubmit}
+          onOpenNewCase={openNewCaseFromDashboard}
           onOpenCasesPage={() => setActivePage("cases")}
         />
       )}

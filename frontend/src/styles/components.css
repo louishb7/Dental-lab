@@ -1,9 +1,7 @@
 .panel {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background:
-    linear-gradient(180deg, rgba(255, 138, 42, 0.035), transparent 18%),
-    var(--color-surface);
+  background: var(--color-surface);
   box-shadow: var(--shadow-soft);
 }
 
@@ -28,7 +26,6 @@
 .panel-title h3 {
   font-size: 1.04rem;
   line-height: 1.15;
-  text-transform: uppercase;
 }
 
 .panel-title p,
@@ -68,16 +65,18 @@
   gap: var(--space-grid);
 }
 
+.stat-grid.compact {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
 .stat-card {
   display: grid;
   gap: 10px;
-  min-height: 132px;
+  min-height: 120px;
   padding: var(--space-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 38%),
-    var(--color-surface);
+  background: var(--color-surface);
 }
 
 .stat-card-header {
@@ -87,8 +86,7 @@
   gap: 12px;
   color: var(--color-text-muted);
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.02em;
 }
 
 .stat-icon {
@@ -139,9 +137,7 @@
   color: var(--color-text);
   cursor: pointer;
   font-size: 0.82rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-weight: 700;
   white-space: nowrap;
   transition:
     transform 120ms ease,
@@ -164,20 +160,16 @@
 .button-primary {
   color: var(--color-primary-contrast);
   border-color: rgba(255, 138, 42, 0.44);
-  background:
-    linear-gradient(180deg, rgba(255, 138, 42, 1), rgba(217, 104, 16, 0.98));
+  background: var(--color-primary);
 }
 
 .button-primary:hover:not(:disabled) {
-  background:
-    linear-gradient(180deg, rgba(255, 159, 77, 1), rgba(217, 104, 16, 1));
+  background: #ff9a4b;
 }
 
 .button-secondary {
   border-color: var(--color-border-strong);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 68%),
-    var(--color-surface-soft);
+  background: var(--color-surface-soft);
 }
 
 .button-secondary:hover:not(:disabled),
@@ -206,25 +198,21 @@
 .button-success {
   color: #092214;
   border-color: rgba(115, 201, 143, 0.3);
-  background:
-    linear-gradient(180deg, rgba(115, 201, 143, 0.98), rgba(57, 153, 89, 0.98));
+  background: #73c98f;
 }
 
 .button-success:hover:not(:disabled) {
-  background:
-    linear-gradient(180deg, rgba(138, 223, 166, 1), rgba(57, 153, 89, 1));
+  background: #88d6a0;
 }
 
 .button-warning {
   color: #2d1f08;
   border-color: rgba(242, 185, 73, 0.34);
-  background:
-    linear-gradient(180deg, rgba(242, 185, 73, 0.98), rgba(191, 129, 26, 0.98));
+  background: #f2b949;
 }
 
 .button-warning:hover:not(:disabled) {
-  background:
-    linear-gradient(180deg, rgba(255, 204, 109, 1), rgba(191, 129, 26, 1));
+  background: #f6c96e;
 }
 
 .button:disabled {
@@ -366,8 +354,7 @@
   color: var(--color-text-muted);
   background: var(--color-table-head);
   font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.03em;
   white-space: nowrap;
 }
 
@@ -408,20 +395,17 @@
 }
 
 .form-section,
-.tactical-form-section {
+.simple-form-section {
   display: grid;
   gap: 12px;
   padding: var(--space-card-sm);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 42%),
-    var(--color-subtle);
+  background: var(--color-subtle);
 }
 
 .form-section h3 {
   font-size: 0.96rem;
-  text-transform: uppercase;
 }
 
 .form-row {
@@ -434,10 +418,8 @@
   display: grid;
   gap: 7px;
   color: var(--color-text-soft);
-  font-size: 0.74rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
 .form-field input,
@@ -495,8 +477,6 @@
   flex-wrap: wrap;
   color: var(--color-text-muted);
   font-size: 0.84rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 .case-page-actions {
@@ -682,7 +662,6 @@
 .state-box h3 {
   color: var(--color-text);
   font-size: 1rem;
-  text-transform: uppercase;
 }
 
 .loading-spinner {
@@ -700,9 +679,7 @@
   padding: 14px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 42%),
-    var(--color-subtle);
+  background: var(--color-subtle);
 }
 
 .case-card-top {
@@ -757,9 +734,7 @@
 
 .auth-card {
   width: min(460px, 100%);
-  background:
-    linear-gradient(180deg, rgba(255, 138, 42, 0.07), transparent 18%),
-    var(--color-surface);
+  background: var(--color-surface);
 }
 
 .auth-brand {
@@ -776,7 +751,6 @@
 
 .auth-brand h1 {
   font-size: 2rem;
-  text-transform: uppercase;
 }
 
 .segmented {
@@ -786,72 +760,36 @@
   margin-bottom: 14px;
 }
 
-.command-hero {
-  overflow: hidden;
-}
-
-.command-hero-body {
+.simple-summary-list {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
-  gap: 20px;
-  align-items: end;
+  gap: 10px;
 }
 
-.command-copy h3 {
-  margin-top: 8px;
-  font-size: 1.72rem;
+.simple-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border);
 }
 
-.command-finance {
-  display: grid;
-  gap: 6px;
-  justify-items: end;
-  text-align: right;
+.simple-summary-row:last-child {
+  border-bottom: 0;
 }
 
-.command-finance span,
+.simple-summary-row span,
 .summary-metric span {
   color: var(--color-text-muted);
-  font-size: 0.78rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-size: 0.82rem;
+  font-weight: 600;
 }
 
-.command-finance strong,
+.simple-summary-row strong,
 .summary-metric strong {
   font-family: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
-  font-size: 2rem;
-  line-height: 1;
-}
-
-.command-finance small {
-  color: var(--color-text-muted);
-}
-
-.bench-lane-count {
-  min-width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: rgba(255, 138, 42, 0.1);
-  color: var(--color-primary);
-  font-weight: 800;
-}
-
-.bench-summary-body {
-  display: grid;
-  gap: 14px;
-}
-
-.summary-metric {
-  display: grid;
-  gap: 5px;
-  padding: 14px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.02);
+  font-size: 1.05rem;
+  line-height: 1.2;
 }
 
 @keyframes spin {
@@ -883,17 +821,6 @@
 
   .filter-bar .button {
     grid-column: 1 / -1;
-  }
-}
-
-@media (max-width: 760px) {
-  .command-hero-body {
-    grid-template-columns: 1fr;
-  }
-
-  .command-finance {
-    justify-items: start;
-    text-align: left;
   }
 }
 

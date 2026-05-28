@@ -8,7 +8,7 @@ const PAGE_META = {
     subtitle: null,
   },
   cases: {
-    title: "Fila de casos",
+    title: "Casos",
     subtitle: null,
   },
   doctors: {
@@ -16,7 +16,7 @@ const PAGE_META = {
     subtitle: null,
   },
   finance: {
-    title: "Painel financeiro",
+    title: "Financeiro",
     subtitle: null,
   },
   services: {
@@ -43,7 +43,7 @@ export default function AppLayout({
     <div className="app-layout">
       <AppSidebar activePage={activePage} onNavigate={onNavigate} />
       <Toast message={message} onDismiss={onDismiss} />
-      <main className="app-main tactical-main">
+      <main className="app-main workspace-main">
         <AppHeader
           title={meta.title}
           user={session}

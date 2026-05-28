@@ -70,9 +70,9 @@ export default function DoctorsPage({
 
   return (
     <PageContainer
-      kicker="Clientes"
+      kicker="Dentistas"
       title="Dentistas"
-      description="Contatos profissionais vinculados aos casos do laboratório."
+      description="Cadastre e consulte os dentistas vinculados aos casos."
       action={
         <Button variant="primary" onClick={onNewDoctor}>
           <Plus size={18} />
@@ -98,7 +98,7 @@ export default function DoctorsPage({
       {showDoctorModal && (
         <Modal
           title={editingDoctorId ? "Editar dentista" : "Novo dentista"}
-          description={editingDoctorId ? "Atualize os dados do cliente profissional." : "Cadastre o cliente profissional que envia casos para o laboratório."}
+          description={editingDoctorId ? "Atualize os dados do dentista." : "Cadastre o dentista para vincular novos casos."}
           onClose={() => setShowDoctorModal(false)}
         >
           <form className="form-grid" onSubmit={onDoctorSubmit}>
@@ -134,7 +134,7 @@ export default function DoctorsPage({
                 rows="4"
                 value={doctorForm.notes}
                 onChange={onDoctorChange}
-                placeholder="Preferências, prazos e detalhes comerciais"
+                placeholder="Contato, preferências ou observações úteis"
               />
             </FormField>
             <Button variant="primary" disabled={busy} type="submit">

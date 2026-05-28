@@ -91,16 +91,16 @@ export default function ServicesPage({
 
   return (
     <PageContainer
-      kicker="Operação"
-      title="Itens dos casos"
-      description="Lance e revise os trabalhos sem sair da operação."
+      kicker="Serviços"
+      title="Serviços dos casos"
+      description="Lance e revise os serviços vinculados a cada caso."
     >
       <div className="content-grid">
         <section className="panel panel-strong">
           <div className="panel-header">
             <div className="panel-title">
-              <h3>Selecionar pedido</h3>
-              <p>Clique em “Adicionar item” para abrir o caso e lançar o trabalho.</p>
+              <h3>Selecionar caso</h3>
+              <p>Clique em “Adicionar item” para abrir o caso e lançar o serviço.</p>
             </div>
           </div>
           <div className="panel-body">
@@ -109,7 +109,7 @@ export default function ServicesPage({
               data={openCases}
               loading={loading}
               emptyIcon={Wrench}
-              emptyTitle="Nenhum pedido em aberto."
+              emptyTitle="Nenhum caso em aberto."
               emptyDescription="Casos entregues ficam no histórico."
             />
           </div>
@@ -119,8 +119,8 @@ export default function ServicesPage({
           <section className="panel">
             <div className="panel-header">
               <div className="panel-title">
-                <h3>Pedido selecionado</h3>
-                <p>O formulário abaixo lança itens diretamente neste caso.</p>
+                <h3>Caso selecionado</h3>
+                <p>Abra os detalhes para adicionar serviços, dentes e observações.</p>
               </div>
             </div>
             <div className="panel-body">

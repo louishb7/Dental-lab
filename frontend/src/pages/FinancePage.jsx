@@ -53,7 +53,7 @@ export default function FinancePage({ dashboard, cases, loading }) {
     },
     {
       key: "services",
-      header: "Serviços",
+      header: "Itens",
       render: (caseItem) => `${getServiceCount(caseItem)} ${getServiceCount(caseItem) === 1 ? "item" : "itens"}`,
     },
     { key: "total_value", header: "Valor", render: (caseItem) => formatCurrency(caseItem.total_value) },
@@ -62,14 +62,14 @@ export default function FinancePage({ dashboard, cases, loading }) {
 
   return (
     <PageContainer
-      kicker="Painel"
+      kicker="Financeiro"
       title="Resumo do mês"
-      description="Ganhos, serviços e entregas do período."
+      description="Acompanhe o valor entregue e os casos concluídos no período."
     >
       <div className="content-grid">
         <div className="stat-grid">
           <StatCard
-            title="Ganhos do mês"
+            title="Valor entregue no mês"
             value={formatCurrency(totalMes)}
             icon={CircleDollarSign}
             tone="success"
@@ -89,7 +89,7 @@ export default function FinancePage({ dashboard, cases, loading }) {
             <div className="panel-header">
               <div className="panel-title">
                 <h3>Ranking de receita no mês atual.</h3>
-                <p>Os dentistas com maior faturamento no período.</p>
+                <p>Dentistas com maior valor entregue no período.</p>
               </div>
             </div>
             <div className="panel-body">
@@ -118,7 +118,7 @@ export default function FinancePage({ dashboard, cases, loading }) {
             <div className="panel-header">
               <div className="panel-title">
                 <h3>Entregas do mês</h3>
-                <p>Relatório escalável de pedidos concluídos no período.</p>
+                <p>Casos concluídos com valor registrado neste mês.</p>
               </div>
             </div>
             <div className="panel-body">

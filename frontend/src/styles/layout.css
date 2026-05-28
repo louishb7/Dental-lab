@@ -11,9 +11,7 @@
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--color-border);
-  background:
-    linear-gradient(180deg, rgba(255, 138, 42, 0.04), transparent 22%),
-    var(--color-sidebar);
+  background: var(--color-sidebar);
   backdrop-filter: blur(10px);
 }
 
@@ -62,13 +60,13 @@
 }
 
 .page-kicker {
-  font-size: 0.72rem;
-  font-weight: 800;
+  font-size: 0.74rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
 }
 
-.tactical-kicker {
+.page-kicker-accent {
   color: var(--color-primary);
 }
 
@@ -107,9 +105,7 @@
 .sidebar-item.active {
   color: var(--color-text);
   border-color: var(--color-border-strong);
-  background:
-    linear-gradient(90deg, rgba(255, 138, 42, 0.13), transparent 85%),
-    rgba(255, 138, 42, 0.04);
+  background: rgba(255, 138, 42, 0.06);
   box-shadow: inset 2px 0 0 var(--color-primary);
 }
 
@@ -133,7 +129,7 @@
   flex-direction: column;
 }
 
-.tactical-main {
+.workspace-main {
   background:
     linear-gradient(180deg, rgba(255, 138, 42, 0.02), transparent 14%),
     transparent;
@@ -162,7 +158,6 @@
 .header-title h1 {
   font-size: 1.42rem;
   line-height: 1.1;
-  text-transform: uppercase;
 }
 
 .header-subtitle {
@@ -206,14 +201,20 @@
 
 .page-heading h2 {
   margin-top: 6px;
-  font-size: 1.84rem;
-  line-height: 1.02;
-  text-transform: uppercase;
+  font-size: 1.72rem;
+  line-height: 1.08;
 }
 
 .content-grid {
   display: grid;
   gap: var(--space-grid);
+}
+
+.page-actions-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .split-grid {
@@ -223,29 +224,22 @@
   align-items: start;
 }
 
-.bench-grid {
+.dashboard-main-grid {
   display: grid;
-  grid-template-columns: 1.18fr 1fr 1fr;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.9fr);
   gap: var(--space-grid);
   align-items: start;
 }
 
-.bench-intake {
-  grid-row: span 2;
-}
-
-.bench-summary {
-  min-height: 100%;
+.dashboard-content-stack,
+.dashboard-side-stack {
+  display: grid;
+  gap: var(--space-grid);
 }
 
 @media (max-width: 1220px) {
-  .bench-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .bench-intake {
-    grid-column: 1 / -1;
-    grid-row: auto;
+  .dashboard-main-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -268,7 +262,7 @@
   }
 
   .split-grid,
-  .bench-grid {
+  .dashboard-main-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -307,6 +301,7 @@
 
   .header-actions .button,
   .header-actions .session-pill,
+  .page-actions-inline .button,
   .page-heading .button {
     width: 100%;
   }

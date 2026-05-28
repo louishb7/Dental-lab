@@ -20,9 +20,9 @@ export default function AuthPage({
         <div className="panel-body">
           <div className="auth-brand">
             <span className="brand-mark auth-mark">C</span>
-            <span className="page-kicker tactical-kicker">Acesso operacional</span>
+            <span className="page-kicker page-kicker-accent">Acesso</span>
             <h1>{PRODUCT_NAME}</h1>
-            <p className="muted">Entre para abrir a bancada e controlar casos, prazos e saídas.</p>
+            <p className="muted">Entre para acompanhar casos, prazos, serviços e entregas.</p>
           </div>
 
           <div className="segmented">

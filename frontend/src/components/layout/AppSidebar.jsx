@@ -9,9 +9,9 @@ import { PRODUCT_NAME } from "../../config/product.js";
 
 const NAV_ITEMS = [
   { id: "dashboard", label: "Bancada", icon: BarChart3 },
-  { id: "cases", label: "Fila", icon: ClipboardList },
+  { id: "cases", label: "Casos", icon: ClipboardList },
   { id: "doctors", label: "Dentistas", icon: Stethoscope },
-  { id: "services", label: "Itens", icon: Wrench },
+  { id: "services", label: "Serviços", icon: Wrench },
   { id: "finance", label: "Financeiro", icon: CreditCard },
 ];
 
@@ -19,10 +19,10 @@ export default function AppSidebar({ activePage, onNavigate }) {
   return (
     <aside className="app-sidebar">
       <div className="sidebar-brand">
-        <span className="brand-mark">OS</span>
+        <span className="brand-mark">C</span>
         <div className="brand-copy">
           <strong>{PRODUCT_NAME}</strong>
-          <span>Bancada operacional</span>
+          <span>Controle de casos</span>
         </div>
       </div>
 
@@ -51,7 +51,7 @@ export default function AppSidebar({ activePage, onNavigate }) {
       </nav>
 
       <div className="sidebar-footer">
-        <span>Modo bunker</span>
+        <span>Uso diário</span>
       </div>
     </aside>
   );

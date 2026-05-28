@@ -18,9 +18,9 @@ export default function AppHeader({
   return (
     <header className="app-header">
       <div className="header-title">
-        <span className="page-kicker tactical-kicker">Cadista OS</span>
+        <span className="page-kicker page-kicker-accent">Cadista</span>
         <h1>{title}</h1>
-        <p className="header-subtitle">Bancada operacional do laboratório.</p>
+        <p className="header-subtitle">Controle simples de casos, serviços, prazos e entregas.</p>
       </div>
       <div className="header-actions">
         <span className="session-pill">
@@ -35,11 +35,11 @@ export default function AppHeader({
           variant="ghost"
           size="sm"
           aria-label={theme === "dark" ? "Ativar tema claro" : "Ativar tema escuro"}
-          title={theme === "dark" ? "Tema claro" : "Tema tático"}
+          title={theme === "dark" ? "Tema claro" : "Tema escuro"}
           onClick={onToggleTheme}
         >
           {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-          {theme === "dark" ? "Claro" : "Tático"}
+          {theme === "dark" ? "Claro" : "Escuro"}
         </Button>
         <Button variant="ghost" size="sm" onClick={onRefresh}>
           <RefreshCw size={16} />

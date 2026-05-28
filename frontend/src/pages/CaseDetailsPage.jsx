@@ -87,7 +87,7 @@ export default function CaseDetailsPage({
   const columns = [
     {
       key: "service_type",
-      header: "Trabalho",
+      header: "Serviço",
       render: (item) => {
         const view = getItemView(item);
 
@@ -144,11 +144,11 @@ export default function CaseDetailsPage({
   return (
     <Modal
       title={`Caso #${caseItem.id}`}
-      description="Resumo do caso e itens de produção."
+      description="Resumo do caso e serviços vinculados."
       onClose={onClose}
     >
       <div className="content-grid">
-        <section className="form-section tactical-form-section">
+        <section className="form-section simple-form-section">
           <h3>Informações principais</h3>
           <div className="form-row">
             <div className="cell-main">
@@ -176,36 +176,36 @@ export default function CaseDetailsPage({
           {caseItem.notes && <p className="muted">{caseItem.notes}</p>}
         </section>
 
-        <section className="form-section tactical-form-section">
+        <section className="form-section simple-form-section">
           <div className="case-card-top">
             <div className="panel-title">
-              <h3>Itens do caso</h3>
-              <p>{items.length ? "Trabalhos já vinculados a este caso." : "Nenhum item lançado ainda."}</p>
+              <h3>Serviços deste caso</h3>
+              <p>{items.length ? "Serviços já vinculados a este caso." : "Nenhum serviço lançado ainda."}</p>
             </div>
             <Button variant="primary" size="sm" onClick={() => openItemForm()}>
               <Plus size={16} />
-              Novo item
+              Adicionar serviço
             </Button>
           </div>
           <DataTable
             columns={columns}
             data={items}
             emptyIcon={Layers3}
-            emptyTitle="Nenhum item lançado ainda."
-            emptyDescription="Abra o formulário e registre o primeiro trabalho deste caso."
+            emptyTitle="Nenhum serviço lançado ainda."
+            emptyDescription="Abra o formulário e registre o primeiro serviço deste caso."
           />
         </section>
 
         {showItemForm && (
           <form className="form-grid" onSubmit={handleSubmit}>
-            <div className="form-section tactical-form-section">
+            <div className="form-section simple-form-section">
               <div className="panel-title">
-                <h3>{editingItemId ? "Editar item" : "Novo item"}</h3>
-                <p>Use o mesmo padrão da bancada: nome, dentes, quantidade e observações.</p>
+                <h3>{editingItemId ? "Editar serviço" : "Adicionar serviço"}</h3>
+                <p>Informe dentes, quantidade ou observações do trabalho de forma simples.</p>
               </div>
 
               <div className="form-row">
-                <FormField label="Nome do trabalho">
+                <FormField label="Serviço">
                   <input
                     name="name"
                     value={itemForm.name}
@@ -255,7 +255,7 @@ export default function CaseDetailsPage({
                   rows="4"
                   value={itemForm.notes}
                   onChange={onItemChange}
-                  placeholder="Cor, encaixe, material, contato, acabamento..."
+                  placeholder="Use este campo para anotar a numeração dos dentes ou detalhes rápidos."
                 />
               </FormField>
 
@@ -265,7 +265,7 @@ export default function CaseDetailsPage({
                 </Button>
                 <Button variant="primary" disabled={busy} type="submit">
                   <Plus size={16} />
-                  {editingItemId ? "Salvar item" : "Adicionar item"}
+                  {editingItemId ? "Salvar serviço" : "Adicionar serviço"}
                 </Button>
               </div>
             </div>

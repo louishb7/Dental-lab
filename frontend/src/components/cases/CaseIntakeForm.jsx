@@ -18,10 +18,10 @@ export default function CaseIntakeForm({
 
   return (
     <form className={`form-grid case-intake-form ${layout}`} onSubmit={onSubmit}>
-      <div className="form-section tactical-form-section">
+      <div className="form-section simple-form-section">
         <div className="panel-title">
-          <h3>Entrada de caso</h3>
-          <p>Registre o essencial para colocar o trabalho em bancada sem ruído.</p>
+          <h3>Novo caso</h3>
+          <p>Preencha só o necessário para começar a organizar o trabalho.</p>
         </div>
         <div className="form-row">
           <FormField label="Dentista">
@@ -86,7 +86,7 @@ export default function CaseIntakeForm({
             rows="4"
             value={caseForm.notes}
             onChange={onCaseChange}
-            placeholder="Cor, material, encaixe, contato ou qualquer combinação operacional"
+            placeholder="Use para dentes, detalhes rápidos, observações ou combinações do caso"
           />
         </FormField>
       </div>
