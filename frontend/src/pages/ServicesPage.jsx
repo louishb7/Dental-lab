@@ -34,16 +34,14 @@ export default function ServicesPage({
       header: "Caso",
       render: (caseItem) => (
         <span className="cell-main">
-          <strong>
-            #{caseItem.id} · {caseItem.patient_ref}
-          </strong>
+          <strong>{caseItem.patient_ref}</strong>
           <small>{doctors.find((doctor) => doctor.id === caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`}</small>
         </span>
       ),
     },
     {
       key: "services",
-      header: "Itens",
+      header: "Serviços",
       render: (caseItem) => (
         <span className="cell-main">
           <strong>{getServiceCount(caseItem)} {getServiceCount(caseItem) === 1 ? "item" : "itens"}</strong>
@@ -73,7 +71,7 @@ export default function ServicesPage({
             onClick={() => onOpenCaseItems(caseItem.id)}
           >
             <Plus size={16} />
-            Adicionar item
+            Adicionar serviço
           </Button>
           <Button
             variant="secondary"
@@ -100,7 +98,7 @@ export default function ServicesPage({
           <div className="panel-header">
             <div className="panel-title">
               <h3>Selecionar caso</h3>
-              <p>Clique em “Adicionar item” para abrir o caso e lançar o serviço.</p>
+              <p>Clique em “Adicionar serviço” para abrir o caso e lançar o serviço.</p>
             </div>
           </div>
           <div className="panel-body">
@@ -125,9 +123,7 @@ export default function ServicesPage({
             </div>
             <div className="panel-body">
               <div className="case-service-hint">
-                <strong>
-                  #{selectedCase.id} · {selectedCase.patient_ref}
-                </strong>
+                <strong>{selectedCase.patient_ref}</strong>
                 <span>
                   {doctors.find((doctor) => doctor.id === selectedCase.doctor_id)?.name ||
                     `#${selectedCase.doctor_id}`}

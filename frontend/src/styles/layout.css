@@ -210,13 +210,6 @@
   gap: var(--space-grid);
 }
 
-.page-actions-inline {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
 .split-grid {
   display: grid;
   grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
@@ -226,12 +219,11 @@
 
 .dashboard-main-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.9fr);
+  grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.86fr);
   gap: var(--space-grid);
   align-items: start;
 }
 
-.dashboard-content-stack,
 .dashboard-side-stack {
   display: grid;
   gap: var(--space-grid);
@@ -301,7 +293,6 @@
 
   .header-actions .button,
   .header-actions .session-pill,
-  .page-actions-inline .button,
   .page-heading .button {
     width: 100%;
   }

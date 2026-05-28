@@ -375,6 +375,11 @@ export default function App() {
     setShowCaseModal(true);
   }
 
+  async function openCaseFromDashboard(caseId) {
+    setActivePage("cases");
+    await openCaseItems(caseId);
+  }
+
   async function commitCaseStatus(caseItem, nextStatus) {
     setBusy(true);
     setMessage(null);
@@ -534,7 +539,7 @@ export default function App() {
           doctors={doctors}
           loading={loading}
           onOpenNewCase={openNewCaseFromDashboard}
-          onOpenCasesPage={() => setActivePage("cases")}
+          onOpenCase={openCaseFromDashboard}
         />
       )}
 

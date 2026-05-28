@@ -141,9 +141,20 @@ export default function CaseDetailsPage({
     }
   }
 
+  const billingTitle = isFixedPrice ? "Valor fixo acertado" : "Cobrança unitária";
+  const billingDescription = isFixedPrice
+    ? "Use os serviços para registrar dentes, quantidade e observações. O total do caso permanece fixo."
+    : "Adicione vários serviços com seus respectivos dentes e valores para compor o total do caso.";
+  const servicesDescription = isFixedPrice
+    ? "Registre os serviços apenas para organizar dentes e observações deste caso."
+    : "Lance cada serviço com dente, quantidade e valor unitário.";
+  const emptyServicesDescription = isFixedPrice
+    ? "Abra o formulário e registre os serviços só para organizar o trabalho deste caso."
+    : "Abra o formulário e registre o primeiro serviço com valor unitário deste caso.";
+
   return (
     <Modal
-      title={`Caso #${caseItem.id}`}
+      title={caseItem.patient_ref || "Detalhes do caso"}
       description="Resumo do caso e serviços vinculados."
       onClose={onClose}
     >
@@ -171,28 +182,40 @@ export default function CaseDetailsPage({
           <div className="case-meta">
             <StatusBadge status={caseItem.status} />
             <PriorityBadge priority={caseItem.priority} />
-            <span>{caseItem.pricing_mode === "fixed" ? "Valor fechado" : "Soma por item"}</span>
+            <span>{billingTitle}</span>
           </div>
           {caseItem.notes && <p className="muted">{caseItem.notes}</p>}
+          <div className="case-billing-box">
+            <div className="case-billing-copy">
+              <small>Forma de cobrança</small>
+              <strong>{billingTitle}</strong>
+              <p>{billingDescription}</p>
+            </div>
+            {isFixedPrice && <strong className="case-billing-value">{formatCurrency(caseItem.total_value)}</strong>}
+          </div>
         </section>
 
         <section className="form-section simple-form-section">
           <div className="case-card-top">
             <div className="panel-title">
               <h3>Serviços deste caso</h3>
-              <p>{items.length ? "Serviços já vinculados a este caso." : "Nenhum serviço lançado ainda."}</p>
+              <p>{items.length ? servicesDescription : "Nenhum serviço lançado ainda."}</p>
             </div>
             <Button variant="primary" size="sm" onClick={() => openItemForm()}>
               <Plus size={16} />
               Adicionar serviço
             </Button>
           </div>
+          <div className="case-service-hint">
+            <strong>{billingTitle}</strong>
+            <span>{servicesDescription}</span>
+          </div>
           <DataTable
             columns={columns}
             data={items}
             emptyIcon={Layers3}
             emptyTitle="Nenhum serviço lançado ainda."
-            emptyDescription="Abra o formulário e registre o primeiro serviço deste caso."
+            emptyDescription={emptyServicesDescription}
           />
         </section>
 
@@ -201,7 +224,19 @@ export default function CaseDetailsPage({
             <div className="form-section simple-form-section">
               <div className="panel-title">
                 <h3>{editingItemId ? "Editar serviço" : "Adicionar serviço"}</h3>
-                <p>Informe dentes, quantidade ou observações do trabalho de forma simples.</p>
+                <p>
+                  {isFixedPrice
+                    ? "Informe dentes, quantidade e observações. O valor total continua sendo o combinado do caso."
+                    : "Informe o serviço, os dentes e o valor unitário de cada lançamento."}
+                </p>
+              </div>
+
+              <div className="case-billing-box compact">
+                <div className="case-billing-copy">
+                  <small>Forma de cobrança</small>
+                  <strong>{billingTitle}</strong>
+                  <p>{isFixedPrice ? "Sem detalhamento unitário obrigatório." : "Cada lançamento soma no valor final do caso."}</p>
+                </div>
               </div>
 
               <div className="form-row">
@@ -238,7 +273,7 @@ export default function CaseDetailsPage({
               </FormField>
 
               {!isFixedPrice && (
-                <FormField label="Valor por item">
+                <FormField label="Valor unitário">
                   <input
                     name="unit_value"
                     value={itemForm.unit_value}
@@ -255,7 +290,7 @@ export default function CaseDetailsPage({
                   rows="4"
                   value={itemForm.notes}
                   onChange={onItemChange}
-                  placeholder="Use este campo para anotar a numeração dos dentes ou detalhes rápidos."
+                  placeholder="Use este campo para anotar detalhes rápidos do trabalho."
                 />
               </FormField>
 

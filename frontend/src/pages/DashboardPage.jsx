@@ -1,20 +1,34 @@
+import { useMemo, useState } from "react";
 import {
   AlertTriangle,
-  ArrowRight,
   CalendarDays,
   CircleDollarSign,
   PackageCheck,
   Plus,
 } from "lucide-react";
+import DayBoard from "../components/dashboard/DayBoard.jsx";
+import WeekSchedule from "../components/dashboard/WeekSchedule.jsx";
 import PageContainer from "../components/layout/PageContainer.jsx";
 import Button from "../components/ui/Button.jsx";
 import DeadlineBadge from "../components/ui/DeadlineBadge.jsx";
 import EmptyState from "../components/ui/EmptyState.jsx";
 import LoadingState from "../components/ui/LoadingState.jsx";
-import PriorityBadge from "../components/ui/PriorityBadge.jsx";
 import StatCard from "../components/ui/StatCard.jsx";
-import StatusBadge from "../components/ui/StatusBadge.jsx";
-import { formatCurrency, getLocalDateKey } from "../utils/formatters.js";
+import {
+  formatCurrency,
+  getLocalDateKey,
+} from "../utils/formatters.js";
+import {
+  addDays,
+  formatDayMonth,
+  getStartOfWeek,
+  getWeekDays,
+  groupCasesByDate,
+  isOverdue,
+  isSameDate,
+  isToday,
+  isTomorrow,
+} from "../utils/productionWeek.js";
 
 function enrichCase(caseItem, doctorById) {
   return {
@@ -31,9 +45,33 @@ function sortByPriorityAndDeadline(a, b) {
   return String(a.deadline || "").localeCompare(String(b.deadline || ""));
 }
 
-function CaseLane({ title, description, cases, emptyTitle }) {
+function formatCaseCount(count) {
+  return `${count} ${count === 1 ? "caso" : "casos"}`;
+}
+
+function getDayBoardTitle(date) {
+  if (isToday(date)) return "Casos de hoje";
+  if (isTomorrow(date)) return "Casos de amanhã";
+  return `Casos de ${formatDayMonth(date)}`;
+}
+
+function getDayBoardDescription(date, count) {
+  if (isToday(date)) {
+    return count ? "Mostrando os casos com prazo para hoje." : "Nenhum caso com prazo para hoje.";
+  }
+
+  if (isTomorrow(date)) {
+    return count ? "Mostrando os casos que entram amanhã." : "Nenhum caso programado para amanhã.";
+  }
+
+  return count
+    ? `Mostrando os casos planejados para ${formatDayMonth(date)}.`
+    : `Nenhum caso planejado para ${formatDayMonth(date)}.`;
+}
+
+function AttentionPanel({ title, description, cases, emptyTitle, emptyIcon = PackageCheck, onOpenCase }) {
   return (
-    <section className="panel">
+    <section className="panel attention-panel">
       <div className="panel-header">
         <div className="panel-title">
           <h3>{title}</h3>
@@ -42,29 +80,29 @@ function CaseLane({ title, description, cases, emptyTitle }) {
       </div>
       <div className="panel-body">
         {cases.length ? (
-          <div className="case-list">
-            {cases.slice(0, 5).map((caseItem) => (
-              <article className="case-card" key={caseItem.id}>
-                <div className="case-card-top">
-                  <div className="cell-main">
-                    <strong>#{caseItem.id} · {caseItem.patient_ref}</strong>
-                    <small>{caseItem.doctor_name}</small>
-                  </div>
-                  <PriorityBadge priority={caseItem.priority} />
-                </div>
-                <div className="case-meta">
+          <div className="compact-case-list">
+            {cases.slice(0, 4).map((caseItem) => (
+              <button
+                key={caseItem.id}
+                className="compact-case-item"
+                type="button"
+                onClick={() => onOpenCase(caseItem.id)}
+              >
+                <span className="compact-case-main">
+                  <strong>{caseItem.patient_ref}</strong>
+                  <small>{caseItem.doctor_name}</small>
+                </span>
+                <span className="compact-case-side">
                   <DeadlineBadge deadline={caseItem.deadline} status={caseItem.status} />
-                  <StatusBadge status={caseItem.status} />
-                  <span>{formatCurrency(caseItem.total_value)}</span>
-                </div>
-              </article>
+                </span>
+              </button>
             ))}
           </div>
         ) : (
           <EmptyState
-            icon={PackageCheck}
+            icon={emptyIcon}
             title={emptyTitle}
-            description="Cadastre um caso ou siga para a lista completa."
+            description="Nada pendente neste bloco."
           />
         )}
       </div>
@@ -78,11 +116,15 @@ export default function DashboardPage({
   doctors = [],
   loading,
   onOpenNewCase,
-  onOpenCasesPage,
+  onOpenCase,
 }) {
+  const today = useMemo(() => new Date(), []);
+  const [weekStart, setWeekStart] = useState(() => getStartOfWeek(today));
+  const [selectedDate, setSelectedDate] = useState(() => today);
+
   if (loading) {
     return (
-      <PageContainer title="Bancada" description="Carregando visão geral dos casos.">
+      <PageContainer title="Bancada" description="Carregando visão semanal dos casos.">
         <section className="panel">
           <LoadingState message="Carregando bancada..." />
         </section>
@@ -91,78 +133,72 @@ export default function DashboardPage({
   }
 
   const doctorById = new Map(doctors.map((doctor) => [doctor.id, doctor]));
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(today.getDate() + 1);
-  const todayKey = getLocalDateKey(today);
-  const tomorrowKey = getLocalDateKey(tomorrow);
-
-  const openCases = cases
+  const activeCases = cases
     .filter((caseItem) => caseItem.status !== "delivered")
     .map((caseItem) => enrichCase(caseItem, doctorById));
-
-  const todayCases = openCases
-    .filter((caseItem) => caseItem.deadline && getLocalDateKey(caseItem.deadline) === todayKey)
-    .sort(sortByPriorityAndDeadline);
-
-  const overdueCases = openCases
-    .filter((caseItem) => {
-      if (!caseItem.deadline) return false;
-      return getLocalDateKey(caseItem.deadline) < todayKey;
-    })
-    .sort(sortByPriorityAndDeadline);
-
-  const readyCases = openCases
+  const groupedCases = groupCasesByDate(activeCases);
+  const overdueCases = activeCases.filter(isOverdue).sort(sortByPriorityAndDeadline);
+  const readyCases = activeCases
     .filter((caseItem) => caseItem.status === "completed")
     .sort(sortByPriorityAndDeadline);
-
-  const tomorrowCases = openCases
-    .filter((caseItem) => caseItem.deadline && getLocalDateKey(caseItem.deadline) === tomorrowKey)
+  const pendingCases = activeCases
+    .filter((caseItem) => caseItem.status === "pending")
     .sort(sortByPriorityAndDeadline);
+  const todayCases = activeCases
+    .filter((caseItem) => isSameDate(caseItem.deadline, today))
+    .sort(sortByPriorityAndDeadline);
+  const weekDays = getWeekDays(weekStart);
+  const selectedDayKey = getLocalDateKey(selectedDate);
+  const selectedDayCases = [...(groupedCases.get(selectedDayKey) || [])].sort(sortByPriorityAndDeadline);
+
+  function shiftWeek(amount) {
+    const currentWeekDays = getWeekDays(weekStart);
+    const selectedIndex = currentWeekDays.findIndex((day) => isSameDate(day, selectedDate));
+    const nextWeekStart = addDays(weekStart, amount * 7);
+    const nextWeekDays = getWeekDays(nextWeekStart);
+    const nextSelectedIndex = selectedIndex >= 0 ? selectedIndex : 0;
+
+    setWeekStart(nextWeekStart);
+    setSelectedDate(nextWeekDays[nextSelectedIndex] || nextWeekStart);
+  }
 
   return (
     <PageContainer
       kicker="Bancada"
       title="Bancada"
-      description="Veja rapidamente o que precisa ser feito, o que está atrasado e o que já está pronto."
+      description="Organize seus casos da semana e acompanhe o que precisa de atenção."
       action={
-        <div className="page-actions-inline">
-          <Button variant="primary" onClick={onOpenNewCase}>
-            <Plus size={16} />
-            Novo caso
-          </Button>
-          <Button variant="secondary" onClick={onOpenCasesPage}>
-            Ver casos
-            <ArrowRight size={16} />
-          </Button>
-        </div>
+        <Button variant="primary" onClick={onOpenNewCase}>
+          <Plus size={16} />
+          Novo caso
+        </Button>
       }
     >
-      <div className="content-grid">
+      <div className="content-grid dashboard-surface">
         <div className="stat-grid compact">
           <StatCard
-            title="Casos de hoje"
+            title="Hoje"
             value={todayCases.length}
-            description="Prazos para hoje"
+            description={formatCaseCount(todayCases.length)}
             icon={CalendarDays}
             tone="warning"
           />
           <StatCard
-            title="Atrasados"
-            value={overdueCases.length}
-            description="Casos fora do prazo"
+            title="Pendentes"
+            value={pendingCases.length}
+            description="Casos ainda em produção"
             icon={AlertTriangle}
-            tone="danger"
+            tone="warning"
           />
           <StatCard
-            title="Prontos"
+            title="Prontos para entrega"
             value={readyCases.length}
-            description="Aguardando entrega"
+            description="Casos concluídos"
             icon={PackageCheck}
             tone="success"
           />
           <StatCard
-            title="Valor entregue no mês"
+            title="Entregue no mês"
             value={formatCurrency(dashboard?.delivered_total_month)}
             description={`${dashboard?.delivered_count_month ?? 0} casos entregues`}
             icon={CircleDollarSign}
@@ -170,55 +206,42 @@ export default function DashboardPage({
           />
         </div>
 
+        <WeekSchedule
+          groupedCases={groupedCases}
+          selectedDate={selectedDate}
+          weekDays={weekDays}
+          weekStart={weekStart}
+          onPreviousWeek={() => shiftWeek(-1)}
+          onNextWeek={() => shiftWeek(1)}
+          onSelectDate={setSelectedDate}
+        />
+
         <div className="dashboard-main-grid">
-          <div className="dashboard-content-stack">
-            <CaseLane
-              title="Casos de hoje"
-              description="O que merece atenção imediata na bancada."
-              cases={todayCases}
-              emptyTitle="Nenhum caso para hoje."
-            />
+          <DayBoard
+            title={getDayBoardTitle(selectedDate)}
+            description={getDayBoardDescription(selectedDate, selectedDayCases.length)}
+            cases={selectedDayCases}
+            onOpenCase={onOpenCase}
+          />
 
-            <CaseLane
-              title="Atrasados"
-              description="Casos vencidos que ainda precisam ser finalizados."
-              cases={overdueCases}
-              emptyTitle="Nenhum caso atrasado."
-            />
-          </div>
-
-          <div className="dashboard-side-stack">
-            <CaseLane
-              title="Prontos para entrega"
-              description="Casos concluídos aguardando saída."
-              cases={readyCases}
-              emptyTitle="Nenhum caso pronto agora."
-            />
-
-            <section className="panel">
-              <div className="panel-header">
-                <div className="panel-title">
-                  <h3>Resumo rápido</h3>
-                  <p>Uma visão simples para acompanhar produção e próxima carga.</p>
-                </div>
-              </div>
-              <div className="panel-body simple-summary-list">
-                <div className="simple-summary-row">
-                  <span>Amanhã</span>
-                  <strong>{tomorrowCases.length} casos</strong>
-                </div>
-                <div className="simple-summary-row">
-                  <span>Em aberto</span>
-                  <strong>{openCases.length} casos</strong>
-                </div>
-                <div className="simple-summary-row">
-                  <span>Entregue no mês</span>
-                  <strong>{formatCurrency(dashboard?.delivered_total_month)}</strong>
-                </div>
-              </div>
-            </section>
-          </div>
+          <AttentionPanel
+            title="Prontos para entrega"
+            description="Casos concluídos aguardando saída."
+            cases={readyCases}
+            emptyTitle="Nenhum caso pronto."
+            emptyIcon={PackageCheck}
+            onOpenCase={onOpenCase}
+          />
         </div>
+
+        <AttentionPanel
+          title="Atrasados"
+          description="Casos fora do prazo e ainda não entregues."
+          cases={overdueCases}
+          emptyTitle="Nenhum caso atrasado."
+          emptyIcon={AlertTriangle}
+          onOpenCase={onOpenCase}
+        />
       </div>
     </PageContainer>
   );

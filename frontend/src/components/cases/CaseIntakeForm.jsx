@@ -16,6 +16,10 @@ export default function CaseIntakeForm({
 }) {
   const SubmitIcon = submitIcon;
 
+  function selectPricingMode(mode) {
+    onCaseChange({ target: { name: "pricing_mode", value: mode } });
+  }
+
   return (
     <form className={`form-grid case-intake-form ${layout}`} onSubmit={onSubmit}>
       <div className="form-section simple-form-section">
@@ -60,16 +64,33 @@ export default function CaseIntakeForm({
               <option value="urgent">Urgente</option>
             </select>
           </FormField>
-          <FormField label="Cobrança">
-            <select name="pricing_mode" value={caseForm.pricing_mode} onChange={onCaseChange}>
-              <option value="services">Somar itens</option>
-              <option value="fixed">Valor fechado</option>
-            </select>
-          </FormField>
+          <div className="form-field">
+            <span>Forma de cobrança</span>
+            <div className="pricing-mode-grid" role="radiogroup" aria-label="Forma de cobrança">
+              <button
+                type="button"
+                className={`choice-card ${caseForm.pricing_mode === "fixed" ? "active" : ""}`}
+                aria-pressed={caseForm.pricing_mode === "fixed"}
+                onClick={() => selectPricingMode("fixed")}
+              >
+                <strong>Valor fixo acertado</strong>
+                <small>Informe o valor total combinado do caso.</small>
+              </button>
+              <button
+                type="button"
+                className={`choice-card ${caseForm.pricing_mode === "services" ? "active" : ""}`}
+                aria-pressed={caseForm.pricing_mode === "services"}
+                onClick={() => selectPricingMode("services")}
+              >
+                <strong>Cobrança unitária</strong>
+                <small>Some os serviços e valores por dente ou item.</small>
+              </button>
+            </div>
+          </div>
         </div>
 
         {caseForm.pricing_mode === "fixed" && (
-          <FormField label="Valor do caso">
+          <FormField label="Valor total acordado">
             <input
               name="total_value"
               value={caseForm.total_value}
@@ -89,6 +110,11 @@ export default function CaseIntakeForm({
             placeholder="Use para dentes, detalhes rápidos, observações ou combinações do caso"
           />
         </FormField>
+        <p className="case-pricing-note">
+          {caseForm.pricing_mode === "fixed"
+            ? "No valor fixo, os serviços servem para registrar dentes e observações do trabalho."
+            : "Na cobrança unitária, cada serviço pode ter seu próprio valor e numeração dos dentes."}
+        </p>
       </div>
 
       <div className="form-actions-row">

@@ -44,16 +44,14 @@ export default function FinancePage({ dashboard, cases, loading }) {
       header: "Caso",
       render: (caseItem) => (
         <span className="cell-main">
-          <strong>
-            #{caseItem.id} · {caseItem.patient_ref}
-          </strong>
+          <strong>{caseItem.patient_ref}</strong>
           <small>{caseItem.doctor_name}</small>
         </span>
       ),
     },
     {
       key: "services",
-      header: "Itens",
+      header: "Serviços",
       render: (caseItem) => `${getServiceCount(caseItem)} ${getServiceCount(caseItem) === 1 ? "item" : "itens"}`,
     },
     { key: "total_value", header: "Valor", render: (caseItem) => formatCurrency(caseItem.total_value) },

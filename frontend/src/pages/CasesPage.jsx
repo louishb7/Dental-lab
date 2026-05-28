@@ -141,14 +141,14 @@ export default function CasesPage({
       header: "Caso / Referência",
       render: (caseItem) => (
         <span className="cell-main">
-          <strong>#{caseItem.id} · {caseItem.patient_ref}</strong>
+          <strong>{caseItem.patient_ref}</strong>
           <small>{doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`}</small>
         </span>
       ),
     },
     {
       key: "services",
-      header: "Itens",
+      header: "Serviços",
       render: (caseItem) => {
         const serviceCount = getServiceCount(caseItem);
         return (
@@ -161,7 +161,7 @@ export default function CasesPage({
               onClick={() => onOpenCaseItems(caseItem.id)}
             >
               <Plus size={14} />
-              Adicionar item
+              Adicionar serviço
             </Button>
           </span>
         );
@@ -229,14 +229,14 @@ export default function CasesPage({
       header: "Caso / Referência",
       render: (caseItem) => (
         <span className="cell-main">
-          <strong>#{caseItem.id} · {caseItem.patient_ref}</strong>
+          <strong>{caseItem.patient_ref}</strong>
           <small>{doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`}</small>
         </span>
       ),
     },
     {
       key: "services",
-      header: "Itens",
+      header: "Serviços",
       render: (caseItem) => (
         <span className="cell-main">
           <strong>{formatCaseCount(getServiceCount(caseItem), "item", "itens")}</strong>
@@ -413,9 +413,7 @@ export default function CasesPage({
                       onChange={() => toggleDeliverySelection(caseItem.id)}
                     />
                     <span className="deliver-choice-copy">
-                      <strong>
-                        #{caseItem.id} · {caseItem.patient_ref}
-                      </strong>
+                      <strong>{caseItem.patient_ref}</strong>
                       <small>
                         {doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`} ·{" "}
                         {formatCaseCount(getServiceCount(caseItem), "serviço", "serviços")}
