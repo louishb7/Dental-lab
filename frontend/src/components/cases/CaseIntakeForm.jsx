@@ -1,6 +1,13 @@
 import { FilePlus2 } from "lucide-react";
+import OdontogramSelector from "./OdontogramSelector.jsx";
 import Button from "../ui/Button.jsx";
 import FormField from "../ui/FormField.jsx";
+import {
+  formatCurrency,
+  formatCurrencyInput,
+  parseCurrencyToNumber,
+} from "../../utils/formatters.js";
+import { sortTeethByFdi } from "../../utils/odontogram.js";
 
 export default function CaseIntakeForm({
   doctors,
@@ -15,9 +22,39 @@ export default function CaseIntakeForm({
   layout = "stacked",
 }) {
   const SubmitIcon = submitIcon;
+  const selectedTeeth = sortTeethByFdi(caseForm.selected_teeth);
+  const unitValues = caseForm.unit_values || {};
+  const selectedTeethSummary = selectedTeeth.length
+    ? `Dentes selecionados: ${selectedTeeth.join(", ")}`
+    : "Nenhum dente selecionado.";
+  const unitTotal = selectedTeeth.reduce(
+    (sum, tooth) => sum + (parseCurrencyToNumber(unitValues[tooth]) || 0),
+    0,
+  );
 
   function selectPricingMode(mode) {
     onCaseChange({ target: { name: "pricing_mode", value: mode } });
+  }
+
+  function syncCaseField(name, value) {
+    onCaseChange({ target: { name, value } });
+  }
+
+  function handleTeethChange(nextTeeth) {
+    const nextUnitValues = nextTeeth.reduce((accumulator, tooth) => {
+      accumulator[tooth] = unitValues[tooth] || "";
+      return accumulator;
+    }, {});
+
+    syncCaseField("selected_teeth", nextTeeth);
+    syncCaseField("unit_values", nextUnitValues);
+  }
+
+  function handleUnitValueChange(tooth, value) {
+    syncCaseField("unit_values", {
+      ...unitValues,
+      [tooth]: formatCurrencyInput(value),
+    });
   }
 
   return (
@@ -25,7 +62,7 @@ export default function CaseIntakeForm({
       <div className="form-section simple-form-section">
         <div className="panel-title">
           <h3>Novo caso</h3>
-          <p>Preencha só o necessário para começar a organizar o trabalho.</p>
+          <p>Dados essenciais para abrir o trabalho.</p>
         </div>
         <div className="form-row">
           <FormField label="Dentista">
@@ -89,17 +126,60 @@ export default function CaseIntakeForm({
           </div>
         </div>
 
-        {caseForm.pricing_mode === "fixed" && (
-          <FormField label="Valor total acordado">
+        <div className="form-row">
+          <FormField label="Serviço principal">
             <input
-              name="total_value"
-              value={caseForm.total_value}
+              name="service_name"
+              value={caseForm.service_name}
               onChange={onCaseChange}
-              placeholder="R$ 0,00"
-              required
+              placeholder="Coroa, faceta, provisório, placa..."
             />
           </FormField>
-        )}
+          {caseForm.pricing_mode === "fixed" ? (
+            <FormField label="Valor total acordado">
+              <input
+                name="total_value"
+                value={caseForm.total_value}
+                onChange={onCaseChange}
+                placeholder="R$ 0,00"
+                required
+              />
+            </FormField>
+          ) : (
+            <div className="case-pricing-total" aria-live="polite">
+              <small>Total visual</small>
+              <strong>{formatCurrency(unitTotal)}</strong>
+              <span>Somado a partir dos dentes selecionados.</span>
+            </div>
+          )}
+        </div>
+
+        <div className="case-teeth-section">
+          <div className="case-teeth-header">
+            <div>
+              <h4>Dentes do caso</h4>
+            </div>
+            <span className="case-teeth-summary">{selectedTeethSummary}</span>
+          </div>
+
+          <OdontogramSelector selectedTeeth={selectedTeeth} onChange={handleTeethChange} />
+
+          {caseForm.pricing_mode === "services" && selectedTeeth.length > 0 && (
+            <div className="tooth-pricing-list">
+              {selectedTeeth.map((tooth) => (
+                <label key={tooth} className="tooth-pricing-item">
+                  <span>Dente {tooth}</span>
+                  <input
+                    value={unitValues[tooth] || ""}
+                    onChange={(event) => handleUnitValueChange(tooth, event.target.value)}
+                    placeholder="R$ 0,00"
+                    required
+                  />
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
 
         <FormField label="Observações">
           <textarea
@@ -112,8 +192,10 @@ export default function CaseIntakeForm({
         </FormField>
         <p className="case-pricing-note">
           {caseForm.pricing_mode === "fixed"
-            ? "No valor fixo, os serviços servem para registrar dentes e observações do trabalho."
-            : "Na cobrança unitária, cada serviço pode ter seu próprio valor e numeração dos dentes."}
+            ? "No valor fixo, os dentes selecionados ficam registrados como referência operacional do caso."
+            : selectedTeeth.length
+              ? "Na cobrança unitária, cada dente selecionado gera um item automático com o valor informado."
+              : "Na cobrança unitária, selecione dentes para gerar as unidades automaticamente ou complemente depois."}
         </p>
       </div>
 

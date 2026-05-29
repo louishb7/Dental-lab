@@ -12,7 +12,7 @@ body {
   min-height: 100vh;
   color: var(--color-text);
   background:
-    linear-gradient(140deg, rgba(0, 0, 0, 0.72), rgba(18, 14, 10, 0.82)),
+    var(--color-body-gradient),
     radial-gradient(circle at top, rgba(255, 138, 42, 0.12), transparent 28%),
     var(--color-bg);
   font-family: "IBM Plex Sans", "Aptos", "Segoe UI", sans-serif;
@@ -26,10 +26,10 @@ body::before {
   inset: 0;
   z-index: -2;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 88px),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 88px),
+    linear-gradient(90deg, var(--color-body-grid-x) 0 1px, transparent 1px 88px),
+    linear-gradient(180deg, var(--color-body-grid-y) 0 1px, transparent 1px 88px),
     radial-gradient(circle at top, rgba(255, 138, 42, 0.14), transparent 34%);
-  opacity: 0.58;
+  opacity: 0.5;
   pointer-events: none;
 }
 
@@ -40,7 +40,7 @@ body::after {
   z-index: -1;
   background:
     radial-gradient(circle at 50% 0%, rgba(255, 138, 42, 0.06), transparent 18%),
-    linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.34));
+    var(--color-body-depth);
   pointer-events: none;
 }
 

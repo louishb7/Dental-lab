@@ -33,8 +33,8 @@ function DayCard({ day, cases, selected, onSelect }) {
         <span className="week-day-label">{formatWeekdayLabel(day)}</span>
         {isCurrentDay && <span className="week-day-marker">Hoje</span>}
       </div>
-      <strong>{summary}</strong>
-      <small>{urgentCount > 0 ? `${urgentCount} urg.` : " "}</small>
+      <strong className="week-day-summary">{summary}</strong>
+      <small className="week-day-urgent">{urgentCount > 0 ? `${urgentCount} urg.` : " "}</small>
     </button>
   );
 }

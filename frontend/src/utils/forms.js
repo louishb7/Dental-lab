@@ -6,6 +6,9 @@ export const EMPTY_REGISTER = { email: "", username: "", password: "" };
 export const EMPTY_CASE = {
   patient_ref: "",
   pricing_mode: "services",
+  service_name: "",
+  selected_teeth: [],
+  unit_values: {},
   total_value: "",
   deadline: "",
   priority: "normal",
@@ -49,6 +52,15 @@ export function buildDoctorPayload(form) {
 }
 
 export function buildCasePayload(doctorId, form, advanced) {
+  const trimmedNotes = form.notes.trim();
+  const operationalNotes = [
+    form.service_name?.trim() ? `Servico principal: ${form.service_name.trim()}` : null,
+    Array.isArray(form.selected_teeth) && form.selected_teeth.length
+      ? `Dentes selecionados: ${form.selected_teeth.join(", ")}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
   const payload = {
     doctor_id: doctorId,
     patient_ref: form.patient_ref.trim(),
@@ -61,7 +73,7 @@ export function buildCasePayload(doctorId, form, advanced) {
 
   payload.deadline = toIsoDate(form.deadline);
   payload.priority = form.priority;
-  payload.notes = form.notes.trim() || null;
+  payload.notes = [trimmedNotes || null, operationalNotes || null].filter(Boolean).join("\n\n") || null;
 
   return payload;
 }
@@ -111,4 +123,19 @@ export function buildItemPayload(form, advanced, pricingMode = "services") {
   };
 
   return payload;
+}
+
+export function buildAutomaticCaseItems(form) {
+  const selectedTeeth = Array.isArray(form.selected_teeth) ? form.selected_teeth : [];
+  const unitValues = form.unit_values || {};
+  const serviceName = form.service_name?.trim() || "Servico do caso";
+
+  return selectedTeeth.map((tooth) => ({
+    tooth,
+    service_type: serviceName,
+    unit_value: parseCurrencyToApiValue(unitValues[tooth]),
+    material: null,
+    color: null,
+    notes: null,
+  }));
 }

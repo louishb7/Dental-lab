@@ -379,8 +379,9 @@ export default function CasesPage({
       {showCaseModal && (
         <Modal
           title="Novo caso"
-          description="Cadastre o caso do jeito que a bancada usa no dia a dia."
+          description="Ficha rápida de entrada."
           onClose={() => setShowCaseModal(false)}
+          className="case-modal-panel"
         >
           <CaseIntakeForm
             doctors={doctors}
@@ -392,6 +393,7 @@ export default function CasesPage({
             onDoctorChange={setSelectedDoctorId}
             onCaseChange={onCaseChange}
             onSubmit={onCaseSubmit}
+            layout="compact"
           />
         </Modal>
       )}

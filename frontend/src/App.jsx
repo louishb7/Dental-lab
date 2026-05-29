@@ -29,6 +29,7 @@ import {
   updateDoctor,
 } from "./services/api.js";
 import {
+  buildAutomaticCaseItems,
   buildCasePayload,
   buildDoctorPayload,
   buildItemPayload,
@@ -268,15 +269,50 @@ export default function App() {
     event.preventDefault();
     if (!selectedDoctorId) return;
 
+    const hasSelectedTeeth = Array.isArray(caseForm.selected_teeth) && caseForm.selected_teeth.length > 0;
+    const automaticItems = caseForm.pricing_mode === "services" ? buildAutomaticCaseItems(caseForm) : [];
+
+    if (caseForm.pricing_mode === "services" && hasSelectedTeeth && !caseForm.service_name.trim()) {
+      setMessage({ type: "error", text: "Informe o serviço principal para gerar os itens por dente." });
+      return;
+    }
+
+    if (automaticItems.some((item) => item.unit_value === null)) {
+      setMessage({ type: "error", text: "Preencha o valor de cada dente selecionado antes de criar o caso." });
+      return;
+    }
+
     setBusy(true);
     setMessage(null);
     try {
-      await createCase(buildCasePayload(selectedDoctorId, caseForm, true));
+      const createdCase = await createCase(buildCasePayload(selectedDoctorId, caseForm, true));
+
+      if (automaticItems.length) {
+        try {
+          await Promise.all(automaticItems.map((item) => createCaseItem(createdCase.id, item)));
+        } catch (error) {
+          const refreshed = await loadAppData();
+          if (!refreshed) return;
+          setCaseForm(EMPTY_CASE);
+          setShowCaseModal(false);
+          setMessage({
+            type: "error",
+            text: `Caso criado, mas houve falha ao lançar os dentes automaticamente: ${error.message}`,
+          });
+          return;
+        }
+      }
+
       const refreshed = await loadAppData();
       if (!refreshed) return;
       setCaseForm(EMPTY_CASE);
       setShowCaseModal(false);
-      setMessage({ type: "success", text: "Caso criado." });
+      setMessage({
+        type: "success",
+        text: automaticItems.length
+          ? `Caso criado com ${automaticItems.length} ${automaticItems.length === 1 ? "unidade" : "unidades"} automáticas.`
+          : "Caso criado.",
+      });
     } catch (error) {
       setMessage({ type: "error", text: error.message });
     } finally {
