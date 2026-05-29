@@ -5,6 +5,7 @@ import {
   CircleDollarSign,
   PackageCheck,
   Plus,
+  Trash2,
 } from "lucide-react";
 import DayBoard from "../components/dashboard/DayBoard.jsx";
 import WeekSchedule from "../components/dashboard/WeekSchedule.jsx";
@@ -76,7 +77,10 @@ function AttentionPanel({
   emptyTitle,
   emptyIcon = PackageCheck,
   onOpenCase,
+  onDeliverCase,
+  onRemoveCase,
   className = "",
+  showActions = false,
 }) {
   return (
     <section className={`panel attention-panel ${className}`.trim()}>
@@ -90,20 +94,37 @@ function AttentionPanel({
         {cases.length ? (
           <div className="compact-case-list">
             {cases.slice(0, 3).map((caseItem) => (
-              <button
-                key={caseItem.id}
-                className="compact-case-item"
-                type="button"
-                onClick={() => onOpenCase(caseItem.id)}
-              >
-                <span className="compact-case-main">
-                  <strong>{caseItem.patient_ref}</strong>
-                  <small>{caseItem.doctor_name}</small>
-                </span>
-                <span className="compact-case-side">
-                  <DeadlineBadge deadline={caseItem.deadline} status={caseItem.status} />
-                </span>
-              </button>
+              <article key={caseItem.id} className="compact-case-item">
+                <button className="compact-case-open" type="button" onClick={() => onOpenCase(caseItem.id)}>
+                  <span className="compact-case-main">
+                    <strong>{caseItem.patient_ref}</strong>
+                    <small>{caseItem.doctor_name}</small>
+                  </span>
+                  <span className="compact-case-side">
+                    <DeadlineBadge deadline={caseItem.deadline} status={caseItem.status} />
+                  </span>
+                </button>
+                {showActions && (
+                  <span className="compact-case-actions">
+                    <Button
+                      variant="success"
+                      size="sm"
+                      onClick={() => onDeliverCase(caseItem.id)}
+                    >
+                      <PackageCheck size={14} />
+                      Entregue
+                    </Button>
+                    <Button
+                      variant="danger"
+                      iconOnly
+                      aria-label="Excluir caso"
+                      onClick={() => onRemoveCase(caseItem.id)}
+                    >
+                      <Trash2 size={14} />
+                    </Button>
+                  </span>
+                )}
+              </article>
             ))}
           </div>
         ) : (
@@ -125,6 +146,8 @@ export default function DashboardPage({
   loading,
   onOpenNewCase,
   onOpenCase,
+  onDeliverCases,
+  onRemoveCase,
 }) {
   const today = useMemo(() => new Date(), []);
   const [weekStart, setWeekStart] = useState(() => getStartOfWeek(today));
@@ -243,15 +266,20 @@ export default function DashboardPage({
           />
         </div>
 
-        <AttentionPanel
-          title="Atrasados"
-          description="Casos fora do prazo."
-          cases={overdueCases}
-          emptyTitle="Nenhum caso atrasado."
-          emptyIcon={AlertTriangle}
-          onOpenCase={onOpenCase}
-          className="attention-panel-secondary"
-        />
+        {overdueCases.length > 0 && (
+          <AttentionPanel
+            title="Atrasados"
+            description="Casos fora do prazo."
+            cases={overdueCases}
+            emptyTitle="Nenhum caso atrasado."
+            emptyIcon={AlertTriangle}
+            onOpenCase={onOpenCase}
+            onDeliverCase={(caseId) => onDeliverCases([caseId])}
+            onRemoveCase={onRemoveCase}
+            showActions
+            className="attention-panel-secondary"
+          />
+        )}
       </div>
     </PageContainer>
   );

@@ -9,7 +9,7 @@ import DataTable from "../components/ui/DataTable.jsx";
 import EmptyState from "../components/ui/EmptyState.jsx";
 import LoadingState from "../components/ui/LoadingState.jsx";
 import StatCard from "../components/ui/StatCard.jsx";
-import { formatCurrency, formatDate } from "../utils/formatters.js";
+import { formatCurrency, formatDate, parseCurrencyToNumber } from "../utils/formatters.js";
 
 function getServiceCount(caseItem) {
   return caseItem.items_count ?? caseItem.items?.length ?? 0;
@@ -20,7 +20,7 @@ export default function FinancePage({ dashboard, cases, loading }) {
     return <LoadingState message="Carregando financeiro..." />;
   }
 
-  const totalMes = Number(dashboard?.delivered_total_month ?? 0);
+  const totalMes = parseCurrencyToNumber(dashboard?.delivered_total_month) ?? 0;
   const countMes = dashboard?.delivered_count_month ?? 0;
   const deliveredCases = dashboard?.delivered_cases_month ?? [];
   const topDoctorsMap = {};
@@ -28,7 +28,7 @@ export default function FinancePage({ dashboard, cases, loading }) {
   deliveredCases.forEach((caseItem) => {
     const key = caseItem.doctor_name;
     if (!topDoctorsMap[key]) topDoctorsMap[key] = { name: key, total: 0, count: 0 };
-    topDoctorsMap[key].total += Number(caseItem.total_value ?? 0);
+    topDoctorsMap[key].total += parseCurrencyToNumber(caseItem.total_value) ?? 0;
     topDoctorsMap[key].count += 1;
   });
 

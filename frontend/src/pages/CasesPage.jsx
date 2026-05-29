@@ -258,14 +258,19 @@ export default function CasesPage({
       key: "actions",
       header: "Ações",
       render: (caseItem) => (
-        <Button
-          variant="secondary"
-          iconOnly
-          aria-label="Abrir detalhes"
-          onClick={() => onOpenCaseItems(caseItem.id)}
-        >
-          <Eye size={16} />
-        </Button>
+        <div className="row-actions">
+          <Button
+            variant="secondary"
+            iconOnly
+            aria-label="Abrir detalhes"
+            onClick={() => onOpenCaseItems(caseItem.id)}
+          >
+            <Eye size={16} />
+          </Button>
+          <Button variant="danger" iconOnly aria-label="Excluir caso" onClick={() => onRemoveCase(caseItem.id)}>
+            <Trash2 size={16} />
+          </Button>
+        </div>
       ),
     },
   ];

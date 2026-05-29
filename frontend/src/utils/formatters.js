@@ -1,5 +1,36 @@
+function parseCurrencyString(value) {
+  const normalized = value
+    .replace(/[^\d,.-]/g, "")
+    .trim();
+
+  if (!normalized) return null;
+
+  const hasComma = normalized.includes(",");
+  const hasDot = normalized.includes(".");
+
+  if (hasComma) {
+    const amount = Number(normalized.replace(/\./g, "").replace(",", "."));
+    return Number.isFinite(amount) ? amount : null;
+  }
+
+  if (hasDot) {
+    const parts = normalized.split(".");
+    const lastPart = parts[parts.length - 1];
+    const decimalLike = parts.length === 2 && lastPart.length <= 2;
+    const amount = decimalLike
+      ? Number(normalized)
+      : Number(normalized.replace(/\./g, ""));
+    return Number.isFinite(amount) ? amount : null;
+  }
+
+  const amount = Number(normalized);
+  return Number.isFinite(amount) ? amount : null;
+}
+
 export function formatCurrency(value) {
-  const amount = Number(value ?? 0);
+  const amount = typeof value === "number"
+    ? value
+    : parseCurrencyString(String(value ?? ""));
 
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -16,15 +47,16 @@ export function formatCurrencyInput(value) {
 }
 
 export function parseCurrencyToNumber(value) {
-  const digits = String(value ?? "").replace(/\D/g, "");
-  if (!digits) return null;
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
 
-  return Number(digits) / 100;
+  return parseCurrencyString(String(value ?? ""));
 }
 
 export function parseCurrencyToApiValue(value) {
   const amount = parseCurrencyToNumber(value);
-  return amount === null ? null : amount.toFixed(2);
+  return amount === null ? null : Number(amount.toFixed(2));
 }
 
 export function formatDate(value) {

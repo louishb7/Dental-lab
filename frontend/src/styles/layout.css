@@ -188,15 +188,19 @@
 .page-container {
   width: 100%;
   max-width: 1560px;
-  padding: var(--space-page-y) var(--space-page-x) 32px;
+  padding: 14px var(--space-page-x) 28px;
 }
 
 .page-heading {
   display: flex;
   align-items: flex-end;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 16px;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
+}
+
+.page-heading-actions-only {
+  min-height: 40px;
 }
 
 .page-heading h2 {

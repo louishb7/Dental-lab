@@ -306,8 +306,9 @@ def test_case_delete_rules_and_soft_delete() -> None:
             ),
         )
 
-        with pytest.raises(ValueError, match="pending com valor registrado"):
-            case_service.delete_case(db, valued_case.id)
+        deleted_valued = case_service.delete_case(db, valued_case.id)
+        assert deleted_valued.deleted_at is not None
+        assert case_service.get_case_by_id(db, valued_case.id) is None
 
         delivered_case = case_service.create_case(
             db,

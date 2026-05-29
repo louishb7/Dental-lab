@@ -576,6 +576,8 @@ export default function App() {
           loading={loading}
           onOpenNewCase={openNewCaseFromDashboard}
           onOpenCase={openCaseFromDashboard}
+          onDeliverCases={handleBulkDeliverCases}
+          onRemoveCase={removeCase}
         />
       )}
 

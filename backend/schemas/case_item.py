@@ -10,6 +10,33 @@ from decimal import Decimal, InvalidOperation
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
+def normalize_decimal_value(value, error_message: str):
+    if value is None or value == "":
+        return None
+
+    if isinstance(value, Decimal):
+        return value
+
+    if isinstance(value, (int, float)):
+        return Decimal(str(value))
+
+    if isinstance(value, str):
+        normalized = value.strip()
+        if not normalized:
+            return None
+
+        normalized = normalized.replace("R$", "").replace(" ", "")
+        if "," in normalized:
+            normalized = normalized.replace(".", "").replace(",", ".")
+
+        try:
+            return Decimal(normalized)
+        except InvalidOperation as exc:
+            raise ValueError(error_message) from exc
+
+    return value
+
+
 class CaseItemBase(BaseModel):
     """Campos compartilhados entre criação, atualização e resposta."""
 
@@ -51,27 +78,7 @@ class CaseItemBase(BaseModel):
     @field_validator("unit_value", mode="before")
     @classmethod
     def normalize_unit_value(cls, value):
-        if value is None or value == "":
-            return None
-
-        if isinstance(value, Decimal):
-            return value
-
-        if isinstance(value, (int, float)):
-            return Decimal(str(value))
-
-        if isinstance(value, str):
-            normalized = value.strip()
-            if not normalized:
-                return None
-
-            normalized = normalized.replace(".", "").replace(",", ".")
-            try:
-                return Decimal(normalized)
-            except InvalidOperation as exc:
-                raise ValueError("Valor unitário inválido") from exc
-
-        return value
+        return normalize_decimal_value(value, "Valor unitário inválido")
 
 
 class CaseItemCreate(CaseItemBase):
@@ -114,27 +121,7 @@ class CaseItemUpdate(BaseModel):
     @field_validator("unit_value", mode="before")
     @classmethod
     def normalize_unit_value(cls, value):
-        if value is None or value == "":
-            return None
-
-        if isinstance(value, Decimal):
-            return value
-
-        if isinstance(value, (int, float)):
-            return Decimal(str(value))
-
-        if isinstance(value, str):
-            normalized = value.strip()
-            if not normalized:
-                return None
-
-            normalized = normalized.replace(".", "").replace(",", ".")
-            try:
-                return Decimal(normalized)
-            except InvalidOperation as exc:
-                raise ValueError("Valor unitário inválido") from exc
-
-        return value
+        return normalize_decimal_value(value, "Valor unitário inválido")
 
 
 class CaseItemResponse(CaseItemBase):

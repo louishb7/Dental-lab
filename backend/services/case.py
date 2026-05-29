@@ -248,15 +248,6 @@ def delete_case(db: Session, case_id: int) -> Case:
     if db_case is None:
         raise LookupError("Caso não encontrado")
 
-    if db_case.status == "pending":
-        if db_case.total_value is not None:
-            raise ValueError(
-                "Não é possível excluir um caso pending com valor registrado."
-            )
-        db.delete(db_case)
-        db.commit()
-        return db_case
-
     db_case.deleted_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(db_case)

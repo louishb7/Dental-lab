@@ -13,6 +13,33 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from backend.schemas.case_item import CaseItemResponse
 
 
+def normalize_decimal_value(value, error_message: str):
+    if value is None or value == "":
+        return None
+
+    if isinstance(value, Decimal):
+        return value
+
+    if isinstance(value, (int, float)):
+        return Decimal(str(value))
+
+    if isinstance(value, str):
+        normalized = value.strip()
+        if not normalized:
+            return None
+
+        normalized = normalized.replace("R$", "").replace(" ", "")
+        if "," in normalized:
+            normalized = normalized.replace(".", "").replace(",", ".")
+
+        try:
+            return Decimal(normalized)
+        except InvalidOperation as exc:
+            raise ValueError(error_message) from exc
+
+    return value
+
+
 class CaseBase(BaseModel):
     """Campos compartilhados entre criação, atualização e resposta de Case."""
 
@@ -42,27 +69,7 @@ class CaseBase(BaseModel):
     @field_validator("total_value", mode="before")
     @classmethod
     def normalize_total_value(cls, value):
-        if value is None or value == "":
-            return None
-
-        if isinstance(value, Decimal):
-            return value
-
-        if isinstance(value, (int, float)):
-            return Decimal(str(value))
-
-        if isinstance(value, str):
-            normalized = value.strip()
-            if not normalized:
-                return None
-
-            normalized = normalized.replace(".", "").replace(",", ".")
-            try:
-                return Decimal(normalized)
-            except InvalidOperation as exc:
-                raise ValueError("Valor combinado inválido") from exc
-
-        return value
+        return normalize_decimal_value(value, "Valor combinado inválido")
 
 
 class CaseCreate(CaseBase):
@@ -88,27 +95,7 @@ class CaseUpdate(BaseModel):
     @field_validator("total_value", mode="before")
     @classmethod
     def normalize_total_value(cls, value):
-        if value is None or value == "":
-            return None
-
-        if isinstance(value, Decimal):
-            return value
-
-        if isinstance(value, (int, float)):
-            return Decimal(str(value))
-
-        if isinstance(value, str):
-            normalized = value.strip()
-            if not normalized:
-                return None
-
-            normalized = normalized.replace(".", "").replace(",", ".")
-            try:
-                return Decimal(normalized)
-            except InvalidOperation as exc:
-                raise ValueError("Valor combinado inválido") from exc
-
-        return value
+        return normalize_decimal_value(value, "Valor combinado inválido")
 
 
 class CaseBulkDeliverRequest(BaseModel):
