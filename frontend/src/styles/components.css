@@ -635,9 +635,9 @@
 
 .form-field {
   display: grid;
-  gap: 5px;
+  gap: 4px;
   color: var(--color-text-muted);
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   font-weight: 700;
 }
 
@@ -647,17 +647,17 @@
 .filter-bar input,
 .filter-bar select {
   width: 100%;
-  min-height: 34px;
+  min-height: 32px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   color: var(--color-text);
   background: var(--color-input-bg);
-  padding: 7px 9px;
+  padding: 6px 8px;
 }
 
 .form-field textarea {
   resize: vertical;
-  min-height: 78px;
+  min-height: 64px;
 }
 
 .form-actions-row {
@@ -676,12 +676,12 @@
 }
 
 .choice-card {
-  min-height: 48px;
+  min-height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
-  padding: 8px;
+  padding: 7px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-input-bg);
@@ -718,8 +718,8 @@
   display: grid;
   align-content: center;
   gap: 2px;
-  min-height: 44px;
-  padding: 8px 10px;
+  min-height: 40px;
+  padding: 7px 9px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-subtle);
@@ -736,173 +736,48 @@
 }
 
 .odontogram-selector {
-  position: relative;
-  width: min(100%, 380px);
-  height: 580px;
-  margin: 0 auto;
-}
-
-.odontogram-stage {
-  position: absolute;
-  inset: 0;
-  border-radius: 12px;
-  background:
-    radial-gradient(ellipse at center, rgba(255, 255, 255, 0.04), transparent 42%),
-    #1c1c1e;
-  pointer-events: none;
-}
-
-.odontogram-legend {
-  position: absolute;
-  left: 10%;
-  top: 42%;
-  z-index: 2;
   display: grid;
-  gap: 11px;
-  min-width: 174px;
-  padding: 14px 16px;
-  border: 1px solid rgba(156, 163, 175, 0.22);
-  border-radius: 8px;
-  background: rgba(17, 17, 17, 0.58);
-  color: rgba(245, 247, 250, 0.88);
-  font-size: 0.72rem;
-  line-height: 1.2;
-  pointer-events: none;
-}
-
-.odontogram-legend .legend-title {
-  color: rgba(245, 247, 250, 0.66);
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0;
-  text-transform: uppercase;
-}
-
-.odontogram-legend span:not(.legend-title) {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-
-.legend-dot {
-  width: 14px;
-  height: 14px;
-  flex: 0 0 auto;
-  border-radius: 3px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
-}
-
-.legend-dot.encerramento {
-  background: #22c55e;
-}
-
-.legend-dot.antagonista {
-  background: #f97316;
-}
-
-.tooth-button {
-  position: absolute;
-  left: var(--tooth-x);
-  top: var(--tooth-y);
-  z-index: 3;
-  width: var(--tooth-w);
-  height: var(--tooth-h);
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #1f2933;
-  cursor: pointer;
-  transform: translate(-50%, -50%) rotate(var(--tooth-rotate));
-  transition:
-    filter 120ms ease,
-    transform 120ms ease;
-}
-
-.tooth-button .tooth-shape {
-  position: absolute;
-  inset: 0;
+  gap: 6px;
+  justify-items: center;
   width: 100%;
-  height: 100%;
+  max-width: 100%;
+}
+
+.odontogram-svg {
+  display: block;
+  width: 100%;
+  max-height: 540px;
+  margin: 0 auto;
   overflow: visible;
-  color: currentColor;
+}
+
+.odontogram-svg-bg {
+  fill: #1c1c1e;
+}
+
+.odontogram-tooth {
+  cursor: pointer;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.28));
+  transition: filter 120ms ease;
 }
 
-.tooth-button.arc-upper .tooth-shape {
-  transform: scaleY(-1);
+.odontogram-tooth:hover {
+  filter: brightness(1.12) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.28));
 }
 
-.tooth-shape-body {
-  stroke: #9ca3af;
-  stroke-width: 1.2;
-}
-
-.tooth-ridge {
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-opacity: 0.18;
-  stroke-width: 1;
-}
-
-.tooth-button.state-antagonista {
-  color: #fff7ed;
-}
-
-.tooth-button.state-antagonista .tooth-shape-body {
-  fill: #f97316;
-  stroke: #fb923c;
-}
-
-.tooth-button.state-encerramento {
-  color: #ecfdf5;
-}
-
-.tooth-button.state-encerramento .tooth-shape-body {
-  fill: #22c55e;
-  stroke: #4ade80;
-}
-
-.tooth-button span {
-  position: absolute;
-  left: 50%;
-  top: 48%;
-  z-index: 2;
-  color: #111827;
-  font-size: 0.74rem;
-  font-weight: 700;
-  line-height: 1;
-  transform: rotate(calc(var(--tooth-rotate) * -1));
-  translate: -50% -50%;
-}
-
-.tooth-button.state-antagonista span,
-.tooth-button.state-encerramento span {
-  color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
-}
-
-.tooth-button:hover {
-  filter: brightness(1.08);
-  transform: translate(-50%, -51%) rotate(var(--tooth-rotate));
-}
-
-.tooth-button:focus-visible {
-  outline: 2px solid rgba(255, 138, 42, 0.7);
-  outline-offset: 3px;
+.odontogram-tooth:focus-visible {
+  outline: none;
+  filter: brightness(1.12) drop-shadow(0 0 0 rgba(0, 0, 0, 0));
 }
 
 .odontogram-selection-bar {
-  position: absolute;
-  left: 6%;
-  right: 6%;
-  bottom: 0;
-  z-index: 4;
-  min-height: 56px;
+  width: 100%;
+  min-height: 42px;
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr) max-content;
   align-items: center;
-  gap: 10px;
-  padding: 9px 10px;
+  gap: 8px;
+  padding: 7px 8px;
   border: 1px solid rgba(156, 163, 175, 0.22);
   border-radius: 8px;
   background: rgba(17, 17, 17, 0.86);
@@ -913,7 +788,7 @@
 .odontogram-selection-list {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   overflow-x: auto;
   min-width: 0;
   padding-bottom: 2px;
@@ -924,18 +799,18 @@
 }
 
 .selected-tooth-badge {
-  min-width: 31px;
-  min-height: 26px;
-  padding: 0 8px;
+  min-width: 28px;
+  min-height: 22px;
+  padding: 2px 7px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 4px;
   color: #ffffff;
-  font-size: 0.74rem;
+  font-size: 11px;
   font-weight: 800;
   cursor: pointer;
 }
 
-.selected-tooth-badge.antagonista {
+.selected-tooth-badge.selecionado {
   background: #f97316;
 }
 
@@ -964,7 +839,7 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 7px;
-  max-height: 132px;
+  max-height: 110px;
   overflow: auto;
   padding-right: 2px;
 }
@@ -994,8 +869,8 @@
 }
 
 .case-modal-panel {
-  width: min(1180px, calc(100vw - 28px));
-  max-height: min(735px, calc(100vh - 28px));
+  width: min(1120px, calc(100vw - 24px));
+  max-height: min(710px, calc(100vh - 24px));
   border-radius: 8px;
   background:
     radial-gradient(circle at 50% 0%, rgba(255, 138, 42, 0.06), transparent 30%),
@@ -1020,18 +895,19 @@
 
 .case-creation-workspace {
   display: grid;
-  grid-template-columns: minmax(280px, 34fr) minmax(330px, 39fr) minmax(220px, 27fr);
-  gap: 6px;
-  min-height: min(680px, calc(100vh - 30px));
-  padding: 6px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 5px;
+  min-height: min(650px, calc(100vh - 26px));
+  padding: 5px;
+  overflow-x: hidden;
 }
 
 .case-create-panel {
   min-width: 0;
   display: grid;
   align-content: start;
-  gap: 9px;
-  padding: 14px;
+  gap: 7px;
+  padding: 11px;
   border: 1px solid var(--color-border);
   border-radius: 8px;
   background:
@@ -1054,7 +930,7 @@
 
 .case-create-topline h3,
 .case-create-heading h3 {
-  font-size: 1.08rem;
+  font-size: 1rem;
   line-height: 1.05;
 }
 
@@ -1071,6 +947,18 @@
   font-size: 0.76rem;
 }
 
+.case-create-submit {
+  display: flex;
+  margin-top: 16px;
+}
+
+.case-create-submit .button {
+  width: 100%;
+  min-height: 36px;
+  padding: 0 14px;
+  font-size: 0.8rem;
+}
+
 .case-create-divider {
   height: 1px;
   background: var(--color-border);
@@ -1078,25 +966,26 @@
 
 .case-create-section-title {
   color: var(--color-primary);
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 800;
 }
 
 .case-create-heading {
   display: grid;
-  gap: 2px;
+  gap: 1px;
 }
 
 .case-create-heading p {
   color: var(--color-text-muted);
+  font-size: 0.76rem;
 }
 
 .case-create-summary {
-  gap: 10px;
+  gap: 7px;
 }
 
 .case-summary-box {
-  padding: 10px;
+  padding: 9px;
   border: 1px solid var(--color-border);
   border-radius: 8px;
   background: var(--color-subtle);
@@ -1104,7 +993,7 @@
 
 .case-summary-box dl {
   display: grid;
-  gap: 9px;
+  gap: 7px;
   margin: 0;
 }
 
@@ -1112,7 +1001,7 @@
   display: grid;
   grid-template-columns: minmax(78px, 0.9fr) 1fr;
   gap: 8px;
-  font-size: 0.8rem;
+  font-size: 0.76rem;
 }
 
 .case-summary-box dt {
@@ -1695,8 +1584,7 @@
   }
 
   .odontogram-selector {
-    width: min(100%, 350px);
-    height: 470px;
+    width: min(100%, 320px);
   }
 }
 
@@ -1802,7 +1690,6 @@
 
   .odontogram-selector {
     width: min(100%, 320px);
-    height: 430px;
   }
 
   .selected-teeth-tray {

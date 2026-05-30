@@ -62,18 +62,6 @@ export default function CaseIntakeForm({
   return (
     <form className={`case-creation-workspace case-intake-form ${layout}`} onSubmit={onSubmit}>
       <section className="case-create-panel case-create-info">
-        <div className="case-create-topline">
-          <h3>Novo caso</h3>
-          <div className="case-create-actions">
-            <Button variant="primary" disabled={busy} type="submit">
-              <SubmitIcon size={17} />
-              {submitLabel}
-            </Button>
-          </div>
-        </div>
-
-        <div className="case-create-divider" />
-
         <div className="case-create-section-title">Informações do caso</div>
 
         <FormField label="Dentista responsável">
@@ -214,6 +202,13 @@ export default function CaseIntakeForm({
               <dd>{selectedTeeth.length ? `${selectedTeeth.length} selecionados` : "Nenhum"}</dd>
             </div>
           </dl>
+        </div>
+
+        <div className="case-create-submit">
+          <Button variant="primary" disabled={busy} type="submit">
+            <SubmitIcon size={17} />
+            {submitLabel}
+          </Button>
         </div>
       </aside>
     </form>

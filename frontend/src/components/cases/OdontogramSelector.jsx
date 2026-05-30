@@ -1,211 +1,214 @@
-import { useCallback, useEffect, useId, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { sortTeethByFdi } from "../../utils/odontogram.js";
 
-const TOOTH_STATES = {
-  normal: {
-    label: "Não selecionado",
-    next: "antagonista",
-  },
-  antagonista: {
-    label: "Antagonista",
-    next: "encerramento",
-  },
-  encerramento: {
-    label: "Encerramento anatômico",
-    next: "normal",
-  },
-};
-
-const BASE_TEETH = [
-  ["11", -5, "central", "upper"],
-  ["12", -19, "central", "upper"],
-  ["13", -34, "lateral", "upper"],
-  ["14", -50, "canine", "upper"],
-  ["15", -66, "premolar", "upper"],
-  ["16", -82, "premolar", "upper"],
-  ["17", -97, "molar", "upper"],
-  ["18", -111, "molar", "upper"],
-  ["48", -126, "molar", "lower"],
-  ["47", -135, "molar", "lower"],
-  ["46", -144, "premolar", "lower"],
-  ["45", -153, "premolar", "lower"],
-  ["44", -162, "canine", "lower"],
-  ["43", -170, "lateral", "lower"],
-  ["42", -176, "central", "lower"],
-  ["41", -181, "front", "lower"],
-  ["31", 181, "front", "lower"],
-  ["32", 176, "central", "lower"],
-  ["33", 170, "lateral", "lower"],
-  ["34", 162, "canine", "lower"],
-  ["35", 153, "premolar", "lower"],
-  ["36", 144, "premolar", "lower"],
-  ["37", 135, "molar", "lower"],
-  ["38", 126, "molar", "lower"],
-  ["28", 111, "molar", "upper"],
-  ["27", 97, "molar", "upper"],
-  ["26", 82, "premolar", "upper"],
-  ["25", 66, "premolar", "upper"],
-  ["24", 50, "canine", "upper"],
-  ["23", 34, "lateral", "upper"],
-  ["22", 19, "central", "upper"],
-  ["21", 5, "central", "upper"],
+const TEETH = [
+  { id: "11", x: 190, y: 34, r: -5 },
+  { id: "12", x: 151, y: 46, r: -18 },
+  { id: "13", x: 118, y: 73, r: -34 },
+  { id: "14", x: 94, y: 112, r: -49 },
+  { id: "15", x: 80, y: 158, r: -66 },
+  { id: "16", x: 76, y: 205, r: -84 },
+  { id: "17", x: 80, y: 250, r: -101 },
+  { id: "18", x: 91, y: 287, r: -117 },
+  { id: "21", x: 230, y: 34, r: 5 },
+  { id: "22", x: 269, y: 46, r: 18 },
+  { id: "23", x: 302, y: 73, r: 34 },
+  { id: "24", x: 326, y: 112, r: 49 },
+  { id: "25", x: 340, y: 158, r: 66 },
+  { id: "26", x: 344, y: 205, r: 84 },
+  { id: "27", x: 340, y: 250, r: 101 },
+  { id: "28", x: 329, y: 287, r: 117 },
+  { id: "48", x: 91, y: 334, r: -63 },
+  { id: "47", x: 80, y: 373, r: -80 },
+  { id: "46", x: 76, y: 418, r: -96 },
+  { id: "45", x: 80, y: 464, r: -112 },
+  { id: "44", x: 96, y: 508, r: -130 },
+  { id: "43", x: 123, y: 545, r: -148 },
+  { id: "42", x: 157, y: 574, r: -164 },
+  { id: "41", x: 194, y: 590, r: -176 },
+  { id: "38", x: 329, y: 334, r: 63 },
+  { id: "37", x: 340, y: 373, r: 80 },
+  { id: "36", x: 344, y: 418, r: 96 },
+  { id: "35", x: 340, y: 464, r: 112 },
+  { id: "34", x: 324, y: 508, r: 130 },
+  { id: "33", x: 297, y: 545, r: 148 },
+  { id: "32", x: 263, y: 574, r: 164 },
+  { id: "31", x: 226, y: 590, r: 176 },
 ];
 
-const SIZE_BY_KIND = {
-  molar: [46, 52],
-  premolar: [38, 44],
-  canine: [32, 40],
-  lateral: [28, 36],
-  central: [28, 34],
-  front: [30, 36],
+const TOOTH_COLORS = {
+  normal: {
+    fill: "#D9DADD",
+    stroke: "#A9ADB4",
+    text: "#151A21",
+    ridge: "#6B7280",
+  },
+  selecionado: {
+    fill: "#F97316",
+    stroke: "#D75D0D",
+    text: "#FFFFFF",
+    ridge: "#FFFFFF",
+  },
 };
 
-function getToothPosition(angleDegrees, kind) {
-  const radians = (angleDegrees * Math.PI) / 180;
-  const [width, height] = SIZE_BY_KIND[kind];
+function scaleForTooth(id) {
+  const tooth = Number(id);
+  const largeMolars = [18, 17, 28, 27, 48, 47, 38, 37];
+  const premolars = [16, 15, 26, 25, 46, 45, 36, 35];
+  const canines = [14, 24, 44, 34];
+  const laterals = [13, 23, 43, 33];
 
-  return {
-    "--tooth-x": `${50 + Math.sin(radians) * 37}%`,
-    "--tooth-y": `${50 - Math.cos(radians) * 44}%`,
-    "--tooth-rotate": `${angleDegrees}deg`,
-    "--tooth-w": `${width}px`,
-    "--tooth-h": `${height}px`,
-  };
+  if (largeMolars.includes(tooth)) return "scale(1.28, 1.18)";
+  if (premolars.includes(tooth)) return "scale(1.12, 1.08)";
+  if (canines.includes(tooth)) return "scale(1.02)";
+  if (laterals.includes(tooth)) return "scale(0.94)";
+  return "scale(0.98)";
 }
 
-function ToothSvg() {
-  const gradientId = useId();
+function Tooth({ tooth, selected, onToggle }) {
+  const colors = selected ? TOOTH_COLORS.selecionado : TOOTH_COLORS.normal;
 
   return (
-    <svg className="tooth-shape" viewBox="0 0 30 40" aria-hidden="true" focusable="false">
-      <defs>
-        <linearGradient id={gradientId} x1="7" y1="2" x2="24" y2="38" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#f8fafc" />
-          <stop offset="0.58" stopColor="#e5e7eb" />
-          <stop offset="1" stopColor="#cbd5e1" />
-        </linearGradient>
-      </defs>
-      <path
-        className="tooth-shape-body"
-        fill={`url(#${gradientId})`}
-        d="M 15 2 C 24 2, 28 8, 28 16 C 28 26, 22 34, 15 38 C 8 34, 2 26, 2 16 C 2 8, 6 2, 15 2 Z"
-      />
-      <line className="tooth-ridge" x1="11" y1="6" x2="9" y2="32" />
-      <line className="tooth-ridge" x1="15" y1="4" x2="15" y2="34" />
-      <line className="tooth-ridge" x1="19" y1="6" x2="21" y2="32" />
-    </svg>
+    <g
+      className="odontogram-tooth"
+      role="button"
+      tabIndex="0"
+      aria-label={`Dente ${tooth.id}`}
+      transform={`translate(${tooth.x},${tooth.y}) rotate(${tooth.r})`}
+      onClick={() => onToggle(tooth.id)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onToggle(tooth.id);
+        }
+      }}
+    >
+      <g transform={scaleForTooth(tooth.id)}>
+        <path
+          d="M0,-25 C13,-25 22,-17 22,-5 C22,8 15,19 7,24 C4,26 2,28 0,30 C-2,28 -4,26 -7,24 C-15,19 -22,8 -22,-5 C-22,-17 -13,-25 0,-25 Z"
+          fill={colors.fill}
+          stroke={colors.stroke}
+          strokeWidth="1.4"
+        />
+        <path
+          d="M-13,-16 C-8,-22 8,-22 13,-16"
+          fill="none"
+          stroke="#FFFFFF"
+          strokeOpacity={selected ? "0.2" : "0.42"}
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+        <path
+          d="M-11,12 C-5,17 5,17 11,12"
+          fill="none"
+          stroke={colors.ridge}
+          strokeOpacity={selected ? "0.3" : "0.18"}
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
+        <line x1="-7" y1="-14" x2="-9" y2="20" stroke={colors.ridge} strokeOpacity={selected ? "0.32" : "0.2"} strokeWidth="1.2" strokeLinecap="round" />
+        <line x1="0" y1="-20" x2="0" y2="23" stroke={colors.ridge} strokeOpacity={selected ? "0.32" : "0.2"} strokeWidth="1.2" strokeLinecap="round" />
+        <line x1="7" y1="-14" x2="9" y2="20" stroke={colors.ridge} strokeOpacity={selected ? "0.32" : "0.2"} strokeWidth="1.2" strokeLinecap="round" />
+        <text
+          x="0"
+          y="2"
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fontSize="16"
+          fontWeight="700"
+          fill={colors.text}
+          style={{ userSelect: "none", pointerEvents: "none" }}
+        >
+          {tooth.id}
+        </text>
+      </g>
+    </g>
   );
 }
 
+/**
+ * Renderiza a arcada FDI em SVG e sincroniza a seleção com o formulário.
+ */
 export default function OdontogramSelector({
   selectedTeeth = [],
   onChange,
 }) {
-  const teeth = useMemo(
-    () => BASE_TEETH.map(([id, angle, kind, arcade]) => ({
-      id,
-      kind,
-      angle,
-      arcade,
-      style: getToothPosition(angle, kind),
-    })),
-    [],
-  );
-  const [toothStates, setToothStates] = useState({});
+  const [selectedById, setSelectedById] = useState({});
 
   useEffect(() => {
-    setToothStates((currentStates) => {
-      const nextStates = {};
-      selectedTeeth.forEach((tooth) => {
-        nextStates[tooth] = currentStates[tooth] && currentStates[tooth] !== "normal"
-          ? currentStates[tooth]
-          : "antagonista";
-      });
-      return nextStates;
-    });
+    setSelectedById(
+      selectedTeeth.reduce((nextSelected, tooth) => {
+        nextSelected[tooth] = true;
+        return nextSelected;
+      }, {}),
+    );
   }, [selectedTeeth]);
 
-  const syncSelectedTeeth = useCallback((nextStates) => {
-    const activeTeeth = Object.entries(nextStates)
-      .filter(([, state]) => state && state !== "normal")
-      .map(([tooth]) => tooth);
-
-    onChange(sortTeethByFdi(activeTeeth));
+  const syncSelectedTeeth = useCallback((nextSelected) => {
+    onChange(sortTeethByFdi(Object.keys(nextSelected).filter((tooth) => nextSelected[tooth])));
   }, [onChange]);
 
-  const cycleTooth = useCallback((tooth) => {
-    const currentState = toothStates[tooth] || "normal";
-    const nextState = TOOTH_STATES[currentState].next;
-    const nextStates = { ...toothStates };
+  const toggleTooth = useCallback((tooth) => {
+    setSelectedById((currentSelected) => {
+      const nextSelected = { ...currentSelected };
 
-    if (nextState === "normal") {
-      delete nextStates[tooth];
-    } else {
-      nextStates[tooth] = nextState;
-    }
+      if (nextSelected[tooth]) {
+        delete nextSelected[tooth];
+      } else {
+        nextSelected[tooth] = true;
+      }
 
-    setToothStates(nextStates);
-    syncSelectedTeeth(nextStates);
-  }, [syncSelectedTeeth, toothStates]);
+      syncSelectedTeeth(nextSelected);
+      return nextSelected;
+    });
+  }, [syncSelectedTeeth]);
 
   const clearSelection = useCallback(() => {
-    setToothStates({});
+    setSelectedById({});
     onChange([]);
   }, [onChange]);
 
-  const selectedItems = sortTeethByFdi(
-    Object.entries(toothStates)
-      .filter(([, state]) => state && state !== "normal")
-      .map(([tooth]) => tooth),
-  ).map((tooth) => ({
-    tooth,
-    state: toothStates[tooth],
-    label: TOOTH_STATES[toothStates[tooth]].label,
-  }));
+  const selectedItems = useMemo(
+    () => sortTeethByFdi(Object.keys(selectedById).filter((tooth) => selectedById[tooth])),
+    [selectedById],
+  );
 
   return (
     <div className="odontogram-selector" role="group" aria-label="Selecionar dentes do caso">
-      <div className="odontogram-stage" aria-hidden="true" />
-
-      <div className="odontogram-legend" aria-label="Legenda de estados">
-        <span className="legend-title">Legenda</span>
-        <span><i className="legend-dot encerramento" />Encerramento anatômico</span>
-        <span><i className="legend-dot antagonista" />Antagonista</span>
-      </div>
-
-      {teeth.map((tooth) => {
-        const state = toothStates[tooth.id] || "normal";
-
-        return (
-          <button
+      <svg
+        className="odontogram-svg"
+        viewBox="0 0 420 620"
+        width="100%"
+        style={{ display: "block", margin: "0 auto" }}
+        xmlns="http://www.w3.org/2000/svg"
+        pointerEvents="all"
+        aria-hidden="false"
+      >
+        <rect className="odontogram-svg-bg" x="0" y="0" width="420" height="620" rx="18" />
+        {TEETH.map((tooth) => (
+          <Tooth
             key={tooth.id}
-            type="button"
-            className={`tooth-button ${tooth.kind} arc-${tooth.arcade} state-${state}`}
-            style={tooth.style}
-            aria-pressed={state !== "normal"}
-            aria-label={`Dente ${tooth.id}: ${TOOTH_STATES[state].label}`}
-            onClick={() => cycleTooth(tooth.id)}
-          >
-            <ToothSvg />
-            <span>{tooth.id}</span>
-          </button>
-        );
-      })}
+            tooth={tooth}
+            selected={Boolean(selectedById[tooth.id])}
+            onToggle={toggleTooth}
+          />
+        ))}
+      </svg>
 
       <div className="odontogram-selection-bar">
         <span>Dentes selecionados:</span>
         <div className="odontogram-selection-list">
           {selectedItems.length ? (
-            selectedItems.map((item) => (
+            selectedItems.map((tooth) => (
               <button
-                key={item.tooth}
+                key={tooth}
                 type="button"
-                className={`selected-tooth-badge ${item.state}`}
-                title={item.label}
-                onClick={() => cycleTooth(item.tooth)}
+                className="selected-tooth-badge selecionado"
+                title={`Dente ${tooth}`}
+                onClick={() => toggleTooth(tooth)}
               >
-                {item.tooth}
+                {tooth}
               </button>
             ))
           ) : (
