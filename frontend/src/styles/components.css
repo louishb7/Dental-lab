@@ -737,92 +737,227 @@
 
 .odontogram-selector {
   position: relative;
-  width: min(100%, 370px);
-  height: 500px;
-  margin: -2px auto 0;
-}
-
-.odontogram-stage,
-.odontogram-center-wash,
-.odontogram-midline {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
+  width: min(100%, 380px);
+  height: 580px;
+  margin: 0 auto;
 }
 
 .odontogram-stage {
-  border-radius: 999px;
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
   background:
-    radial-gradient(ellipse at center, transparent 42%, rgba(255, 138, 42, 0.04) 43%, transparent 55%);
+    radial-gradient(ellipse at center, rgba(255, 255, 255, 0.04), transparent 42%),
+    #1c1c1e;
+  pointer-events: none;
 }
 
-.odontogram-center-wash {
-  inset: 18% 24%;
-  border: 1px solid rgba(255, 138, 42, 0.08);
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.035);
+.odontogram-legend {
+  position: absolute;
+  left: 10%;
+  top: 42%;
+  z-index: 2;
+  display: grid;
+  gap: 11px;
+  min-width: 174px;
+  padding: 14px 16px;
+  border: 1px solid rgba(156, 163, 175, 0.22);
+  border-radius: 8px;
+  background: rgba(17, 17, 17, 0.58);
+  color: rgba(245, 247, 250, 0.88);
+  font-size: 0.72rem;
+  line-height: 1.2;
+  pointer-events: none;
 }
 
-.odontogram-midline {
-  left: 50%;
-  top: 7%;
-  bottom: 7%;
-  width: 1px;
-  background: linear-gradient(180deg, transparent, rgba(255, 138, 42, 0.16), transparent);
+.odontogram-legend .legend-title {
+  color: rgba(245, 247, 250, 0.66);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.odontogram-legend span:not(.legend-title) {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.legend-dot {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  border-radius: 3px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.legend-dot.encerramento {
+  background: #22c55e;
+}
+
+.legend-dot.antagonista {
+  background: #f97316;
 }
 
 .tooth-button {
   position: absolute;
   left: var(--tooth-x);
   top: var(--tooth-y);
-  width: 36px;
-  height: 40px;
+  z-index: 3;
+  width: var(--tooth-w);
+  height: var(--tooth-h);
   padding: 0;
-  border: 1px solid rgba(36, 43, 52, 0.22);
-  border-radius: 46% 46% 36% 36%;
-  background:
-    linear-gradient(145deg, #f4f5f6, #d5d9dd 64%, #b7bec6);
-  color: #111923;
-  font-size: 0.82rem;
-  font-weight: 800;
+  border: 0;
+  background: transparent;
+  color: #1f2933;
   cursor: pointer;
-  box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.58),
-    0 3px 8px rgba(0, 0, 0, 0.16);
   transform: translate(-50%, -50%) rotate(var(--tooth-rotate));
   transition:
-    border-color 120ms ease,
-    background 120ms ease,
-    color 120ms ease,
-    transform 120ms ease,
-    box-shadow 120ms ease;
+    filter 120ms ease,
+    transform 120ms ease;
+}
+
+.tooth-button .tooth-shape {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  color: currentColor;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.28));
+}
+
+.tooth-button.arc-upper .tooth-shape {
+  transform: scaleY(-1);
+}
+
+.tooth-shape-body {
+  stroke: #9ca3af;
+  stroke-width: 1.2;
+}
+
+.tooth-ridge {
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-opacity: 0.18;
+  stroke-width: 1;
+}
+
+.tooth-button.state-antagonista {
+  color: #fff7ed;
+}
+
+.tooth-button.state-antagonista .tooth-shape-body {
+  fill: #f97316;
+  stroke: #fb923c;
+}
+
+.tooth-button.state-encerramento {
+  color: #ecfdf5;
+}
+
+.tooth-button.state-encerramento .tooth-shape-body {
+  fill: #22c55e;
+  stroke: #4ade80;
 }
 
 .tooth-button span {
-  position: relative;
-  z-index: 1;
-  display: block;
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  z-index: 2;
+  color: #111827;
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1;
   transform: rotate(calc(var(--tooth-rotate) * -1));
+  translate: -50% -50%;
 }
 
-.tooth-lower {
-  border-radius: 34% 34% 46% 46%;
+.tooth-button.state-antagonista span,
+.tooth-button.state-encerramento span {
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
 }
 
 .tooth-button:hover {
-  transform: translate(-50%, -52%) rotate(var(--tooth-rotate));
-  border-color: rgba(255, 138, 42, 0.55);
-  box-shadow: 0 4px 10px rgba(255, 138, 42, 0.12);
+  filter: brightness(1.08);
+  transform: translate(-50%, -51%) rotate(var(--tooth-rotate));
 }
 
-.tooth-button.selected {
-  border-color: rgba(255, 138, 42, 0.74);
-  background:
-    linear-gradient(145deg, #ff9b3d, #ff7c1f 58%, #d75d0d);
-  color: #1b0f06;
-  box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.28),
-    0 5px 12px rgba(255, 138, 42, 0.18);
+.tooth-button:focus-visible {
+  outline: 2px solid rgba(255, 138, 42, 0.7);
+  outline-offset: 3px;
+}
+
+.odontogram-selection-bar {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: 0;
+  z-index: 4;
+  min-height: 56px;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid rgba(156, 163, 175, 0.22);
+  border-radius: 8px;
+  background: rgba(17, 17, 17, 0.86);
+  color: rgba(245, 247, 250, 0.86);
+  font-size: 0.74rem;
+}
+
+.odontogram-selection-list {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  min-width: 0;
+  padding-bottom: 2px;
+}
+
+.odontogram-selection-list small {
+  color: rgba(245, 247, 250, 0.55);
+}
+
+.selected-tooth-badge {
+  min-width: 31px;
+  min-height: 26px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 0.74rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.selected-tooth-badge.antagonista {
+  background: #f97316;
+}
+
+.selected-tooth-badge.encerramento {
+  background: #22c55e;
+}
+
+.odontogram-clear {
+  width: 30px;
+  height: 30px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(156, 163, 175, 0.22);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(245, 247, 250, 0.78);
+  cursor: pointer;
+}
+
+.odontogram-clear:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
 }
 
 .tooth-pricing-list {
@@ -1663,12 +1798,6 @@
 
   .case-modal-panel {
     width: 100%;
-  }
-
-  .tooth-button {
-    width: 32px;
-    height: 36px;
-    font-size: 0.76rem;
   }
 
   .odontogram-selector {

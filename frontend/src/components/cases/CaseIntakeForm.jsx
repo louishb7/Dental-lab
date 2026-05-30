@@ -160,24 +160,10 @@ export default function CaseIntakeForm({
       <section className="case-create-panel case-create-teeth">
         <div className="case-create-heading">
           <h3>Dentes do caso</h3>
+          <p>Selecione os dentes envolvidos</p>
         </div>
 
         <OdontogramSelector selectedTeeth={selectedTeeth} onChange={handleTeethChange} />
-
-        <div className="selected-teeth-tray">
-          <span>Selecionados:</span>
-          <div className="selected-teeth-list">
-            {selectedTeeth.length ? (
-              selectedTeeth.map((tooth) => (
-                <button key={tooth} type="button" onClick={() => handleTeethChange(selectedTeeth.filter((item) => item !== tooth))}>
-                  {tooth}
-                </button>
-              ))
-            ) : (
-              <small>Nenhum dente selecionado.</small>
-            )}
-          </div>
-        </div>
 
         {caseForm.pricing_mode === "services" && selectedTeeth.length > 0 && (
           <div className="tooth-pricing-list">
