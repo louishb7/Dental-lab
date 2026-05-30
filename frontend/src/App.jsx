@@ -269,13 +269,7 @@ export default function App() {
     event.preventDefault();
     if (!selectedDoctorId) return;
 
-    const hasSelectedTeeth = Array.isArray(caseForm.selected_teeth) && caseForm.selected_teeth.length > 0;
     const automaticItems = caseForm.pricing_mode === "services" ? buildAutomaticCaseItems(caseForm) : [];
-
-    if (caseForm.pricing_mode === "services" && hasSelectedTeeth && !caseForm.service_name.trim()) {
-      setMessage({ type: "error", text: "Informe o serviço principal para gerar os itens por dente." });
-      return;
-    }
 
     if (automaticItems.some((item) => item.unit_value === null)) {
       setMessage({ type: "error", text: "Preencha o valor de cada dente selecionado antes de criar o caso." });

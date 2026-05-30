@@ -393,7 +393,7 @@ export default function CasesPage({
             selectedDoctorId={selectedDoctorId}
             caseForm={caseForm}
             busy={busy}
-            submitLabel="Criar caso"
+            submitLabel="Salvar caso"
             submitIcon={Plus}
             onDoctorChange={setSelectedDoctorId}
             onCaseChange={onCaseChange}

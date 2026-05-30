@@ -1,14 +1,21 @@
 import { ODONTOGRAM_ARCADES, sortTeethByFdi } from "../../utils/odontogram.js";
 
 function getToothStyle(index, arcadeId) {
-  const offset = index - 7.5;
-  const lift = Math.abs(offset) * 2.7;
-  const direction = arcadeId === "upper" ? 1 : -1;
-  const rotateDirection = arcadeId === "upper" ? -2.2 : 2.2;
+  const startAngle = arcadeId === "upper" ? 200 : 160;
+  const endAngle = arcadeId === "upper" ? 340 : 20;
+  const angle = startAngle + ((endAngle - startAngle) * index) / 15;
+  const radians = (angle * Math.PI) / 180;
+  const radiusX = arcadeId === "upper" ? 35 : 34;
+  const radiusY = arcadeId === "upper" ? 31 : 33;
+  const centerY = arcadeId === "upper" ? 43 : 52;
+  const x = 50 + Math.cos(radians) * radiusX;
+  const y = centerY + Math.sin(radians) * radiusY;
+  const rotation = angle + (arcadeId === "upper" ? 90 : -90);
 
   return {
-    "--tooth-y": `${direction * lift}px`,
-    "--tooth-rotate": `${offset * rotateDirection}deg`,
+    "--tooth-x": `${x}%`,
+    "--tooth-y": `${y}%`,
+    "--tooth-rotate": `${rotation}deg`,
   };
 }
 
@@ -28,35 +35,33 @@ export default function OdontogramSelector({
 
   return (
     <div className="odontogram-selector" role="group" aria-label="Selecionar dentes do caso">
-      {ODONTOGRAM_ARCADES.map((arcade) => (
-        <section key={arcade.id} className={`odontogram-arcade ${arcade.id}`} aria-label={arcade.label}>
-          <div className="odontogram-arcade-head">
-            <strong>{arcade.label}</strong>
-          </div>
-          <div className="odontogram-grid">
-            {arcade.teeth.map((tooth, index) => {
-              const active = selectedSet.has(tooth);
+      <div className="odontogram-stage" aria-hidden="true">
+        <span className="odontogram-midline" />
+        <span className="odontogram-center-wash" />
+      </div>
+      {ODONTOGRAM_ARCADES.map((arcade) =>
+        arcade.teeth.map((tooth, index) => {
+          const active = selectedSet.has(tooth);
 
-              return (
-                <button
-                  key={tooth}
-                  type="button"
-                  className={[
-                    "tooth-button",
-                    active ? "selected" : "",
-                    index === 7 ? "tooth-midline" : "",
-                  ].filter(Boolean).join(" ")}
-                  style={getToothStyle(index, arcade.id)}
-                  aria-pressed={active}
-                  onClick={() => toggleTooth(tooth)}
-                >
-                  {tooth}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-      ))}
+          return (
+            <button
+              key={tooth}
+              type="button"
+              className={[
+                "tooth-button",
+                `tooth-${arcade.id}`,
+                active ? "selected" : "",
+              ].filter(Boolean).join(" ")}
+              style={getToothStyle(index, arcade.id)}
+              aria-pressed={active}
+              aria-label={`Dente ${tooth}`}
+              onClick={() => toggleTooth(tooth)}
+            >
+              <span>{tooth}</span>
+            </button>
+          );
+        }),
+      )}
     </div>
   );
 }

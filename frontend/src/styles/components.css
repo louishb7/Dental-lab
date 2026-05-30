@@ -635,9 +635,9 @@
 
 .form-field {
   display: grid;
-  gap: 7px;
-  color: var(--color-text-soft);
-  font-size: 0.8rem;
+  gap: 5px;
+  color: var(--color-text-muted);
+  font-size: 0.76rem;
   font-weight: 700;
 }
 
@@ -647,17 +647,17 @@
 .filter-bar input,
 .filter-bar select {
   width: 100%;
-  min-height: 39px;
+  min-height: 34px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   color: var(--color-text);
   background: var(--color-input-bg);
-  padding: 8px 10px;
+  padding: 7px 9px;
 }
 
 .form-field textarea {
   resize: vertical;
-  min-height: 108px;
+  min-height: 78px;
 }
 
 .form-actions-row {
@@ -672,19 +672,21 @@
 .pricing-mode-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 7px;
 }
 
 .choice-card {
-  min-height: 74px;
-  display: grid;
-  gap: 6px;
-  padding: 10px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-input-bg);
   color: var(--color-text);
-  text-align: left;
+  text-align: center;
   cursor: pointer;
   transition:
     transform 120ms ease,
@@ -707,54 +709,17 @@
   line-height: 1.25;
 }
 
-.choice-card small {
-  color: var(--color-text-muted);
-  line-height: 1.4;
-}
-
 .case-pricing-note {
   color: var(--color-text-muted);
   line-height: 1.5;
-}
-
-.case-teeth-section {
-  display: grid;
-  gap: 10px;
-  padding: 10px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-subtle);
-}
-
-.case-teeth-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.case-teeth-header h4 {
-  font-size: 0.9rem;
-}
-
-.case-teeth-header p,
-.case-teeth-summary {
-  color: var(--color-text-muted);
-  line-height: 1.4;
-}
-
-.case-teeth-summary {
-  max-width: 280px;
-  text-align: right;
-  font-size: 0.78rem;
 }
 
 .case-pricing-total {
   display: grid;
   align-content: center;
   gap: 2px;
-  min-height: 42px;
-  padding: 10px 12px;
+  min-height: 44px;
+  padding: 8px 10px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-subtle);
@@ -771,57 +736,60 @@
 }
 
 .odontogram-selector {
-  display: grid;
-  gap: 8px;
-  padding: 4px 0;
+  position: relative;
+  width: min(100%, 370px);
+  height: 500px;
+  margin: -2px auto 0;
 }
 
-.odontogram-arcade {
-  display: grid;
-  gap: 6px;
-  overflow-x: auto;
-  padding: 9px 8px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+.odontogram-stage,
+.odontogram-center-wash,
+.odontogram-midline {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.odontogram-stage {
+  border-radius: 999px;
   background:
-    radial-gradient(ellipse at center, rgba(255, 138, 42, 0.06), transparent 58%),
-    var(--color-control-bg);
+    radial-gradient(ellipse at center, transparent 42%, rgba(255, 138, 42, 0.04) 43%, transparent 55%);
 }
 
-.odontogram-arcade-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+.odontogram-center-wash {
+  inset: 18% 24%;
+  border: 1px solid rgba(255, 138, 42, 0.08);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.035);
 }
 
-.odontogram-arcade-head strong {
-  font-size: 0.76rem;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-}
-
-.odontogram-grid {
-  min-width: 560px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 14px 4px;
+.odontogram-midline {
+  left: 50%;
+  top: 7%;
+  bottom: 7%;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(255, 138, 42, 0.16), transparent);
 }
 
 .tooth-button {
-  width: 31px;
-  min-width: 31px;
-  min-height: 38px;
+  position: absolute;
+  left: var(--tooth-x);
+  top: var(--tooth-y);
+  width: 36px;
+  height: 40px;
   padding: 0;
-  border: 1px solid var(--color-border);
-  background: var(--color-elevated-bg);
-  color: var(--color-text-soft);
+  border: 1px solid rgba(36, 43, 52, 0.22);
+  border-radius: 46% 46% 36% 36%;
+  background:
+    linear-gradient(145deg, #f4f5f6, #d5d9dd 64%, #b7bec6);
+  color: #111923;
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
-  transform: translateY(var(--tooth-y)) rotate(var(--tooth-rotate));
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.58),
+    0 3px 8px rgba(0, 0, 0, 0.16);
+  transform: translate(-50%, -50%) rotate(var(--tooth-rotate));
   transition:
     border-color 120ms ease,
     background 120ms ease,
@@ -830,53 +798,58 @@
     box-shadow 120ms ease;
 }
 
-.odontogram-arcade.upper .tooth-button {
-  border-radius: 15px 15px 9px 9px;
+.tooth-button span {
+  position: relative;
+  z-index: 1;
+  display: block;
+  transform: rotate(calc(var(--tooth-rotate) * -1));
 }
 
-.odontogram-arcade.lower .tooth-button {
-  border-radius: 9px 9px 15px 15px;
-}
-
-.tooth-button.tooth-midline {
-  margin-right: 14px;
+.tooth-lower {
+  border-radius: 34% 34% 46% 46%;
 }
 
 .tooth-button:hover {
-  transform: translateY(calc(var(--tooth-y) - 1px)) rotate(var(--tooth-rotate));
-  border-color: rgba(255, 138, 42, 0.28);
-  color: var(--color-text);
+  transform: translate(-50%, -52%) rotate(var(--tooth-rotate));
+  border-color: rgba(255, 138, 42, 0.55);
+  box-shadow: 0 4px 10px rgba(255, 138, 42, 0.12);
 }
 
 .tooth-button.selected {
-  border-color: rgba(255, 138, 42, 0.46);
-  background: rgba(255, 138, 42, 0.14);
-  color: var(--color-primary);
-  box-shadow: inset 0 0 0 1px rgba(255, 138, 42, 0.18);
+  border-color: rgba(255, 138, 42, 0.74);
+  background:
+    linear-gradient(145deg, #ff9b3d, #ff7c1f 58%, #d75d0d);
+  color: #1b0f06;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.28),
+    0 5px 12px rgba(255, 138, 42, 0.18);
 }
 
 .tooth-pricing-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 7px;
+  max-height: 132px;
+  overflow: auto;
+  padding-right: 2px;
 }
 
 .tooth-pricing-item {
   display: grid;
-  gap: 6px;
+  gap: 4px;
   color: var(--color-text-soft);
-  font-size: 0.8rem;
+  font-size: 0.74rem;
   font-weight: 700;
 }
 
 .tooth-pricing-item input {
   width: 100%;
-  min-height: 42px;
+  min-height: 32px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   color: var(--color-text);
   background: var(--color-input-bg);
-  padding: 10px 12px;
+  padding: 6px 8px;
 }
 
 .case-intake-form.compact .form-section {
@@ -886,53 +859,174 @@
 }
 
 .case-modal-panel {
-  width: min(700px, 100%);
-  max-height: min(720px, calc(100vh - 32px));
+  width: min(1180px, calc(100vw - 28px));
+  max-height: min(735px, calc(100vh - 28px));
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 138, 42, 0.06), transparent 30%),
+    var(--color-surface);
 }
 
 .case-modal-panel .modal-header {
-  padding: 14px 16px 0;
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  padding: 0;
+}
+
+.case-modal-panel .modal-header .panel-title {
+  display: none;
 }
 
 .case-modal-panel .panel-body {
-  padding: 12px 16px 16px;
+  padding: 0;
 }
 
-.case-modal-panel .case-intake-form {
+.case-creation-workspace {
+  display: grid;
+  grid-template-columns: minmax(280px, 34fr) minmax(330px, 39fr) minmax(220px, 27fr);
+  gap: 6px;
+  min-height: min(680px, calc(100vh - 30px));
+  padding: 6px;
+}
+
+.case-create-panel {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 34%),
+    var(--color-surface);
+}
+
+.case-create-teeth {
+  position: relative;
+  overflow: hidden;
+  justify-items: stretch;
+}
+
+.case-create-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 10px;
 }
 
-.case-modal-panel .simple-form-section {
+.case-create-topline h3,
+.case-create-heading h3 {
+  font-size: 1.08rem;
+  line-height: 1.05;
+}
+
+.case-create-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 34px;
+}
+
+.case-create-actions .button {
+  min-height: 34px;
+  padding: 0 11px;
+  font-size: 0.76rem;
+}
+
+.case-create-divider {
+  height: 1px;
+  background: var(--color-border);
+}
+
+.case-create-section-title {
+  color: var(--color-primary);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.case-create-heading {
+  display: grid;
+  gap: 2px;
+}
+
+.case-create-heading p {
+  color: var(--color-text-muted);
+}
+
+.case-create-summary {
   gap: 10px;
 }
 
-.case-modal-panel .form-row {
-  gap: 10px;
-}
-
-.case-modal-panel .form-field {
-  gap: 5px;
-}
-
-.case-modal-panel .form-field input,
-.case-modal-panel .form-field textarea,
-.case-modal-panel .form-field select {
-  min-height: 38px;
-  padding: 8px 10px;
-}
-
-.case-modal-panel .form-field textarea {
-  min-height: 72px;
-}
-
-.case-modal-panel .choice-card {
-  min-height: 72px;
+.case-summary-box {
   padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-subtle);
 }
 
-.case-modal-panel .form-actions-row .button {
-  min-width: 160px;
-  min-height: 38px;
+.case-summary-box dl {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+}
+
+.case-summary-box dl div {
+  display: grid;
+  grid-template-columns: minmax(78px, 0.9fr) 1fr;
+  gap: 8px;
+  font-size: 0.8rem;
+}
+
+.case-summary-box dt {
+  color: var(--color-text-soft);
+}
+
+.case-summary-box dd {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.selected-teeth-tray {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 7px 9px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-subtle);
+}
+
+.selected-teeth-tray > span {
+  flex: 0 0 auto;
+  font-size: 0.8rem;
+}
+
+.selected-teeth-list {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.selected-teeth-list button {
+  min-width: 34px;
+  min-height: 28px;
+  padding: 0 8px;
+  border: 1px solid rgba(255, 138, 42, 0.34);
+  border-radius: 6px;
+  background: rgba(255, 138, 42, 0.14);
+  color: var(--color-primary);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.selected-teeth-list small {
+  color: var(--color-text-muted);
+  font-size: 0.76rem;
 }
 
 .filter-bar {
@@ -1451,6 +1545,24 @@
   .tooth-pricing-list {
     grid-template-columns: 1fr;
   }
+
+  .case-creation-workspace {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .case-create-panel {
+    padding: 14px;
+  }
+
+  .case-create-teeth {
+    order: -1;
+  }
+
+  .odontogram-selector {
+    width: min(100%, 350px);
+    height: 470px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -1480,16 +1592,6 @@
 
   .week-panel-header {
     align-items: stretch;
-  }
-
-  .case-teeth-header {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .case-teeth-summary {
-    max-width: none;
-    text-align: left;
   }
 
   .form-actions-row,
@@ -1563,15 +1665,30 @@
     width: 100%;
   }
 
-  .odontogram-grid {
-    min-width: 500px;
+  .tooth-button {
+    width: 32px;
+    height: 36px;
+    font-size: 0.76rem;
   }
 
-  .tooth-button {
-    width: 28px;
-    min-width: 28px;
-    min-height: 36px;
-    font-size: 0.76rem;
+  .odontogram-selector {
+    width: min(100%, 320px);
+    height: 430px;
+  }
+
+  .selected-teeth-tray {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .case-create-topline,
+  .case-create-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .case-create-actions {
+    padding-right: 0;
   }
 
   .modal-panel .table-wrap {
