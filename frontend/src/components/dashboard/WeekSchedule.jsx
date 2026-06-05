@@ -53,7 +53,7 @@ export default function WeekSchedule({
       <div className="panel-header">
         <div className="panel-title">
           <h3>Semana de produção</h3>
-          <p>Navegue entre os dias e veja os casos da bancada.</p>
+          <p>Casos do dia na bancada.</p>
         </div>
       </div>
       <div className="panel-body week-panel-body">

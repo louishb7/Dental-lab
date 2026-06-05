@@ -19,10 +19,6 @@ const PAGE_META = {
     title: "Financeiro",
     subtitle: null,
   },
-  services: {
-    title: "Serviços",
-    subtitle: null,
-  },
 };
 
 export default function AppLayout({

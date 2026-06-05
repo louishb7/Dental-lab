@@ -148,21 +148,13 @@ export default function CasesPage({
     },
     {
       key: "services",
-      header: "Serviços",
+      header: "Resumo",
       render: (caseItem) => {
         const serviceCount = getServiceCount(caseItem);
         return (
           <span className="cell-main">
             <strong>{formatCaseCount(serviceCount, "item", "itens")}</strong>
-            <small>Abra o caso para lançar os trabalhos</small>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => onOpenCaseItems(caseItem.id)}
-            >
-              <Plus size={14} />
-              Adicionar serviço
-            </Button>
+            <small>Detalhes no caso</small>
           </span>
         );
       },

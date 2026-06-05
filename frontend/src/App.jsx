@@ -6,7 +6,6 @@ import CasesPage from "./pages/CasesPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import DoctorsPage from "./pages/DoctorsPage.jsx";
 import FinancePage from "./pages/FinancePage.jsx";
-import ServicesPage from "./pages/ServicesPage.jsx";
 import {
   clearSession,
   createCase,
@@ -31,6 +30,7 @@ import {
 import {
   buildAutomaticCaseItems,
   buildCasePayload,
+  buildDentalWorkItems,
   buildDoctorPayload,
   buildItemPayload,
   EMPTY_CASE,
@@ -318,18 +318,35 @@ export default function App() {
     event.preventDefault();
     if (!selectedCaseId) return false;
 
+    const selectedTeeth = Array.isArray(itemForm.selected_teeth) ? itemForm.selected_teeth : [];
+    if (!options.itemId && !selectedTeeth.length) {
+      setMessage({ type: "error", text: "Selecione ao menos um dente antes de adicionar o serviço." });
+      return false;
+    }
+
     setBusy(true);
     setMessage(null);
     try {
-      const payload = buildItemPayload(
-        itemForm,
-        options.advanced ?? true,
-        selectedCase?.pricing_mode,
-      );
-
       if (options.itemId) {
+        const payload = buildItemPayload(
+          itemForm,
+          options.advanced ?? true,
+          selectedCase?.pricing_mode,
+        );
         await updateCaseItem(selectedCaseId, options.itemId, payload);
+      } else if (selectedTeeth.length) {
+        const payloads = buildDentalWorkItems(itemForm, selectedCase?.pricing_mode);
+        if (payloads.some((payload) => payload.unit_value === null && selectedCase?.pricing_mode !== "fixed")) {
+          setMessage({ type: "error", text: "Preencha o valor de cada dente selecionado antes de adicionar o serviço." });
+          return false;
+        }
+        await Promise.all(payloads.map((payload) => createCaseItem(selectedCaseId, payload)));
       } else {
+        const payload = buildItemPayload(
+          itemForm,
+          options.advanced ?? true,
+          selectedCase?.pricing_mode,
+        );
         await createCaseItem(selectedCaseId, payload);
       }
       const refreshed = await loadAppData();
@@ -621,23 +638,6 @@ export default function App() {
       )}
 
       {activePage === "finance" && <FinancePage dashboard={dashboard} cases={cases} loading={loading} />}
-
-      {activePage === "services" && (
-        <ServicesPage
-          cases={cases}
-          doctors={doctors}
-          loading={loading}
-          busy={busy}
-          selectedCase={selectedCase}
-          items={items}
-          itemForm={itemForm}
-          onOpenCaseItems={openCaseItems}
-          onItemChange={handleItemChange}
-          onItemSubmit={handleItemSubmit}
-          onRemoveItem={removeItem}
-          onCloseDetails={() => setSelectedCaseId(null)}
-        />
-      )}
 
       {confirmPending && (
         <ConfirmModal

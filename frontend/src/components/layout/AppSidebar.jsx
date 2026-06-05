@@ -3,7 +3,6 @@ import {
   ClipboardList,
   CreditCard,
   Stethoscope,
-  Wrench,
 } from "lucide-react";
 import { PRODUCT_NAME } from "../../config/product.js";
 
@@ -11,7 +10,6 @@ const NAV_ITEMS = [
   { id: "dashboard", label: "Bancada", icon: BarChart3 },
   { id: "cases", label: "Casos", icon: ClipboardList },
   { id: "doctors", label: "Dentistas", icon: Stethoscope },
-  { id: "services", label: "Serviços", icon: Wrench },
   { id: "finance", label: "Financeiro", icon: CreditCard },
 ];
 

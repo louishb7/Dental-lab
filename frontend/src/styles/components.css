@@ -122,15 +122,15 @@
 
 .week-panel-body {
   display: grid;
-  gap: 10px;
+  gap: 7px;
 }
 
 .week-panel-nav {
   display: grid;
-  grid-template-columns: max-content minmax(0, 1fr) max-content;
+  grid-template-columns: minmax(92px, 0.3fr) minmax(120px, 1fr) minmax(92px, 0.3fr);
   align-items: center;
-  gap: 10px;
-  padding: 6px;
+  gap: 7px;
+  padding: 5px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-subtle);
@@ -138,6 +138,16 @@
 
 .week-panel-nav .week-range-label {
   text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.week-panel-nav .button {
+  width: 100%;
+  min-height: 30px;
+  padding: 0 8px;
+  font-size: 0.72rem;
 }
 
 .panel-chip {
@@ -235,8 +245,8 @@
 .week-days-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 7px;
-  padding: 8px;
+  gap: 6px;
+  padding: 6px;
   border: 1px solid rgba(255, 138, 42, 0.1);
   border-radius: var(--radius-sm);
   background:
@@ -249,9 +259,9 @@
   min-width: 0;
   display: grid;
   align-content: start;
-  gap: 6px;
-  min-height: 88px;
-  padding: 8px 7px;
+  gap: 4px;
+  min-height: 66px;
+  padding: 6px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background:
@@ -297,22 +307,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  min-height: 18px;
+  gap: 4px;
+  min-height: 15px;
 }
 
 .week-day-label {
   color: var(--color-text-muted);
-  font-size: 0.7rem;
+  font-size: 0.64rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
 }
 
 .week-day-marker {
   color: var(--color-info-soft);
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 700;
-  padding: 2px 6px;
+  padding: 1px 5px;
   border-radius: 999px;
   background: rgba(138, 180, 255, 0.08);
 }
@@ -320,18 +329,18 @@
 .week-day-summary {
   font-family: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
   display: block;
-  min-height: 26px;
-  padding-top: 5px;
+  min-height: 20px;
+  padding-top: 4px;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
-  font-size: 0.84rem;
+  font-size: 0.78rem;
   line-height: 1.1;
 }
 
 .week-day-urgent {
   color: var(--color-text-muted);
   line-height: 1.2;
-  font-size: 0.66rem;
-  min-height: 14px;
+  font-size: 0.6rem;
+  min-height: 10px;
   opacity: 0.82;
 }
 
@@ -340,8 +349,7 @@
 }
 
 .week-day-card.off .week-day-summary {
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
+  font-size: 0.72rem;
 }
 
 .button {

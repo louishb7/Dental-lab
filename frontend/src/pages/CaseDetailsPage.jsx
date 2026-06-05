@@ -1,5 +1,6 @@
 import { Edit3, Layers3, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import CaseDentalWorkForm from "../components/cases/CaseDentalWorkForm.jsx";
 import Button from "../components/ui/Button.jsx";
 import DataTable from "../components/ui/DataTable.jsx";
 import DeadlineBadge from "../components/ui/DeadlineBadge.jsx";
@@ -16,6 +17,10 @@ const EMPTY_ITEM_FORM = {
   service_type: "",
   quantity: "1",
   unit_value: "",
+  selected_teeth: [],
+  unit_values: {},
+  pricing_mode: "services",
+  total_value: "",
   material: "",
   color: "",
   notes: "",
@@ -60,7 +65,11 @@ export default function CaseDetailsPage({
     setShowItemForm(true);
 
     if (!item) {
-      syncItemForm(EMPTY_ITEM_FORM);
+      syncItemForm({
+        ...EMPTY_ITEM_FORM,
+        pricing_mode: caseItem?.pricing_mode || "services",
+        total_value: isFixedPrice ? formatCurrency(caseItem?.total_value) : "",
+      });
       return;
     }
 
@@ -72,6 +81,10 @@ export default function CaseDetailsPage({
       service_type: item.service_type || "",
       quantity: operational.quantity,
       unit_value: item.unit_value ? formatCurrency(item.unit_value) : "",
+      selected_teeth: [],
+      unit_values: {},
+      pricing_mode: caseItem?.pricing_mode || "services",
+      total_value: isFixedPrice ? formatCurrency(caseItem?.total_value) : "",
       material: item.material || "",
       color: item.color || "",
       notes: operational.notes,
@@ -198,7 +211,7 @@ export default function CaseDetailsPage({
         <section className="form-section simple-form-section">
           <div className="case-card-top">
             <div className="panel-title">
-              <h3>Serviços deste caso</h3>
+              <h3>Serviços do caso</h3>
               <p>{items.length ? servicesDescription : "Nenhum serviço lançado ainda."}</p>
             </div>
             <Button variant="primary" size="sm" onClick={() => openItemForm()}>
@@ -219,11 +232,40 @@ export default function CaseDetailsPage({
           />
         </section>
 
-        {showItemForm && (
+        {showItemForm && !editingItemId && (
+          <form className="case-creation-workspace case-intake-form compact case-service-work-form" onSubmit={handleSubmit}>
+            <CaseDentalWorkForm
+              form={itemForm}
+              busy={busy}
+              submitLabel="Adicionar serviço"
+              submitIcon={Plus}
+              allowPricingModeChange={false}
+              showFixedValueInput={false}
+              showServiceName
+              showNotes
+              title="Dentes do serviço"
+              subtitle="Selecione os dentes deste lançamento"
+              summaryTitle="Resumo do serviço"
+              fixedModeLabel="Cobrança fixa"
+              unitModeLabel="Cobrança unitária"
+              fixedValueHint="Valor fixo do caso"
+              unitValueHint="Total dos dentes selecionados"
+              onChange={onItemChange}
+              onCancel={closeItemForm}
+              summaryRows={[
+                { label: "Caso", value: caseItem.patient_ref },
+                { label: "Dentista", value: doctor?.name || `#${caseItem.doctor_id}` },
+                { label: "Serviço", value: itemForm.name },
+              ]}
+            />
+          </form>
+        )}
+
+        {showItemForm && editingItemId && (
           <form className="form-grid" onSubmit={handleSubmit}>
             <div className="form-section simple-form-section">
               <div className="panel-title">
-                <h3>{editingItemId ? "Editar serviço" : "Adicionar serviço"}</h3>
+                <h3>Editar serviço</h3>
                 <p>
                   {isFixedPrice
                     ? "Informe dentes, quantidade e observações. O valor total continua sendo o combinado do caso."
@@ -300,7 +342,7 @@ export default function CaseDetailsPage({
                 </Button>
                 <Button variant="primary" disabled={busy} type="submit">
                   <Plus size={16} />
-                  {editingItemId ? "Salvar serviço" : "Adicionar serviço"}
+                  Salvar serviço
                 </Button>
               </div>
             </div>

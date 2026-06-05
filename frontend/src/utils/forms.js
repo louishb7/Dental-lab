@@ -20,6 +20,10 @@ export const EMPTY_ITEM = {
   service_type: "",
   quantity: "1",
   unit_value: "",
+  selected_teeth: [],
+  unit_values: {},
+  pricing_mode: "services",
+  total_value: "",
   material: "",
   color: "",
   notes: "",
@@ -137,5 +141,24 @@ export function buildAutomaticCaseItems(form) {
     material: null,
     color: null,
     notes: null,
+  }));
+}
+
+/**
+ * Builds one case-service payload per selected tooth from the odontogram flow.
+ */
+export function buildDentalWorkItems(form, pricingMode = "services") {
+  const selectedTeeth = Array.isArray(form.selected_teeth) ? form.selected_teeth : [];
+  const unitValues = form.unit_values || {};
+  const serviceName = form.name?.trim() || form.service_type?.trim() || "Servico do caso";
+  const notes = form.notes?.trim() || null;
+
+  return selectedTeeth.map((tooth) => ({
+    tooth,
+    service_type: serviceName,
+    unit_value: pricingMode === "fixed" ? null : parseCurrencyToApiValue(unitValues[tooth]),
+    material: form.material?.trim() || null,
+    color: form.color?.trim() || null,
+    notes,
   }));
 }
