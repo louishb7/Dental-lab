@@ -56,9 +56,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60")
 if not 5 <= ACCESS_TOKEN_EXPIRE_MINUTES <= 24 * 60:
     raise RuntimeError("ACCESS_TOKEN_EXPIRE_MINUTES must be between 5 and 1440.")
 
-PASSWORD_MIN_LENGTH = int(os.getenv("PASSWORD_MIN_LENGTH", "12"))
-if PASSWORD_MIN_LENGTH < 12:
-    raise RuntimeError("PASSWORD_MIN_LENGTH must be at least 12.")
+# Regra fixa do produto: cadastro com senha de no mínimo 6 caracteres.
+PASSWORD_MIN_LENGTH = 6
 
 BCRYPT_ROUNDS = int(os.getenv("BCRYPT_ROUNDS", "12"))
 if not 12 <= BCRYPT_ROUNDS <= 16:

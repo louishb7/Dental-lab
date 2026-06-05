@@ -10,6 +10,7 @@ from backend.models.user import User
 from backend.main import app
 
 STRONG_PASSWORD = "StrongPass123!"
+SPECIAL_PASSWORD = "Ab!1cd"
 
 
 def _configure_test_security(monkeypatch) -> None:
@@ -120,7 +121,7 @@ def test_registration_allows_multiple_users_and_rejects_duplicate_identity(monke
         "/auth/register",
         json={
             "email": "admin@cadista.local",
-            "username": "another-admin",
+            "username": "anotheradmin",
             "password": STRONG_PASSWORD,
         },
     )
@@ -172,12 +173,63 @@ def test_registration_rejects_weak_password(monkeypatch) -> None:
         "/auth/register",
         json={
             "email": "weak@cadista.local",
-            "username": "weak",
+            "username": "weak1",
             "password": "weakpass",
         },
     )
 
     assert response.status_code == 422, response.text
+    assert response.json()["detail"][0]["msg"] == "Value error, Senha deve conter ao menos um número"
+
+
+def test_registration_accepts_passwords_with_special_characters(monkeypatch) -> None:
+    _configure_test_security(monkeypatch)
+    client = TestClient(app)
+
+    response = client.post(
+        "/auth/register",
+        json={
+            "email": "symbols@cadista.local",
+            "username": "symbols1",
+            "password": SPECIAL_PASSWORD,
+        },
+    )
+
+    assert response.status_code == 201, response.text
+    assert response.json()["username"] == "symbols1"
+
+
+def test_registration_rejects_invalid_usernames(monkeypatch) -> None:
+    _configure_test_security(monkeypatch)
+    client = TestClient(app)
+
+    digits_only_response = client.post(
+        "/auth/register",
+        json={
+            "email": "digits@cadista.local",
+            "username": "12345",
+            "password": STRONG_PASSWORD,
+        },
+    )
+    assert digits_only_response.status_code == 422, digits_only_response.text
+    assert (
+        digits_only_response.json()["detail"][0]["msg"]
+        == "Value error, Nome de usuário não pode ser composto apenas por números"
+    )
+
+    special_chars_response = client.post(
+        "/auth/register",
+        json={
+            "email": "special@cadista.local",
+            "username": "user@1",
+            "password": STRONG_PASSWORD,
+        },
+    )
+    assert special_chars_response.status_code == 422, special_chars_response.text
+    assert (
+        special_chars_response.json()["detail"][0]["msg"]
+        == "Value error, Nome de usuário pode conter apenas letras e números"
+    )
 
 
 def test_login_locks_after_repeated_failures(monkeypatch) -> None:

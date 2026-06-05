@@ -1,15 +1,14 @@
-import { Edit3, Layers3, Plus, Trash2 } from "lucide-react";
+import { Edit3, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import CaseDentalWorkForm from "../components/cases/CaseDentalWorkForm.jsx";
+import OdontogramSelector from "../components/cases/OdontogramSelector.jsx";
 import Button from "../components/ui/Button.jsx";
-import DataTable from "../components/ui/DataTable.jsx";
 import DeadlineBadge from "../components/ui/DeadlineBadge.jsx";
 import FormField from "../components/ui/FormField.jsx";
 import Modal from "../components/ui/Modal.jsx";
-import PriorityBadge from "../components/ui/PriorityBadge.jsx";
 import StatusBadge from "../components/ui/StatusBadge.jsx";
-import { formatCurrency } from "../utils/formatters.js";
+import { formatCurrency, formatCurrencyInput } from "../utils/formatters.js";
 import { splitItemOperationalNotes } from "../utils/forms.js";
+import { sortTeethByFdi } from "../utils/odontogram.js";
 
 const EMPTY_ITEM_FORM = {
   name: "",
@@ -19,12 +18,35 @@ const EMPTY_ITEM_FORM = {
   unit_value: "",
   selected_teeth: [],
   unit_values: {},
-  pricing_mode: "services",
+  pricing_mode: "fixed",
   total_value: "",
   material: "",
   color: "",
   notes: "",
 };
+
+function splitCaseNotes(value) {
+  const notes = [];
+  const teeth = [];
+
+  String(value || "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .forEach((line) => {
+      const match = line.match(/^Dentes selecionados:\s*(.+)$/i);
+      if (match) {
+        teeth.push(match[1].trim());
+      } else if (!/^Servico principal:/i.test(line)) {
+        notes.push(line);
+      }
+    });
+
+  return {
+    notes: notes.join("\n"),
+    teeth: teeth.join(", "),
+  };
+}
 
 function getItemView(item) {
   const operational = splitItemOperationalNotes(item?.notes);
@@ -47,7 +69,10 @@ export default function CaseDetailsPage({
 }) {
   const [showItemForm, setShowItemForm] = useState(false);
   const [editingItemId, setEditingItemId] = useState(null);
-  const isFixedPrice = caseItem?.pricing_mode === "fixed";
+  const selectedTeeth = sortTeethByFdi(itemForm.selected_teeth);
+  const unitValues = itemForm.unit_values || {};
+  const caseNotes = splitCaseNotes(caseItem?.notes);
+  const hasUrgentPriority = caseItem?.priority === "urgent";
 
   useEffect(() => {
     setShowItemForm(false);
@@ -65,28 +90,20 @@ export default function CaseDetailsPage({
     setShowItemForm(true);
 
     if (!item) {
-      syncItemForm({
-        ...EMPTY_ITEM_FORM,
-        pricing_mode: caseItem?.pricing_mode || "services",
-        total_value: isFixedPrice ? formatCurrency(caseItem?.total_value) : "",
-      });
+      syncItemForm(EMPTY_ITEM_FORM);
       return;
     }
 
     const operational = splitItemOperationalNotes(item.notes);
 
     syncItemForm({
+      ...EMPTY_ITEM_FORM,
       name: item.service_type || "",
       tooth: item.tooth || "",
       service_type: item.service_type || "",
       quantity: operational.quantity,
       unit_value: item.unit_value ? formatCurrency(item.unit_value) : "",
-      selected_teeth: [],
-      unit_values: {},
-      pricing_mode: caseItem?.pricing_mode || "services",
-      total_value: isFixedPrice ? formatCurrency(caseItem?.total_value) : "",
-      material: item.material || "",
-      color: item.color || "",
+      pricing_mode: item.unit_value ? "services" : "fixed",
       notes: operational.notes,
     });
   }
@@ -97,225 +114,208 @@ export default function CaseDetailsPage({
     syncItemForm(EMPTY_ITEM_FORM);
   }
 
-  const columns = [
-    {
-      key: "service_type",
-      header: "Serviço",
-      render: (item) => {
-        const view = getItemView(item);
+  function setServicePricingMode(mode) {
+    syncItemForm({ pricing_mode: mode });
+  }
 
-        return (
-          <span className="cell-main">
-            <strong>{item.service_type}</strong>
-            {view.notes && <small>{view.notes}</small>}
-          </span>
-        );
+  function handleTeethChange(nextTeeth) {
+    const nextUnitValues = nextTeeth.reduce((accumulator, tooth) => {
+      accumulator[tooth] = unitValues[tooth] || "";
+      return accumulator;
+    }, {});
+
+    syncItemForm({
+      selected_teeth: nextTeeth,
+      unit_values: nextUnitValues,
+      tooth: sortTeethByFdi(nextTeeth).join(", "),
+    });
+  }
+
+  function handleUnitValueChange(tooth, value) {
+    syncItemForm({
+      unit_values: {
+        ...unitValues,
+        [tooth]: formatCurrencyInput(value),
       },
-    },
-    { key: "tooth", header: "Dentes / numeração" },
-    {
-      key: "quantity",
-      header: "Qtd.",
-      render: (item) => getItemView(item).quantity,
-    },
-    ...(
-      isFixedPrice
-        ? []
-        : [{ key: "unit_value", header: "Valor", render: (item) => formatCurrency(item.unit_value) }]
-    ),
-    {
-      key: "actions",
-      header: "Ações",
-      render: (item) => (
-        <div className="row-actions">
-          <Button variant="secondary" size="sm" onClick={() => openItemForm(item)}>
-            <Edit3 size={16} />
-            Editar
-          </Button>
-          <Button
-            variant="danger"
-            iconOnly
-            aria-label="Excluir item"
-            onClick={() => onRemoveItem(item.id)}
-          >
-            <Trash2 size={16} />
-          </Button>
-        </div>
-      ),
-    },
-  ];
+    });
+  }
 
   if (!caseItem) return null;
 
   async function handleSubmit(event) {
-    const success = await onItemSubmit(event, { itemId: editingItemId, advanced: false });
+    const success = await onItemSubmit(event, {
+      itemId: editingItemId,
+      advanced: false,
+      pricingMode: itemForm.pricing_mode,
+    });
     if (success) {
       closeItemForm();
     }
   }
 
-  const billingTitle = isFixedPrice ? "Valor fixo acertado" : "Cobrança unitária";
-  const billingDescription = isFixedPrice
-    ? "Use os serviços para registrar dentes, quantidade e observações. O total do caso permanece fixo."
-    : "Adicione vários serviços com seus respectivos dentes e valores para compor o total do caso.";
-  const servicesDescription = isFixedPrice
-    ? "Registre os serviços apenas para organizar dentes e observações deste caso."
-    : "Lance cada serviço com dente, quantidade e valor unitário.";
-  const emptyServicesDescription = isFixedPrice
-    ? "Abra o formulário e registre os serviços só para organizar o trabalho deste caso."
-    : "Abra o formulário e registre o primeiro serviço com valor unitário deste caso.";
-
   return (
-    <Modal
-      title={caseItem.patient_ref || "Detalhes do caso"}
-      description="Resumo do caso e serviços vinculados."
-      onClose={onClose}
-    >
-      <div className="content-grid">
-        <section className="form-section simple-form-section">
-          <h3>Informações principais</h3>
-          <div className="form-row">
-            <div className="cell-main">
-              <small>Paciente</small>
-              <strong>{caseItem.patient_ref}</strong>
+    <>
+      <Modal
+        title={caseItem.patient_ref || "Detalhes do caso"}
+        onClose={onClose}
+        className="case-details-modal"
+      >
+        <div className="case-details-stack">
+          <section className="case-details-section">
+            <div className="case-details-topline">
+              <h3>Informações principais</h3>
+              <Button variant="primary" size="sm" onClick={() => openItemForm()}>
+                <Plus size={16} />
+                Adicionar serviço
+              </Button>
             </div>
-            <div className="cell-main">
-              <small>Dentista</small>
-              <strong>{doctor?.name || `#${caseItem.doctor_id}`}</strong>
-            </div>
-            <div className="cell-main">
-              <small>Prazo</small>
-              <DeadlineBadge deadline={caseItem.deadline} status={caseItem.status} />
-            </div>
-            <div className="cell-main">
-              <small>Total</small>
-              <strong>{formatCurrency(caseItem.total_value)}</strong>
-            </div>
-          </div>
-          <div className="case-meta">
-            <StatusBadge status={caseItem.status} />
-            <PriorityBadge priority={caseItem.priority} />
-            <span>{billingTitle}</span>
-          </div>
-          {caseItem.notes && <p className="muted">{caseItem.notes}</p>}
-          <div className="case-billing-box">
-            <div className="case-billing-copy">
-              <small>Forma de cobrança</small>
-              <strong>{billingTitle}</strong>
-              <p>{billingDescription}</p>
-            </div>
-            {isFixedPrice && <strong className="case-billing-value">{formatCurrency(caseItem.total_value)}</strong>}
-          </div>
-        </section>
 
-        <section className="form-section simple-form-section">
-          <div className="case-card-top">
-            <div className="panel-title">
-              <h3>Serviços do caso</h3>
-              <p>{items.length ? servicesDescription : "Nenhum serviço lançado ainda."}</p>
-            </div>
-            <Button variant="primary" size="sm" onClick={() => openItemForm()}>
-              <Plus size={16} />
-              Adicionar serviço
-            </Button>
-          </div>
-          <div className="case-service-hint">
-            <strong>{billingTitle}</strong>
-            <span>{servicesDescription}</span>
-          </div>
-          <DataTable
-            columns={columns}
-            data={items}
-            emptyIcon={Layers3}
-            emptyTitle="Nenhum serviço lançado ainda."
-            emptyDescription={emptyServicesDescription}
-          />
-        </section>
-
-        {showItemForm && !editingItemId && (
-          <form className="case-creation-workspace case-intake-form compact case-service-work-form" onSubmit={handleSubmit}>
-            <CaseDentalWorkForm
-              form={itemForm}
-              busy={busy}
-              submitLabel="Adicionar serviço"
-              submitIcon={Plus}
-              allowPricingModeChange={false}
-              showFixedValueInput={false}
-              showServiceName
-              showNotes
-              title="Dentes do serviço"
-              subtitle="Selecione os dentes deste lançamento"
-              summaryTitle="Resumo do serviço"
-              fixedModeLabel="Cobrança fixa"
-              unitModeLabel="Cobrança unitária"
-              fixedValueHint="Valor fixo do caso"
-              unitValueHint="Total dos dentes selecionados"
-              onChange={onItemChange}
-              onCancel={closeItemForm}
-              summaryRows={[
-                { label: "Caso", value: caseItem.patient_ref },
-                { label: "Dentista", value: doctor?.name || `#${caseItem.doctor_id}` },
-                { label: "Serviço", value: itemForm.name },
-              ]}
-            />
-          </form>
-        )}
-
-        {showItemForm && editingItemId && (
-          <form className="form-grid" onSubmit={handleSubmit}>
-            <div className="form-section simple-form-section">
-              <div className="panel-title">
-                <h3>Editar serviço</h3>
-                <p>
-                  {isFixedPrice
-                    ? "Informe dentes, quantidade e observações. O valor total continua sendo o combinado do caso."
-                    : "Informe o serviço, os dentes e o valor unitário de cada lançamento."}
-                </p>
+            <div className="case-details-facts">
+              <div className="cell-main">
+                <small>Paciente</small>
+                <strong>{caseItem.patient_ref}</strong>
               </div>
-
-              <div className="case-billing-box compact">
-                <div className="case-billing-copy">
-                  <small>Forma de cobrança</small>
-                  <strong>{billingTitle}</strong>
-                  <p>{isFixedPrice ? "Sem detalhamento unitário obrigatório." : "Cada lançamento soma no valor final do caso."}</p>
-                </div>
+              <div className="cell-main">
+                <small>Dentista</small>
+                <strong>{doctor?.name || `#${caseItem.doctor_id}`}</strong>
               </div>
-
-              <div className="form-row">
-                <FormField label="Serviço">
-                  <input
-                    name="name"
-                    value={itemForm.name}
-                    onChange={onItemChange}
-                    placeholder="Coroa, faceta, placa, provisório..."
-                    required
-                  />
-                </FormField>
-                <FormField label="Quantidade">
-                  <input
-                    name="quantity"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    value={itemForm.quantity}
-                    onChange={onItemChange}
-                    placeholder="1"
-                    required
-                  />
-                </FormField>
+              <div className="cell-main">
+                <small>Prazo</small>
+                <DeadlineBadge deadline={caseItem.deadline} status={caseItem.status} />
               </div>
+              <div className="cell-main">
+                <small>Total</small>
+                <strong>{formatCurrency(caseItem.total_value)}</strong>
+              </div>
+            </div>
 
-              <FormField label="Dentes / numeração">
+            <div className="case-meta">
+              <StatusBadge status={caseItem.status} />
+              {hasUrgentPriority && <span className="badge badge-priority urgent">Urgente</span>}
+            </div>
+
+            {(caseNotes.notes || caseNotes.teeth) && (
+              <div className="case-notes-grid">
+                {caseNotes.notes && (
+                  <div className="case-note-block">
+                    <small>Observações</small>
+                    <p>{caseNotes.notes}</p>
+                  </div>
+                )}
+                {caseNotes.teeth && (
+                  <div className="case-note-block">
+                    <small>Dentes selecionados</small>
+                    <p>{caseNotes.teeth}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+
+          <section className="case-details-section">
+            <h3>Serviços do caso</h3>
+
+            {items.length ? (
+              <div className="case-services-list">
+                {items.map((item) => {
+                  const view = getItemView(item);
+
+                  return (
+                    <article key={item.id} className="case-service-item">
+                      <div className="case-service-main">
+                        <strong>{item.service_type}</strong>
+                        <span>{item.tooth ? `Dente ${item.tooth}` : "Sem dente informado"}</span>
+                        {view.notes && <small>{view.notes}</small>}
+                      </div>
+                      <div className="case-service-side">
+                        {item.unit_value !== null && item.unit_value !== undefined && (
+                          <strong>{formatCurrency(item.unit_value)}</strong>
+                        )}
+                        <div className="row-actions">
+                          <Button variant="secondary" size="sm" onClick={() => openItemForm(item)}>
+                            <Edit3 size={15} />
+                            Editar
+                          </Button>
+                          <Button
+                            variant="danger"
+                            iconOnly
+                            aria-label="Excluir serviço"
+                            onClick={() => onRemoveItem(item.id)}
+                          >
+                            <Trash2 size={15} />
+                          </Button>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="case-empty-copy">Nenhum serviço lançado ainda.</p>
+            )}
+          </section>
+        </div>
+      </Modal>
+
+      {showItemForm && (
+        <Modal
+          title={editingItemId ? "Editar serviço" : "Adicionar serviço"}
+          onClose={closeItemForm}
+          className="case-service-modal"
+        >
+          <form className="case-service-form" onSubmit={handleSubmit}>
+            <FormField label="Serviço / descrição curta">
+              <input
+                name="name"
+                value={itemForm.name}
+                onChange={onItemChange}
+                placeholder="Coroa, faceta, placa, provisório..."
+                required
+              />
+            </FormField>
+
+            {editingItemId ? (
+              <FormField label="Dentes selecionados">
                 <input
                   name="tooth"
                   value={itemForm.tooth}
                   onChange={onItemChange}
-                  placeholder="11, 21, 22-24, PT, moldeira..."
+                  placeholder="11, 21, 22-24..."
                   required
                 />
               </FormField>
+            ) : (
+              <div className="case-service-teeth">
+                <span className="case-service-label">Dentes selecionados</span>
+                <OdontogramSelector selectedTeeth={selectedTeeth} onChange={handleTeethChange} />
+              </div>
+            )}
 
-              {!isFixedPrice && (
-                <FormField label="Valor unitário">
+            <div className="form-field">
+              <span>Tipo de cobrança do serviço</span>
+              <div className="pricing-mode-grid" role="radiogroup" aria-label="Tipo de cobrança do serviço">
+                <button
+                  type="button"
+                  className={`choice-card ${itemForm.pricing_mode === "fixed" ? "active" : ""}`}
+                  aria-pressed={itemForm.pricing_mode === "fixed"}
+                  onClick={() => setServicePricingMode("fixed")}
+                >
+                  <strong>Manter preço fixado</strong>
+                </button>
+                <button
+                  type="button"
+                  className={`choice-card ${itemForm.pricing_mode === "services" ? "active" : ""}`}
+                  aria-pressed={itemForm.pricing_mode === "services"}
+                  onClick={() => setServicePricingMode("services")}
+                >
+                  <strong>Valor adicional</strong>
+                </button>
+              </div>
+            </div>
+
+            {itemForm.pricing_mode === "services" && (
+              editingItemId ? (
+                <FormField label="Valor adicional">
                   <input
                     name="unit_value"
                     value={itemForm.unit_value}
@@ -324,31 +324,45 @@ export default function CaseDetailsPage({
                     required
                   />
                 </FormField>
-              )}
+              ) : selectedTeeth.length > 0 && (
+                <div className="tooth-pricing-list compact">
+                  {selectedTeeth.map((tooth) => (
+                    <label key={tooth} className="tooth-pricing-item">
+                      <span>Dente {tooth}</span>
+                      <input
+                        value={unitValues[tooth] || ""}
+                        onChange={(event) => handleUnitValueChange(tooth, event.target.value)}
+                        placeholder="R$ 0,00"
+                        required
+                      />
+                    </label>
+                  ))}
+                </div>
+              )
+            )}
 
-              <FormField label="Observações">
-                <textarea
-                  name="notes"
-                  rows="4"
-                  value={itemForm.notes}
-                  onChange={onItemChange}
-                  placeholder="Use este campo para anotar detalhes rápidos do trabalho."
-                />
-              </FormField>
+            <FormField label="Observações">
+              <textarea
+                name="notes"
+                rows="3"
+                value={itemForm.notes}
+                onChange={onItemChange}
+                placeholder="Observação curta do serviço"
+              />
+            </FormField>
 
-              <div className="confirm-modal-actions">
-                <Button variant="ghost" onClick={closeItemForm}>
-                  Cancelar
-                </Button>
-                <Button variant="primary" disabled={busy} type="submit">
-                  <Plus size={16} />
-                  Salvar serviço
-                </Button>
-              </div>
+            <div className="confirm-modal-actions">
+              <Button variant="ghost" onClick={closeItemForm}>
+                Cancelar
+              </Button>
+              <Button variant="primary" disabled={busy} type="submit">
+                <Plus size={16} />
+                {editingItemId ? "Salvar serviço" : "Adicionar serviço"}
+              </Button>
             </div>
           </form>
-        )}
-      </div>
-    </Modal>
+        </Modal>
+      )}
+    </>
   );
 }

@@ -6,11 +6,11 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import AliasChoices, BaseModel, Field, model_validator
-
-from backend.core import settings
+from pydantic import AliasChoices, BaseModel, Field, field_validator
 
 EMAIL_PATTERN = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
+PASSWORD_MIN_LENGTH = 6
+USERNAME_MIN_LENGTH = 5
 
 
 class AuthRegisterRequest(BaseModel):
@@ -23,37 +23,40 @@ class AuthRegisterRequest(BaseModel):
     )
     username: str = Field(
         ...,
-        min_length=3,
         max_length=80,
         description="Nome de usuário",
     )
     password: str = Field(
         ...,
-        min_length=settings.PASSWORD_MIN_LENGTH,
         description="Senha do usuário",
     )
 
-    @model_validator(mode="after")
-    def validate_password_strength(self) -> "AuthRegisterRequest":
-        password = self.password
-        normalized_password = password.strip()
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, value: str) -> str:
+        normalized_username = value.strip()
 
-        if normalized_password != password:
-            raise ValueError("Senha não pode começar ou terminar com espaços")
+        if len(normalized_username) < USERNAME_MIN_LENGTH:
+            raise ValueError("Nome de usuário deve ter pelo menos 5 caracteres")
 
-        if not any(char.isalpha() for char in password):
-            raise ValueError("Senha deve conter ao menos uma letra")
+        if not normalized_username.isalnum():
+            raise ValueError("Nome de usuário pode conter apenas letras e números")
 
-        if not any(char.isdigit() for char in password):
+        if not any(char.isalpha() for char in normalized_username):
+            raise ValueError("Nome de usuário não pode ser composto apenas por números")
+
+        return normalized_username
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        if len(value) < PASSWORD_MIN_LENGTH:
+            raise ValueError("Senha deve ter pelo menos 6 caracteres")
+
+        if not any(char.isdigit() for char in value):
             raise ValueError("Senha deve conter ao menos um número")
 
-        if self.username.strip().lower() in password.lower():
-            raise ValueError("Senha não pode conter o nome de usuário")
-
-        if self.email.strip().lower() in password.lower():
-            raise ValueError("Senha não pode conter o email")
-
-        return self
+        return value
 
 
 class AuthLoginRequest(BaseModel):

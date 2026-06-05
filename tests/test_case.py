@@ -39,7 +39,7 @@ def _register_user(client: TestClient) -> dict:
         "/auth/register",
         json={
             "email": "case@cadista.local",
-            "username": "case",
+            "username": "case01",
             "password": STRONG_PASSWORD,
         },
     )

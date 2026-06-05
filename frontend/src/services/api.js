@@ -36,7 +36,10 @@ async function parseResponse(response) {
 
   if (!response.ok) {
     const detail = payload?.detail || "Nao foi possivel concluir a operacao.";
-    throw new Error(Array.isArray(detail) ? detail[0]?.msg : detail);
+    const error = new Error(Array.isArray(detail) ? detail[0]?.msg : detail);
+    error.status = response.status;
+    error.details = Array.isArray(detail) ? detail : null;
+    throw error;
   }
 
   return payload;

@@ -49,6 +49,37 @@ function getStoredTheme() {
   return storedTheme === "light" ? "light" : "dark";
 }
 
+function createEmptyAuthErrors() {
+  return {
+    identifier: "",
+    email: "",
+    username: "",
+    password: "",
+    general: "",
+  };
+}
+
+function normalizeValidationMessage(message) {
+  return message.replace(/^Value error,\s*/, "");
+}
+
+function buildAuthErrors(details) {
+  const errors = createEmptyAuthErrors();
+
+  for (const item of details) {
+    const field = Array.isArray(item?.loc) ? item.loc[item.loc.length - 1] : null;
+    const message = normalizeValidationMessage(String(item?.msg || "Campo inválido"));
+
+    if (field && Object.prototype.hasOwnProperty.call(errors, field)) {
+      errors[field] = message;
+    } else {
+      errors.general = errors.general || message;
+    }
+  }
+
+  return errors;
+}
+
 export default function App() {
   const [session, setSession] = useState(() => getStoredSession());
   const [authMode, setAuthMode] = useState("login");
@@ -56,6 +87,7 @@ export default function App() {
   const [registerForm, setRegisterForm] = useState(EMPTY_REGISTER);
   const [authLoading, setAuthLoading] = useState(false);
   const [authMessage, setAuthMessage] = useState(null);
+  const [authErrors, setAuthErrors] = useState(createEmptyAuthErrors());
 
   const [activePage, setActivePage] = useState("dashboard");
   const [theme, setTheme] = useState(() => getStoredTheme());
@@ -85,6 +117,12 @@ export default function App() {
     document.documentElement.dataset.theme = theme;
     window.localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
+
+  function changeAuthMode(mode) {
+    setAuthMode(mode);
+    setAuthMessage(null);
+    setAuthErrors(createEmptyAuthErrors());
+  }
 
   function toggleTheme() {
     setTheme((current) => (current === "dark" ? "light" : "dark"));
@@ -148,6 +186,7 @@ export default function App() {
     const { name, value } = event.target;
     const setter = mode === "login" ? setLoginForm : setRegisterForm;
     setter((current) => ({ ...current, [name]: value }));
+    setAuthErrors((current) => ({ ...current, [name]: "" }));
   }
 
   function handleDoctorChange(event) {
@@ -178,6 +217,7 @@ export default function App() {
     event.preventDefault();
     setAuthLoading(true);
     setAuthMessage(null);
+    setAuthErrors(createEmptyAuthErrors());
     try {
       const user = await login({
         identifier: loginForm.identifier.trim(),
@@ -196,6 +236,7 @@ export default function App() {
     event.preventDefault();
     setAuthLoading(true);
     setAuthMessage(null);
+    setAuthErrors(createEmptyAuthErrors());
     try {
       const user = await register({
         email: registerForm.email.trim(),
@@ -205,7 +246,15 @@ export default function App() {
       setSession(user);
       setRegisterForm(EMPTY_REGISTER);
     } catch (error) {
-      setAuthMessage({ type: "error", text: error.message });
+      if (error.status === 422 && Array.isArray(error.details)) {
+        setAuthErrors(buildAuthErrors(error.details));
+        setAuthMessage({
+          type: "error",
+          text: "Corrija os campos destacados para continuar.",
+        });
+      } else {
+        setAuthMessage({ type: "error", text: error.message });
+      }
     } finally {
       setAuthLoading(false);
     }
@@ -335,8 +384,9 @@ export default function App() {
         );
         await updateCaseItem(selectedCaseId, options.itemId, payload);
       } else if (selectedTeeth.length) {
-        const payloads = buildDentalWorkItems(itemForm, selectedCase?.pricing_mode);
-        if (payloads.some((payload) => payload.unit_value === null && selectedCase?.pricing_mode !== "fixed")) {
+        const itemPricingMode = options.pricingMode || selectedCase?.pricing_mode;
+        const payloads = buildDentalWorkItems(itemForm, itemPricingMode);
+        if (payloads.some((payload) => payload.unit_value === null && itemPricingMode !== "fixed")) {
           setMessage({ type: "error", text: "Preencha o valor de cada dente selecionado antes de adicionar o serviço." });
           return false;
         }
@@ -555,11 +605,12 @@ export default function App() {
     return (
       <AuthPage
         authMode={authMode}
-        setAuthMode={setAuthMode}
+        setAuthMode={changeAuthMode}
         loginForm={loginForm}
         registerForm={registerForm}
         authLoading={authLoading}
         authMessage={authMessage}
+        authErrors={authErrors}
         onAuthChange={handleAuthChange}
         onLogin={handleLogin}
         onRegister={handleRegister}

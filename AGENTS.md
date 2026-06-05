@@ -18,6 +18,32 @@ Regras obrigatórias:
 
 ---
 
+## Modo Aula
+
+Quando o usuário escrever algo como "codex, torne tudo em uma aula", "me dá uma aula disso", "explica o que aconteceu", "resumo didático" ou qualquer variante que peça uma explicação pedagógica do que foi feito, ative o Modo Aula.
+
+No Modo Aula, reuna todas as informações, decisões e alterações feitas nessa sessão e estruture a resposta assim:
+
+**1. Contexto e problema**
+O que estava quebrado, qual era o sintoma visível e qual era a causa raiz real.
+
+**2. Raciocínio diagnóstico**
+Como o problema foi identificado. Quais pistas levaram à causa raiz. O que foi descartado e por quê.
+
+**3. A solução passo a passo**
+O que foi feito, em que ordem e por quê cada passo era necessário. Se algo não funcionou antes de funcionar, explica o motivo.
+
+**4. Conceitos envolvidos**
+Explica cada tecnologia, ferramenta ou conceito que apareceu na solução como se o usuário nunca tivesse visto antes. Sem assumir conhecimento prévio.
+
+**5. O que eu devo lembrar**
+Os aprendizados principais dessa tarefa em forma de regras práticas aplicáveis no futuro.
+
+Tom: engenheiro sênior revisando o trabalho com um júnior — direto, sem enrolação, mas sem pular etapas importantes.
+
+O Modo Aula só é ativado quando explicitamente solicitado. Em todas as outras situações, siga o comportamento padrão.
+
+
 ## Nomenclatura do Projeto
 
 O nome de trabalho atual do produto é **Cadista**.
