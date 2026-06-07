@@ -23,12 +23,15 @@ add_header Referrer-Policy "no-referrer" always;
 
 - Restrinja `server_name` e `TRUSTED_HOSTS` aos domínios reais.
 - Restrinja `CORS_ORIGINS` aos domínios reais do frontend.
+- Em `APP_ENV=production`, `CORS_ORIGINS` e `TRUSTED_HOSTS` são obrigatórios e não podem usar valores locais; `CORS_ORIGINS` deve usar `https`.
+- Não use `CORS_ORIGIN_REGEX` em produção.
 - Mantenha o banco de dados fora da internet pública.
 
 ### Variáveis principais
 
 - `DATABASE_URL`: string de conexão do banco.
 - `SECRET_KEY`: chave longa e única por ambiente.
+- `VITE_API_BASE_URL`: URL base da API usada no build do frontend. Exemplo local: `http://localhost:8000`.
 - `LOGIN_MAX_ATTEMPTS`: número máximo de falhas antes do bloqueio.
 - `LOGIN_LOCKOUT_MINUTES`: tempo de bloqueio temporário.
 - `LOGIN_RATE_LIMIT_ATTEMPTS`: número máximo de logins por janela por cliente.

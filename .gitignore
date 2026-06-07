@@ -1,5 +1,7 @@
 .env
 .env.*
+!.env.example
+!frontend/.env.example
 .envrc.local
 .direnv/
 repomix-output*.xml

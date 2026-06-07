@@ -26,6 +26,10 @@ def _parse_csv_env(name: str, default: str) -> list[str]:
     return values
 
 
+def _env_is_defined(name: str) -> bool:
+    return bool(os.getenv(name, "").strip())
+
+
 def _validate_cors_origin(origin: str) -> str:
     if origin == "*":
         raise RuntimeError("CORS_ORIGINS cannot contain wildcard origins.")
@@ -42,6 +46,15 @@ def _validate_trusted_host(host: str) -> str:
     if "://" in host or "/" in host or "?" in host or "#" in host:
         raise RuntimeError(f"Invalid trusted host: {host}")
     return host
+
+
+def _is_local_cors_origin(origin: str) -> bool:
+    parsed = urlparse(origin)
+    return parsed.hostname in {"localhost", "127.0.0.1", "0.0.0.0"}
+
+
+def _is_local_trusted_host(host: str) -> bool:
+    return host.split(":", 1)[0] in {"localhost", "127.0.0.1", "0.0.0.0", "testserver"}
 
 APP_ENV = os.getenv("APP_ENV", "development").strip().lower() or "development"
 
@@ -108,3 +121,17 @@ TRUSTED_HOSTS = [
     _validate_trusted_host(host)
     for host in _parse_csv_env("TRUSTED_HOSTS", DEFAULT_TRUSTED_HOSTS)
 ]
+
+if APP_ENV == "production":
+    if not _env_is_defined("CORS_ORIGINS"):
+        raise RuntimeError("CORS_ORIGINS must be explicitly defined in production.")
+    if not _env_is_defined("TRUSTED_HOSTS"):
+        raise RuntimeError("TRUSTED_HOSTS must be explicitly defined in production.")
+    if CORS_ORIGIN_REGEX:
+        raise RuntimeError("CORS_ORIGIN_REGEX must not be used in production.")
+    if any(origin.startswith("http://") for origin in CORS_ORIGINS):
+        raise RuntimeError("Production CORS_ORIGINS must use https origins.")
+    if any(_is_local_cors_origin(origin) for origin in CORS_ORIGINS):
+        raise RuntimeError("Production CORS_ORIGINS must not contain local origins.")
+    if any(_is_local_trusted_host(host) for host in TRUSTED_HOSTS):
+        raise RuntimeError("Production TRUSTED_HOSTS must not contain local/test hosts.")
