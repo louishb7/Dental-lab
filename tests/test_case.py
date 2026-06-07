@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from backend.core import settings
 from backend.main import app
 from backend.database.connection import SessionLocal
+from backend.models.user import User
 from backend.schemas.case import CaseCreate, CaseUpdate
 from backend.schemas.case_item import CaseItemCreate, CaseItemUpdate
 from backend.schemas.doctor import DoctorCreate
@@ -208,7 +209,15 @@ def test_bulk_deliver_cases_route_accepts_selected_cases(monkeypatch) -> None:
     headers = {"Authorization": f"Bearer {token}"}
 
     with SessionLocal() as db:
-        doctor = _create_doctor(db)
+        user_id = db.query(User.id).filter(User.username == "case01").scalar_one()
+        doctor = doctor_service.create_doctor(
+            db,
+            DoctorCreate(
+                name="Dr. Caso",
+                clinic_name="Clínica Caso",
+            ),
+            user_id=user_id,
+        )
         pending_case = case_service.create_case(
             db,
             CaseCreate(doctor_id=doctor.id, patient_ref="Paciente Rota"),

@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from backend.core import settings
 from backend.database.connection import SessionLocal
 from backend.main import app
+from backend.models.user import User
 from backend.schemas.case import CaseCreate, CaseUpdate
 from backend.schemas.case_item import CaseItemCreate
 from backend.schemas.doctor import DoctorCreate
@@ -45,12 +46,14 @@ def test_dashboard_overview_and_list_counts(monkeypatch) -> None:
     now = datetime.now(timezone.utc)
 
     with SessionLocal() as db:
+        user_id = db.query(User.id).filter(User.username == "dashboard").scalar_one()
         doctor_a = doctor_service.create_doctor(
             db,
             DoctorCreate(
                 name="Dr. Dashboard A",
                 clinic_name="Clínica A",
             ),
+            user_id=user_id,
         )
         doctor_b = doctor_service.create_doctor(
             db,
@@ -58,6 +61,7 @@ def test_dashboard_overview_and_list_counts(monkeypatch) -> None:
                 name="Dr. Dashboard B",
                 clinic_name="Clínica B",
             ),
+            user_id=user_id,
         )
 
         overdue_case = case_service.create_case(

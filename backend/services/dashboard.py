@@ -35,12 +35,25 @@ def _fetch_cases(query) -> list[Case]:
     return [_decorate_case(case) for case in cases]
 
 
-def get_dashboard_summary(db: Session) -> DashboardSummaryResponse:
+def _scope_cases_by_user(query, user_id: int | None):
+    if user_id is None:
+        return query
+    return query.join(Doctor, Doctor.id == Case.doctor_id).filter(
+        Doctor.user_id == user_id
+    )
+
+
+def get_dashboard_summary(
+    db: Session, user_id: int | None = None
+) -> DashboardSummaryResponse:
     now = datetime.now(timezone.utc)
     today = now.date()
     month_start, next_month = _month_window(now)
 
-    active_cases_query = db.query(Case).filter(Case.deleted_at.is_(None))
+    active_cases_query = _scope_cases_by_user(
+        db.query(Case).filter(Case.deleted_at.is_(None)),
+        user_id,
+    )
 
     status_rows = (
         active_cases_query.with_entities(Case.status, func.count(Case.id))
@@ -52,8 +65,7 @@ def get_dashboard_summary(db: Session) -> DashboardSummaryResponse:
         status_counts[status] = int(count)
 
     overdue_cases = _fetch_cases(
-        db.query(Case)
-        .join(Doctor, Doctor.id == Case.doctor_id)
+        _scope_cases_by_user(db.query(Case), user_id)
         .filter(
             Case.deleted_at.is_(None),
             Case.status != "delivered",
@@ -64,8 +76,7 @@ def get_dashboard_summary(db: Session) -> DashboardSummaryResponse:
     )
 
     urgent_open_cases = _fetch_cases(
-        db.query(Case)
-        .join(Doctor, Doctor.id == Case.doctor_id)
+        _scope_cases_by_user(db.query(Case), user_id)
         .filter(
             Case.deleted_at.is_(None),
             Case.priority == "urgent",
@@ -75,8 +86,7 @@ def get_dashboard_summary(db: Session) -> DashboardSummaryResponse:
     )
 
     delivered_cases_month = _fetch_cases(
-        db.query(Case)
-        .join(Doctor, Doctor.id == Case.doctor_id)
+        _scope_cases_by_user(db.query(Case), user_id)
         .filter(
             Case.deleted_at.is_(None),
             Case.status == "delivered",
@@ -89,7 +99,10 @@ def get_dashboard_summary(db: Session) -> DashboardSummaryResponse:
     )
 
     delivered_total = (
-        db.query(func.coalesce(func.sum(Case.total_value), 0))
+        _scope_cases_by_user(
+            db.query(func.coalesce(func.sum(Case.total_value), 0)),
+            user_id,
+        )
         .filter(
             Case.deleted_at.is_(None),
             Case.status == "delivered",

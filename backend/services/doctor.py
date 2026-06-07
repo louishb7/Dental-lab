@@ -41,18 +41,24 @@ def _attach_case_counts(db: Session, doctors: list[Doctor]) -> list[Doctor]:
     return doctors
 
 
-def create_doctor(db: Session, doctor: DoctorCreate) -> Doctor:
-    db_doctor = Doctor(**doctor.model_dump())
+def create_doctor(db: Session, doctor: DoctorCreate, user_id: int | None = None) -> Doctor:
+    db_doctor = Doctor(**doctor.model_dump(), user_id=user_id)
     db.add(db_doctor)
     db.commit()
     db.refresh(db_doctor)
     return _attach_case_count(db, db_doctor)
 
 
-def get_doctor_by_id(db: Session, doctor_id: int) -> Doctor | None:
+def get_doctor_by_id(
+    db: Session, doctor_id: int, user_id: int | None = None
+) -> Doctor | None:
+    filters = [Doctor.id == doctor_id, Doctor.deleted_at.is_(None)]
+    if user_id is not None:
+        filters.append(Doctor.user_id == user_id)
+
     db_doctor = (
         db.query(Doctor)
-        .filter(Doctor.id == doctor_id, Doctor.deleted_at.is_(None))
+        .filter(*filters)
         .first()
     )
     if db_doctor is None:
@@ -60,10 +66,15 @@ def get_doctor_by_id(db: Session, doctor_id: int) -> Doctor | None:
     return _attach_case_count(db, db_doctor)
 
 
-def get_all_doctors(db: Session, skip: int = 0, limit: int = 100) -> list[Doctor]:
+def get_all_doctors(
+    db: Session, skip: int = 0, limit: int = 100, user_id: int | None = None
+) -> list[Doctor]:
+    query = db.query(Doctor).filter(Doctor.deleted_at.is_(None))
+    if user_id is not None:
+        query = query.filter(Doctor.user_id == user_id)
+
     doctors = (
-        db.query(Doctor)
-        .filter(Doctor.deleted_at.is_(None))
+        query
         .offset(skip)
         .limit(limit)
         .all()
@@ -72,9 +83,12 @@ def get_all_doctors(db: Session, skip: int = 0, limit: int = 100) -> list[Doctor
 
 
 def update_doctor(
-    db: Session, doctor_id: int, doctor_data: DoctorUpdate
+    db: Session,
+    doctor_id: int,
+    doctor_data: DoctorUpdate,
+    user_id: int | None = None,
 ) -> Doctor | None:
-    db_doctor = get_doctor_by_id(db, doctor_id)
+    db_doctor = get_doctor_by_id(db, doctor_id, user_id=user_id)
 
     if db_doctor:
         update_data = doctor_data.model_dump(exclude_unset=True)
@@ -88,8 +102,8 @@ def update_doctor(
     return db_doctor
 
 
-def delete_doctor(db: Session, doctor_id: int) -> bool:
-    db_doctor = get_doctor_by_id(db, doctor_id)
+def delete_doctor(db: Session, doctor_id: int, user_id: int | None = None) -> bool:
+    db_doctor = get_doctor_by_id(db, doctor_id, user_id=user_id)
 
     if db_doctor:
         active_case = (

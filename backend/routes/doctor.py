@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from backend.dependencies.auth import get_current_user
 from backend.database.connection import get_db
+from backend.models.user import User
 from backend.schemas.doctor import DoctorCreate, DoctorResponse, DoctorUpdate
 from backend.services import doctor as doctor_service
 
@@ -18,14 +19,17 @@ from backend.services import doctor as doctor_service
 router = APIRouter(
     prefix="/doctors",
     tags=["Doctors"],
-    dependencies=[Depends(get_current_user)],
 )
 
 
 @router.post(
     "/", response_model=DoctorResponse, status_code=status.HTTP_201_CREATED
 )
-def create_doctor(doctor: DoctorCreate, db: Session = Depends(get_db)):
+def create_doctor(
+    doctor: DoctorCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """
     Cria um novo registro de Doutor no sistema.
 
@@ -36,12 +40,15 @@ def create_doctor(doctor: DoctorCreate, db: Session = Depends(get_db)):
     Returns:
         DoctorResponse: Os dados do doutor recém-criado, formatados para saída.
     """
-    return doctor_service.create_doctor(db=db, doctor=doctor)
+    return doctor_service.create_doctor(db=db, doctor=doctor, user_id=current_user.id)
 
 
 @router.get("/", response_model=List[DoctorResponse])
 def read_doctors(
-    skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Lista todos os Doutores cadastrados no sistema.
@@ -54,11 +61,17 @@ def read_doctors(
     Returns:
         List[DoctorResponse]: Uma lista de doutores formatada pelo schema.
     """
-    return doctor_service.get_all_doctors(db, skip=skip, limit=limit)
+    return doctor_service.get_all_doctors(
+        db, skip=skip, limit=limit, user_id=current_user.id
+    )
 
 
 @router.get("/{doctor_id}", response_model=DoctorResponse)
-def read_doctor(doctor_id: int, db: Session = Depends(get_db)):
+def read_doctor(
+    doctor_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """
     Busca as informações de um Doutor específico pelo seu ID.
 
@@ -72,7 +85,9 @@ def read_doctor(doctor_id: int, db: Session = Depends(get_db)):
     Raises:
         HTTPException: Retorna erro 404 se o doutor não for encontrado.
     """
-    db_doctor = doctor_service.get_doctor_by_id(db, doctor_id=doctor_id)
+    db_doctor = doctor_service.get_doctor_by_id(
+        db, doctor_id=doctor_id, user_id=current_user.id
+    )
     if db_doctor is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -83,7 +98,10 @@ def read_doctor(doctor_id: int, db: Session = Depends(get_db)):
 
 @router.put("/{doctor_id}", response_model=DoctorResponse)
 def update_doctor(
-    doctor_id: int, doctor_data: DoctorUpdate, db: Session = Depends(get_db)
+    doctor_id: int,
+    doctor_data: DoctorUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Atualiza os dados de um Doutor existente.
@@ -100,7 +118,7 @@ def update_doctor(
         HTTPException: Retorna erro 404 se o doutor não for encontrado.
     """
     updated_doctor = doctor_service.update_doctor(
-        db, doctor_id=doctor_id, doctor_data=doctor_data
+        db, doctor_id=doctor_id, doctor_data=doctor_data, user_id=current_user.id
     )
     if updated_doctor is None:
         raise HTTPException(
@@ -111,7 +129,11 @@ def update_doctor(
 
 
 @router.delete("/{doctor_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_doctor(doctor_id: int, db: Session = Depends(get_db)):
+def delete_doctor(
+    doctor_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     """
     Exclui um Doutor do sistema.
     Aviso: a remoção deve respeitar a regra de negócio que impede
@@ -125,7 +147,9 @@ def delete_doctor(doctor_id: int, db: Session = Depends(get_db)):
         HTTPException: Retorna erro 404 se o doutor não for encontrado.
     """
     try:
-        success = doctor_service.delete_doctor(db, doctor_id=doctor_id)
+        success = doctor_service.delete_doctor(
+            db, doctor_id=doctor_id, user_id=current_user.id
+        )
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

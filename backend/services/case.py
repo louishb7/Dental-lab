@@ -52,12 +52,14 @@ def _attach_items_counts(db: Session, cases: list[Case]) -> list[Case]:
     return cases
 
 
-def _get_active_doctor(db: Session, doctor_id: int) -> Doctor | None:
-    return (
-        db.query(Doctor)
-        .filter(Doctor.id == doctor_id, Doctor.deleted_at.is_(None))
-        .first()
-    )
+def _get_active_doctor(
+    db: Session, doctor_id: int, user_id: int | None = None
+) -> Doctor | None:
+    filters = [Doctor.id == doctor_id, Doctor.deleted_at.is_(None)]
+    if user_id is not None:
+        filters.append(Doctor.user_id == user_id)
+
+    return db.query(Doctor).filter(*filters).first()
 
 
 def _resolve_pricing_mode(
@@ -104,8 +106,8 @@ def recalculate_service_case_total(db: Session, case_id: int) -> Case | None:
     return db_case
 
 
-def create_case(db: Session, case_data: CaseCreate) -> Case:
-    if _get_active_doctor(db, case_data.doctor_id) is None:
+def create_case(db: Session, case_data: CaseCreate, user_id: int | None = None) -> Case:
+    if _get_active_doctor(db, case_data.doctor_id, user_id=user_id) is None:
         raise ValueError("Doutor não encontrado")
 
     pricing_mode = _resolve_pricing_mode(
@@ -114,7 +116,11 @@ def create_case(db: Session, case_data: CaseCreate) -> Case:
     )
     if pricing_mode == "fixed" and case_data.total_value is None:
         raise ValueError("Informe o valor fixo para este caso.")
-    if pricing_mode == "services" and case_data.pricing_mode == "services" and case_data.total_value is not None:
+    if (
+        pricing_mode == "services"
+        and case_data.pricing_mode == "services"
+        and case_data.total_value is not None
+    ):
         raise ValueError("Casos por serviços não usam valor combinado.")
 
     total_value = case_data.total_value if pricing_mode == "fixed" else None
@@ -135,13 +141,20 @@ def create_case(db: Session, case_data: CaseCreate) -> Case:
     return _attach_items_count(db, db_case)
 
 
-def get_case_by_id(db: Session, case_id: int) -> Case | None:
-    db_case = (
+def get_case_by_id(
+    db: Session, case_id: int, user_id: int | None = None
+) -> Case | None:
+    query = (
         db.query(Case)
         .options(selectinload(Case.items))
         .filter(Case.id == case_id, Case.deleted_at.is_(None))
-        .first()
     )
+    if user_id is not None:
+        query = query.join(Doctor, Doctor.id == Case.doctor_id).filter(
+            Doctor.user_id == user_id
+        )
+
+    db_case = query.first()
     if db_case is None:
         return None
     return _attach_items_count(db, db_case)
@@ -153,12 +166,18 @@ def get_all_cases(
     limit: int = 100,
     doctor_id: int | None = None,
     status: str | None = None,
+    user_id: int | None = None,
 ) -> list[Case]:
     query = (
         db.query(Case)
         .options(selectinload(Case.items))
         .filter(Case.deleted_at.is_(None))
     )
+
+    if user_id is not None:
+        query = query.join(Doctor, Doctor.id == Case.doctor_id).filter(
+            Doctor.user_id == user_id
+        )
 
     if doctor_id is not None:
         query = query.filter(Case.doctor_id == doctor_id)
@@ -170,12 +189,18 @@ def get_all_cases(
     return _attach_items_counts(db, cases)
 
 
-def update_case(db: Session, case_id: int, case_data: CaseUpdate) -> Case | None:
-    db_case = (
-        db.query(Case)
-        .filter(Case.id == case_id, Case.deleted_at.is_(None))
-        .first()
-    )
+def update_case(
+    db: Session,
+    case_id: int,
+    case_data: CaseUpdate,
+    user_id: int | None = None,
+) -> Case | None:
+    query = db.query(Case).filter(Case.id == case_id, Case.deleted_at.is_(None))
+    if user_id is not None:
+        query = query.join(Doctor, Doctor.id == Case.doctor_id).filter(
+            Doctor.user_id == user_id
+        )
+    db_case = query.first()
 
     if db_case is None:
         return None
@@ -188,7 +213,10 @@ def update_case(db: Session, case_id: int, case_data: CaseUpdate) -> Case | None
     new_total_value = update_data.pop("total_value", None)
 
     new_doctor_id = update_data.get("doctor_id")
-    if new_doctor_id is not None and _get_active_doctor(db, new_doctor_id) is None:
+    if (
+        new_doctor_id is not None
+        and _get_active_doctor(db, new_doctor_id, user_id=user_id) is None
+    ):
         raise ValueError("Doutor não encontrado")
 
     target_pricing_mode = _resolve_pricing_mode(
@@ -239,12 +267,13 @@ def update_case(db: Session, case_id: int, case_data: CaseUpdate) -> Case | None
     return db_case
 
 
-def delete_case(db: Session, case_id: int) -> Case:
-    db_case = (
-        db.query(Case)
-        .filter(Case.id == case_id, Case.deleted_at.is_(None))
-        .first()
-    )
+def delete_case(db: Session, case_id: int, user_id: int | None = None) -> Case:
+    query = db.query(Case).filter(Case.id == case_id, Case.deleted_at.is_(None))
+    if user_id is not None:
+        query = query.join(Doctor, Doctor.id == Case.doctor_id).filter(
+            Doctor.user_id == user_id
+        )
+    db_case = query.first()
     if db_case is None:
         raise LookupError("Caso não encontrado")
 
@@ -259,9 +288,15 @@ def bulk_deliver_cases(
     db: Session,
     case_ids: list[int] | None = None,
     doctor_id: int | None = None,
+    user_id: int | None = None,
 ) -> list[Case]:
     normalized_ids = list(dict.fromkeys(case_ids or []))
     query = db.query(Case).filter(Case.deleted_at.is_(None))
+
+    if user_id is not None:
+        query = query.join(Doctor, Doctor.id == Case.doctor_id).filter(
+            Doctor.user_id == user_id
+        )
 
     if doctor_id is not None:
         query = query.filter(Case.doctor_id == doctor_id)
@@ -274,7 +309,9 @@ def bulk_deliver_cases(
     cases = query.order_by(Case.id.asc()).all()
     if normalized_ids:
         found_ids = {case.id for case in cases}
-        missing_ids = [case_id for case_id in normalized_ids if case_id not in found_ids]
+        missing_ids = [
+            case_id for case_id in normalized_ids if case_id not in found_ids
+        ]
         if missing_ids:
             raise ValueError("Alguns pedidos selecionados não foram encontrados.")
 

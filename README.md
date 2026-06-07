@@ -5,6 +5,8 @@
 ### Autenticação
 
 - Login com bloqueio temporário após tentativas repetidas.
+- O escopo atual é multi-user simples: cada usuário acessa apenas seus próprios doutores, casos, itens e dashboard.
+- Não há papéis administrativos ou permissões granulares nesta fase.
 - `SECRET_KEY`, `DATABASE_URL`, `CORS_ORIGINS` e `TRUSTED_HOSTS` devem vir de variáveis de ambiente.
 - `APP_ENV=production` desativa `/docs`, `/redoc` e `/openapi.json`.
 
