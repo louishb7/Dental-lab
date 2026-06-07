@@ -353,7 +353,9 @@ export default function App() {
       setMessage({
         type: "success",
         text: automaticItems.length
-          ? `Caso criado com ${automaticItems.length} ${automaticItems.length === 1 ? "unidade" : "unidades"} automáticas.`
+          ? `Caso criado com ${automaticItems.length} ${
+              automaticItems.length === 1 ? "item de serviço automático" : "itens de serviço automáticos"
+            }.`
           : "Caso criado.",
       });
     } catch (error) {
@@ -574,7 +576,7 @@ export default function App() {
     if (!selectedCaseId) return;
 
     requestConfirm({
-      title: "Excluir item",
+      title: "Excluir item de serviço",
       description: "Esta ação não pode ser desfeita.",
       confirmLabel: "Excluir",
       action: () => {

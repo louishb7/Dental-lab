@@ -68,6 +68,22 @@ def test_create_case_and_normalize_money() -> None:
         assert case.delivered_at is None
 
 
+def test_service_pricing_rejects_combined_total_value() -> None:
+    with SessionLocal() as db:
+        doctor = _create_doctor(db)
+
+        with pytest.raises(ValueError, match="Casos por serviços"):
+            case_service.create_case(
+                db,
+                CaseCreate(
+                    doctor_id=doctor.id,
+                    patient_ref="Paciente Valor Inválido",
+                    pricing_mode="services",
+                    total_value="300,00",
+                ),
+            )
+
+
 def test_create_and_move_case_require_active_doctor() -> None:
     with SessionLocal() as db:
         doctor = _create_doctor(db)

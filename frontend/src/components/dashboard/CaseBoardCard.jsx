@@ -4,11 +4,11 @@ import DeadlineBadge from "../ui/DeadlineBadge.jsx";
 import PriorityBadge from "../ui/PriorityBadge.jsx";
 import StatusBadge from "../ui/StatusBadge.jsx";
 import { formatCurrency } from "../../utils/formatters.js";
-import { getServiceCount } from "../../utils/cases.js";
+import { formatServiceItemCount, getServiceCount } from "../../utils/cases.js";
 
 function formatItemsLabel(caseItem) {
   const count = getServiceCount(caseItem);
-  return count ? `${count} ${count === 1 ? "item" : "itens"}` : "Sem itens";
+  return count ? formatServiceItemCount(caseItem) : "Sem itens de serviço";
 }
 
 export default function CaseBoardCard({ caseItem, onOpenCase }) {

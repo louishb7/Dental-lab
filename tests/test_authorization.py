@@ -5,7 +5,7 @@ import pytest
 from backend.database.connection import SessionLocal
 from backend.models.user import User
 from backend.schemas.case import CaseCreate, CaseUpdate
-from backend.schemas.case_item import CaseItemCreate
+from backend.schemas.case_item import CaseItemCreate, CaseItemUpdate
 from backend.schemas.doctor import DoctorCreate
 from backend.services import case as case_service
 from backend.services import case_item as case_item_service
@@ -105,6 +105,41 @@ def test_services_scope_doctors_cases_items_and_dashboard_by_user() -> None:
             CaseUpdate(patient_ref="Tentativa"),
             user_id=second_user.id,
         ) is None
+
+        with pytest.raises(ValueError, match="Doutor não encontrado"):
+            case_service.update_case(
+                db,
+                first_case.id,
+                CaseUpdate(doctor_id=second_doctor.id),
+                user_id=first_user.id,
+            )
+
+        with pytest.raises(LookupError, match="Caso não encontrado"):
+            case_service.delete_case(db, first_case.id, user_id=second_user.id)
+
+        with pytest.raises(ValueError, match="não foram encontrados"):
+            case_service.bulk_deliver_cases(
+                db,
+                case_ids=[first_case.id],
+                user_id=second_user.id,
+            )
+
+        with pytest.raises(LookupError, match="Caso não encontrado"):
+            case_item_service.update_case_item(
+                db,
+                first_case.id,
+                first_item.id,
+                CaseItemUpdate(notes="Tentativa"),
+                user_id=second_user.id,
+            )
+
+        with pytest.raises(LookupError, match="Caso não encontrado"):
+            case_item_service.delete_case_item(
+                db,
+                first_case.id,
+                first_item.id,
+                user_id=second_user.id,
+            )
 
         first_dashboard = dashboard_service.get_dashboard_summary(
             db, user_id=first_user.id

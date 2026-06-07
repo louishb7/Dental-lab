@@ -10,7 +10,7 @@ import PageContainer from "../components/layout/PageContainer.jsx";
 import PriorityBadge from "../components/ui/PriorityBadge.jsx";
 import StatusBadge from "../components/ui/StatusBadge.jsx";
 import { formatCurrency, formatDate } from "../utils/formatters.js";
-import { getServiceCount } from "../utils/cases.js";
+import { formatServiceItemCount, getServiceCount } from "../utils/cases.js";
 import CaseDetailsPage from "./CaseDetailsPage.jsx";
 
 function formatCaseCount(count, singular, plural) {
@@ -146,15 +146,12 @@ export default function CasesPage({
     {
       key: "services",
       header: "Resumo",
-      render: (caseItem) => {
-        const serviceCount = getServiceCount(caseItem);
-        return (
-          <span className="cell-main">
-            <strong>{formatCaseCount(serviceCount, "item", "itens")}</strong>
-            <small>Detalhes no caso</small>
-          </span>
-        );
-      },
+      render: (caseItem) => (
+        <span className="cell-main">
+          <strong>{formatServiceItemCount(caseItem)}</strong>
+          <small>Linhas lançadas no caso</small>
+        </span>
+      ),
     },
     {
       key: "deadline",
@@ -225,10 +222,10 @@ export default function CasesPage({
     },
     {
       key: "services",
-      header: "Serviços",
+      header: "Itens de serviço",
       render: (caseItem) => (
         <span className="cell-main">
-          <strong>{formatCaseCount(getServiceCount(caseItem), "item", "itens")}</strong>
+          <strong>{formatServiceItemCount(caseItem)}</strong>
           <small>Histórico de entrega</small>
         </span>
       ),
@@ -412,7 +409,7 @@ export default function CasesPage({
                       <strong>{caseItem.patient_ref}</strong>
                       <small>
                         {doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`} ·{" "}
-                        {formatCaseCount(getServiceCount(caseItem), "serviço", "serviços")}
+                        {formatServiceItemCount(caseItem)}
                       </small>
                     </span>
                     <strong>{formatCurrency(caseItem.total_value)}</strong>

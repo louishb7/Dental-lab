@@ -9,7 +9,7 @@ import DataTable from "../components/ui/DataTable.jsx";
 import EmptyState from "../components/ui/EmptyState.jsx";
 import LoadingState from "../components/ui/LoadingState.jsx";
 import StatCard from "../components/ui/StatCard.jsx";
-import { getServiceCount } from "../utils/cases.js";
+import { formatServiceItemCount, getServiceCount } from "../utils/cases.js";
 import { formatCurrency, formatDate, parseCurrencyToNumber } from "../utils/formatters.js";
 
 export default function FinancePage({ dashboard, cases, loading }) {
@@ -48,8 +48,8 @@ export default function FinancePage({ dashboard, cases, loading }) {
     },
     {
       key: "services",
-      header: "Serviços",
-      render: (caseItem) => `${getServiceCount(caseItem)} ${getServiceCount(caseItem) === 1 ? "item" : "itens"}`,
+      header: "Itens de serviço",
+      render: (caseItem) => formatServiceItemCount(caseItem),
     },
     { key: "total_value", header: "Valor", render: (caseItem) => formatCurrency(caseItem.total_value) },
     { key: "delivered_at", header: "Entregue em", render: (caseItem) => formatDate(caseItem.delivered_at) },
@@ -71,11 +71,11 @@ export default function FinancePage({ dashboard, cases, loading }) {
           />
           <StatCard title="Casos entregues" value={countMes} icon={PackageCheck} tone="info" />
           <StatCard
-            title="Itens lançados"
+            title="Itens de serviço lançados"
             value={totalServices}
             icon={Wrench}
             tone="info"
-            description="Itens somados em todos os casos"
+            description="Linhas de serviço somadas em todos os casos"
           />
         </div>
 

@@ -101,3 +101,54 @@ def test_case_item_quantity_must_be_positive() -> None:
             quantity=0,
             unit_value="90,00",
         )
+
+
+def test_service_pricing_requires_unit_value_and_fixed_pricing_keeps_total() -> None:
+    with SessionLocal() as db:
+        doctor = doctor_service.create_doctor(
+            db,
+            DoctorCreate(name="Dr. Cobrança"),
+        )
+        service_case = case_service.create_case(
+            db,
+            CaseCreate(
+                doctor_id=doctor.id,
+                patient_ref="Paciente Serviço",
+                pricing_mode="services",
+            ),
+        )
+
+        with pytest.raises(ValueError, match="valor unitário"):
+            case_item_service.create_case_item(
+                db,
+                service_case.id,
+                CaseItemCreate(
+                    tooth="11",
+                    service_type="coroa",
+                    unit_value=None,
+                ),
+            )
+
+        fixed_case = case_service.create_case(
+            db,
+            CaseCreate(
+                doctor_id=doctor.id,
+                patient_ref="Paciente Fixo",
+                pricing_mode="fixed",
+                total_value="500,00",
+            ),
+        )
+        item = case_item_service.create_case_item(
+            db,
+            fixed_case.id,
+            CaseItemCreate(
+                tooth="21",
+                service_type="faceta",
+                unit_value=None,
+            ),
+        )
+        refreshed_case = case_service.get_case_by_id(db, fixed_case.id)
+
+        assert item.unit_value is None
+        assert refreshed_case is not None
+        assert refreshed_case.total_value == Decimal("500.00")

@@ -229,7 +229,7 @@ export default function CaseDetailsPage({
                       <div className="case-service-main">
                         <strong>{item.service_type}</strong>
                         <span>{item.tooth ? `Dente ${item.tooth}` : "Sem dente informado"}</span>
-                        {view.quantity > 1 && <span>{`Quantidade ${view.quantity}`}</span>}
+                        {view.quantity > 1 && <span>{`${view.quantity} unidades`}</span>}
                         {view.notes && <small>{view.notes}</small>}
                       </div>
                       <div className="case-service-side">
@@ -301,7 +301,7 @@ export default function CaseDetailsPage({
               </div>
             )}
 
-            <FormField label="Quantidade">
+            <FormField label="Unidades">
               <input
                 name="quantity"
                 type="number"
@@ -314,8 +314,8 @@ export default function CaseDetailsPage({
             </FormField>
 
             <div className="form-field">
-              <span>Tipo de cobrança do serviço</span>
-              <div className="pricing-mode-grid" role="radiogroup" aria-label="Tipo de cobrança do serviço">
+              <span>Cobrança deste item de serviço</span>
+              <div className="pricing-mode-grid" role="radiogroup" aria-label="Cobrança deste item de serviço">
                 <button
                   type="button"
                   className={`choice-card ${itemForm.pricing_mode === "fixed" ? "active" : ""}`}
