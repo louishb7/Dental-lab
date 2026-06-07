@@ -9,11 +9,8 @@ import DataTable from "../components/ui/DataTable.jsx";
 import EmptyState from "../components/ui/EmptyState.jsx";
 import LoadingState from "../components/ui/LoadingState.jsx";
 import StatCard from "../components/ui/StatCard.jsx";
+import { getServiceCount } from "../utils/cases.js";
 import { formatCurrency, formatDate, parseCurrencyToNumber } from "../utils/formatters.js";
-
-function getServiceCount(caseItem) {
-  return caseItem.items_count ?? caseItem.items?.length ?? 0;
-}
 
 export default function FinancePage({ dashboard, cases, loading }) {
   if (loading) {

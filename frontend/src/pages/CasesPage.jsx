@@ -10,14 +10,11 @@ import PageContainer from "../components/layout/PageContainer.jsx";
 import PriorityBadge from "../components/ui/PriorityBadge.jsx";
 import StatusBadge from "../components/ui/StatusBadge.jsx";
 import { formatCurrency, formatDate } from "../utils/formatters.js";
+import { getServiceCount } from "../utils/cases.js";
 import CaseDetailsPage from "./CaseDetailsPage.jsx";
 
 function formatCaseCount(count, singular, plural) {
   return `${count} ${count === 1 ? singular : plural}`;
-}
-
-function getServiceCount(caseItem) {
-  return caseItem.items_count ?? caseItem.items?.length ?? 0;
 }
 
 export default function CasesPage({

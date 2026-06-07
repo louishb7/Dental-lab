@@ -46,6 +46,9 @@ class CaseItemBase(BaseModel):
     service_type: str = Field(
         ..., description="Tipo de serviço executado"
     )
+    quantity: int = Field(
+        default=1, description="Quantidade de unidades do serviço"
+    )
     unit_value: Optional[Decimal] = Field(
         default=None, description="Valor unitário do serviço"
     )
@@ -80,6 +83,13 @@ class CaseItemBase(BaseModel):
     def normalize_unit_value(cls, value):
         return normalize_decimal_value(value, "Valor unitário inválido")
 
+    @field_validator("quantity")
+    @classmethod
+    def validate_quantity(cls, value: int) -> int:
+        if value < 1:
+            raise ValueError("Quantidade deve ser maior ou igual a 1")
+        return value
+
 
 class CaseItemCreate(CaseItemBase):
     """Payload para criação de um item de caso."""
@@ -92,6 +102,9 @@ class CaseItemUpdate(BaseModel):
 
     tooth: Optional[str] = None
     service_type: Optional[str] = None
+    quantity: Optional[int] = Field(
+        default=None, description="Quantidade de unidades do serviço"
+    )
     unit_value: Optional[Decimal] = Field(
         default=None, description="Valor unitário do serviço"
     )
@@ -122,6 +135,13 @@ class CaseItemUpdate(BaseModel):
     @classmethod
     def normalize_unit_value(cls, value):
         return normalize_decimal_value(value, "Valor unitário inválido")
+
+    @field_validator("quantity")
+    @classmethod
+    def validate_quantity(cls, value: Optional[int]) -> Optional[int]:
+        if value is not None and value < 1:
+            raise ValueError("Quantidade deve ser maior ou igual a 1")
+        return value
 
 
 class CaseItemResponse(CaseItemBase):

@@ -6,7 +6,7 @@ import DeadlineBadge from "../components/ui/DeadlineBadge.jsx";
 import FormField from "../components/ui/FormField.jsx";
 import Modal from "../components/ui/Modal.jsx";
 import StatusBadge from "../components/ui/StatusBadge.jsx";
-import { formatCurrency, formatCurrencyInput } from "../utils/formatters.js";
+import { formatCurrency, formatCurrencyInput, parseCurrencyToNumber } from "../utils/formatters.js";
 import { splitItemOperationalNotes } from "../utils/forms.js";
 import { sortTeethByFdi } from "../utils/odontogram.js";
 
@@ -50,9 +50,14 @@ function splitCaseNotes(value) {
 
 function getItemView(item) {
   const operational = splitItemOperationalNotes(item?.notes);
+  const quantity = Number(item?.quantity ?? operational.quantity) || 1;
+  const unitValue = parseCurrencyToNumber(item?.unit_value);
+  const totalValue = unitValue === null ? null : unitValue * quantity;
+
   return {
-    quantity: operational.quantity,
+    quantity,
     notes: operational.notes,
+    totalValue,
   };
 }
 
@@ -101,7 +106,7 @@ export default function CaseDetailsPage({
       name: item.service_type || "",
       tooth: item.tooth || "",
       service_type: item.service_type || "",
-      quantity: operational.quantity,
+      quantity: String(item.quantity ?? operational.quantity),
       unit_value: item.unit_value ? formatCurrency(item.unit_value) : "",
       pricing_mode: item.unit_value ? "services" : "fixed",
       notes: operational.notes,
@@ -145,7 +150,6 @@ export default function CaseDetailsPage({
   async function handleSubmit(event) {
     const success = await onItemSubmit(event, {
       itemId: editingItemId,
-      advanced: false,
       pricingMode: itemForm.pricing_mode,
     });
     if (success) {
@@ -225,11 +229,17 @@ export default function CaseDetailsPage({
                       <div className="case-service-main">
                         <strong>{item.service_type}</strong>
                         <span>{item.tooth ? `Dente ${item.tooth}` : "Sem dente informado"}</span>
+                        {view.quantity > 1 && <span>{`Quantidade ${view.quantity}`}</span>}
                         {view.notes && <small>{view.notes}</small>}
                       </div>
                       <div className="case-service-side">
                         {item.unit_value !== null && item.unit_value !== undefined && (
-                          <strong>{formatCurrency(item.unit_value)}</strong>
+                          <>
+                            <strong>{formatCurrency(view.totalValue ?? item.unit_value)}</strong>
+                            {view.quantity > 1 && (
+                              <small>{`${view.quantity} x ${formatCurrency(item.unit_value)}`}</small>
+                            )}
+                          </>
                         )}
                         <div className="row-actions">
                           <Button variant="secondary" size="sm" onClick={() => openItemForm(item)}>
@@ -290,6 +300,18 @@ export default function CaseDetailsPage({
                 <OdontogramSelector selectedTeeth={selectedTeeth} onChange={handleTeethChange} />
               </div>
             )}
+
+            <FormField label="Quantidade">
+              <input
+                name="quantity"
+                type="number"
+                min="1"
+                step="1"
+                value={itemForm.quantity}
+                onChange={onItemChange}
+                required
+              />
+            </FormField>
 
             <div className="form-field">
               <span>Tipo de cobrança do serviço</span>

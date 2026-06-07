@@ -9,7 +9,7 @@ from backend.core import settings
 from backend.main import app
 from backend.database.connection import SessionLocal
 from backend.schemas.case import CaseCreate, CaseUpdate
-from backend.schemas.case_item import CaseItemCreate
+from backend.schemas.case_item import CaseItemCreate, CaseItemUpdate
 from backend.schemas.doctor import DoctorCreate
 from backend.services import case as case_service
 from backend.services import case_item as case_item_service
@@ -263,10 +263,12 @@ def test_service_mode_case_recalculates_total_from_items() -> None:
             CaseItemCreate(
                 tooth="11",
                 service_type="coroa",
+                quantity=2,
                 unit_value="120,00",
             ),
         )
         assert first_item.unit_value == Decimal("120.00")
+        assert first_item.quantity == 2
 
         second_item = case_item_service.create_case_item(
             db,
@@ -278,10 +280,28 @@ def test_service_mode_case_recalculates_total_from_items() -> None:
             ),
         )
         assert second_item.unit_value == Decimal("80.00")
+        assert second_item.quantity == 1
 
         updated_case = case_service.get_case_by_id(db, case.id)
         assert updated_case is not None
-        assert updated_case.total_value == Decimal("200.00")
+        assert updated_case.total_value == Decimal("320.00")
+
+        case_item_service.update_case_item(
+            db,
+            case.id,
+            first_item.id,
+            CaseItemUpdate(quantity=3),
+        )
+
+        updated_case = case_service.get_case_by_id(db, case.id)
+        assert updated_case is not None
+        assert updated_case.total_value == Decimal("440.00")
+
+        assert case_item_service.delete_case_item(db, case.id, second_item.id) is True
+
+        updated_case = case_service.get_case_by_id(db, case.id)
+        assert updated_case is not None
+        assert updated_case.total_value == Decimal("360.00")
 
 
 def test_case_delete_rules_and_soft_delete() -> None:

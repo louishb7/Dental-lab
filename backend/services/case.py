@@ -77,7 +77,7 @@ def _resolve_pricing_mode(
 
 def _sum_case_item_values(db: Session, case_id: int) -> Decimal | None:
     total = (
-        db.query(func.sum(CaseItem.unit_value))
+        db.query(func.sum(CaseItem.quantity * CaseItem.unit_value))
         .filter(CaseItem.case_id == case_id)
         .scalar()
     )

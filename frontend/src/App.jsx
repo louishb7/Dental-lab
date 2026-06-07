@@ -328,7 +328,7 @@ export default function App() {
     setBusy(true);
     setMessage(null);
     try {
-      const createdCase = await createCase(buildCasePayload(selectedDoctorId, caseForm, true));
+      const createdCase = await createCase(buildCasePayload(selectedDoctorId, caseForm));
 
       if (automaticItems.length) {
         try {
@@ -379,7 +379,6 @@ export default function App() {
       if (options.itemId) {
         const payload = buildItemPayload(
           itemForm,
-          options.advanced ?? true,
           selectedCase?.pricing_mode,
         );
         await updateCaseItem(selectedCaseId, options.itemId, payload);
@@ -394,7 +393,6 @@ export default function App() {
       } else {
         const payload = buildItemPayload(
           itemForm,
-          options.advanced ?? true,
           selectedCase?.pricing_mode,
         );
         await createCaseItem(selectedCaseId, payload);

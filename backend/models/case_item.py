@@ -17,6 +17,7 @@ class CaseItem(Base):
         case_id (int): Chave estrangeira vinculando este item a um DentalCase.
         tooth (str): Número do dente em FDI ou descrição livre.
         service_type (str): Tipo de serviço executado.
+        quantity (int): Quantidade de unidades comerciais deste serviço.
         unit_value (Decimal | None): Valor unitário do serviço.
         material (str): Material utilizado.
         color (str): Cor ou tonalidade.
@@ -35,6 +36,7 @@ class CaseItem(Base):
     )
     tooth = Column(String(100), nullable=False)
     service_type = Column(String(100), nullable=False)
+    quantity = Column(Integer, nullable=False, default=1, server_default="1")
     unit_value = Column(Numeric(10, 2), nullable=True)
     material = Column(String(100))
     color = Column(String(50))

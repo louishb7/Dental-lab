@@ -55,7 +55,7 @@ export function buildDoctorPayload(form) {
   };
 }
 
-export function buildCasePayload(doctorId, form, advanced) {
+export function buildCasePayload(doctorId, form) {
   const trimmedNotes = form.notes.trim();
   const operationalNotes = [
     form.service_name?.trim() ? `Servico principal: ${form.service_name.trim()}` : null,
@@ -106,24 +106,19 @@ export function splitItemOperationalNotes(value) {
   return { quantity, notes };
 }
 
-export function buildItemPayload(form, advanced, pricingMode = "services") {
+export function buildItemPayload(form, pricingMode = "services") {
   const quantity = normalizeQuantity(form.quantity);
   const serviceName = form.name?.trim() || form.service_type?.trim() || "";
   const notes = form.notes.trim();
-  const composedNotes = [
-    quantity !== "1" ? `Quantidade: ${quantity}` : null,
-    notes || null,
-  ]
-    .filter(Boolean)
-    .join("\n");
 
   const payload = {
     tooth: form.tooth.trim(),
     service_type: serviceName,
+    quantity: Number(quantity),
     unit_value: pricingMode === "fixed" ? null : parseCurrencyToApiValue(form.unit_value),
     material: form.material.trim() || null,
     color: form.color.trim() || null,
-    notes: composedNotes || null,
+    notes: notes || null,
   };
 
   return payload;
@@ -137,6 +132,7 @@ export function buildAutomaticCaseItems(form) {
   return selectedTeeth.map((tooth) => ({
     tooth,
     service_type: serviceName,
+    quantity: 1,
     unit_value: parseCurrencyToApiValue(unitValues[tooth]),
     material: null,
     color: null,
@@ -151,11 +147,13 @@ export function buildDentalWorkItems(form, pricingMode = "services") {
   const selectedTeeth = Array.isArray(form.selected_teeth) ? form.selected_teeth : [];
   const unitValues = form.unit_values || {};
   const serviceName = form.name?.trim() || form.service_type?.trim() || "Servico do caso";
+  const quantity = Number(normalizeQuantity(form.quantity));
   const notes = form.notes?.trim() || null;
 
   return selectedTeeth.map((tooth) => ({
     tooth,
     service_type: serviceName,
+    quantity,
     unit_value: pricingMode === "fixed" ? null : parseCurrencyToApiValue(unitValues[tooth]),
     material: form.material?.trim() || null,
     color: form.color?.trim() || null,

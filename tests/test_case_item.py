@@ -37,6 +37,7 @@ def test_case_item_crud_and_block_on_deleted_case() -> None:
             CaseItemCreate(
                 tooth="11",
                 service_type="coroa",
+                quantity=2,
                 unit_value="150,00",
                 material="zircônia",
                 color="A1",
@@ -46,6 +47,7 @@ def test_case_item_crud_and_block_on_deleted_case() -> None:
 
         assert item.id == 1
         assert item.tooth == "11"
+        assert item.quantity == 2
         assert item.unit_value == Decimal("150.00")
 
         updated = case_item_service.update_case_item(
@@ -54,6 +56,7 @@ def test_case_item_crud_and_block_on_deleted_case() -> None:
             item.id,
             CaseItemUpdate(
                 tooth="12",
+                quantity=3,
                 unit_value="175,00",
                 notes="ajustado",
             ),
@@ -61,6 +64,7 @@ def test_case_item_crud_and_block_on_deleted_case() -> None:
 
         assert updated is not None
         assert updated.tooth == "12"
+        assert updated.quantity == 3
         assert updated.unit_value == Decimal("175.00")
         assert updated.notes == "ajustado"
 
@@ -87,3 +91,13 @@ def test_case_item_crud_and_block_on_deleted_case() -> None:
                     unit_value="90,00",
                 ),
             )
+
+
+def test_case_item_quantity_must_be_positive() -> None:
+    with pytest.raises(ValueError, match="Quantidade deve ser maior ou igual a 1"):
+        CaseItemCreate(
+            tooth="11",
+            service_type="coroa",
+            quantity=0,
+            unit_value="90,00",
+        )

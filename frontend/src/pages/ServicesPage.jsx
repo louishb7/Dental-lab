@@ -5,12 +5,9 @@ import DeadlineBadge from "../components/ui/DeadlineBadge.jsx";
 import PageContainer from "../components/layout/PageContainer.jsx";
 import CaseDetailsPage from "./CaseDetailsPage.jsx";
 import { formatCurrency } from "../utils/formatters.js";
+import { getServiceCount } from "../utils/cases.js";
 import PriorityBadge from "../components/ui/PriorityBadge.jsx";
 import StatusBadge from "../components/ui/StatusBadge.jsx";
-
-function getServiceCount(caseItem) {
-  return caseItem.items_count ?? caseItem.items?.length ?? 0;
-}
 
 export default function ServicesPage({
   cases,
