@@ -118,11 +118,11 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 | Auth | `POST /auth/register` | Nao | Cria usuario | `email`, `username`, `password` | token bearer, username, email | `201`, `409`, `422`, `503` | Normalizacao, validacao, hash, duplicidade, token imediato | `test_auth.py` | `test/e2e/auth.e2e-spec.ts`, `test/integration/auth-user.integration-spec.ts` | Concluido na Fase 3 |
 | Auth | `POST /auth/login` | Nao | Usuario por identifier | `identifier`/`username`/`email`, `password` | token bearer, username, email | `200`, `401`, `423`, `429`, `422`, `503` | Login case-insensitive, lockout, sliding window rate limit | `test_auth.py` | `test/e2e/auth.e2e-spec.ts`, `test/integration/auth-user.integration-spec.ts`, `src/auth/login-rate-limit.service.spec.ts` | Concluido na Fase 3 |
 | Auth | `GET /auth/me` | Sim | Usuario do JWT | Bearer token | `id`, `username`, `email` | `200`, `401` | Token valido e usuario existente | `test_auth.py` | `test/e2e/auth.e2e-spec.ts` | Concluido na Fase 3 |
-| Doctor | `POST /doctors/` | Sim | Cria com usuario do JWT | `DoctorCreate` | `DoctorResponse` com `cases_count` | `201`, `401`, `422` | Normaliza telefone, ownership obrigatorio | `test_doctor.py`, `test_authorization.py` | Pendente | Pendente |
-| Doctor | `GET /doctors/` | Sim | Filtra por usuario | `skip`, `limit` | Lista de `DoctorResponse` | `200`, `401` | Apenas ativos, `cases_count`, lista vazia | `test_auth.py`, `test_doctor.py`, `test_authorization.py`, `test_dashboard.py` | Pendente | Pendente |
-| Doctor | `GET /doctors/{doctor_id}` | Sim | Filtra por usuario | `doctor_id` | `DoctorResponse` | `200`, `401`, `404` | Outro usuario retorna nao encontrado | `test_authorization.py` | Pendente | Pendente |
-| Doctor | `PUT /doctors/{doctor_id}` | Sim | Filtra por usuario | `DoctorUpdate` | `DoctorResponse` | `200`, `401`, `404`, `422` | Atualizacao parcial e telefone | `test_doctor.py`, `test_authorization.py` | Pendente | Pendente |
-| Doctor | `DELETE /doctors/{doctor_id}` | Sim | Filtra por usuario | `doctor_id` | Corpo vazio | `204`, `401`, `404`, `409` | Soft delete, bloqueio por casos ativos pending/completed | `test_doctor.py` | Pendente | Pendente |
+| Doctor | `POST /doctors/` | Sim | Cria com usuario do JWT | `DoctorCreate` | `DoctorResponse` com `cases_count` | `201`, `401`, `422` | Normaliza telefone, ownership obrigatorio | `test_doctor.py`, `test_authorization.py` | `test/e2e/doctor.e2e-spec.ts`, `test/integration/doctor.integration-spec.ts`, `src/doctor/doctor-phone.spec.ts` | Concluido na Fase 4 |
+| Doctor | `GET /doctors/` | Sim | Filtra por usuario | `skip`, `limit` | Lista de `DoctorResponse` | `200`, `401` | Apenas ativos, `cases_count`, lista vazia | `test_auth.py`, `test_doctor.py`, `test_authorization.py`, `test_dashboard.py` | `test/e2e/doctor.e2e-spec.ts`, `test/integration/doctor.integration-spec.ts` | Concluido na Fase 4 |
+| Doctor | `GET /doctors/{doctor_id}` | Sim | Filtra por usuario | `doctor_id` | `DoctorResponse` | `200`, `401`, `404` | Outro usuario retorna nao encontrado | `test_authorization.py` | `test/e2e/doctor.e2e-spec.ts`, `test/integration/doctor.integration-spec.ts` | Concluido na Fase 4 |
+| Doctor | `PUT /doctors/{doctor_id}` | Sim | Filtra por usuario | `DoctorUpdate` | `DoctorResponse` | `200`, `401`, `404`, `422` | Atualizacao parcial e telefone | `test_doctor.py`, `test_authorization.py` | `test/e2e/doctor.e2e-spec.ts`, `test/integration/doctor.integration-spec.ts` | Concluido na Fase 4 |
+| Doctor | `DELETE /doctors/{doctor_id}` | Sim | Filtra por usuario | `doctor_id` | Corpo vazio | `204`, `401`, `404`, `409` | Soft delete, bloqueio por casos ativos pending/completed | `test_doctor.py` | `test/e2e/doctor.e2e-spec.ts`, `test/integration/doctor.integration-spec.ts` | Concluido na Fase 4 |
 | Case | `POST /cases/` | Sim | Doctor deve pertencer ao usuario | `CaseCreate` | `CaseResponse` | `201`, `401`, `404`, `422` | Pricing mode, valor fixo/servicos, status inicial pending | `test_case.py`, `test_authorization.py` | Pendente | Pendente |
 | Case | `GET /cases/` | Sim | Filtra por usuario | `skip`, `limit`, `doctor_id`, `status` | Lista de `CaseResponse` | `200`, `401` | Apenas ativos, filtros, `id DESC`, items e `items_count` | `test_auth.py`, `test_dashboard.py`, `test_authorization.py` | Pendente | Pendente |
 | Case | `GET /cases/{case_id}` | Sim | Filtra por usuario | `case_id` | `CaseResponse` | `200`, `401`, `404` | Outro usuario retorna nao encontrado | `test_authorization.py` | Pendente | Pendente |
@@ -233,17 +233,17 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 
 ### Fase 4 - Doctor
 
-- [ ] Criar modulo `doctor`.
-- [ ] Implementar DTOs de create/update/response.
-- [ ] Implementar CRUD com ownership obrigatorio por usuario autenticado.
-- [ ] Implementar normalizacao e validacao de telefone BR.
-- [ ] Implementar soft delete por `deleted_at`.
-- [ ] Implementar bloqueio de exclusao quando houver cases ativos `pending` ou `completed`.
-- [ ] Implementar `cases_count` em respostas.
-- [ ] Preservar status HTTP e mensagens de erro principais.
-- [ ] Cobrir com testes unitarios, integracao e e2e equivalentes a `test_doctor.py` e partes de `test_authorization.py`.
-- [ ] Cobrir isolamento multiusuario.
-- [ ] Registrar resumo textual da fase.
+- [x] Criar modulo `doctor`.
+- [x] Implementar DTOs de create/update/response.
+- [x] Implementar CRUD com ownership obrigatorio por usuario autenticado.
+- [x] Implementar normalizacao e validacao de telefone BR.
+- [x] Implementar soft delete por `deleted_at`.
+- [x] Implementar bloqueio de exclusao quando houver cases ativos `pending` ou `completed`.
+- [x] Implementar `cases_count` em respostas.
+- [x] Preservar status HTTP e mensagens de erro principais.
+- [x] Cobrir com testes unitarios, integracao e e2e equivalentes a `test_doctor.py` e partes de `test_authorization.py`.
+- [x] Cobrir isolamento multiusuario.
+- [x] Registrar resumo textual da fase.
 
 ### Fase 5 - Case
 
@@ -346,6 +346,10 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 
 ## Decisoes e Notas
 
+- Fase 4 concluida: criado `DoctorModule` no NestJS com endpoints `POST/GET/GET by id/PUT/DELETE /doctors/`, todos protegidos por JWT. A criacao sempre usa `user.id` do token para `doctors.user_id`, sem aceitar `user_id` publico; consultas, updates e deletes filtram por `id`, `user_id` e `deleted_at IS NULL`, fazendo recursos de outro usuario retornarem como nao encontrados.
+- Fase 4 regras traduzidas: telefone BR preserva regex/formato legado e fallback para 10/11 digitos; string vazia vira `null`; `cases_count` conta apenas casos com `deleted_at IS NULL`; delete aplica soft delete em `deleted_at`; delete e bloqueado com `409` e detail legado quando existe caso ativo `pending` ou `completed`; casos `delivered` nao bloqueiam.
+- Fase 4 testes: casos de `cases_count` e bloqueio de delete criam registros em `cases` diretamente via Prisma nos testes, sem implementar controller/service de Case antes da Fase 5.
+- Fase 4 validacoes: `npm run format`, `npm run lint`, `npm run build`, `npm run test`, `npm run test:integration` e `npm run test:e2e` executados com sucesso em `backend-nest/`.
 - Fase 3/auth: algoritmo legado de rate limit de login documentado antes da traducao. O FastAPI usa um `dict[str, deque[float]]` em memoria protegido por `Lock`; a chave e `request.client.host` com fallback `"unknown"`; em cada `POST /auth/login`, a tentativa e registrada antes da autenticacao; timestamps mais antigos que `LOGIN_RATE_LIMIT_WINDOW_SECONDS` sao removidos; se a fila ainda tiver `LOGIN_RATE_LIMIT_ATTEMPTS` ou mais entradas, a requisicao falha com `429`, detail `"Muitas tentativas. Tente novamente mais tarde."` e header `Retry-After = max(1, ceil(window - (now - primeira_tentativa)))`; login bem-sucedido nao limpa a janela. Esse mecanismo e separado do lockout persistido em `users`.
 - Fase 3 concluida: criados `AuthModule` e `UserModule` no NestJS preservando cadastro com token imediato, normalizacao case-insensitive de email/username, login por `identifier` e aliases `username`/`email`, JWT com `sub=username`, bcrypt configuravel, lockout persistido em `users`, rate limit manual por janela deslizante em memoria e `GET /auth/me` protegido por bearer token.
 - Fase 3 decisao de teste: scripts `test:integration` e `test:e2e` fixam valores de seguranca (`BCRYPT_ROUNDS=4`, `LOGIN_MAX_ATTEMPTS=3`, janela de rate limit) para reproduzir os cenarios de lockout/rate limit de forma deterministica, sem depender de variaveis externas do shell.

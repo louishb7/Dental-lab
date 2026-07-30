@@ -86,6 +86,14 @@ Endpoints de auth ja migrados nesta fase:
 - `POST /auth/login`
 - `GET /auth/me`
 
+Endpoints de doctor ja migrados na Fase 4:
+
+- `POST /doctors/`
+- `GET /doctors/`
+- `GET /doctors/{doctor_id}`
+- `PUT /doctors/{doctor_id}`
+- `DELETE /doctors/{doctor_id}`
+
 ## Validacao
 
 ```bash
