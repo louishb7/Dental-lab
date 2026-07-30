@@ -134,7 +134,7 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 | CaseItem | `GET /cases/{case_id}/items/{item_id}` | Sim | Case/item devem pertencer ao usuario | IDs | `CaseItemResponse` | `200`, `401`, `404` | Outro usuario retorna nao encontrado | `test_authorization.py` | `test/e2e/case-item.e2e-spec.ts`, `test/integration/case-item.integration-spec.ts` | Concluido na Fase 6 |
 | CaseItem | `PUT /cases/{case_id}/items/{item_id}` | Sim | Case/item devem pertencer ao usuario | `CaseItemUpdate` | `CaseItemResponse` | `200`, `401`, `404`, `422`; regra service-only de `unit_value` em case `services` permanece sem status HTTP novo | Atualizacao parcial, validacoes, recalc | `test_case_item.py`, `test_authorization.py` | `test/e2e/case-item.e2e-spec.ts`, `test/integration/case-item.integration-spec.ts`, `src/case-item/case-item-rules.spec.ts` | Concluido na Fase 6 |
 | CaseItem | `DELETE /cases/{case_id}/items/{item_id}` | Sim | Case/item devem pertencer ao usuario | IDs | Corpo vazio | `204`, `401`, `404` | Delete fisico de item, recalc se services | `test_case_item.py`, `test_authorization.py` | `test/e2e/case-item.e2e-spec.ts`, `test/integration/case-item.integration-spec.ts` | Concluido na Fase 6 |
-| Dashboard | `GET /dashboard/overview` | Sim | Agrega apenas usuario | Nenhuma | `DashboardSummaryResponse` | `200`, `401` | Status counts, atrasados, urgentes, entregues do mes | `test_dashboard.py`, `test_authorization.py` | Pendente | Pendente |
+| Dashboard | `GET /dashboard/overview` | Sim | Agrega apenas usuario | Nenhuma | `DashboardSummaryResponse` | `200`, `401` | Status counts, atrasados, urgentes, entregues do mes | `test_dashboard.py`, `test_authorization.py` | `test/e2e/dashboard.e2e-spec.ts`, `test/integration/dashboard.integration-spec.ts`, `src/dashboard/dashboard-date.spec.ts` | Concluido na Fase 7 |
 
 ## Testes de Paridade
 
@@ -283,18 +283,18 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 
 ### Fase 7 - Dashboard
 
-- [ ] Criar modulo `dashboard`.
-- [ ] Implementar `GET /dashboard/overview`.
-- [ ] Implementar `status_counts` com zeros default.
-- [ ] Implementar overdue cases com criterio de data e status equivalente.
-- [ ] Implementar urgent open cases com criterio e ordenacao equivalente.
-- [ ] Implementar delivered cases do mes com janela mensal equivalente.
-- [ ] Implementar soma e contagem financeira mensal.
-- [ ] Implementar `doctor_name` nas respostas compactas.
-- [ ] Criar testes de limites de dia, mes e timezone.
-- [ ] Cobrir com testes unitarios, integracao e e2e equivalentes a `test_dashboard.py` e partes de `test_authorization.py`.
-- [ ] Cobrir isolamento multiusuario nas agregacoes.
-- [ ] Registrar resumo textual da fase.
+- [x] Criar modulo `dashboard`.
+- [x] Implementar `GET /dashboard/overview`.
+- [x] Implementar `status_counts` com zeros default.
+- [x] Implementar overdue cases com criterio de data e status equivalente.
+- [x] Implementar urgent open cases com criterio e ordenacao equivalente.
+- [x] Implementar delivered cases do mes com janela mensal equivalente.
+- [x] Implementar soma e contagem financeira mensal.
+- [x] Implementar `doctor_name` nas respostas compactas.
+- [x] Criar testes de limites de dia, mes e timezone.
+- [x] Cobrir com testes unitarios, integracao e e2e equivalentes a `test_dashboard.py` e partes de `test_authorization.py`.
+- [x] Cobrir isolamento multiusuario nas agregacoes.
+- [x] Registrar resumo textual da fase.
 
 ### Fase 8 - Seguranca Global
 
@@ -346,6 +346,11 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 
 ## Decisoes e Notas
 
+- Fase 7 concluida: criado `DashboardModule` no NestJS com `GET /dashboard/overview` protegido por JWT. Todas as agregacoes filtram por ownership via `cases -> doctors.user_id` e excluem `cases.deleted_at IS NOT NULL`, preservando o comportamento multiusuario do FastAPI.
+- Fase 7 regras traduzidas: `status_counts` sempre retorna `pending`, `completed` e `delivered` com zero default; atrasados usam status diferente de `delivered`, prazo nao nulo e deadline anterior ao inicio do dia UTC; urgentes em aberto usam `priority = urgent`, status diferente de `delivered`, ordenacao por deadline ASC com nulos por ultimo e id DESC; entregues do mes usam janela mensal UTC, `status = delivered`, `delivered_at` preenchido e `total_value` nao nulo.
+- Fase 7 financeiro: `delivered_total_month` soma `cases.total_value` com `Decimal` do Prisma e volta `0` quando nao ha casos entregues somaveis; `delivered_count_month` e a quantidade de casos retornados em `delivered_cases_month`.
+- Fase 7 decisao tecnica: `status_counts` usa SQL parametrizado com Prisma `$queryRaw` para manter a agregacao dentro da transacao e evitar ambiguidade de tipagem do `groupBy`; a consulta preserva ownership e soft delete.
+- Fase 7 validacoes: `npm run format`, `npm run lint`, `npm run build`, `npm run test`, `npm run test:integration` e `npm run test:e2e` executados com sucesso em `backend-nest/`.
 - Fase 6 concluida: criado `CaseItemModule` no NestJS com rotas aninhadas `GET/POST /cases/{case_id}/items/`, `GET/PUT/DELETE /cases/{case_id}/items/{item_id}`, todas protegidas por JWT. Ownership e aplicado pelo case pai (`cases -> doctors.user_id`); case de outro usuario ou soft-deletado se comporta como "Caso nao encontrado".
 - Fase 6 regras traduzidas: `tooth` e trimado, nao pode ser vazio e, quando numerico, deve ficar entre 11 e 48; `quantity` deve ser maior ou igual a 1 e defaulta para 1; `unit_value` usa a mesma normalizacao monetaria de `total_value`; cases `services` exigem `unit_value`, cases `fixed` aceitam `unit_value = null` e preservam `total_value` fixo.
 - Fase 6 recalc: create/update/delete de item em case `services` recalcula `cases.total_value` com `SUM(quantity * unit_value)` em transacao; quando nao ha valores somaveis, o total volta para `null`. Em case `fixed`, alteracoes de item nao alteram o valor fixo do case.

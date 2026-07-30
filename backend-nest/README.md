@@ -111,6 +111,10 @@ Endpoints de case-item ja migrados na Fase 6:
 - `PUT /cases/{case_id}/items/{item_id}`
 - `DELETE /cases/{case_id}/items/{item_id}`
 
+Endpoint de dashboard ja migrado na Fase 7:
+
+- `GET /dashboard/overview`
+
 ## Validacao
 
 ```bash
