@@ -2,6 +2,7 @@ import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 
+import { configureApp } from '../../src/app.configure';
 import { AppModule } from '../../src/app.module';
 import { assertSafeTestDatabaseUrl } from '../../src/config/test-database';
 
@@ -16,6 +17,7 @@ describe('health e2e', () => {
     }).compile();
 
     app = moduleRef.createNestApplication();
+    configureApp(app);
     await app.init();
   });
 

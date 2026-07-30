@@ -5,6 +5,7 @@ const VALID_ENV = {
   NODE_ENV: 'test',
   PORT: '3001',
   DATABASE_URL: 'postgresql://cadista:cadista_dev_password@localhost:5433/cadista_nest_test',
+  SECRET_KEY: 'test-secret-key-for-cadista-nest-auth',
 };
 
 describe('validateEnvironment', () => {
@@ -13,6 +14,14 @@ describe('validateEnvironment', () => {
       NODE_ENV: 'test',
       PORT: 3001,
       DATABASE_URL: VALID_ENV.DATABASE_URL,
+      SECRET_KEY: VALID_ENV.SECRET_KEY,
+      ALGORITHM: 'HS256',
+      ACCESS_TOKEN_EXPIRE_MINUTES: 60,
+      BCRYPT_ROUNDS: 12,
+      LOGIN_MAX_ATTEMPTS: 5,
+      LOGIN_LOCKOUT_MINUTES: 15,
+      LOGIN_RATE_LIMIT_ATTEMPTS: 10,
+      LOGIN_RATE_LIMIT_WINDOW_SECONDS: 60,
     });
   });
 
@@ -32,6 +41,26 @@ describe('validateEnvironment', () => {
     expect(() => validateEnvironment({ ...VALID_ENV, PORT: 'abc' })).toThrow(
       'PORT must be an integer between 1 and 65535.',
     );
+  });
+
+  it('fails early when SECRET_KEY is missing', () => {
+    expect(() => validateEnvironment({ ...VALID_ENV, SECRET_KEY: '' })).toThrow(
+      'SECRET_KEY must be defined',
+    );
+  });
+
+  it('fails early when SECRET_KEY is too short', () => {
+    expect(() => validateEnvironment({ ...VALID_ENV, SECRET_KEY: 'short' })).toThrow(
+      'SECRET_KEY must be at least 32 characters long.',
+    );
+  });
+
+  it('allows lower bcrypt rounds only in test', () => {
+    expect(validateEnvironment({ ...VALID_ENV, BCRYPT_ROUNDS: '4' }).BCRYPT_ROUNDS).toBe(4);
+
+    expect(() =>
+      validateEnvironment({ ...VALID_ENV, NODE_ENV: 'development', BCRYPT_ROUNDS: '4' }),
+    ).toThrow('BCRYPT_ROUNDS must be an integer between 12 and 16.');
   });
 });
 

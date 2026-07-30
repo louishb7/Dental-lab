@@ -115,9 +115,9 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 | Modulo | Metodo e rota | Autenticacao | Ownership | Entrada | Resposta | Status HTTP | Regra de negocio | Teste Python de referencia | Teste Nest equivalente | Situacao |
 | ------ | ------------- | ------------ | --------- | ------- | -------- | ----------- | ---------------- | -------------------------- | ---------------------- | -------- |
 | Root | `GET /` | Nao | N/A | Nenhuma | `{ "message": "API Cadista operante!" }` ou equivalente documentado | `200` | Healthcheck operacional legado | `test_security_headers.py`, `test_database_health.py` | Pendente | Pendente |
-| Auth | `POST /auth/register` | Nao | Cria usuario | `email`, `username`, `password` | token bearer, username, email | `201`, `409`, `422`, `503` | Normalizacao, validacao, hash, duplicidade, token imediato | `test_auth.py` | Pendente | Pendente |
-| Auth | `POST /auth/login` | Nao | Usuario por identifier | `identifier`/`username`/`email`, `password` | token bearer, username, email | `200`, `401`, `423`, `429`, `422`, `503` | Login case-insensitive, lockout, sliding window rate limit | `test_auth.py` | Pendente | Pendente |
-| Auth | `GET /auth/me` | Sim | Usuario do JWT | Bearer token | `id`, `username`, `email` | `200`, `401` | Token valido e usuario existente | `test_auth.py` | Pendente | Pendente |
+| Auth | `POST /auth/register` | Nao | Cria usuario | `email`, `username`, `password` | token bearer, username, email | `201`, `409`, `422`, `503` | Normalizacao, validacao, hash, duplicidade, token imediato | `test_auth.py` | `test/e2e/auth.e2e-spec.ts`, `test/integration/auth-user.integration-spec.ts` | Concluido na Fase 3 |
+| Auth | `POST /auth/login` | Nao | Usuario por identifier | `identifier`/`username`/`email`, `password` | token bearer, username, email | `200`, `401`, `423`, `429`, `422`, `503` | Login case-insensitive, lockout, sliding window rate limit | `test_auth.py` | `test/e2e/auth.e2e-spec.ts`, `test/integration/auth-user.integration-spec.ts`, `src/auth/login-rate-limit.service.spec.ts` | Concluido na Fase 3 |
+| Auth | `GET /auth/me` | Sim | Usuario do JWT | Bearer token | `id`, `username`, `email` | `200`, `401` | Token valido e usuario existente | `test_auth.py` | `test/e2e/auth.e2e-spec.ts` | Concluido na Fase 3 |
 | Doctor | `POST /doctors/` | Sim | Cria com usuario do JWT | `DoctorCreate` | `DoctorResponse` com `cases_count` | `201`, `401`, `422` | Normaliza telefone, ownership obrigatorio | `test_doctor.py`, `test_authorization.py` | Pendente | Pendente |
 | Doctor | `GET /doctors/` | Sim | Filtra por usuario | `skip`, `limit` | Lista de `DoctorResponse` | `200`, `401` | Apenas ativos, `cases_count`, lista vazia | `test_auth.py`, `test_doctor.py`, `test_authorization.py`, `test_dashboard.py` | Pendente | Pendente |
 | Doctor | `GET /doctors/{doctor_id}` | Sim | Filtra por usuario | `doctor_id` | `DoctorResponse` | `200`, `401`, `404` | Outro usuario retorna nao encontrado | `test_authorization.py` | Pendente | Pendente |
@@ -140,9 +140,9 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 
 ### Unitarios Jest
 
-- [ ] Configuracao valida e invalida.
+- [x] Configuracao valida e invalida.
 - [ ] Validadores puros de DTO/utilitarios quando cada modulo for migrado.
-- [ ] Algoritmo manual de sliding window do login quando auth for migrado.
+- [x] Algoritmo manual de sliding window do login quando auth for migrado.
 - [ ] Regras puras de pricing, status e normalizacao monetaria quando os modulos forem migrados.
 
 ### Integracao Prisma/PostgreSQL
@@ -155,7 +155,7 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 
 ### E2E Supertest
 
-- [ ] Healthcheck da aplicacao.
+- [x] Healthcheck da aplicacao.
 - [ ] Contrato HTTP, status codes, `detail`, trailing slash e serializacao.
 - [ ] Rotas protegidas e isolamento multiusuario em cada modulo relevante.
 - [ ] Equivalencia aos Pytests: `test_auth`, `test_authorization`, `test_case`, `test_case_item`, `test_dashboard`, `test_doctor`, `test_security_headers`, `test_database_health`, `test_production_settings`.
@@ -217,19 +217,19 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 
 ### Fase 3 - Auth e User
 
-- [ ] Criar modulo `auth`.
-- [ ] Criar modulo/service/repository de `user`.
-- [ ] Documentar algoritmo Python atual do rate limit antes de implementar.
-- [ ] Implementar DTOs de register/login/me com validacoes equivalentes.
-- [ ] Implementar hashing bcrypt com rounds configuraveis.
-- [ ] Implementar `POST /auth/register` com normalizacao, duplicidade e retorno de token.
-- [ ] Implementar `POST /auth/login` com `identifier`, aliases equivalentes, JWT e erros equivalentes.
-- [ ] Implementar lockout de conta separado do rate limit por client_id.
-- [ ] Implementar rate limit de login por janela deslizante manual ou provar equivalencia por testes.
-- [ ] Implementar JWT strategy/guard e `GET /auth/me`.
-- [ ] Cobrir auth com testes unitarios e e2e equivalentes a `test_auth.py`.
-- [ ] Cobrir rotas protegidas sem token e com token.
-- [ ] Registrar resumo textual da fase.
+- [x] Criar modulo `auth`.
+- [x] Criar modulo/service/repository de `user`.
+- [x] Documentar algoritmo Python atual do rate limit antes de implementar.
+- [x] Implementar DTOs de register/login/me com validacoes equivalentes.
+- [x] Implementar hashing bcrypt com rounds configuraveis.
+- [x] Implementar `POST /auth/register` com normalizacao, duplicidade e retorno de token.
+- [x] Implementar `POST /auth/login` com `identifier`, aliases equivalentes, JWT e erros equivalentes.
+- [x] Implementar lockout de conta separado do rate limit por client_id.
+- [x] Implementar rate limit de login por janela deslizante manual ou provar equivalencia por testes.
+- [x] Implementar JWT strategy/guard e `GET /auth/me`.
+- [x] Cobrir auth com testes unitarios e e2e equivalentes a `test_auth.py`.
+- [x] Cobrir rotas protegidas sem token e com token.
+- [x] Registrar resumo textual da fase.
 
 ### Fase 4 - Doctor
 
@@ -346,6 +346,11 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 
 ## Decisoes e Notas
 
+- Fase 3/auth: algoritmo legado de rate limit de login documentado antes da traducao. O FastAPI usa um `dict[str, deque[float]]` em memoria protegido por `Lock`; a chave e `request.client.host` com fallback `"unknown"`; em cada `POST /auth/login`, a tentativa e registrada antes da autenticacao; timestamps mais antigos que `LOGIN_RATE_LIMIT_WINDOW_SECONDS` sao removidos; se a fila ainda tiver `LOGIN_RATE_LIMIT_ATTEMPTS` ou mais entradas, a requisicao falha com `429`, detail `"Muitas tentativas. Tente novamente mais tarde."` e header `Retry-After = max(1, ceil(window - (now - primeira_tentativa)))`; login bem-sucedido nao limpa a janela. Esse mecanismo e separado do lockout persistido em `users`.
+- Fase 3 concluida: criados `AuthModule` e `UserModule` no NestJS preservando cadastro com token imediato, normalizacao case-insensitive de email/username, login por `identifier` e aliases `username`/`email`, JWT com `sub=username`, bcrypt configuravel, lockout persistido em `users`, rate limit manual por janela deslizante em memoria e `GET /auth/me` protegido por bearer token.
+- Fase 3 decisao de teste: scripts `test:integration` e `test:e2e` fixam valores de seguranca (`BCRYPT_ROUNDS=4`, `LOGIN_MAX_ATTEMPTS=3`, janela de rate limit) para reproduzir os cenarios de lockout/rate limit de forma deterministica, sem depender de variaveis externas do shell.
+- Fase 3 validacoes: `npm run format`, `npm run lint`, `npm run build`, `npm run test`, `npm run test:integration`, `npm run test:e2e`, `pg_isready -h localhost -p 5433 -U cadista`, `psql ... -c "SELECT 1 AS ok"`, start do NestJS em `PORT=3002` fora do sandbox e `curl -i http://127.0.0.1:3002/health`, `curl -i http://127.0.0.1:3002/health/database` executados com sucesso.
+- Fase 3 observacao de ambiente: tentativas de iniciar/curl o NestJS dentro do sandbox falharam ao acessar `localhost`; a validacao real de runtime foi repetida fora do sandbox com permissao aprovada e passou.
 - Processo: ao final de cada alteracao, o agente deve fornecer uma mensagem de commit sugerida para facilitar a revisao e o registro das etapas da migracao.
 - `status_revert_reason` e campo legado: existe no modelo/schema de resposta FastAPI, mas o service atual ignora o valor recebido em update e nao permite reversao de status. A migracao deve preservar o fluxo linear sem criar regra nova baseada nesse campo.
 - FastAPI em `backend/` deve permanecer disponivel como referencia ate o cutover; o NestJS sera criado em `backend-nest/` e rodara em porta configuravel diferente da porta atual do FastAPI.

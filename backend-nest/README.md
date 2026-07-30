@@ -23,8 +23,14 @@ Variaveis obrigatorias nesta fase:
 - `NODE_ENV`: `development`, `test` ou `production`
 - `PORT`: porta HTTP do NestJS, padrao recomendado `3001`
 - `DATABASE_URL`: URL PostgreSQL usada pelo Prisma
-
-Variaveis de autenticacao ja estao documentadas no exemplo, mas o modulo de auth ainda nao foi implementado nesta fase.
+- `SECRET_KEY`: chave de assinatura JWT, minimo 32 caracteres
+- `ALGORITHM`: algoritmo JWT aceito (`HS256`, `HS384` ou `HS512`)
+- `ACCESS_TOKEN_EXPIRE_MINUTES`: expiracao do JWT em minutos
+- `BCRYPT_ROUNDS`: custo do bcrypt
+- `LOGIN_MAX_ATTEMPTS`: limite de falhas antes do lockout da conta
+- `LOGIN_LOCKOUT_MINUTES`: duracao do lockout temporario
+- `LOGIN_RATE_LIMIT_ATTEMPTS`: limite de tentativas por cliente na janela deslizante
+- `LOGIN_RATE_LIMIT_WINDOW_SECONDS`: tamanho da janela deslizante do login
 
 ## Banco local
 
@@ -73,6 +79,12 @@ Healthchecks:
 curl http://localhost:3001/health
 curl http://localhost:3001/health/database
 ```
+
+Endpoints de auth ja migrados nesta fase:
+
+- `POST /auth/register`
+- `POST /auth/login`
+- `GET /auth/me`
 
 ## Validacao
 
