@@ -7,11 +7,79 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// Placeholder tecnico de Fase 1 para materializar o Prisma Client antes do schema de dominio.
-/// Nao possui migration nesta fase e nao e usado pelo runtime; healthcheck usa apenas `$queryRaw`.
-model PrismaClientBootstrap {
-  id   Int    @id
-  name String
+model User {
+  id                  Int       @id @default(autoincrement())
+  email               String    @db.VarChar(255)
+  username            String    @db.VarChar(80)
+  passwordHash        String    @map("password_hash") @db.VarChar(255)
+  failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
+  lockedUntil         DateTime? @map("locked_until") @db.Timestamptz(6)
+  lastFailedLoginAt   DateTime? @map("last_failed_login_at") @db.Timestamptz(6)
+  lastLoginAt         DateTime? @map("last_login_at") @db.Timestamptz(6)
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  doctors             Doctor[]
 
-  @@map("_prisma_client_bootstrap")
+  @@unique([email], map: "uq_users_email")
+  @@unique([username], map: "uq_users_username")
+  @@map("users")
+}
+
+model Doctor {
+  id         Int          @id @default(autoincrement())
+  userId     Int?         @map("user_id")
+  name       String       @db.VarChar(150)
+  clinicName String?      @map("clinic_name") @db.VarChar(150)
+  phone      String?      @db.VarChar(50)
+  notes      String?      @db.Text
+  createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  deletedAt  DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  user       User?        @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_doctors_user_id_users")
+  cases      DentalCase[]
+
+  @@index([userId], map: "ix_doctors_user_id")
+  @@index([name], map: "ix_doctors_name")
+  @@index([deletedAt], map: "ix_doctors_deleted_at")
+  @@map("doctors")
+}
+
+model DentalCase {
+  id                 Int        @id @default(autoincrement())
+  doctorId           Int        @map("doctor_id")
+  patientRef         String     @map("patient_ref") @db.VarChar(150)
+  pricingMode        String     @default("services") @map("pricing_mode") @db.VarChar(20)
+  deadline           DateTime?  @db.Timestamptz(6)
+  priority           String     @default("normal") @db.VarChar(20)
+  status             String     @default("pending") @db.VarChar(20)
+  totalValue         Decimal?   @map("total_value") @db.Decimal(10, 2)
+  notes              String?    @db.Text
+  createdAt          DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  deliveredAt        DateTime?  @map("delivered_at") @db.Timestamptz(6)
+  deletedAt          DateTime?  @map("deleted_at") @db.Timestamptz(6)
+  statusRevertReason String?    @map("status_revert_reason") @db.Text
+  doctor             Doctor     @relation(fields: [doctorId], references: [id], onDelete: Restrict, map: "cases_doctor_id_fkey")
+  items              CaseItem[]
+
+  @@index([doctorId], map: "ix_cases_doctor_id")
+  @@index([patientRef], map: "ix_cases_patient_ref")
+  @@index([priority], map: "ix_cases_priority")
+  @@index([status], map: "ix_cases_status")
+  @@index([deletedAt], map: "ix_cases_deleted_at")
+  @@map("cases")
+}
+
+model CaseItem {
+  id          Int        @id @default(autoincrement())
+  caseId      Int        @map("case_id")
+  tooth       String     @db.VarChar(100)
+  serviceType String     @map("service_type") @db.VarChar(100)
+  quantity    Int        @default(1)
+  unitValue   Decimal?   @map("unit_value") @db.Decimal(10, 2)
+  material    String?    @db.VarChar(100)
+  color       String?    @db.VarChar(50)
+  notes       String?    @db.Text
+  case        DentalCase @relation(fields: [caseId], references: [id], onDelete: Cascade, map: "case_items_case_id_fkey")
+
+  @@index([caseId], map: "ix_case_items_case_id")
+  @@map("case_items")
 }

@@ -44,10 +44,10 @@ Gerar o client:
 npm run prisma:generate
 ```
 
-Durante a Fase 1, `prisma/schema.prisma` contem apenas um model tecnico `PrismaClientBootstrap`.
-Ele existe somente para materializar o Prisma Client antes da modelagem de dominio, nao possui
-migration nesta fase e nao e usado pelo runtime. A Fase 2 deve remover/substituir esse placeholder
-antes da migration inicial real.
+O schema Prisma ja modela as tabelas legadas `users`, `doctors`, `cases` e `case_items`.
+As constraints que Prisma nao representa diretamente ficam em SQL customizado dentro da
+migration inicial, incluindo checks de status/cobranca/valores e indices unicos funcionais
+para `lower(email)` e `lower(username)`.
 
 Quando existirem migrations:
 

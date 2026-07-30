@@ -32,7 +32,10 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 - [ ] Preservar login por `identifier`, aceitando username ou email, alem dos aliases atuais `username` e `email` no payload.
 - [ ] Preservar JWT com `sub` igual ao username, `iat`, `exp`, algoritmo configuravel e `token_type: "bearer"`.
 - [ ] Preservar lockout de conta em `User`: falhas incrementam `failed_login_attempts`, definem `last_failed_login_at`, bloqueiam em `locked_until` ao atingir `LOGIN_MAX_ATTEMPTS`, e login valido limpa o estado.
+- [ ] Preservar detalhe real do lockout: ao atingir o limite, `locked_until` e definido e `failed_login_attempts` volta para `0`; lock expirado limpa `locked_until`, `failed_login_attempts` e `last_failed_login_at`.
 - [ ] Preservar rate limit de login por `client_id` em janela deslizante com timestamps, retorno `429`, mensagem atual e header `Retry-After`.
+- [ ] Preservar `client_id` atual do rate limit de login como `request.client.host`, com fallback `"unknown"`; headers de proxy nao sao considerados no comportamento atual.
+- [ ] Preservar que `POST /auth/login` registra tentativa no rate limit antes de autenticar; login bem-sucedido nao chama reset da janela por `client_id`.
 - [ ] Preservar `Doctor`: `id`, `user_id`, `name`, `clinic_name`, `phone`, `notes`, `created_at`, `deleted_at`.
 - [ ] Preservar FK `doctors.user_id -> users.id` com `ON DELETE CASCADE`; no Nest, ownership e obrigatorio para criacao e operacao.
 - [ ] Preservar soft delete de doctor por `deleted_at`, listagens/buscas retornando apenas ativos.
@@ -48,6 +51,7 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 - [ ] Preservar `items_count` em respostas de case como contagem de linhas `CaseItem`, nao soma de `quantity`.
 - [ ] Preservar carregamento de `items` na resposta de case.
 - [ ] Preservar resolucao de `pricing_mode` na criacao: modo informado vence; sem modo, inferir `fixed` se `total_value` veio preenchido, senao `services`.
+- [ ] Preservar criacao de case sempre com `status = "pending"`; qualquer `status` aceito pelo schema base no payload de criacao e ignorado pelo service atual.
 - [ ] Preservar regra de `fixed`: `total_value` obrigatorio e mantido independente dos itens.
 - [ ] Preservar regra de `services`: se o payload informa `pricing_mode: "services"`, `total_value` nao e aceito diretamente; o total inicial e `null` e depois e recalculado pelos itens.
 - [ ] Preservar normalizacao monetaria backend para `total_value` e `unit_value`: aceita `Decimal`, numero, string, `R$`, espacos, milhar com ponto e decimal com virgula.
@@ -64,6 +68,7 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 - [ ] Preservar `bulk-deliver` com diferenca real entre payload vazio e payload com IDs.
 - [ ] `bulk-deliver` sem `case_ids` ou com lista vazia: selecionar somente casos `completed`, respeitar filtro opcional por doctor e ownership do usuario.
 - [ ] `bulk-deliver` com IDs: remover duplicados, buscar apenas dentro do ownership, validar que todos foram encontrados, falhar com `409` se algum faltar, promover `pending` para `completed` e depois `delivered`, entregar `completed`, usar mesmo instante de operacao, preservar `delivered_at` existente, retornar por `id ASC`.
+- [ ] Preservar detalhe real de `bulk-deliver` com IDs: casos ja `delivered` selecionados explicitamente tambem sao retornados, permanecem `delivered` e preservam `delivered_at`.
 - [ ] `bulk-deliver` deve ser transacional: nenhuma atualizacao parcial se a validacao falhar.
 - [ ] Preservar `CaseItem`: `id`, `case_id`, `tooth`, `service_type`, `quantity`, `unit_value`, `material`, `color`, `notes`.
 - [ ] Preservar FK `case_items.case_id -> cases.id` com `ON DELETE CASCADE`.
@@ -89,18 +94,21 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 - [ ] Preservar frontend React/Vite existente como consumidor HTTP + JSON.
 - [ ] Preservar cliente frontend em `frontend/src/services/api.js`, `VITE_API_BASE_URL`, fallback FastAPI `http://localhost:8000`, token em `localStorage` (`cadista_token`) e usuario em `cadista_user`.
 - [ ] Preservar tratamento frontend de resposta: parse JSON, 204 como `null`, `detail` string ou lista de validacao, limpeza de sessao em falha de carga autenticada.
+- [ ] Preservar defaults reais de banco/modelo: `users.failed_login_attempts = 0`, `cases.priority = "normal"`, `cases.status = "pending"`, `cases.pricing_mode = "services"`, `case_items.quantity = 1`.
 
 ## Constraints e SQL Customizado no Prisma
 
-- [ ] Criar migration SQL customizada para indice unico `uq_users_email_lower` em `lower(email)`.
-- [ ] Criar migration SQL customizada para indice unico `uq_users_username_lower` em `lower(username)`.
-- [ ] Criar SQL customizado para checks de `cases.priority`, `cases.status`, `cases.pricing_mode` e `cases.total_value >= 0`.
-- [ ] Criar SQL customizado para checks de `case_items.quantity >= 1` e `case_items.unit_value >= 0`.
-- [ ] Preservar `ON DELETE CASCADE` de `doctors.user_id`.
-- [ ] Preservar `ON DELETE RESTRICT` de `cases.doctor_id`.
-- [ ] Preservar `ON DELETE CASCADE` de `case_items.case_id`.
-- [ ] Preservar indices usados por filtros e ownership: `doctors.user_id`, `doctors.deleted_at`, `doctors.name`, `cases.doctor_id`, `cases.patient_ref`, `cases.priority`, `cases.status`, `cases.deleted_at`, `case_items.case_id`.
-- [ ] Documentar em cada migration o que foi expresso via Prisma e o que exigiu SQL manual.
+- [x] Preservar constraints unicas legadas case-sensitive `uq_users_email` e `uq_users_username`, alem dos indices unicos funcionais em `lower(email)` e `lower(username)`, salvo decisao explicita em contrario.
+- [x] Criar migration SQL customizada para indice unico `uq_users_email_lower` em `lower(email)`.
+- [x] Criar migration SQL customizada para indice unico `uq_users_username_lower` em `lower(username)`.
+- [x] Criar SQL customizado para checks de `cases.priority`, `cases.status`, `cases.pricing_mode` e `cases.total_value >= 0`.
+- [x] Criar SQL customizado para checks de `case_items.quantity >= 1` e `case_items.unit_value >= 0`.
+- [x] Preservar `ON DELETE CASCADE` de `doctors.user_id`.
+- [x] Preservar `ON DELETE RESTRICT` de `cases.doctor_id`.
+- [x] Preservar `ON DELETE CASCADE` de `case_items.case_id`.
+- [x] Preservar indices usados por filtros e ownership: `doctors.user_id`, `doctors.deleted_at`, `doctors.name`, `cases.doctor_id`, `cases.patient_ref`, `cases.priority`, `cases.status`, `cases.deleted_at`, `case_items.case_id`.
+- [x] Resolver na Fase 2 a divergencia auditada de indice: `backend/models/case.py` declara `pricing_mode` com `index=True`, mas a migration Alembic `0005_case_billing_modes` nao cria indice para `cases.pricing_mode`.
+- [x] Documentar em cada migration o que foi expresso via Prisma e o que exigiu SQL manual.
 
 ## Matriz de Paridade por Endpoint
 
@@ -122,9 +130,9 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 | Case | `PUT /cases/{case_id}` | Sim | Filtra por usuario | `CaseUpdate` | `CaseResponse` | `200`, `401`, `404`, `409`, `422` | Status linear, pricing atual, doctor ativo, sem reversao | `test_case.py`, `test_authorization.py` | Pendente | Pendente |
 | Case | `DELETE /cases/{case_id}` | Sim | Filtra por usuario | `case_id` | `CaseResponse` soft-deletado | `200`, `401`, `404`, `409` | Soft delete | `test_case.py`, `test_authorization.py` | Pendente | Pendente |
 | CaseItem | `GET /cases/{case_id}/items/` | Sim | Case deve pertencer ao usuario | `case_id` | Lista de `CaseItemResponse` | `200`, `401`, `404` | `id DESC`, case deletado/externo como nao encontrado | `test_case_item.py`, `test_authorization.py` | Pendente | Pendente |
-| CaseItem | `POST /cases/{case_id}/items/` | Sim | Case deve pertencer ao usuario | `CaseItemCreate` | `CaseItemResponse` | `201`, `401`, `404`, `422` | Tooth, quantity, unit_value em services, recalc | `test_case_item.py`, `test_case.py` | Pendente | Pendente |
+| CaseItem | `POST /cases/{case_id}/items/` | Sim | Case deve pertencer ao usuario | `CaseItemCreate` | `CaseItemResponse` | `201`, `401`, `404`, `422`; `ValueError` de `unit_value` em case `services` nao e convertido pela rota atual e deve ser confirmado antes da Fase 6 | Tooth, quantity, unit_value em services, recalc | `test_case_item.py`, `test_case.py` | Pendente | Pendente |
 | CaseItem | `GET /cases/{case_id}/items/{item_id}` | Sim | Case/item devem pertencer ao usuario | IDs | `CaseItemResponse` | `200`, `401`, `404` | Outro usuario retorna nao encontrado | `test_authorization.py` | Pendente | Pendente |
-| CaseItem | `PUT /cases/{case_id}/items/{item_id}` | Sim | Case/item devem pertencer ao usuario | `CaseItemUpdate` | `CaseItemResponse` | `200`, `401`, `404`, `422` | Atualizacao parcial, validacoes, recalc | `test_case_item.py`, `test_authorization.py` | Pendente | Pendente |
+| CaseItem | `PUT /cases/{case_id}/items/{item_id}` | Sim | Case/item devem pertencer ao usuario | `CaseItemUpdate` | `CaseItemResponse` | `200`, `401`, `404`, `422`; `ValueError` de `unit_value` em case `services` nao e convertido pela rota atual e deve ser confirmado antes da Fase 6 | Atualizacao parcial, validacoes, recalc | `test_case_item.py`, `test_authorization.py` | Pendente | Pendente |
 | CaseItem | `DELETE /cases/{case_id}/items/{item_id}` | Sim | Case/item devem pertencer ao usuario | IDs | Corpo vazio | `204`, `401`, `404` | Delete fisico de item, recalc se services | `test_case_item.py`, `test_authorization.py` | Pendente | Pendente |
 | Dashboard | `GET /dashboard/overview` | Sim | Agrega apenas usuario | Nenhuma | `DashboardSummaryResponse` | `200`, `401` | Status counts, atrasados, urgentes, entregues do mes | `test_dashboard.py`, `test_authorization.py` | Pendente | Pendente |
 
@@ -139,10 +147,10 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 
 ### Integracao Prisma/PostgreSQL
 
-- [ ] Conexao real com PostgreSQL; nao usar SQLite como substituto.
-- [ ] Banco isolado para testes destrutivos, diferente do banco de desenvolvimento.
-- [ ] Healthcheck de banco com `SELECT 1`.
-- [ ] Constraints SQL customizadas comprovadas por testes conforme forem criadas.
+- [x] Conexao real com PostgreSQL; nao usar SQLite como substituto.
+- [x] Banco isolado para testes destrutivos, diferente do banco de desenvolvimento.
+- [x] Healthcheck de banco com `SELECT 1`.
+- [x] Constraints SQL customizadas comprovadas por testes conforme forem criadas.
 - [ ] Transacoes de casos e bulk-deliver comprovadas por testes.
 
 ### E2E Supertest
@@ -195,17 +203,17 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 
 ### Fase 2 - Schema Prisma e Migration Inicial
 
-- [ ] Modelar `User` no `schema.prisma` com campos, defaults, timestamps e indices necessarios.
-- [ ] Modelar `Doctor` no `schema.prisma` com ownership, soft delete e relacao com cases.
-- [ ] Modelar `DentalCase`/`Case` no `schema.prisma` apontando para tabela `cases`.
-- [ ] Modelar `CaseItem` no `schema.prisma`.
-- [ ] Implementar enums ou validacoes equivalentes para `pricing_mode`, `priority` e `status`.
-- [ ] Implementar constraints financeiras e de quantidade equivalentes.
-- [ ] Implementar unicidade case-insensitive de email/username no PostgreSQL via SQL customizado.
-- [ ] Gerar migration inicial Prisma.
-- [ ] Validar `prisma migrate` em banco limpo.
-- [ ] Validar introspeccao minima das tabelas e `SELECT 1`.
-- [ ] Registrar resumo textual da fase.
+- [x] Modelar `User` no `schema.prisma` com campos, defaults, timestamps e indices necessarios.
+- [x] Modelar `Doctor` no `schema.prisma` com ownership, soft delete e relacao com cases.
+- [x] Modelar `DentalCase`/`Case` no `schema.prisma` apontando para tabela `cases`.
+- [x] Modelar `CaseItem` no `schema.prisma`.
+- [x] Implementar enums ou validacoes equivalentes para `pricing_mode`, `priority` e `status`.
+- [x] Implementar constraints financeiras e de quantidade equivalentes.
+- [x] Implementar unicidade case-insensitive de email/username no PostgreSQL via SQL customizado.
+- [x] Gerar migration inicial Prisma.
+- [x] Validar `prisma migrate` em banco limpo.
+- [x] Validar introspeccao minima das tabelas e `SELECT 1`.
+- [x] Registrar resumo textual da fase.
 
 ### Fase 3 - Auth e User
 
@@ -347,3 +355,11 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 - Validacoes comprovadas em Fase 1: `npm install`, `npm run prisma:generate`, `npx prisma validate --schema=prisma/schema.prisma`, `npm run format`, `npm run lint`, `npm run build`, `npm run test`, `env -u DATABASE_URL NODE_ENV=development PORT=3001 npm run start:dev`.
 - Validacoes antes bloqueadas foram concluidas com PostgreSQL 16 local iniciado por binarios do sistema: `initdb -D /tmp/cadista-nest-postgres -U cadista --auth=trust`, `pg_ctl -D /tmp/cadista-nest-postgres -l /tmp/cadista-nest-postgres.log -o "-p 5433 -h localhost -k /tmp" start`, criacao dos bancos `cadista_nest` e `cadista_nest_test`, `npm run test:integration`, `npm run test:e2e`, start do NestJS na porta `3001`, `curl -i http://localhost:3001/health` e `curl -i http://localhost:3001/health/database`.
 - Docker Compose permanece configurado, mas nao foi validado neste ambiente porque `docker` e `podman` nao estao instalados. A validacao local usou PostgreSQL real, nao SQLite.
+- Auditoria FastAPI antes da Fase 2: checklist atualizado com detalhes reais de rate limit/lockout, defaults, criacao de case com status sempre `pending`, comportamento de `bulk-deliver` com casos ja `delivered`, constraints unicas legadas de `users`, divergencia de indice `cases.pricing_mode` entre modelo e Alembic, e gap de contrato HTTP nas rotas `case-item` para `ValueError` de `unit_value`.
+- Validacao da auditoria FastAPI antes da Fase 2: `npm run lint`, `npm run build`, `npm run test`, `npm run test:integration` e `npm run test:e2e` passaram no `backend-nest/`. `pytest` legado foi executado com `DATABASE_URL=sqlite:////tmp/cadista_test.db`; a suite completa nao retornou resumo final neste ambiente, e a selecao `tests/test_authorization.py tests/test_doctor.py tests/test_case_item.py tests/test_database_health.py tests/test_security_headers.py tests/test_production_settings.py` atingiu `timeout 180s` apos exibir oito testes passados, sem falha de assertion registrada.
+- Fase 2 decisao de schema: `pricing_mode`, `priority` e `status` permanecem como `String`/`varchar` com check constraints SQL customizadas, em vez de enums PostgreSQL, para preservar a forma fisica do banco legado.
+- Fase 2 decisao de ownership: `doctors.user_id` permanece nullable no banco para compatibilidade/migracao de dados legados, mas deve ser obrigatorio nas operacoes novas da aplicacao Nest.
+- Fase 2 decisao de indice: nao criar indice em `cases.pricing_mode` na migration inicial Prisma, porque a migration Alembic real nao cria esse indice e nenhum endpoint atual filtra por esse campo. A anotacao `index=True` no modelo SQLAlchemy fica registrada como divergencia auditada.
+- Fase 2 concluida: `PrismaClientBootstrap` foi removido e substituido pelos models `User`, `Doctor`, `DentalCase` e `CaseItem`, preservando nomes fisicos das tabelas legadas, mapeamento snake_case, `Decimal(10, 2)`, timestamps com timezone, defaults, soft delete, FKs e indices auditados.
+- Fase 2 migration: `20260730152630_initial_domain_schema` foi gerada pelo Prisma e ajustada com SQL customizado para constraints unicas legadas, indices `uq_users_email_lower`/`uq_users_username_lower`, checks de `cases` e checks de `case_items`.
+- Fase 2 validacoes: `npx prisma format`, `npx prisma validate`, `npx prisma migrate dev`, `npm run prisma:migrate:test`, `npx prisma migrate status`, introspeccao SQL de tabelas/constraints/indices, `SELECT 1`, `npm run format`, `npm run lint`, `npm run build`, `npm run test`, `npm run test:integration`, `npm run test:e2e` e selecao Pytest curta (`tests/test_database_health.py`, `tests/test_doctor.py`, `test_case_item_quantity_must_be_positive`) executados com sucesso.
