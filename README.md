@@ -33,7 +33,7 @@ add_header Referrer-Policy "no-referrer" always;
 
 - `DATABASE_URL`: string de conexão do banco.
 - `SECRET_KEY`: chave longa e única por ambiente.
-- `VITE_API_BASE_URL`: URL base da API usada no build do frontend. Exemplo local: `http://localhost:8000`.
+- `VITE_API_BASE_URL`: URL base da API usada no build do frontend. Exemplo local NestJS: `http://localhost:3001`.
 - `LOGIN_MAX_ATTEMPTS`: número máximo de falhas antes do bloqueio.
 - `LOGIN_LOCKOUT_MINUTES`: tempo de bloqueio temporário.
 - `LOGIN_RATE_LIMIT_ATTEMPTS`: número máximo de logins por janela por cliente.

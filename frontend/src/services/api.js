@@ -1,4 +1,4 @@
-const DEFAULT_API_ROOT_URL = "http://localhost:8000";
+const DEFAULT_API_ROOT_URL = "http://localhost:3001";
 const API_ROOT_URL = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_ROOT_URL).replace(/\/+$/, "");
 const DOCTORS_URL = `${API_ROOT_URL}/doctors`;
 const CASES_URL = `${API_ROOT_URL}/cases`;

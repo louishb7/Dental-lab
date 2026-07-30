@@ -17,7 +17,7 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 - [ ] Registros novos criados pela aplicacao devem ter proprietario obrigatorio.
 - [ ] `Doctor.user_id` nulo no legado deve ser tratado apenas como compatibilidade/migracao de dados, nunca como regra normal da nova aplicacao.
 - [ ] FastAPI permanece disponivel como implementacao de referencia ate o cutover.
-- [ ] Frontend React/Vite permanece sem repontamento ate a Fase 9.
+- [x] Frontend React/Vite foi repontado somente na Fase 9.
 - [ ] Nenhuma divergencia intencional deve ser implementada sem registro previo em `Decisoes e Notas`.
 - [ ] Ao final de cada alteracao, fornecer uma mensagem de commit sugerida para revisao do usuario.
 
@@ -92,7 +92,7 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 - [ ] Preservar docs OpenAPI desabilitados em producao ou documentar equivalente no Nest.
 - [ ] Preservar endpoint raiz `GET /` retornando mensagem operacional equivalente.
 - [ ] Preservar frontend React/Vite existente como consumidor HTTP + JSON.
-- [ ] Preservar cliente frontend em `frontend/src/services/api.js`, `VITE_API_BASE_URL`, fallback FastAPI `http://localhost:8000`, token em `localStorage` (`cadista_token`) e usuario em `cadista_user`.
+- [ ] Preservar cliente frontend em `frontend/src/services/api.js`, `VITE_API_BASE_URL`, fallback NestJS `http://localhost:3001`, token em `localStorage` (`cadista_token`) e usuario em `cadista_user`.
 - [ ] Preservar tratamento frontend de resposta: parse JSON, 204 como `null`, `detail` string ou lista de validacao, limpeza de sessao em falha de carga autenticada.
 - [ ] Preservar defaults reais de banco/modelo: `users.failed_login_attempts = 0`, `cases.priority = "normal"`, `cases.status = "pending"`, `cases.pricing_mode = "services"`, `case_items.quantity = 1`.
 
@@ -311,13 +311,13 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 
 ### Fase 9 - Frontend
 
-- [ ] Confirmar nova URL base local do Nest.
-- [ ] Repontar `frontend/src/services/api.js` via `VITE_API_BASE_URL` ou fallback controlado.
-- [ ] Manter React/Vite existente sem migrar para Tailwind.
-- [ ] Validar login, cadastro, dashboard, doctors, cases, case items e finance consumindo a API Nest.
-- [ ] Validar tratamento de loading, sucesso, erro, lista vazia, falha de rede e validacao 422.
-- [ ] Executar build do frontend.
-- [ ] Registrar resumo textual da fase.
+- [x] Confirmar nova URL base local do Nest.
+- [x] Repontar `frontend/src/services/api.js` via `VITE_API_BASE_URL` ou fallback controlado.
+- [x] Manter React/Vite existente sem migrar para Tailwind.
+- [x] Validar login, cadastro, dashboard, doctors, cases, case items e finance consumindo a API Nest.
+- [x] Validar tratamento de loading, sucesso, erro, lista vazia, falha de rede e validacao 422.
+- [x] Executar build do frontend.
+- [x] Registrar resumo textual da fase.
 
 ### Fase 10 - Deploy
 
@@ -346,6 +346,11 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 
 ## Decisoes e Notas
 
+- Fase 9 concluida: o frontend React/Vite foi mantido sem mudancas funcionais de UI e o fallback local de API foi repontado de `http://localhost:8000` para `http://localhost:3001`, preservando `VITE_API_BASE_URL` como override por ambiente. Esta e a mudanca esperada da Fase 9; o FastAPI continua no repositorio como implementacao de referencia ate o cutover.
+- Fase 9 contrato frontend/API: `frontend/src/services/api.js` continua centralizando login, cadastro, sessao, dashboard, doctors, cases, bulk-deliver e case-items. A validacao de contrato foi feita pelos testes e2e do backend Nest para os endpoints consumidos e pelo build Vite do frontend.
+- Fase 9 tratamento de estados: nenhum fluxo de UI foi reescrito; foram preservados os caminhos existentes de carregamento, sucesso, erro, lista vazia, falha de rede e mensagens `detail`/validacao tratados pelo cliente HTTP atual.
+- Fase 9 validacoes: `npm run build` executado com sucesso em `frontend/`; em `backend-nest/`, `npm run lint`, `npm run build`, `npm run test`, `npm run prisma:migrate:test`, `npm run test:integration` e `npm run test:e2e` executados com sucesso. `git diff --check` executado sem erros.
+- Fase 9 decisao operacional de testes: `test:integration` e `test:e2e` nao devem ser executados simultaneamente apontando para o mesmo `cadista_nest_test`, porque as suites limpam tabelas com `TRUNCATE ... RESTART IDENTITY` e podem interferir entre si. Executar sequencialmente ou configurar bancos isolados por processo.
 - Fase 8 concluida: `configureApp` agora aplica headers globais equivalentes ao FastAPI (`Cache-Control`, `Pragma`, `Expires`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy`), com reforco de `Cache-Control: no-store` em `/auth/*`.
 - Fase 8 CORS/hosts: configurado CORS com origens locais padrao, metodos `GET, POST, PUT, DELETE, OPTIONS`, headers `Authorization, Content-Type, Accept, Origin`, sem credentials e `optionsSuccessStatus = 200`; ambientes nao producao usam regex local para portas dinamicas do Vite, preservando o comportamento dos Pytests que rodam com ambiente FastAPI de desenvolvimento. Trusted Hosts rejeita wildcard e hosts nao autorizados.
 - Fase 8 producao: `validateEnvironment` exige `CORS_ORIGINS` e `TRUSTED_HOSTS` explicitos em `NODE_ENV=production`, rejeita `CORS_ORIGIN_REGEX`, origens `http://`, origens locais e hosts locais/teste. O Nest nao configura Swagger/OpenAPI, portanto rotas `/docs` e `/openapi.json` permanecem inexistentes.
