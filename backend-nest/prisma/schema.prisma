@@ -1,0 +1,17 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Placeholder tecnico de Fase 1 para materializar o Prisma Client antes do schema de dominio.
+/// Nao possui migration nesta fase e nao e usado pelo runtime; healthcheck usa apenas `$queryRaw`.
+model PrismaClientBootstrap {
+  id   Int    @id
+  name String
+
+  @@map("_prisma_client_bootstrap")
+}

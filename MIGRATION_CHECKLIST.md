@@ -1,0 +1,349 @@
+# Cadista Migration Checklist
+
+Documento vivo para acompanhar a migracao fiel do Cadista de Python/FastAPI para TypeScript/NestJS + Prisma + PostgreSQL.
+
+Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Python continuam sendo a fonte de verdade comportamental ate o cutover. O backend NestJS deve ficar em pasta separada, atualmente `backend-nest/`, para que FastAPI e NestJS possam rodar em paralelo.
+
+## Principios Obrigatorios
+
+- [ ] Cadista e oficialmente multiusuario.
+- [ ] Todos os endpoints de dominio exigem autenticacao.
+- [ ] O usuario autenticado vem do JWT, nunca de `user_id` no body, query string ou path publico.
+- [ ] Cada usuario possui seus proprios doutores, casos e itens.
+- [ ] Consultas, mutacoes e agregacoes de dominio sempre filtram por ownership.
+- [ ] IDs enviados pelo cliente nunca bastam para autorizar acesso.
+- [ ] Recursos de outro usuario se comportam como inexistentes, sem vazamento de informacao.
+- [ ] Testes multiusuario com pelo menos dois usuarios sao obrigatorios em cada modulo de dominio.
+- [ ] Registros novos criados pela aplicacao devem ter proprietario obrigatorio.
+- [ ] `Doctor.user_id` nulo no legado deve ser tratado apenas como compatibilidade/migracao de dados, nunca como regra normal da nova aplicacao.
+- [ ] FastAPI permanece disponivel como implementacao de referencia ate o cutover.
+- [ ] Frontend React/Vite permanece sem repontamento ate a Fase 9.
+- [ ] Nenhuma divergencia intencional deve ser implementada sem registro previo em `Decisoes e Notas`.
+- [ ] Ao final de cada alteracao, fornecer uma mensagem de commit sugerida para revisao do usuario.
+
+## Inventario de Paridade Validado
+
+- [ ] Preservar entidades `User`, `Doctor`, `DentalCase`/`Case` e `CaseItem`.
+- [ ] Preservar tabelas fisicas atuais: `users`, `doctors`, `cases`, `case_items`.
+- [ ] Preservar `User`: `id`, `email`, `username`, `password_hash`, `failed_login_attempts`, `locked_until`, `last_failed_login_at`, `last_login_at`, `created_at`, `updated_at`.
+- [ ] Preservar unicidade case-insensitive de `email` e `username`, equivalente aos indices unicos em `lower(email)` e `lower(username)`.
+- [ ] Preservar normalizacao de usuario: email salvo em lowercase, username com `trim`, buscas de email/username/identifier case-insensitive.
+- [ ] Preservar validacao de cadastro: email com padrao basico, username minimo de 5 caracteres, apenas alfanumerico, nao apenas numeros; senha minima de 6 caracteres e ao menos 1 numero.
+- [ ] Preservar login por `identifier`, aceitando username ou email, alem dos aliases atuais `username` e `email` no payload.
+- [ ] Preservar JWT com `sub` igual ao username, `iat`, `exp`, algoritmo configuravel e `token_type: "bearer"`.
+- [ ] Preservar lockout de conta em `User`: falhas incrementam `failed_login_attempts`, definem `last_failed_login_at`, bloqueiam em `locked_until` ao atingir `LOGIN_MAX_ATTEMPTS`, e login valido limpa o estado.
+- [ ] Preservar rate limit de login por `client_id` em janela deslizante com timestamps, retorno `429`, mensagem atual e header `Retry-After`.
+- [ ] Preservar `Doctor`: `id`, `user_id`, `name`, `clinic_name`, `phone`, `notes`, `created_at`, `deleted_at`.
+- [ ] Preservar FK `doctors.user_id -> users.id` com `ON DELETE CASCADE`; no Nest, ownership e obrigatorio para criacao e operacao.
+- [ ] Preservar soft delete de doctor por `deleted_at`, listagens/buscas retornando apenas ativos.
+- [ ] Preservar `cases_count` em respostas de doctor como contagem de casos ativos (`cases.deleted_at IS NULL`).
+- [ ] Preservar regra real de exclusao de doctor: bloquear soft delete somente se houver caso ativo com status `pending` ou `completed`; permitir soft delete quando os casos ativos vinculados estiverem entregues.
+- [ ] Preservar normalizacao de telefone BR: aceita vazio como `null`, aceita `(xx)xxxx-xxxx`/`(xx)xxxxx-xxxx`, ou 10/11 digitos e formata.
+- [ ] Preservar `DentalCase`: `id`, `doctor_id`, `patient_ref`, `pricing_mode`, `deadline`, `priority`, `status`, `total_value`, `notes`, `created_at`, `delivered_at`, `deleted_at`, `status_revert_reason`.
+- [ ] Preservar FK `cases.doctor_id -> doctors.id` com `ON DELETE RESTRICT`.
+- [ ] Preservar constraints de case: `priority IN ('normal', 'urgent')`, `status IN ('pending', 'completed', 'delivered')`, `pricing_mode IN ('fixed', 'services')`, `total_value IS NULL OR total_value >= 0`.
+- [ ] Preservar soft delete de case por `deleted_at`; delete retorna o case removido e listagens/buscas retornam apenas ativos.
+- [ ] Preservar filtros de listagem de cases: `skip`, `limit`, `doctor_id`, query alias `status`.
+- [ ] Preservar ordenacao de cases por `id DESC` e itens por `id DESC`.
+- [ ] Preservar `items_count` em respostas de case como contagem de linhas `CaseItem`, nao soma de `quantity`.
+- [ ] Preservar carregamento de `items` na resposta de case.
+- [ ] Preservar resolucao de `pricing_mode` na criacao: modo informado vence; sem modo, inferir `fixed` se `total_value` veio preenchido, senao `services`.
+- [ ] Preservar regra de `fixed`: `total_value` obrigatorio e mantido independente dos itens.
+- [ ] Preservar regra de `services`: se o payload informa `pricing_mode: "services"`, `total_value` nao e aceito diretamente; o total inicial e `null` e depois e recalculado pelos itens.
+- [ ] Preservar normalizacao monetaria backend para `total_value` e `unit_value`: aceita `Decimal`, numero, string, `R$`, espacos, milhar com ponto e decimal com virgula.
+- [ ] Preservar fluxo linear de status: `pending -> completed -> delivered`.
+- [ ] Permitir permanecer no status atual conforme o contrato atual.
+- [ ] Bloquear pular etapas.
+- [ ] Bloquear qualquer retorno de status.
+- [ ] Garantir que tentativa invalida de status preserve status e demais dados anteriores.
+- [ ] Preservar `delivered_at`: definido automaticamente ao mudar para `delivered` somente se ainda estiver vazio.
+- [ ] Nao implementar reversao de status.
+- [ ] Nao criar regra nova baseada em `status_revert_reason`.
+- [ ] Tratar `status_revert_reason` como campo legado atualmente ignorado pelo service; manter apenas se necessario para compatibilidade de contrato.
+- [ ] Preservar `CaseUpdate` atual sem `pricing_mode`; qualquer alteracao deve ser decisao separada.
+- [ ] Preservar `bulk-deliver` com diferenca real entre payload vazio e payload com IDs.
+- [ ] `bulk-deliver` sem `case_ids` ou com lista vazia: selecionar somente casos `completed`, respeitar filtro opcional por doctor e ownership do usuario.
+- [ ] `bulk-deliver` com IDs: remover duplicados, buscar apenas dentro do ownership, validar que todos foram encontrados, falhar com `409` se algum faltar, promover `pending` para `completed` e depois `delivered`, entregar `completed`, usar mesmo instante de operacao, preservar `delivered_at` existente, retornar por `id ASC`.
+- [ ] `bulk-deliver` deve ser transacional: nenhuma atualizacao parcial se a validacao falhar.
+- [ ] Preservar `CaseItem`: `id`, `case_id`, `tooth`, `service_type`, `quantity`, `unit_value`, `material`, `color`, `notes`.
+- [ ] Preservar FK `case_items.case_id -> cases.id` com `ON DELETE CASCADE`.
+- [ ] Preservar constraints de item: `quantity >= 1`, `unit_value IS NULL OR unit_value >= 0`.
+- [ ] Preservar validacao de `tooth`: trim, nao vazio; se numerico, entre 11 e 48; descricao livre nao numerica e aceita.
+- [ ] Preservar regra de item em case `services`: `unit_value` obrigatorio na criacao e nao pode ser atualizado para `null`.
+- [ ] Preservar permissao de `unit_value = null` em case `fixed`.
+- [ ] Preservar recalc de `total_value` quando item e criado, editado ou removido em case `services`, usando soma de `quantity * unit_value`.
+- [ ] Preservar comportamento atual da soma: sem valores somaveis, `total_value` fica `null`.
+- [ ] Preservar dashboard `GET /dashboard/overview`: `generated_at`, `status_counts`, `overdue_cases`, `urgent_open_cases`, `delivered_cases_month`, `delivered_total_month`, `delivered_count_month`.
+- [ ] Preservar dashboard por usuario autenticado, excluindo cases soft-deletados.
+- [ ] Preservar `status_counts` sempre com chaves `pending`, `completed`, `delivered`, mesmo com zero.
+- [ ] Preservar overdue: status diferente de `delivered`, deadline nao nulo, data do deadline menor que hoje, ordenado por deadline ASC e id DESC.
+- [ ] Preservar urgentes em aberto: `priority = urgent`, status diferente de `delivered`, ordenado por deadline ASC com nulos por ultimo e id DESC.
+- [ ] Preservar entregues do mes: status `delivered`, `delivered_at` dentro do mes corrente, `total_value` nao nulo, ordenado por `delivered_at DESC` e id DESC.
+- [ ] Preservar headers globais: `Cache-Control: no-store`, `Pragma: no-cache`, `Expires: 0`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`, `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Resource-Policy: same-site`.
+- [ ] Preservar `Cache-Control: no-store` forcado em rotas `/auth/*`.
+- [ ] Preservar CORS atual: origens locais padrao 3000/5173, regex local dinamico em desenvolvimento, sem credentials, metodos `GET, POST, PUT, DELETE, OPTIONS`, headers `Authorization, Content-Type, Accept, Origin`.
+- [ ] Preservar Trusted Hosts sem wildcard.
+- [ ] Preservar regras de producao: `DATABASE_URL` e `SECRET_KEY` obrigatorios; `SECRET_KEY` minimo 32; CORS e Trusted Hosts explicitos em producao; CORS de producao deve ser HTTPS e nao local; `CORS_ORIGIN_REGEX` proibido em producao.
+- [ ] Preservar docs OpenAPI desabilitados em producao ou documentar equivalente no Nest.
+- [ ] Preservar endpoint raiz `GET /` retornando mensagem operacional equivalente.
+- [ ] Preservar frontend React/Vite existente como consumidor HTTP + JSON.
+- [ ] Preservar cliente frontend em `frontend/src/services/api.js`, `VITE_API_BASE_URL`, fallback FastAPI `http://localhost:8000`, token em `localStorage` (`cadista_token`) e usuario em `cadista_user`.
+- [ ] Preservar tratamento frontend de resposta: parse JSON, 204 como `null`, `detail` string ou lista de validacao, limpeza de sessao em falha de carga autenticada.
+
+## Constraints e SQL Customizado no Prisma
+
+- [ ] Criar migration SQL customizada para indice unico `uq_users_email_lower` em `lower(email)`.
+- [ ] Criar migration SQL customizada para indice unico `uq_users_username_lower` em `lower(username)`.
+- [ ] Criar SQL customizado para checks de `cases.priority`, `cases.status`, `cases.pricing_mode` e `cases.total_value >= 0`.
+- [ ] Criar SQL customizado para checks de `case_items.quantity >= 1` e `case_items.unit_value >= 0`.
+- [ ] Preservar `ON DELETE CASCADE` de `doctors.user_id`.
+- [ ] Preservar `ON DELETE RESTRICT` de `cases.doctor_id`.
+- [ ] Preservar `ON DELETE CASCADE` de `case_items.case_id`.
+- [ ] Preservar indices usados por filtros e ownership: `doctors.user_id`, `doctors.deleted_at`, `doctors.name`, `cases.doctor_id`, `cases.patient_ref`, `cases.priority`, `cases.status`, `cases.deleted_at`, `case_items.case_id`.
+- [ ] Documentar em cada migration o que foi expresso via Prisma e o que exigiu SQL manual.
+
+## Matriz de Paridade por Endpoint
+
+| Modulo | Metodo e rota | Autenticacao | Ownership | Entrada | Resposta | Status HTTP | Regra de negocio | Teste Python de referencia | Teste Nest equivalente | Situacao |
+| ------ | ------------- | ------------ | --------- | ------- | -------- | ----------- | ---------------- | -------------------------- | ---------------------- | -------- |
+| Root | `GET /` | Nao | N/A | Nenhuma | `{ "message": "API Cadista operante!" }` ou equivalente documentado | `200` | Healthcheck operacional legado | `test_security_headers.py`, `test_database_health.py` | Pendente | Pendente |
+| Auth | `POST /auth/register` | Nao | Cria usuario | `email`, `username`, `password` | token bearer, username, email | `201`, `409`, `422`, `503` | Normalizacao, validacao, hash, duplicidade, token imediato | `test_auth.py` | Pendente | Pendente |
+| Auth | `POST /auth/login` | Nao | Usuario por identifier | `identifier`/`username`/`email`, `password` | token bearer, username, email | `200`, `401`, `423`, `429`, `422`, `503` | Login case-insensitive, lockout, sliding window rate limit | `test_auth.py` | Pendente | Pendente |
+| Auth | `GET /auth/me` | Sim | Usuario do JWT | Bearer token | `id`, `username`, `email` | `200`, `401` | Token valido e usuario existente | `test_auth.py` | Pendente | Pendente |
+| Doctor | `POST /doctors/` | Sim | Cria com usuario do JWT | `DoctorCreate` | `DoctorResponse` com `cases_count` | `201`, `401`, `422` | Normaliza telefone, ownership obrigatorio | `test_doctor.py`, `test_authorization.py` | Pendente | Pendente |
+| Doctor | `GET /doctors/` | Sim | Filtra por usuario | `skip`, `limit` | Lista de `DoctorResponse` | `200`, `401` | Apenas ativos, `cases_count`, lista vazia | `test_auth.py`, `test_doctor.py`, `test_authorization.py`, `test_dashboard.py` | Pendente | Pendente |
+| Doctor | `GET /doctors/{doctor_id}` | Sim | Filtra por usuario | `doctor_id` | `DoctorResponse` | `200`, `401`, `404` | Outro usuario retorna nao encontrado | `test_authorization.py` | Pendente | Pendente |
+| Doctor | `PUT /doctors/{doctor_id}` | Sim | Filtra por usuario | `DoctorUpdate` | `DoctorResponse` | `200`, `401`, `404`, `422` | Atualizacao parcial e telefone | `test_doctor.py`, `test_authorization.py` | Pendente | Pendente |
+| Doctor | `DELETE /doctors/{doctor_id}` | Sim | Filtra por usuario | `doctor_id` | Corpo vazio | `204`, `401`, `404`, `409` | Soft delete, bloqueio por casos ativos pending/completed | `test_doctor.py` | Pendente | Pendente |
+| Case | `POST /cases/` | Sim | Doctor deve pertencer ao usuario | `CaseCreate` | `CaseResponse` | `201`, `401`, `404`, `422` | Pricing mode, valor fixo/servicos, status inicial pending | `test_case.py`, `test_authorization.py` | Pendente | Pendente |
+| Case | `GET /cases/` | Sim | Filtra por usuario | `skip`, `limit`, `doctor_id`, `status` | Lista de `CaseResponse` | `200`, `401` | Apenas ativos, filtros, `id DESC`, items e `items_count` | `test_auth.py`, `test_dashboard.py`, `test_authorization.py` | Pendente | Pendente |
+| Case | `GET /cases/{case_id}` | Sim | Filtra por usuario | `case_id` | `CaseResponse` | `200`, `401`, `404` | Outro usuario retorna nao encontrado | `test_authorization.py` | Pendente | Pendente |
+| Case | `POST /cases/bulk-deliver` | Sim | Filtra por usuario e doctor | `case_ids`, `doctor_id` | Lista de `CaseResponse` | `200`, `401`, `409`, `422` | Com IDs vs sem IDs, dedupe, transacao, `id ASC` | `test_case.py`, `test_authorization.py` | Pendente | Pendente |
+| Case | `PUT /cases/{case_id}` | Sim | Filtra por usuario | `CaseUpdate` | `CaseResponse` | `200`, `401`, `404`, `409`, `422` | Status linear, pricing atual, doctor ativo, sem reversao | `test_case.py`, `test_authorization.py` | Pendente | Pendente |
+| Case | `DELETE /cases/{case_id}` | Sim | Filtra por usuario | `case_id` | `CaseResponse` soft-deletado | `200`, `401`, `404`, `409` | Soft delete | `test_case.py`, `test_authorization.py` | Pendente | Pendente |
+| CaseItem | `GET /cases/{case_id}/items/` | Sim | Case deve pertencer ao usuario | `case_id` | Lista de `CaseItemResponse` | `200`, `401`, `404` | `id DESC`, case deletado/externo como nao encontrado | `test_case_item.py`, `test_authorization.py` | Pendente | Pendente |
+| CaseItem | `POST /cases/{case_id}/items/` | Sim | Case deve pertencer ao usuario | `CaseItemCreate` | `CaseItemResponse` | `201`, `401`, `404`, `422` | Tooth, quantity, unit_value em services, recalc | `test_case_item.py`, `test_case.py` | Pendente | Pendente |
+| CaseItem | `GET /cases/{case_id}/items/{item_id}` | Sim | Case/item devem pertencer ao usuario | IDs | `CaseItemResponse` | `200`, `401`, `404` | Outro usuario retorna nao encontrado | `test_authorization.py` | Pendente | Pendente |
+| CaseItem | `PUT /cases/{case_id}/items/{item_id}` | Sim | Case/item devem pertencer ao usuario | `CaseItemUpdate` | `CaseItemResponse` | `200`, `401`, `404`, `422` | Atualizacao parcial, validacoes, recalc | `test_case_item.py`, `test_authorization.py` | Pendente | Pendente |
+| CaseItem | `DELETE /cases/{case_id}/items/{item_id}` | Sim | Case/item devem pertencer ao usuario | IDs | Corpo vazio | `204`, `401`, `404` | Delete fisico de item, recalc se services | `test_case_item.py`, `test_authorization.py` | Pendente | Pendente |
+| Dashboard | `GET /dashboard/overview` | Sim | Agrega apenas usuario | Nenhuma | `DashboardSummaryResponse` | `200`, `401` | Status counts, atrasados, urgentes, entregues do mes | `test_dashboard.py`, `test_authorization.py` | Pendente | Pendente |
+
+## Testes de Paridade
+
+### Unitarios Jest
+
+- [ ] Configuracao valida e invalida.
+- [ ] Validadores puros de DTO/utilitarios quando cada modulo for migrado.
+- [ ] Algoritmo manual de sliding window do login quando auth for migrado.
+- [ ] Regras puras de pricing, status e normalizacao monetaria quando os modulos forem migrados.
+
+### Integracao Prisma/PostgreSQL
+
+- [ ] Conexao real com PostgreSQL; nao usar SQLite como substituto.
+- [ ] Banco isolado para testes destrutivos, diferente do banco de desenvolvimento.
+- [ ] Healthcheck de banco com `SELECT 1`.
+- [ ] Constraints SQL customizadas comprovadas por testes conforme forem criadas.
+- [ ] Transacoes de casos e bulk-deliver comprovadas por testes.
+
+### E2E Supertest
+
+- [ ] Healthcheck da aplicacao.
+- [ ] Contrato HTTP, status codes, `detail`, trailing slash e serializacao.
+- [ ] Rotas protegidas e isolamento multiusuario em cada modulo relevante.
+- [ ] Equivalencia aos Pytests: `test_auth`, `test_authorization`, `test_case`, `test_case_item`, `test_dashboard`, `test_doctor`, `test_security_headers`, `test_database_health`, `test_production_settings`.
+
+## Ordem de Execucao
+
+### Fase 1 - Setup do Projeto
+
+- [x] Criar aplicacao NestJS/TypeScript em `backend-nest/` sem alterar o backend FastAPI funcional.
+- [x] Configurar TypeScript estrito com `strict`, `noImplicitAny`, `strictNullChecks`, `noUncheckedIndexedAccess`, `noImplicitOverride`, `forceConsistentCasingInFileNames`.
+- [x] Configurar estrutura inicial sem controllers/services ficticios de dominio.
+- [x] Adicionar `ConfigModule` e validacao de `NODE_ENV`, `PORT`, `DATABASE_URL`.
+- [x] Documentar variaveis futuras de auth no `.env.example` sem implementar auth.
+- [x] Configurar Prisma.
+- [x] Criar `PrismaService` e ciclo de conexao.
+- [x] Configurar PostgreSQL local via Docker Compose com volume persistente e healthcheck.
+- [x] Definir estrategia separada para banco de testes e protecao contra uso acidental do banco de desenvolvimento.
+- [x] Criar healthcheck basico da aplicacao.
+- [x] Criar healthcheck de banco.
+- [x] Configurar lint e format.
+- [x] Configurar testes unitarios Jest.
+- [x] Configurar testes de integracao com Prisma/PostgreSQL.
+- [x] Configurar testes e2e com Supertest.
+- [x] Implementar teste unitario minimo de bootstrap/configuracao.
+- [x] Implementar teste e2e do healthcheck da aplicacao.
+- [x] Implementar teste de integracao do healthcheck/conexao com PostgreSQL.
+- [x] Implementar teste de falha de configuracao quando `DATABASE_URL` estiver ausente ou invalida.
+- [x] Documentar comandos de desenvolvimento, testes e migrations.
+- [x] Garantir portas distintas: FastAPI na porta atual e NestJS em outra porta configuravel.
+- [x] Executar instalacao de dependencias.
+- [x] Executar lint.
+- [x] Executar build.
+- [x] Executar testes unitarios.
+- [x] Executar testes de integracao.
+- [x] Executar testes e2e.
+- [ ] Inicializar PostgreSQL pelo Docker Compose. Bloqueado neste ambiente porque `docker` e `podman` nao estao instalados.
+- [x] Inicializar PostgreSQL local via binarios do sistema em `/tmp/cadista-nest-postgres`, porta `5433`, para concluir validacoes locais sem Docker.
+- [x] Inicializar NestJS com banco disponivel.
+- [x] Validar healthcheck da aplicacao por HTTP com a aplicacao conectada ao banco.
+- [x] Validar healthcheck do banco por HTTP com a aplicacao conectada ao banco.
+- [x] Confirmar que nao ha implementacao prematura de dominio.
+- [x] Confirmar que o backend FastAPI nao foi alterado.
+- [x] Registrar evidencias reais da fase em `Decisoes e Notas`.
+- [x] Registrar resumo textual da fase.
+
+### Fase 2 - Schema Prisma e Migration Inicial
+
+- [ ] Modelar `User` no `schema.prisma` com campos, defaults, timestamps e indices necessarios.
+- [ ] Modelar `Doctor` no `schema.prisma` com ownership, soft delete e relacao com cases.
+- [ ] Modelar `DentalCase`/`Case` no `schema.prisma` apontando para tabela `cases`.
+- [ ] Modelar `CaseItem` no `schema.prisma`.
+- [ ] Implementar enums ou validacoes equivalentes para `pricing_mode`, `priority` e `status`.
+- [ ] Implementar constraints financeiras e de quantidade equivalentes.
+- [ ] Implementar unicidade case-insensitive de email/username no PostgreSQL via SQL customizado.
+- [ ] Gerar migration inicial Prisma.
+- [ ] Validar `prisma migrate` em banco limpo.
+- [ ] Validar introspeccao minima das tabelas e `SELECT 1`.
+- [ ] Registrar resumo textual da fase.
+
+### Fase 3 - Auth e User
+
+- [ ] Criar modulo `auth`.
+- [ ] Criar modulo/service/repository de `user`.
+- [ ] Documentar algoritmo Python atual do rate limit antes de implementar.
+- [ ] Implementar DTOs de register/login/me com validacoes equivalentes.
+- [ ] Implementar hashing bcrypt com rounds configuraveis.
+- [ ] Implementar `POST /auth/register` com normalizacao, duplicidade e retorno de token.
+- [ ] Implementar `POST /auth/login` com `identifier`, aliases equivalentes, JWT e erros equivalentes.
+- [ ] Implementar lockout de conta separado do rate limit por client_id.
+- [ ] Implementar rate limit de login por janela deslizante manual ou provar equivalencia por testes.
+- [ ] Implementar JWT strategy/guard e `GET /auth/me`.
+- [ ] Cobrir auth com testes unitarios e e2e equivalentes a `test_auth.py`.
+- [ ] Cobrir rotas protegidas sem token e com token.
+- [ ] Registrar resumo textual da fase.
+
+### Fase 4 - Doctor
+
+- [ ] Criar modulo `doctor`.
+- [ ] Implementar DTOs de create/update/response.
+- [ ] Implementar CRUD com ownership obrigatorio por usuario autenticado.
+- [ ] Implementar normalizacao e validacao de telefone BR.
+- [ ] Implementar soft delete por `deleted_at`.
+- [ ] Implementar bloqueio de exclusao quando houver cases ativos `pending` ou `completed`.
+- [ ] Implementar `cases_count` em respostas.
+- [ ] Preservar status HTTP e mensagens de erro principais.
+- [ ] Cobrir com testes unitarios, integracao e e2e equivalentes a `test_doctor.py` e partes de `test_authorization.py`.
+- [ ] Cobrir isolamento multiusuario.
+- [ ] Registrar resumo textual da fase.
+
+### Fase 5 - Case
+
+- [ ] Criar modulo `case`.
+- [ ] Implementar DTOs de create/update/bulk-deliver/response.
+- [ ] Implementar CRUD com ownership via doctor do usuario autenticado.
+- [ ] Implementar resolucao de `pricing_mode` na criacao.
+- [ ] Implementar regras de `fixed` e `services`.
+- [ ] Implementar normalizacao monetaria de `total_value`.
+- [ ] Implementar filtros `skip`, `limit`, `doctor_id` e `status`.
+- [ ] Implementar ordenacao por `id DESC`.
+- [ ] Implementar fluxo linear de status sem reversao.
+- [ ] Preservar `status_revert_reason` como campo legado ignorado, se ainda necessario no DTO de compatibilidade.
+- [ ] Implementar bulk-deliver dedicado com comportamento real completo.
+- [ ] Implementar delete por soft delete e retorno do case.
+- [ ] Implementar `items_count` e `items` em respostas.
+- [ ] Cobrir bulk-deliver: lista vazia, IDs duplicados, IDs inexistentes, ID de outro usuario, mistura pending/completed, filtro por doctor, rollback integral em erro.
+- [ ] Cobrir com testes unitarios, integracao e e2e equivalentes a `test_case.py` e partes de `test_authorization.py`.
+- [ ] Cobrir isolamento multiusuario.
+- [ ] Registrar resumo textual da fase.
+
+### Fase 6 - CaseItem
+
+- [ ] Criar modulo `case-item`.
+- [ ] Implementar DTOs de create/update/response.
+- [ ] Implementar CRUD aninhado em `/cases/{case_id}/items`.
+- [ ] Implementar validacao de `tooth`.
+- [ ] Implementar validacao de `quantity >= 1`.
+- [ ] Implementar normalizacao monetaria de `unit_value`.
+- [ ] Implementar regra de `unit_value` obrigatorio para cases `services`.
+- [ ] Implementar permissao de `unit_value = null` para cases `fixed`.
+- [ ] Recalcular `total_value` do case pai em create/update/delete quando `pricing_mode = services`.
+- [ ] Preservar ordenacao de listagem por `id DESC`.
+- [ ] Cobrir com testes unitarios, integracao e e2e equivalentes a `test_case_item.py` e partes de `test_authorization.py`.
+- [ ] Cobrir isolamento multiusuario.
+- [ ] Registrar resumo textual da fase.
+
+### Fase 7 - Dashboard
+
+- [ ] Criar modulo `dashboard`.
+- [ ] Implementar `GET /dashboard/overview`.
+- [ ] Implementar `status_counts` com zeros default.
+- [ ] Implementar overdue cases com criterio de data e status equivalente.
+- [ ] Implementar urgent open cases com criterio e ordenacao equivalente.
+- [ ] Implementar delivered cases do mes com janela mensal equivalente.
+- [ ] Implementar soma e contagem financeira mensal.
+- [ ] Implementar `doctor_name` nas respostas compactas.
+- [ ] Criar testes de limites de dia, mes e timezone.
+- [ ] Cobrir com testes unitarios, integracao e e2e equivalentes a `test_dashboard.py` e partes de `test_authorization.py`.
+- [ ] Cobrir isolamento multiusuario nas agregacoes.
+- [ ] Registrar resumo textual da fase.
+
+### Fase 8 - Seguranca Global
+
+- [ ] Implementar middleware global de headers de seguranca equivalente.
+- [ ] Implementar `Cache-Control: no-store` global e reforco em `/auth/*`.
+- [ ] Configurar CORS equivalente em desenvolvimento.
+- [ ] Configurar validacoes de CORS e Trusted Hosts para producao.
+- [ ] Configurar Trusted Hosts sem wildcard.
+- [ ] Desabilitar docs em producao ou documentar alternativa Nest equivalente.
+- [ ] Avaliar rate limit global sem alterar comportamento critico do login.
+- [ ] Cobrir com testes e2e equivalentes a `test_security_headers.py`.
+- [ ] Cobrir configuracoes de producao equivalente a `test_production_settings.py`.
+- [ ] Registrar resumo textual da fase.
+
+### Fase 9 - Frontend
+
+- [ ] Confirmar nova URL base local do Nest.
+- [ ] Repontar `frontend/src/services/api.js` via `VITE_API_BASE_URL` ou fallback controlado.
+- [ ] Manter React/Vite existente sem migrar para Tailwind.
+- [ ] Validar login, cadastro, dashboard, doctors, cases, case items e finance consumindo a API Nest.
+- [ ] Validar tratamento de loading, sucesso, erro, lista vazia, falha de rede e validacao 422.
+- [ ] Executar build do frontend.
+- [ ] Registrar resumo textual da fase.
+
+### Fase 10 - Deploy
+
+- [ ] Escolher PostgreSQL gerenciado: Railway, Neon ou Supabase.
+- [ ] Definir backend Nest em Render ou Railway.
+- [ ] Configurar variaveis de ambiente de producao.
+- [ ] Executar migrations Prisma em producao.
+- [ ] Configurar CORS e Trusted Hosts reais.
+- [ ] Resolver estrategia de cold start.
+- [ ] Validar healthcheck publico.
+- [ ] Validar fluxo autenticado em producao.
+- [ ] Registrar resumo textual da fase.
+
+## Definition of Done por Modulo
+
+- [ ] Regras de negocio relevantes implementadas, nao apenas CRUD basico.
+- [ ] Testes unitarios Jest quando houver regra pura ou configuracao testavel.
+- [ ] Testes de integracao com Prisma/PostgreSQL para persistencia, constraints e transacoes.
+- [ ] Testes e2e Supertest para contrato HTTP.
+- [ ] Testes multiusuario cobrindo isolamento de dados em cada modulo relevante.
+- [ ] Contrato de endpoint equivalente ao original.
+- [ ] Qualquer mudanca intencional documentada em `Decisoes e Notas`.
+- [ ] Resumo textual escrito ao final do modulo com o que foi traduzido e por que.
+- [ ] Validacao objetiva executada e registrada.
+- [ ] Mensagem de commit sugerida entregue ao usuario no fechamento da alteracao.
+
+## Decisoes e Notas
+
+- Processo: ao final de cada alteracao, o agente deve fornecer uma mensagem de commit sugerida para facilitar a revisao e o registro das etapas da migracao.
+- `status_revert_reason` e campo legado: existe no modelo/schema de resposta FastAPI, mas o service atual ignora o valor recebido em update e nao permite reversao de status. A migracao deve preservar o fluxo linear sem criar regra nova baseada nesse campo.
+- FastAPI em `backend/` deve permanecer disponivel como referencia ate o cutover; o NestJS sera criado em `backend-nest/` e rodara em porta configuravel diferente da porta atual do FastAPI.
+- Fase 1 criou `backend-nest/` com NestJS, ConfigModule, PrismaService, healthchecks, Docker Compose PostgreSQL, lint/format, Jest unitario, teste de integracao Prisma/PostgreSQL e e2e Supertest. Nao foram criados modulos de dominio.
+- Prisma foi fixado em `6.19.3`. A tentativa com Prisma `7.9.1` exigiu o novo fluxo de `prisma.config.ts` e mudaria mais infraestrutura do que o necessario nesta fase.
+- `prisma/schema.prisma` contem `PrismaClientBootstrap`, um model tecnico temporario para permitir `prisma generate` antes da Fase 2. Ele nao possui migration nesta fase, nao e usado pelo runtime, e deve ser removido/substituido antes da migration inicial real de dominio.
+- Validacoes comprovadas em Fase 1: `npm install`, `npm run prisma:generate`, `npx prisma validate --schema=prisma/schema.prisma`, `npm run format`, `npm run lint`, `npm run build`, `npm run test`, `env -u DATABASE_URL NODE_ENV=development PORT=3001 npm run start:dev`.
+- Validacoes antes bloqueadas foram concluidas com PostgreSQL 16 local iniciado por binarios do sistema: `initdb -D /tmp/cadista-nest-postgres -U cadista --auth=trust`, `pg_ctl -D /tmp/cadista-nest-postgres -l /tmp/cadista-nest-postgres.log -o "-p 5433 -h localhost -k /tmp" start`, criacao dos bancos `cadista_nest` e `cadista_nest_test`, `npm run test:integration`, `npm run test:e2e`, start do NestJS na porta `3001`, `curl -i http://localhost:3001/health` e `curl -i http://localhost:3001/health/database`.
+- Docker Compose permanece configurado, mas nao foi validado neste ambiente porque `docker` e `podman` nao estao instalados. A validacao local usou PostgreSQL real, nao SQLite.
