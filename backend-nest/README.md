@@ -31,6 +31,9 @@ Variaveis obrigatorias nesta fase:
 - `LOGIN_LOCKOUT_MINUTES`: duracao do lockout temporario
 - `LOGIN_RATE_LIMIT_ATTEMPTS`: limite de tentativas por cliente na janela deslizante
 - `LOGIN_RATE_LIMIT_WINDOW_SECONDS`: tamanho da janela deslizante do login
+- `CORS_ORIGINS`: origens HTTP permitidas, separadas por virgula
+- `CORS_ORIGIN_REGEX`: regex opcional para origens locais dinamicas em desenvolvimento/teste; proibida em producao
+- `TRUSTED_HOSTS`: hosts aceitos no header `Host`, separados por virgula
 
 ## Banco local
 
@@ -114,6 +117,14 @@ Endpoints de case-item ja migrados na Fase 6:
 Endpoint de dashboard ja migrado na Fase 7:
 
 - `GET /dashboard/overview`
+
+Seguranca global migrada na Fase 8:
+
+- Headers globais de seguranca e cache
+- CORS local equivalente ao FastAPI
+- Trusted Hosts sem wildcard
+- Validacoes de ambiente para producao
+- Rotas de docs/OpenAPI nao configuradas no Nest
 
 ## Validacao
 

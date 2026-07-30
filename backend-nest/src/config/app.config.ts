@@ -12,6 +12,9 @@ export interface EnvironmentVariables {
   LOGIN_LOCKOUT_MINUTES: number;
   LOGIN_RATE_LIMIT_ATTEMPTS: number;
   LOGIN_RATE_LIMIT_WINDOW_SECONDS: number;
+  CORS_ORIGINS: string[];
+  CORS_ORIGIN_REGEX: string | null;
+  TRUSTED_HOSTS: string[];
 }
 
 export type JwtAlgorithm = 'HS256' | 'HS384' | 'HS512';
@@ -108,8 +111,114 @@ function parseBcryptRounds(value: string | undefined, nodeEnvironment: NodeEnvir
   return parseIntegerInRange(value, 'BCRYPT_ROUNDS', 12, minRounds, 16);
 }
 
+const DEFAULT_CORS_ORIGINS = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+];
+const DEFAULT_TRUSTED_HOSTS = ['localhost', '127.0.0.1', 'testserver'];
+const DEV_CORS_ORIGIN_REGEX = String.raw`^http://(localhost|127\.0\.0\.1):[0-9]+$`;
+
+function parseCsv(value: string | undefined, defaultValues: string[], key: string): string[] {
+  const rawValues =
+    value === undefined ? defaultValues : value.split(',').map((item) => item.trim());
+  const values = rawValues.filter((item) => item.length > 0);
+  if (values.length === 0) {
+    throw new Error(`${key} must contain at least one value.`);
+  }
+
+  return values;
+}
+
+function validateCorsOrigin(origin: string): string {
+  if (origin === '*') {
+    throw new Error('CORS_ORIGINS cannot contain wildcard origins.');
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(origin);
+  } catch (error) {
+    throw new Error(`Invalid CORS origin: ${origin}`, { cause: error });
+  }
+
+  if (
+    (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') ||
+    parsed.host.length === 0 ||
+    (parsed.pathname !== '' && parsed.pathname !== '/')
+  ) {
+    throw new Error(`Invalid CORS origin: ${origin}`);
+  }
+
+  return origin;
+}
+
+function validateTrustedHost(host: string): string {
+  if (host === '*' || host.includes('*')) {
+    throw new Error('TRUSTED_HOSTS cannot contain wildcards.');
+  }
+
+  if (host.includes('://') || host.includes('/') || host.includes('?') || host.includes('#')) {
+    throw new Error(`Invalid trusted host: ${host}`);
+  }
+
+  return host;
+}
+
+function isLocalCorsOrigin(origin: string): boolean {
+  const parsed = new URL(origin);
+  return (
+    parsed.hostname === 'localhost' ||
+    parsed.hostname === '127.0.0.1' ||
+    parsed.hostname === '0.0.0.0'
+  );
+}
+
+function isLocalTrustedHost(host: string): boolean {
+  const hostname = host.split(':', 1)[0];
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '0.0.0.0' ||
+    hostname === 'testserver'
+  );
+}
+
 export function validateEnvironment(config: Record<string, unknown>): EnvironmentVariables {
   const nodeEnvironment = parseNodeEnvironment(readString(config, 'NODE_ENV'));
+  const corsOriginsRaw = readString(config, 'CORS_ORIGINS');
+  const trustedHostsRaw = readString(config, 'TRUSTED_HOSTS');
+  const corsOrigins = parseCsv(corsOriginsRaw, DEFAULT_CORS_ORIGINS, 'CORS_ORIGINS').map(
+    validateCorsOrigin,
+  );
+  const trustedHosts = parseCsv(trustedHostsRaw, DEFAULT_TRUSTED_HOSTS, 'TRUSTED_HOSTS').map(
+    validateTrustedHost,
+  );
+  const corsOriginRegex =
+    readString(config, 'CORS_ORIGIN_REGEX') ??
+    (nodeEnvironment === 'production' ? null : DEV_CORS_ORIGIN_REGEX);
+
+  if (nodeEnvironment === 'production') {
+    if (corsOriginsRaw === undefined) {
+      throw new Error('CORS_ORIGINS must be explicitly defined in production.');
+    }
+    if (trustedHostsRaw === undefined) {
+      throw new Error('TRUSTED_HOSTS must be explicitly defined in production.');
+    }
+    if (corsOriginRegex) {
+      throw new Error('CORS_ORIGIN_REGEX must not be used in production.');
+    }
+    if (corsOrigins.some((origin) => origin.startsWith('http://'))) {
+      throw new Error('Production CORS_ORIGINS must use https origins.');
+    }
+    if (corsOrigins.some(isLocalCorsOrigin)) {
+      throw new Error('Production CORS_ORIGINS must not contain local origins.');
+    }
+    if (trustedHosts.some(isLocalTrustedHost)) {
+      throw new Error('Production TRUSTED_HOSTS must not contain local/test hosts.');
+    }
+  }
 
   return {
     NODE_ENV: nodeEnvironment,
@@ -153,5 +262,8 @@ export function validateEnvironment(config: Record<string, unknown>): Environmen
       10,
       86_400,
     ),
+    CORS_ORIGINS: corsOrigins,
+    CORS_ORIGIN_REGEX: corsOriginRegex,
+    TRUSTED_HOSTS: trustedHosts,
   };
 }

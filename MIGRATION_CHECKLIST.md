@@ -298,16 +298,16 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 
 ### Fase 8 - Seguranca Global
 
-- [ ] Implementar middleware global de headers de seguranca equivalente.
-- [ ] Implementar `Cache-Control: no-store` global e reforco em `/auth/*`.
-- [ ] Configurar CORS equivalente em desenvolvimento.
-- [ ] Configurar validacoes de CORS e Trusted Hosts para producao.
-- [ ] Configurar Trusted Hosts sem wildcard.
-- [ ] Desabilitar docs em producao ou documentar alternativa Nest equivalente.
-- [ ] Avaliar rate limit global sem alterar comportamento critico do login.
-- [ ] Cobrir com testes e2e equivalentes a `test_security_headers.py`.
-- [ ] Cobrir configuracoes de producao equivalente a `test_production_settings.py`.
-- [ ] Registrar resumo textual da fase.
+- [x] Implementar middleware global de headers de seguranca equivalente.
+- [x] Implementar `Cache-Control: no-store` global e reforco em `/auth/*`.
+- [x] Configurar CORS equivalente em desenvolvimento.
+- [x] Configurar validacoes de CORS e Trusted Hosts para producao.
+- [x] Configurar Trusted Hosts sem wildcard.
+- [x] Desabilitar docs em producao ou documentar alternativa Nest equivalente.
+- [x] Avaliar rate limit global sem alterar comportamento critico do login.
+- [x] Cobrir com testes e2e equivalentes a `test_security_headers.py`.
+- [x] Cobrir configuracoes de producao equivalente a `test_production_settings.py`.
+- [x] Registrar resumo textual da fase.
 
 ### Fase 9 - Frontend
 
@@ -346,6 +346,11 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 
 ## Decisoes e Notas
 
+- Fase 8 concluida: `configureApp` agora aplica headers globais equivalentes ao FastAPI (`Cache-Control`, `Pragma`, `Expires`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy`), com reforco de `Cache-Control: no-store` em `/auth/*`.
+- Fase 8 CORS/hosts: configurado CORS com origens locais padrao, metodos `GET, POST, PUT, DELETE, OPTIONS`, headers `Authorization, Content-Type, Accept, Origin`, sem credentials e `optionsSuccessStatus = 200`; ambientes nao producao usam regex local para portas dinamicas do Vite, preservando o comportamento dos Pytests que rodam com ambiente FastAPI de desenvolvimento. Trusted Hosts rejeita wildcard e hosts nao autorizados.
+- Fase 8 producao: `validateEnvironment` exige `CORS_ORIGINS` e `TRUSTED_HOSTS` explicitos em `NODE_ENV=production`, rejeita `CORS_ORIGIN_REGEX`, origens `http://`, origens locais e hosts locais/teste. O Nest nao configura Swagger/OpenAPI, portanto rotas `/docs` e `/openapi.json` permanecem inexistentes.
+- Fase 8 rate limit global: nao foi implementado um rate limit global novo, porque o FastAPI legado possui rate limit especifico de login por janela deslizante e adicionar limite global mudaria o comportamento de endpoints de dominio. A decisao preserva o login rate limit ja migrado e testado na Fase 3.
+- Fase 8 validacoes: `npm run format`, `npm run lint`, `npm run build`, `npm run test`, `npm run test:integration` e `npm run test:e2e` executados com sucesso em `backend-nest/`.
 - Fase 7 concluida: criado `DashboardModule` no NestJS com `GET /dashboard/overview` protegido por JWT. Todas as agregacoes filtram por ownership via `cases -> doctors.user_id` e excluem `cases.deleted_at IS NOT NULL`, preservando o comportamento multiusuario do FastAPI.
 - Fase 7 regras traduzidas: `status_counts` sempre retorna `pending`, `completed` e `delivered` com zero default; atrasados usam status diferente de `delivered`, prazo nao nulo e deadline anterior ao inicio do dia UTC; urgentes em aberto usam `priority = urgent`, status diferente de `delivered`, ordenacao por deadline ASC com nulos por ultimo e id DESC; entregues do mes usam janela mensal UTC, `status = delivered`, `delivered_at` preenchido e `total_value` nao nulo.
 - Fase 7 financeiro: `delivered_total_month` soma `cases.total_value` com `Decimal` do Prisma e volta `0` quando nao ha casos entregues somaveis; `delivered_count_month` e a quantidade de casos retornados em `delivered_cases_month`.
