@@ -103,6 +103,14 @@ Endpoints de case ja migrados na Fase 5:
 - `PUT /cases/{case_id}`
 - `DELETE /cases/{case_id}`
 
+Endpoints de case-item ja migrados na Fase 6:
+
+- `GET /cases/{case_id}/items/`
+- `POST /cases/{case_id}/items/`
+- `GET /cases/{case_id}/items/{item_id}`
+- `PUT /cases/{case_id}/items/{item_id}`
+- `DELETE /cases/{case_id}/items/{item_id}`
+
 ## Validacao
 
 ```bash

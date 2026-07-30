@@ -129,11 +129,11 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 | Case | `POST /cases/bulk-deliver` | Sim | Filtra por usuario e doctor | `case_ids`, `doctor_id` | Lista de `CaseResponse` | `200`, `401`, `409`, `422` | Com IDs vs sem IDs, dedupe, transacao, `id ASC` | `test_case.py`, `test_authorization.py` | `test/e2e/case.e2e-spec.ts`, `test/integration/case.integration-spec.ts` | Concluido na Fase 5 |
 | Case | `PUT /cases/{case_id}` | Sim | Filtra por usuario | `CaseUpdate` | `CaseResponse` | `200`, `401`, `404`, `409`, `422` | Status linear, pricing atual, doctor ativo, sem reversao | `test_case.py`, `test_authorization.py` | `test/e2e/case.e2e-spec.ts`, `test/integration/case.integration-spec.ts`, `src/case/case-rules.spec.ts` | Concluido na Fase 5 |
 | Case | `DELETE /cases/{case_id}` | Sim | Filtra por usuario | `case_id` | `CaseResponse` soft-deletado | `200`, `401`, `404`, `409` | Soft delete | `test_case.py`, `test_authorization.py` | `test/e2e/case.e2e-spec.ts`, `test/integration/case.integration-spec.ts` | Concluido na Fase 5 |
-| CaseItem | `GET /cases/{case_id}/items/` | Sim | Case deve pertencer ao usuario | `case_id` | Lista de `CaseItemResponse` | `200`, `401`, `404` | `id DESC`, case deletado/externo como nao encontrado | `test_case_item.py`, `test_authorization.py` | Pendente | Pendente |
-| CaseItem | `POST /cases/{case_id}/items/` | Sim | Case deve pertencer ao usuario | `CaseItemCreate` | `CaseItemResponse` | `201`, `401`, `404`, `422`; `ValueError` de `unit_value` em case `services` nao e convertido pela rota atual e deve ser confirmado antes da Fase 6 | Tooth, quantity, unit_value em services, recalc | `test_case_item.py`, `test_case.py` | Pendente | Pendente |
-| CaseItem | `GET /cases/{case_id}/items/{item_id}` | Sim | Case/item devem pertencer ao usuario | IDs | `CaseItemResponse` | `200`, `401`, `404` | Outro usuario retorna nao encontrado | `test_authorization.py` | Pendente | Pendente |
-| CaseItem | `PUT /cases/{case_id}/items/{item_id}` | Sim | Case/item devem pertencer ao usuario | `CaseItemUpdate` | `CaseItemResponse` | `200`, `401`, `404`, `422`; `ValueError` de `unit_value` em case `services` nao e convertido pela rota atual e deve ser confirmado antes da Fase 6 | Atualizacao parcial, validacoes, recalc | `test_case_item.py`, `test_authorization.py` | Pendente | Pendente |
-| CaseItem | `DELETE /cases/{case_id}/items/{item_id}` | Sim | Case/item devem pertencer ao usuario | IDs | Corpo vazio | `204`, `401`, `404` | Delete fisico de item, recalc se services | `test_case_item.py`, `test_authorization.py` | Pendente | Pendente |
+| CaseItem | `GET /cases/{case_id}/items/` | Sim | Case deve pertencer ao usuario | `case_id` | Lista de `CaseItemResponse` | `200`, `401`, `404` | `id DESC`, case deletado/externo como nao encontrado | `test_case_item.py`, `test_authorization.py` | `test/e2e/case-item.e2e-spec.ts`, `test/integration/case-item.integration-spec.ts` | Concluido na Fase 6 |
+| CaseItem | `POST /cases/{case_id}/items/` | Sim | Case deve pertencer ao usuario | `CaseItemCreate` | `CaseItemResponse` | `201`, `401`, `404`, `422`; regra service-only de `unit_value` em case `services` permanece sem status HTTP novo | Tooth, quantity, unit_value em services, recalc | `test_case_item.py`, `test_case.py` | `test/e2e/case-item.e2e-spec.ts`, `test/integration/case-item.integration-spec.ts`, `src/case-item/case-item-rules.spec.ts` | Concluido na Fase 6 |
+| CaseItem | `GET /cases/{case_id}/items/{item_id}` | Sim | Case/item devem pertencer ao usuario | IDs | `CaseItemResponse` | `200`, `401`, `404` | Outro usuario retorna nao encontrado | `test_authorization.py` | `test/e2e/case-item.e2e-spec.ts`, `test/integration/case-item.integration-spec.ts` | Concluido na Fase 6 |
+| CaseItem | `PUT /cases/{case_id}/items/{item_id}` | Sim | Case/item devem pertencer ao usuario | `CaseItemUpdate` | `CaseItemResponse` | `200`, `401`, `404`, `422`; regra service-only de `unit_value` em case `services` permanece sem status HTTP novo | Atualizacao parcial, validacoes, recalc | `test_case_item.py`, `test_authorization.py` | `test/e2e/case-item.e2e-spec.ts`, `test/integration/case-item.integration-spec.ts`, `src/case-item/case-item-rules.spec.ts` | Concluido na Fase 6 |
+| CaseItem | `DELETE /cases/{case_id}/items/{item_id}` | Sim | Case/item devem pertencer ao usuario | IDs | Corpo vazio | `204`, `401`, `404` | Delete fisico de item, recalc se services | `test_case_item.py`, `test_authorization.py` | `test/e2e/case-item.e2e-spec.ts`, `test/integration/case-item.integration-spec.ts` | Concluido na Fase 6 |
 | Dashboard | `GET /dashboard/overview` | Sim | Agrega apenas usuario | Nenhuma | `DashboardSummaryResponse` | `200`, `401` | Status counts, atrasados, urgentes, entregues do mes | `test_dashboard.py`, `test_authorization.py` | Pendente | Pendente |
 
 ## Testes de Paridade
@@ -267,19 +267,19 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 
 ### Fase 6 - CaseItem
 
-- [ ] Criar modulo `case-item`.
-- [ ] Implementar DTOs de create/update/response.
-- [ ] Implementar CRUD aninhado em `/cases/{case_id}/items`.
-- [ ] Implementar validacao de `tooth`.
-- [ ] Implementar validacao de `quantity >= 1`.
-- [ ] Implementar normalizacao monetaria de `unit_value`.
-- [ ] Implementar regra de `unit_value` obrigatorio para cases `services`.
-- [ ] Implementar permissao de `unit_value = null` para cases `fixed`.
-- [ ] Recalcular `total_value` do case pai em create/update/delete quando `pricing_mode = services`.
-- [ ] Preservar ordenacao de listagem por `id DESC`.
-- [ ] Cobrir com testes unitarios, integracao e e2e equivalentes a `test_case_item.py` e partes de `test_authorization.py`.
-- [ ] Cobrir isolamento multiusuario.
-- [ ] Registrar resumo textual da fase.
+- [x] Criar modulo `case-item`.
+- [x] Implementar DTOs de create/update/response.
+- [x] Implementar CRUD aninhado em `/cases/{case_id}/items`.
+- [x] Implementar validacao de `tooth`.
+- [x] Implementar validacao de `quantity >= 1`.
+- [x] Implementar normalizacao monetaria de `unit_value`.
+- [x] Implementar regra de `unit_value` obrigatorio para cases `services`.
+- [x] Implementar permissao de `unit_value = null` para cases `fixed`.
+- [x] Recalcular `total_value` do case pai em create/update/delete quando `pricing_mode = services`.
+- [x] Preservar ordenacao de listagem por `id DESC`.
+- [x] Cobrir com testes unitarios, integracao e e2e equivalentes a `test_case_item.py` e partes de `test_authorization.py`.
+- [x] Cobrir isolamento multiusuario.
+- [x] Registrar resumo textual da fase.
 
 ### Fase 7 - Dashboard
 
@@ -346,6 +346,11 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 
 ## Decisoes e Notas
 
+- Fase 6 concluida: criado `CaseItemModule` no NestJS com rotas aninhadas `GET/POST /cases/{case_id}/items/`, `GET/PUT/DELETE /cases/{case_id}/items/{item_id}`, todas protegidas por JWT. Ownership e aplicado pelo case pai (`cases -> doctors.user_id`); case de outro usuario ou soft-deletado se comporta como "Caso nao encontrado".
+- Fase 6 regras traduzidas: `tooth` e trimado, nao pode ser vazio e, quando numerico, deve ficar entre 11 e 48; `quantity` deve ser maior ou igual a 1 e defaulta para 1; `unit_value` usa a mesma normalizacao monetaria de `total_value`; cases `services` exigem `unit_value`, cases `fixed` aceitam `unit_value = null` e preservam `total_value` fixo.
+- Fase 6 recalc: create/update/delete de item em case `services` recalcula `cases.total_value` com `SUM(quantity * unit_value)` em transacao; quando nao ha valores somaveis, o total volta para `null`. Em case `fixed`, alteracoes de item nao alteram o valor fixo do case.
+- Fase 6 contrato legado: a rota FastAPI de `case-item` converte apenas `LookupError` em `404`; o `ValueError` de `unit_value` obrigatorio em case `services` e regra comprovada no service Python, mas nao tem status HTTP dedicado no contrato atual. O Nest preserva a regra no service e nao inventa um novo status HTTP para ela nesta fase.
+- Fase 6 validacoes: `npm run format`, `npm run lint`, `npm run build`, `npm run test`, `npm run test:integration` e `npm run test:e2e` executados com sucesso em `backend-nest/`.
 - Fase 5 concluida: criado `CaseModule` no NestJS com endpoints `POST/GET/GET by id/POST bulk-deliver/PUT/DELETE /cases`, todos protegidos por JWT. Ownership e aplicado via `doctor.user_id` em todas as consultas e mutacoes; doctors de outro usuario ou soft-deletados retornam o mesmo erro de "Doutor/Caso nao encontrado" usado para recurso inexistente.
 - Fase 5 regras traduzidas: criacao sempre salva `status = "pending"`; `pricing_mode` e inferido como `fixed` quando `total_value` vem preenchido e como `services` caso contrario; modo `fixed` exige valor; modo `services` recusa valor combinado explicito e recalcula `total_value` a partir de `case_items`; `CaseUpdate` nao aceita troca publica de `pricing_mode`; `status_revert_reason` permanece aceito no DTO de update e ignorado pelo service, sem habilitar reversao.
 - Fase 5 bulk-deliver: sem IDs ou com lista vazia entrega apenas casos `completed`, respeitando filtro opcional por doctor; com IDs remove duplicados, valida todos dentro do ownership, entrega `pending` e `completed`, preserva `delivered_at` existente, retorna em `id ASC` e evita atualizacao parcial quando ha ID inexistente/de outro usuario.
