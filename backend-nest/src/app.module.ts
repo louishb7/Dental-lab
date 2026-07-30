@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 import { AuthModule } from './auth/auth.module';
+import { CaseModule } from './case/case.module';
 import { validateEnvironment } from './config/app.config';
 import { DoctorModule } from './doctor/doctor.module';
 import { HealthModule } from './health/health.module';
@@ -18,6 +19,7 @@ import { UserModule } from './user/user.module';
     UserModule,
     AuthModule,
     DoctorModule,
+    CaseModule,
     HealthModule,
   ],
 })

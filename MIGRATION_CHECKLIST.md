@@ -123,12 +123,12 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 | Doctor | `GET /doctors/{doctor_id}` | Sim | Filtra por usuario | `doctor_id` | `DoctorResponse` | `200`, `401`, `404` | Outro usuario retorna nao encontrado | `test_authorization.py` | `test/e2e/doctor.e2e-spec.ts`, `test/integration/doctor.integration-spec.ts` | Concluido na Fase 4 |
 | Doctor | `PUT /doctors/{doctor_id}` | Sim | Filtra por usuario | `DoctorUpdate` | `DoctorResponse` | `200`, `401`, `404`, `422` | Atualizacao parcial e telefone | `test_doctor.py`, `test_authorization.py` | `test/e2e/doctor.e2e-spec.ts`, `test/integration/doctor.integration-spec.ts` | Concluido na Fase 4 |
 | Doctor | `DELETE /doctors/{doctor_id}` | Sim | Filtra por usuario | `doctor_id` | Corpo vazio | `204`, `401`, `404`, `409` | Soft delete, bloqueio por casos ativos pending/completed | `test_doctor.py` | `test/e2e/doctor.e2e-spec.ts`, `test/integration/doctor.integration-spec.ts` | Concluido na Fase 4 |
-| Case | `POST /cases/` | Sim | Doctor deve pertencer ao usuario | `CaseCreate` | `CaseResponse` | `201`, `401`, `404`, `422` | Pricing mode, valor fixo/servicos, status inicial pending | `test_case.py`, `test_authorization.py` | Pendente | Pendente |
-| Case | `GET /cases/` | Sim | Filtra por usuario | `skip`, `limit`, `doctor_id`, `status` | Lista de `CaseResponse` | `200`, `401` | Apenas ativos, filtros, `id DESC`, items e `items_count` | `test_auth.py`, `test_dashboard.py`, `test_authorization.py` | Pendente | Pendente |
-| Case | `GET /cases/{case_id}` | Sim | Filtra por usuario | `case_id` | `CaseResponse` | `200`, `401`, `404` | Outro usuario retorna nao encontrado | `test_authorization.py` | Pendente | Pendente |
-| Case | `POST /cases/bulk-deliver` | Sim | Filtra por usuario e doctor | `case_ids`, `doctor_id` | Lista de `CaseResponse` | `200`, `401`, `409`, `422` | Com IDs vs sem IDs, dedupe, transacao, `id ASC` | `test_case.py`, `test_authorization.py` | Pendente | Pendente |
-| Case | `PUT /cases/{case_id}` | Sim | Filtra por usuario | `CaseUpdate` | `CaseResponse` | `200`, `401`, `404`, `409`, `422` | Status linear, pricing atual, doctor ativo, sem reversao | `test_case.py`, `test_authorization.py` | Pendente | Pendente |
-| Case | `DELETE /cases/{case_id}` | Sim | Filtra por usuario | `case_id` | `CaseResponse` soft-deletado | `200`, `401`, `404`, `409` | Soft delete | `test_case.py`, `test_authorization.py` | Pendente | Pendente |
+| Case | `POST /cases/` | Sim | Doctor deve pertencer ao usuario | `CaseCreate` | `CaseResponse` | `201`, `401`, `404`, `422` | Pricing mode, valor fixo/servicos, status inicial pending | `test_case.py`, `test_authorization.py` | `test/e2e/case.e2e-spec.ts`, `test/integration/case.integration-spec.ts`, `src/case/case-rules.spec.ts` | Concluido na Fase 5 |
+| Case | `GET /cases/` | Sim | Filtra por usuario | `skip`, `limit`, `doctor_id`, `status` | Lista de `CaseResponse` | `200`, `401` | Apenas ativos, filtros, `id DESC`, items e `items_count` | `test_auth.py`, `test_dashboard.py`, `test_authorization.py` | `test/e2e/case.e2e-spec.ts`, `test/integration/case.integration-spec.ts` | Concluido na Fase 5 |
+| Case | `GET /cases/{case_id}` | Sim | Filtra por usuario | `case_id` | `CaseResponse` | `200`, `401`, `404` | Outro usuario retorna nao encontrado | `test_authorization.py` | `test/e2e/case.e2e-spec.ts`, `test/integration/case.integration-spec.ts` | Concluido na Fase 5 |
+| Case | `POST /cases/bulk-deliver` | Sim | Filtra por usuario e doctor | `case_ids`, `doctor_id` | Lista de `CaseResponse` | `200`, `401`, `409`, `422` | Com IDs vs sem IDs, dedupe, transacao, `id ASC` | `test_case.py`, `test_authorization.py` | `test/e2e/case.e2e-spec.ts`, `test/integration/case.integration-spec.ts` | Concluido na Fase 5 |
+| Case | `PUT /cases/{case_id}` | Sim | Filtra por usuario | `CaseUpdate` | `CaseResponse` | `200`, `401`, `404`, `409`, `422` | Status linear, pricing atual, doctor ativo, sem reversao | `test_case.py`, `test_authorization.py` | `test/e2e/case.e2e-spec.ts`, `test/integration/case.integration-spec.ts`, `src/case/case-rules.spec.ts` | Concluido na Fase 5 |
+| Case | `DELETE /cases/{case_id}` | Sim | Filtra por usuario | `case_id` | `CaseResponse` soft-deletado | `200`, `401`, `404`, `409` | Soft delete | `test_case.py`, `test_authorization.py` | `test/e2e/case.e2e-spec.ts`, `test/integration/case.integration-spec.ts` | Concluido na Fase 5 |
 | CaseItem | `GET /cases/{case_id}/items/` | Sim | Case deve pertencer ao usuario | `case_id` | Lista de `CaseItemResponse` | `200`, `401`, `404` | `id DESC`, case deletado/externo como nao encontrado | `test_case_item.py`, `test_authorization.py` | Pendente | Pendente |
 | CaseItem | `POST /cases/{case_id}/items/` | Sim | Case deve pertencer ao usuario | `CaseItemCreate` | `CaseItemResponse` | `201`, `401`, `404`, `422`; `ValueError` de `unit_value` em case `services` nao e convertido pela rota atual e deve ser confirmado antes da Fase 6 | Tooth, quantity, unit_value em services, recalc | `test_case_item.py`, `test_case.py` | Pendente | Pendente |
 | CaseItem | `GET /cases/{case_id}/items/{item_id}` | Sim | Case/item devem pertencer ao usuario | IDs | `CaseItemResponse` | `200`, `401`, `404` | Outro usuario retorna nao encontrado | `test_authorization.py` | Pendente | Pendente |
@@ -151,7 +151,7 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 - [x] Banco isolado para testes destrutivos, diferente do banco de desenvolvimento.
 - [x] Healthcheck de banco com `SELECT 1`.
 - [x] Constraints SQL customizadas comprovadas por testes conforme forem criadas.
-- [ ] Transacoes de casos e bulk-deliver comprovadas por testes.
+- [x] Transacoes de casos e bulk-deliver comprovadas por testes.
 
 ### E2E Supertest
 
@@ -247,23 +247,23 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 
 ### Fase 5 - Case
 
-- [ ] Criar modulo `case`.
-- [ ] Implementar DTOs de create/update/bulk-deliver/response.
-- [ ] Implementar CRUD com ownership via doctor do usuario autenticado.
-- [ ] Implementar resolucao de `pricing_mode` na criacao.
-- [ ] Implementar regras de `fixed` e `services`.
-- [ ] Implementar normalizacao monetaria de `total_value`.
-- [ ] Implementar filtros `skip`, `limit`, `doctor_id` e `status`.
-- [ ] Implementar ordenacao por `id DESC`.
-- [ ] Implementar fluxo linear de status sem reversao.
-- [ ] Preservar `status_revert_reason` como campo legado ignorado, se ainda necessario no DTO de compatibilidade.
-- [ ] Implementar bulk-deliver dedicado com comportamento real completo.
-- [ ] Implementar delete por soft delete e retorno do case.
-- [ ] Implementar `items_count` e `items` em respostas.
-- [ ] Cobrir bulk-deliver: lista vazia, IDs duplicados, IDs inexistentes, ID de outro usuario, mistura pending/completed, filtro por doctor, rollback integral em erro.
-- [ ] Cobrir com testes unitarios, integracao e e2e equivalentes a `test_case.py` e partes de `test_authorization.py`.
-- [ ] Cobrir isolamento multiusuario.
-- [ ] Registrar resumo textual da fase.
+- [x] Criar modulo `case`.
+- [x] Implementar DTOs de create/update/bulk-deliver/response.
+- [x] Implementar CRUD com ownership via doctor do usuario autenticado.
+- [x] Implementar resolucao de `pricing_mode` na criacao.
+- [x] Implementar regras de `fixed` e `services`.
+- [x] Implementar normalizacao monetaria de `total_value`.
+- [x] Implementar filtros `skip`, `limit`, `doctor_id` e `status`.
+- [x] Implementar ordenacao por `id DESC`.
+- [x] Implementar fluxo linear de status sem reversao.
+- [x] Preservar `status_revert_reason` como campo legado ignorado, se ainda necessario no DTO de compatibilidade.
+- [x] Implementar bulk-deliver dedicado com comportamento real completo.
+- [x] Implementar delete por soft delete e retorno do case.
+- [x] Implementar `items_count` e `items` em respostas.
+- [x] Cobrir bulk-deliver: lista vazia, IDs duplicados, IDs inexistentes, ID de outro usuario, mistura pending/completed, filtro por doctor, rollback integral em erro.
+- [x] Cobrir com testes unitarios, integracao e e2e equivalentes a `test_case.py` e partes de `test_authorization.py`.
+- [x] Cobrir isolamento multiusuario.
+- [x] Registrar resumo textual da fase.
 
 ### Fase 6 - CaseItem
 
@@ -346,6 +346,11 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 
 ## Decisoes e Notas
 
+- Fase 5 concluida: criado `CaseModule` no NestJS com endpoints `POST/GET/GET by id/POST bulk-deliver/PUT/DELETE /cases`, todos protegidos por JWT. Ownership e aplicado via `doctor.user_id` em todas as consultas e mutacoes; doctors de outro usuario ou soft-deletados retornam o mesmo erro de "Doutor/Caso nao encontrado" usado para recurso inexistente.
+- Fase 5 regras traduzidas: criacao sempre salva `status = "pending"`; `pricing_mode` e inferido como `fixed` quando `total_value` vem preenchido e como `services` caso contrario; modo `fixed` exige valor; modo `services` recusa valor combinado explicito e recalcula `total_value` a partir de `case_items`; `CaseUpdate` nao aceita troca publica de `pricing_mode`; `status_revert_reason` permanece aceito no DTO de update e ignorado pelo service, sem habilitar reversao.
+- Fase 5 bulk-deliver: sem IDs ou com lista vazia entrega apenas casos `completed`, respeitando filtro opcional por doctor; com IDs remove duplicados, valida todos dentro do ownership, entrega `pending` e `completed`, preserva `delivered_at` existente, retorna em `id ASC` e evita atualizacao parcial quando ha ID inexistente/de outro usuario.
+- Fase 5 testes: `case_items` foram criados diretamente via Prisma nos testes de Case apenas para validar `items`, `items_count` e recalc de total de casos `services`, sem implementar endpoints de CaseItem antes da Fase 6.
+- Fase 5 validacoes: `npm run format`, `npm run lint`, `npm run build`, `npm run test`, `npm run test:integration` e `npm run test:e2e` executados com sucesso em `backend-nest/`.
 - Fase 4 concluida: criado `DoctorModule` no NestJS com endpoints `POST/GET/GET by id/PUT/DELETE /doctors/`, todos protegidos por JWT. A criacao sempre usa `user.id` do token para `doctors.user_id`, sem aceitar `user_id` publico; consultas, updates e deletes filtram por `id`, `user_id` e `deleted_at IS NULL`, fazendo recursos de outro usuario retornarem como nao encontrados.
 - Fase 4 regras traduzidas: telefone BR preserva regex/formato legado e fallback para 10/11 digitos; string vazia vira `null`; `cases_count` conta apenas casos com `deleted_at IS NULL`; delete aplica soft delete em `deleted_at`; delete e bloqueado com `409` e detail legado quando existe caso ativo `pending` ou `completed`; casos `delivered` nao bloqueiam.
 - Fase 4 testes: casos de `cases_count` e bloqueio de delete criam registros em `cases` diretamente via Prisma nos testes, sem implementar controller/service de Case antes da Fase 5.

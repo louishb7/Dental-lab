@@ -94,6 +94,15 @@ Endpoints de doctor ja migrados na Fase 4:
 - `PUT /doctors/{doctor_id}`
 - `DELETE /doctors/{doctor_id}`
 
+Endpoints de case ja migrados na Fase 5:
+
+- `POST /cases/`
+- `GET /cases/`
+- `GET /cases/{case_id}`
+- `POST /cases/bulk-deliver`
+- `PUT /cases/{case_id}`
+- `DELETE /cases/{case_id}`
+
 ## Validacao
 
 ```bash
