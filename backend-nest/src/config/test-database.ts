@@ -17,8 +17,11 @@ export function assertSafeTestDatabaseUrl(databaseUrl: string | undefined): stri
   }
 
   const databaseName = parsed.pathname.replace(/^\/+/, '');
-  if (!databaseName.endsWith('_test')) {
-    throw new Error('Refusing to run destructive tests outside a database ending in _test.');
+  const schemaName = parsed.searchParams.get('schema') || '';
+  if (!databaseName.endsWith('_test') && !schemaName.endsWith('_test')) {
+    throw new Error(
+      'Refusing to run destructive tests outside a database or schema ending in _test.',
+    );
   }
 
   return databaseUrl;

@@ -4,9 +4,11 @@ import { assertSafeTestDatabaseUrl } from '../../src/config/test-database';
 
 describe('schema parity integration', () => {
   let prisma: PrismaClient;
+  let schemaName: string;
 
   beforeAll(async () => {
     const databaseUrl = assertSafeTestDatabaseUrl(process.env.DATABASE_URL);
+    schemaName = new URL(databaseUrl).searchParams.get('schema') || 'public';
     prisma = new PrismaClient({
       datasources: {
         db: {
@@ -31,7 +33,7 @@ describe('schema parity integration', () => {
     const rows = await prisma.$queryRaw<Array<{ table_name: string }>>`
       SELECT table_name
       FROM information_schema.tables
-      WHERE table_schema = 'public'
+      WHERE table_schema = ${schemaName}
         AND table_name IN ('users', 'doctors', 'cases', 'case_items')
       ORDER BY table_name
     `;
@@ -43,7 +45,9 @@ describe('schema parity integration', () => {
     const constraints = await prisma.$queryRaw<Array<{ conname: string }>>`
       SELECT conname
       FROM pg_constraint
-      WHERE conname IN (
+      JOIN pg_namespace ON pg_namespace.oid = pg_constraint.connamespace
+      WHERE pg_namespace.nspname = ${schemaName}
+        AND conname IN (
         'uq_users_email',
         'uq_users_username',
         'fk_doctors_user_id_users',
@@ -61,7 +65,7 @@ describe('schema parity integration', () => {
     const indexes = await prisma.$queryRaw<Array<{ indexname: string }>>`
       SELECT indexname
       FROM pg_indexes
-      WHERE schemaname = 'public'
+      WHERE schemaname = ${schemaName}
         AND indexname IN (
           'uq_users_email_lower',
           'uq_users_username_lower',

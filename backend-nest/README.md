@@ -37,13 +37,16 @@ Variaveis obrigatorias nesta fase:
 
 ## Banco local
 
-Suba o PostgreSQL local:
+O ambiente local padrao usa o PostgreSQL ja instalado em `localhost:5432`, no banco `cadista_db`, com schemas separados para o Nest:
+
+- `cadista_nest`: desenvolvimento
+- `cadista_nest_test`: testes
+
+Se quiser usar o PostgreSQL via Docker em outro ambiente, ajuste `DATABASE_URL` no `.env` para a porta do container e use:
 
 ```bash
-docker compose up -d postgres
+npm run db:up:docker
 ```
-
-O Compose expoe PostgreSQL em `localhost:5433`, cria o banco de desenvolvimento `cadista_nest` e prepara tambem `cadista_nest_test` para testes.
 
 ## Prisma
 
@@ -69,11 +72,18 @@ Constraints que Prisma nao expressar diretamente devem entrar como SQL customiza
 
 ## Desenvolvimento
 
+Com o `.env` local criado, o fluxo normal fica curto:
+
 ```bash
 npm install
-docker compose up -d postgres
-npm run prisma:generate
-NODE_ENV=development PORT=3001 DATABASE_URL=postgresql://cadista:cadista_dev_password@localhost:5433/cadista_nest npm run start:dev
+npm run api:setup
+npm run api:dev
+```
+
+Depois da primeira configuracao, normalmente basta:
+
+```bash
+npm run api:dev
 ```
 
 Healthchecks:

@@ -4,7 +4,8 @@ import { assertSafeTestDatabaseUrl } from './test-database';
 const VALID_ENV = {
   NODE_ENV: 'test',
   PORT: '3001',
-  DATABASE_URL: 'postgresql://cadista:cadista_dev_password@localhost:5433/cadista_nest_test',
+  DATABASE_URL:
+    'postgresql://cadista_user:cadista777@localhost:5432/cadista_db?schema=cadista_nest_test',
   SECRET_KEY: 'test-secret-key-for-cadista-nest-auth',
 };
 
@@ -157,13 +158,22 @@ describe('assertSafeTestDatabaseUrl', () => {
     expect(assertSafeTestDatabaseUrl(VALID_ENV.DATABASE_URL)).toBe(VALID_ENV.DATABASE_URL);
   });
 
+  it('accepts a PostgreSQL schema ending in _test when NODE_ENV is test', () => {
+    process.env.NODE_ENV = 'test';
+
+    const schemaScopedUrl =
+      'postgresql://cadista:cadista_dev_password@localhost:5432/cadista_db?schema=cadista_nest_test';
+
+    expect(assertSafeTestDatabaseUrl(schemaScopedUrl)).toBe(schemaScopedUrl);
+  });
+
   it('rejects a development database for destructive test commands', () => {
     process.env.NODE_ENV = 'test';
 
     expect(() =>
       assertSafeTestDatabaseUrl(
-        'postgresql://cadista:cadista_dev_password@localhost:5433/cadista_nest',
+        'postgresql://cadista_user:cadista777@localhost:5432/cadista_db?schema=cadista_nest',
       ),
-    ).toThrow('Refusing to run destructive tests outside a database ending in _test.');
+    ).toThrow('Refusing to run destructive tests outside a database or schema ending in _test.');
   });
 });
