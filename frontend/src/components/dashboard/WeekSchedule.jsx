@@ -19,6 +19,17 @@ function formatCaseCount(count) {
   return `${count} ${count === 1 ? "caso" : "casos"}`;
 }
 
+function CaseCountBadge({ count }) {
+  return (
+    <Badge
+      variant="outline"
+      className="w-fit border-[rgba(229,235,241,0.14)] bg-[rgba(42,49,59,0.72)] px-2 py-0.5 text-[0.7rem] font-bold text-[#f3f4f6]"
+    >
+      {formatCaseCount(count)}
+    </Badge>
+  );
+}
+
 function DayCard({ day, cases, selected, onSelect, onOpenNewCaseForDate }) {
   const urgentCount = cases.filter((caseItem) => caseItem.priority === "urgent").length;
   const isCurrentDay = isToday(day);
@@ -27,8 +38,8 @@ function DayCard({ day, cases, selected, onSelect, onOpenNewCaseForDate }) {
   return (
     <div
       className={[
-        "grid min-h-[92px] min-w-0 gap-2 rounded-md border bg-card/70 p-2 text-card-foreground transition-colors",
-        selected ? "border-primary/45 shadow-[inset_0_0_0_1px_rgba(255,138,42,0.18)]" : "border-border",
+        "grid min-h-[92px] min-w-0 gap-2 rounded-md border bg-[rgba(32,38,47,0.96)] p-2 text-[#f3f4f6] transition-colors",
+        selected ? "border-[rgba(255,138,42,0.45)] shadow-[inset_0_0_0_1px_rgba(255,138,42,0.18)]" : "border-[rgba(229,235,241,0.13)]",
       ].join(" ")}
     >
       <button
@@ -38,30 +49,31 @@ function DayCard({ day, cases, selected, onSelect, onOpenNewCaseForDate }) {
         onClick={() => onSelect(day)}
       >
         <div className="flex min-h-6 items-center justify-between gap-2">
-          <span className="text-[0.68rem] font-bold uppercase text-muted-foreground">
+          <span className="text-[0.68rem] font-bold uppercase text-[#aeb7c2]">
             {formatWeekdayLabel(day)}
           </span>
           {isCurrentDay && (
-            <Badge className="border-primary/25 bg-primary/10 px-1.5 py-0 text-[0.58rem] font-bold text-primary">
+            <Badge
+              variant="outline"
+              className="border-[rgba(255,138,42,0.28)] bg-[rgba(255,138,42,0.1)] px-1.5 py-0 text-[0.58rem] font-bold text-[#ff8a2a]"
+            >
               Hoje
             </Badge>
           )}
         </div>
         {isOffDay ? (
-          <Badge variant="secondary" className="w-fit border-border bg-muted px-2 py-0.5 text-[0.64rem] font-bold text-muted-foreground">
+          <Badge variant="outline" className="w-fit border-[rgba(229,235,241,0.12)] bg-[rgba(237,237,237,0.05)] px-2 py-0.5 text-[0.64rem] font-bold text-[#aeb7c2]">
             Dia off
           </Badge>
         ) : (
-          <strong className="text-sm font-semibold leading-tight text-foreground">
-            {formatCaseCount(cases.length)}
-          </strong>
+          <CaseCountBadge count={cases.length} />
         )}
-        <small className="min-h-4 text-[0.64rem] leading-none text-muted-foreground">
+        <small className="min-h-4 text-[0.64rem] leading-none text-[#aeb7c2]">
           {urgentCount > 0 ? `${urgentCount} urg.` : " "}
         </small>
       </button>
       <Button
-        className="h-7 w-fit justify-self-end px-2 text-muted-foreground hover:text-primary"
+        className="h-7 w-fit justify-self-end px-2 text-[#aeb7c2] hover:text-[#ff8a2a]"
         variant="ghost"
         size="xs"
         type="button"
@@ -91,19 +103,19 @@ export default function WeekSchedule({
   });
 
   return (
-    <Card className="gap-3 rounded-md border-border bg-card/95 py-0 shadow-sm">
+    <Card className="gap-3 rounded-md border-[rgba(229,235,241,0.13)] bg-[rgba(25,30,38,0.96)] py-0 text-[#f3f4f6] shadow-sm">
       <CardHeader className="gap-1 px-4 pt-4 pb-0">
-        <CardTitle className="text-xs font-extrabold uppercase tracking-[0.08em] text-foreground">
+        <CardTitle className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#f3f4f6]">
           Semana de produção
         </CardTitle>
-        <CardDescription>Casos do dia na bancada.</CardDescription>
+        <CardDescription className="text-[#aeb7c2]">Casos do dia na bancada.</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-2 px-4 pb-4">
-        <div className="grid grid-cols-[minmax(86px,0.3fr)_minmax(120px,1fr)_minmax(86px,0.3fr)] items-center gap-2 rounded-md border border-border bg-muted p-1">
+        <div className="grid grid-cols-[minmax(86px,0.3fr)_minmax(120px,1fr)_minmax(86px,0.3fr)] items-center gap-2 rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)] p-1">
           <Button variant="outline" size="xs" type="button" onClick={onPreviousWeek}>
             ← Semana
           </Button>
-          <strong className="truncate text-center text-sm font-semibold text-foreground">
+          <strong className="truncate text-center text-sm font-semibold text-[#f3f4f6]">
             {formatWeekRange(weekStart)}
           </strong>
           <Button variant="outline" size="xs" type="button" onClick={onNextWeek}>
@@ -129,7 +141,7 @@ export default function WeekSchedule({
             })}
           </div>
         ) : (
-          <div className="flex min-h-14 flex-wrap items-center justify-center gap-3 rounded-md border border-dashed border-border bg-muted p-3 text-sm font-semibold text-muted-foreground">
+          <div className="flex min-h-14 flex-wrap items-center justify-center gap-3 rounded-md border border-dashed border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)] p-3 text-sm font-semibold text-[#aeb7c2]">
             <span>Nenhum caso agendado nesta semana.</span>
             <Button
               variant="outline"
