@@ -54,7 +54,6 @@
 
 .brand-copy span,
 .sidebar-footer,
-.header-subtitle,
 .page-kicker {
   color: var(--color-text-muted);
 }
@@ -158,10 +157,6 @@
 .header-title h1 {
   font-size: 1.42rem;
   line-height: 1.1;
-}
-
-.header-subtitle {
-  font-size: 0.86rem;
 }
 
 .header-actions {

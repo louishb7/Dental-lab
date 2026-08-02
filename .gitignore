@@ -1,6 +1,7 @@
 .env
 .env.*
 !.env.example
+!backend-nest/.env.example
 !frontend/.env.example
 .envrc.local
 .direnv/

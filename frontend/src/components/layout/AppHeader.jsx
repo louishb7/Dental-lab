@@ -20,7 +20,6 @@ export default function AppHeader({
       <div className="header-title">
         <span className="page-kicker page-kicker-accent">Cadista</span>
         <h1>{title}</h1>
-        <p className="header-subtitle">Controle simples de casos, serviços, prazos e entregas.</p>
       </div>
       <div className="header-actions">
         <span className="session-pill">

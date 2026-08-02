@@ -344,6 +344,28 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 - [ ] Validacao objetiva executada e registrada.
 - [ ] Mensagem de commit sugerida entregue ao usuario no fechamento da alteracao.
 
+## Princípios de UI e Simplificação de Fluxo
+
+PRINCÍPIO NORTEADOR:
+O sistema não deve competir pela atenção do usuário — ele é um instrumento de apoio ao trabalho real (produção de próteses), não um produto de engajamento. A interface deve ser organizada em duas camadas claramente separadas:
+
+1. CAMADA INSTRUMENTO (Bancada, Casos, Dentistas): deve responder rapidamente três perguntas — o que fazer hoje, o que está pronto pra entrega, o que está atrasado. Elementos aqui devem ser mínimos, glanceable (reconhecíveis em segundos), sem exigir leitura ou análise.
+
+2. CAMADA ANÁLISE (Financeiro): pode ser tão informativa e rica quanto necessário, pois é acessada por escolha deliberada do usuário, não como efeito colateral de outra tarefa.
+
+Qualquer elemento de UI que não ajude a decisão imediata de "o que fazer agora" não pertence à camada instrumento.
+
+CHECKLIST DE SIMPLIFICAÇÃO:
+
+- [x] Remover o subtítulo repetido ("Controle simples de casos, serviços, prazos e entregas.") de todas as páginas internas — manter no máximo em uma tela de onboarding, se existir
+- [ ] Colapsar o bloco "Semana de produção" quando não houver casos agendados na semana, substituindo os 7 cards "DIA OFF" por uma mensagem única e compacta
+- [ ] Investigar a causa raiz do botão manual "Atualizar": os dados deveriam revalidar automaticamente após mutações (criar/editar/entregar caso, cadastrar dentista). Corrigir a causa antes de remover o botão — não esconder o sintoma
+- [ ] Consolidar os elementos persistentes da barra superior (data, nome do usuário, tema, atualizar, sair) em um número menor de elementos — avaliar agrupar tema e sair num menu único de usuário
+- [ ] Completar ou remover o item "USO DIÁRIO" no rodapé da sidebar, que atualmente aparece sem conteúdo
+- [ ] No formulário de "Novo caso", adicionar defaults inteligentes: último dentista usado pré-selecionado, prazo de entrega com valor padrão sugerido — reduzir o tempo entre abrir o formulário e salvar o caso
+- [ ] No bloco "Semana de produção" da Bancada, permitir adicionar um caso diretamente a partir de um dia específico da semana (clique no dia abre o formulário de novo caso já com aquele prazo/data pré-preenchido), em vez de o bloco ser só um espelho passivo de leitura dos casos já cadastrados
+- [ ] Auditar a tela Bancada e mover para o Financeiro qualquer elemento que seja informativo/analítico em vez de acionável no dia a dia
+
 ## Decisoes e Notas
 
 - Fase 9 concluida: o frontend React/Vite foi mantido sem mudancas funcionais de UI e o fallback local de API foi repontado de `http://localhost:8000` para `http://localhost:3001`, preservando `VITE_API_BASE_URL` como override por ambiente. Esta e a mudanca esperada da Fase 9; o FastAPI continua no repositorio como implementacao de referencia ate o cutover.
