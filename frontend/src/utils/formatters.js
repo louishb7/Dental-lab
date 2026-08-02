@@ -89,6 +89,11 @@ export function getDeadlineTone(deadline, status) {
 }
 
 export function getLocalDateKey(value) {
+  if (typeof value === "string") {
+    const dateOnly = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (dateOnly) return `${dateOnly[1]}-${dateOnly[2]}-${dateOnly[3]}`;
+  }
+
   const date = value ? new Date(value) : new Date();
   if (Number.isNaN(date.getTime())) return null;
 

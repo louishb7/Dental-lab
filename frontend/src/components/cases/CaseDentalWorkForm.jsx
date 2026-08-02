@@ -137,7 +137,6 @@ export default function CaseDentalWorkForm({
               rows="4"
               value={form.notes}
               onChange={onChange}
-              placeholder="Use este campo para anotar detalhes rápidos do trabalho."
             />
           </FormField>
         )}

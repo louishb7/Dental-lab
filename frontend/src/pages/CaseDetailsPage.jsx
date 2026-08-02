@@ -160,14 +160,13 @@ export default function CaseDetailsPage({
   return (
     <>
       <Modal
-        title={caseItem.patient_ref || "Detalhes do caso"}
+        title="Detalhes do caso"
         onClose={onClose}
         className="case-details-modal"
       >
         <div className="case-details-stack">
-          <section className="case-details-section">
+          <section className="case-details-section case-details-primary">
             <div className="case-details-topline">
-              <h3>Informações principais</h3>
               <Button variant="primary" size="sm" onClick={() => openItemForm()}>
                 <Plus size={16} />
                 Adicionar serviço
@@ -216,10 +215,9 @@ export default function CaseDetailsPage({
             )}
           </section>
 
-          <section className="case-details-section">
-            <h3>Serviços do caso</h3>
-
-            {items.length ? (
+          {items.length > 0 && (
+            <section className="case-details-section">
+              <h3>Serviços extras</h3>
               <div className="case-services-list">
                 {items.map((item) => {
                   const view = getItemView(item);
@@ -227,9 +225,7 @@ export default function CaseDetailsPage({
                   return (
                     <article key={item.id} className="case-service-item">
                       <div className="case-service-main">
-                        <strong>{item.service_type}</strong>
-                        <span>{item.tooth ? `Dente ${item.tooth}` : "Sem dente informado"}</span>
-                        {view.quantity > 1 && <span>{`${view.quantity} unidades`}</span>}
+                        <strong>{item.tooth ? `Dente ${item.tooth}` : "Serviço extra"}</strong>
                         {view.notes && <small>{view.notes}</small>}
                       </div>
                       <div className="case-service-side">
@@ -260,30 +256,18 @@ export default function CaseDetailsPage({
                   );
                 })}
               </div>
-            ) : (
-              <p className="case-empty-copy">Nenhum serviço lançado ainda.</p>
-            )}
-          </section>
+            </section>
+          )}
         </div>
       </Modal>
 
       {showItemForm && (
         <Modal
-          title={editingItemId ? "Editar serviço" : "Adicionar serviço"}
+          title={editingItemId ? "Editar serviço extra" : "Serviço extra"}
           onClose={closeItemForm}
           className="case-service-modal"
         >
           <form className="case-service-form" onSubmit={handleSubmit}>
-            <FormField label="Serviço / descrição curta">
-              <input
-                name="name"
-                value={itemForm.name}
-                onChange={onItemChange}
-                placeholder="Coroa, faceta, placa, provisório..."
-                required
-              />
-            </FormField>
-
             {editingItemId ? (
               <FormField label="Dentes selecionados">
                 <input
@@ -300,18 +284,6 @@ export default function CaseDetailsPage({
                 <OdontogramSelector selectedTeeth={selectedTeeth} onChange={handleTeethChange} />
               </div>
             )}
-
-            <FormField label="Unidades">
-              <input
-                name="quantity"
-                type="number"
-                min="1"
-                step="1"
-                value={itemForm.quantity}
-                onChange={onItemChange}
-                required
-              />
-            </FormField>
 
             <div className="form-field">
               <span>Cobrança deste item de serviço</span>
@@ -369,7 +341,6 @@ export default function CaseDetailsPage({
                 rows="3"
                 value={itemForm.notes}
                 onChange={onItemChange}
-                placeholder="Observação curta do serviço"
               />
             </FormField>
 

@@ -269,7 +269,6 @@
     var(--color-elevated-bg);
   color: var(--color-text);
   text-align: center;
-  cursor: pointer;
   transition:
     transform 120ms ease,
     border-color 120ms ease,
@@ -283,6 +282,41 @@
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.036), rgba(255, 255, 255, 0.012)),
     var(--color-surface-soft);
+}
+
+.week-day-select {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  text-align: center;
+}
+
+.week-day-add {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-soft);
+  background: var(--color-subtle);
+  cursor: pointer;
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.week-day-add:hover {
+  color: var(--color-primary);
+  border-color: rgba(255, 138, 42, 0.28);
+  background: rgba(255, 138, 42, 0.08);
 }
 
 .week-day-card.selected {
@@ -1327,6 +1361,12 @@
   background: var(--color-subtle);
 }
 
+.case-details-primary {
+  padding: 14px;
+  border-color: var(--color-border-strong);
+  background: var(--color-surface);
+}
+
 .case-details-section h3 {
   font-size: 0.95rem;
 }
@@ -1334,7 +1374,7 @@
 .case-details-topline {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 10px;
 }
 
@@ -1391,9 +1431,7 @@
   min-width: 0;
 }
 
-.case-service-main span,
-.case-service-main small,
-.case-empty-copy {
+.case-service-main small {
   color: var(--color-text-muted);
   line-height: 1.4;
 }

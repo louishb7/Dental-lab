@@ -54,10 +54,6 @@ function getSuggestedCaseDeadline() {
   const deadline = new Date();
   deadline.setDate(deadline.getDate() + 1);
 
-  while (deadline.getDay() === 0 || deadline.getDay() === 6) {
-    deadline.setDate(deadline.getDate() + 1);
-  }
-
   const year = deadline.getFullYear();
   const month = String(deadline.getMonth() + 1).padStart(2, "0");
   const day = String(deadline.getDate()).padStart(2, "0");

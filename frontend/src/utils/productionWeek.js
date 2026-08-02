@@ -16,6 +16,13 @@ const DAY_MONTH_FORMATTER = new Intl.DateTimeFormat("pt-BR", {
  * @returns {Date|null} Local date at 00:00 or null for invalid input.
  */
 export function toDateOnly(value) {
+  if (typeof value === "string") {
+    const dateOnly = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (dateOnly) {
+      return new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]));
+    }
+  }
+
   const date = value ? new Date(value) : new Date();
   if (Number.isNaN(date.getTime())) return null;
 

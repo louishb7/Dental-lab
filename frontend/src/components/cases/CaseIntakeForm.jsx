@@ -94,7 +94,6 @@ export default function CaseIntakeForm({
             rows="4"
             value={caseForm.notes}
             onChange={onCaseChange}
-            placeholder="Use para dentes, detalhes rápidos, observações ou combinações do caso"
           />
         </FormField>
 

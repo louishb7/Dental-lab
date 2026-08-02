@@ -16,7 +16,7 @@ function DayCard({ day, cases, selected, onSelect, onOpenNewCaseForDate }) {
   const summary = isOffDay ? "DIA OFF" : `${formatCaseCount(cases.length)}`;
 
   return (
-    <button
+    <div
       className={[
         "week-day-card",
         selected ? "selected" : "",
@@ -25,20 +25,29 @@ function DayCard({ day, cases, selected, onSelect, onOpenNewCaseForDate }) {
       ]
         .filter(Boolean)
         .join(" ")}
-      type="button"
-      aria-pressed={selected}
-      onClick={() => {
-        onSelect(day);
-        onOpenNewCaseForDate(day);
-      }}
     >
-      <div className="week-day-top">
-        <span className="week-day-label">{formatWeekdayLabel(day)}</span>
-        {isCurrentDay && <span className="week-day-marker">Hoje</span>}
-      </div>
-      <strong className="week-day-summary">{summary}</strong>
-      <small className="week-day-urgent">{urgentCount > 0 ? `${urgentCount} urg.` : " "}</small>
-    </button>
+      <button
+        className="week-day-select"
+        type="button"
+        aria-pressed={selected}
+        onClick={() => onSelect(day)}
+      >
+        <div className="week-day-top">
+          <span className="week-day-label">{formatWeekdayLabel(day)}</span>
+          {isCurrentDay && <span className="week-day-marker">Hoje</span>}
+        </div>
+        <strong className="week-day-summary">{summary}</strong>
+        <small className="week-day-urgent">{urgentCount > 0 ? `${urgentCount} urg.` : " "}</small>
+      </button>
+      <button
+        className="week-day-add"
+        type="button"
+        aria-label={`Criar caso em ${formatWeekdayLabel(day)}`}
+        onClick={() => onOpenNewCaseForDate(day)}
+      >
+        + Caso
+      </button>
+    </div>
   );
 }
 
