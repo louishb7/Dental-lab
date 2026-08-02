@@ -212,6 +212,7 @@ export default function DashboardPage({
             description={formatCaseCount(todayCases.length)}
             icon={CalendarDays}
             tone="warning"
+            compact
           />
           <StatCard
             title="Pendentes"
@@ -219,6 +220,7 @@ export default function DashboardPage({
             description="Casos ainda em produção"
             icon={AlertTriangle}
             tone="warning"
+            compact
           />
           <StatCard
             title="Prontos para entrega"
@@ -226,6 +228,7 @@ export default function DashboardPage({
             description="Casos concluídos"
             icon={PackageCheck}
             tone="success"
+            compact
           />
         </div>
 

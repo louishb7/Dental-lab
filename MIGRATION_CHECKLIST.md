@@ -374,6 +374,7 @@ CHECKLIST DE SIMPLIFICAÇÃO:
 - [x] Migrar a tela Dentistas e o modal "Novo dentista" para Tailwind/shadcn.
 - [x] Migrar a tela Financeiro para Tailwind/shadcn, preservando a camada analítica com ranking e entregas do mês.
 - [x] Remover CSS puro legado em `frontend/src/styles/`, mantendo apenas `tailwind.css` como entrada de estilos do frontend.
+- [x] Passo 1 refinamento visual: reduzir padding, altura e escala dos cards de métrica "Hoje", "Pendentes" e "Prontos para entrega" no topo da Bancada.
 
 ## Decisoes e Notas
 

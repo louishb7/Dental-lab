@@ -16,22 +16,29 @@ const TONE_CLASSES = {
   },
 };
 
-export default function StatCard({ title, value, description, icon: Icon, tone = "info" }) {
+export default function StatCard({ title, value, description, icon: Icon, tone = "info", compact = false }) {
   const toneClasses = TONE_CLASSES[tone] || TONE_CLASSES.info;
 
   return (
     <Card className="rounded-md border-[rgba(229,235,241,0.13)] bg-[rgba(25,30,38,0.96)] py-0 text-[#f3f4f6] shadow-sm">
-      <CardContent className="grid gap-3 p-4">
-        <div className="flex items-center justify-between gap-3">
+      <CardContent className={cn("grid", compact ? "gap-2 p-3" : "gap-3 p-4")}>
+        <div className="flex items-center justify-between gap-2">
           <span className="text-xs font-extrabold uppercase tracking-[0.05em] text-[#aeb7c2]">{title}</span>
-        {Icon && (
-          <span className={cn("grid size-9 place-items-center rounded-md", toneClasses.icon)} aria-hidden="true">
-            <Icon size={20} />
-          </span>
-        )}
+          {Icon && (
+            <span
+              className={cn("grid place-items-center rounded-md", compact ? "size-7" : "size-9", toneClasses.icon)}
+              aria-hidden="true"
+            >
+              <Icon size={compact ? 16 : 20} />
+            </span>
+          )}
         </div>
-        <strong className="text-3xl font-bold leading-none">{value}</strong>
-        {description && <p className="text-sm leading-snug text-[#aeb7c2]">{description}</p>}
+        <strong className={cn("font-bold leading-none", compact ? "text-2xl" : "text-3xl")}>{value}</strong>
+        {description && (
+          <p className={cn("leading-snug text-[#aeb7c2]", compact ? "text-xs" : "text-sm")}>
+            {description}
+          </p>
+        )}
       </CardContent>
     </Card>
   );
