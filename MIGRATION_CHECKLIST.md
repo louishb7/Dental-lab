@@ -365,6 +365,7 @@ CHECKLIST DE SIMPLIFICAÇÃO:
 - [x] No formulário de "Novo caso", adicionar defaults inteligentes: último dentista usado pré-selecionado, prazo de entrega com valor padrão sugerido — reduzir o tempo entre abrir o formulário e salvar o caso
 - [x] No bloco "Semana de produção" da Bancada, permitir adicionar um caso diretamente a partir de um dia específico da semana (clique no dia abre o formulário de novo caso já com aquele prazo/data pré-preenchido), em vez de o bloco ser só um espelho passivo de leitura dos casos já cadastrados
 - [x] Auditar a tela Bancada e mover para o Financeiro qualquer elemento que seja informativo/analítico em vez de acionável no dia a dia
+- [x] Introduzir Tailwind CSS + shadcn/ui no frontend como piloto pelo componente "Semana de produção"; decisão antecipada em relação ao plano original porque resolve diretamente a inconsistência visual desse bloco, mantendo as demais telas no CSS existente até validação específica.
 
 ## Decisoes e Notas
 

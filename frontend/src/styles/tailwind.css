@@ -1,0 +1,50 @@
+@layer theme, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@import "tw-animate-css";
+
+@theme inline {
+  --color-background: var(--shadcn-background);
+  --color-foreground: var(--shadcn-foreground);
+  --color-card: var(--shadcn-card);
+  --color-card-foreground: var(--shadcn-card-foreground);
+  --color-popover: var(--shadcn-popover);
+  --color-popover-foreground: var(--shadcn-popover-foreground);
+  --color-primary: var(--shadcn-primary);
+  --color-primary-foreground: var(--shadcn-primary-foreground);
+  --color-secondary: var(--shadcn-secondary);
+  --color-secondary-foreground: var(--shadcn-secondary-foreground);
+  --color-muted: var(--shadcn-muted);
+  --color-muted-foreground: var(--shadcn-muted-foreground);
+  --color-accent: var(--shadcn-accent);
+  --color-accent-foreground: var(--shadcn-accent-foreground);
+  --color-destructive: var(--shadcn-destructive);
+  --color-border: var(--shadcn-border);
+  --color-input: var(--shadcn-input);
+  --color-ring: var(--shadcn-ring);
+}
+
+:root,
+[data-theme="dark"],
+[data-theme="light"] {
+  --shadcn-background: var(--color-bg);
+  --shadcn-foreground: var(--color-text);
+  --shadcn-card: var(--color-surface);
+  --shadcn-card-foreground: var(--color-text);
+  --shadcn-popover: var(--color-surface);
+  --shadcn-popover-foreground: var(--color-text);
+  --shadcn-primary: var(--color-primary);
+  --shadcn-primary-foreground: var(--color-primary-contrast);
+  --shadcn-secondary: var(--color-subtle);
+  --shadcn-secondary-foreground: var(--color-text-soft);
+  --shadcn-muted: var(--color-subtle);
+  --shadcn-muted-foreground: var(--color-text-muted);
+  --shadcn-accent: var(--color-surface-muted);
+  --shadcn-accent-foreground: var(--color-text);
+  --shadcn-destructive: var(--color-danger);
+  --shadcn-border: var(--color-border);
+  --shadcn-input: var(--color-border);
+  --shadcn-ring: var(--color-primary);
+}
