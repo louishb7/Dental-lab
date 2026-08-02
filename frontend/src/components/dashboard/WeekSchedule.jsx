@@ -9,7 +9,7 @@ function formatCaseCount(count) {
   return `${count} ${count === 1 ? "caso" : "casos"}`;
 }
 
-function DayCard({ day, cases, selected, onSelect }) {
+function DayCard({ day, cases, selected, onSelect, onOpenNewCaseForDate }) {
   const urgentCount = cases.filter((caseItem) => caseItem.priority === "urgent").length;
   const isCurrentDay = isToday(day);
   const isOffDay = cases.length === 0;
@@ -27,7 +27,10 @@ function DayCard({ day, cases, selected, onSelect }) {
         .join(" ")}
       type="button"
       aria-pressed={selected}
-      onClick={() => onSelect(day)}
+      onClick={() => {
+        onSelect(day);
+        onOpenNewCaseForDate(day);
+      }}
     >
       <div className="week-day-top">
         <span className="week-day-label">{formatWeekdayLabel(day)}</span>
@@ -47,7 +50,13 @@ export default function WeekSchedule({
   onPreviousWeek,
   onNextWeek,
   onSelectDate,
+  onOpenNewCaseForDate,
 }) {
+  const weekHasCases = weekDays.some((day) => {
+    const dayKey = getLocalDateKey(day);
+    return (groupedCases.get(dayKey) || []).length > 0;
+  });
+
   return (
     <section className="panel panel-strong week-schedule-panel">
       <div className="panel-header">
@@ -66,22 +75,36 @@ export default function WeekSchedule({
             Semana →
           </button>
         </div>
-        <div className="week-days-grid" aria-label="Dias da semana">
-          {weekDays.map((day) => {
-            const dayKey = getLocalDateKey(day);
-            const dayCases = groupedCases.get(dayKey) || [];
+        {weekHasCases ? (
+          <div className="week-days-grid" aria-label="Dias da semana">
+            {weekDays.map((day) => {
+              const dayKey = getLocalDateKey(day);
+              const dayCases = groupedCases.get(dayKey) || [];
 
-            return (
-              <DayCard
-                key={dayKey}
-                day={day}
-                cases={dayCases}
-                selected={getLocalDateKey(selectedDate) === dayKey}
-                onSelect={onSelectDate}
-              />
-            );
-          })}
-        </div>
+              return (
+                <DayCard
+                  key={dayKey}
+                  day={day}
+                  cases={dayCases}
+                  selected={getLocalDateKey(selectedDate) === dayKey}
+                  onSelect={onSelectDate}
+                  onOpenNewCaseForDate={onOpenNewCaseForDate}
+                />
+              );
+            })}
+          </div>
+        ) : (
+          <div className="week-empty-state">
+            <span>Nenhum caso agendado nesta semana.</span>
+            <button
+              className="button button-secondary button-sm"
+              type="button"
+              onClick={() => onOpenNewCaseForDate(selectedDate)}
+            >
+              Criar caso em {formatWeekdayLabel(selectedDate)}
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );

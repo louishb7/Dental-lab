@@ -358,13 +358,13 @@ Qualquer elemento de UI que não ajude a decisão imediata de "o que fazer agora
 CHECKLIST DE SIMPLIFICAÇÃO:
 
 - [x] Remover o subtítulo repetido ("Controle simples de casos, serviços, prazos e entregas.") de todas as páginas internas — manter no máximo em uma tela de onboarding, se existir
-- [ ] Colapsar o bloco "Semana de produção" quando não houver casos agendados na semana, substituindo os 7 cards "DIA OFF" por uma mensagem única e compacta
-- [ ] Investigar a causa raiz do botão manual "Atualizar": os dados deveriam revalidar automaticamente após mutações (criar/editar/entregar caso, cadastrar dentista). Corrigir a causa antes de remover o botão — não esconder o sintoma
-- [ ] Consolidar os elementos persistentes da barra superior (data, nome do usuário, tema, atualizar, sair) em um número menor de elementos — avaliar agrupar tema e sair num menu único de usuário
-- [ ] Completar ou remover o item "USO DIÁRIO" no rodapé da sidebar, que atualmente aparece sem conteúdo
-- [ ] No formulário de "Novo caso", adicionar defaults inteligentes: último dentista usado pré-selecionado, prazo de entrega com valor padrão sugerido — reduzir o tempo entre abrir o formulário e salvar o caso
-- [ ] No bloco "Semana de produção" da Bancada, permitir adicionar um caso diretamente a partir de um dia específico da semana (clique no dia abre o formulário de novo caso já com aquele prazo/data pré-preenchido), em vez de o bloco ser só um espelho passivo de leitura dos casos já cadastrados
-- [ ] Auditar a tela Bancada e mover para o Financeiro qualquer elemento que seja informativo/analítico em vez de acionável no dia a dia
+- [x] Colapsar o bloco "Semana de produção" quando não houver casos agendados na semana, substituindo os 7 cards "DIA OFF" por uma mensagem única e compacta
+- [x] Investigar a causa raiz do botão manual "Atualizar": os dados deveriam revalidar automaticamente após mutações (criar/editar/entregar caso, cadastrar dentista). Corrigir a causa antes de remover o botão — não esconder o sintoma
+- [x] Consolidar os elementos persistentes da barra superior (data, nome do usuário, tema, atualizar, sair) em um número menor de elementos — avaliar agrupar tema e sair num menu único de usuário
+- [x] Completar ou remover o item "USO DIÁRIO" no rodapé da sidebar, que atualmente aparece sem conteúdo
+- [x] No formulário de "Novo caso", adicionar defaults inteligentes: último dentista usado pré-selecionado, prazo de entrega com valor padrão sugerido — reduzir o tempo entre abrir o formulário e salvar o caso
+- [x] No bloco "Semana de produção" da Bancada, permitir adicionar um caso diretamente a partir de um dia específico da semana (clique no dia abre o formulário de novo caso já com aquele prazo/data pré-preenchido), em vez de o bloco ser só um espelho passivo de leitura dos casos já cadastrados
+- [x] Auditar a tela Bancada e mover para o Financeiro qualquer elemento que seja informativo/analítico em vez de acionável no dia a dia
 
 ## Decisoes e Notas
 

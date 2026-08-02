@@ -47,10 +47,6 @@ export default function AppSidebar({ activePage, onNavigate }) {
           );
         })}
       </nav>
-
-      <div className="sidebar-footer">
-        <span>Uso diário</span>
-      </div>
     </aside>
   );
 }

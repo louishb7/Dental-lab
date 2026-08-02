@@ -30,6 +30,7 @@ export default function CasesPage({
   setShowCaseModal,
   selectedDoctorId,
   setSelectedDoctorId,
+  onNewCase,
   onCaseChange,
   onCaseSubmit,
   onItemChange,
@@ -267,7 +268,7 @@ export default function CasesPage({
       title="Casos"
       description="Consulte, filtre e acompanhe todos os casos da bancada."
       action={
-        <Button variant="primary" onClick={() => setShowCaseModal(true)}>
+        <Button variant="primary" onClick={onNewCase}>
           <Plus size={18} />
           Novo caso
         </Button>

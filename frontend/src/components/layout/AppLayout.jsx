@@ -27,7 +27,6 @@ export default function AppLayout({
   session,
   theme,
   onToggleTheme,
-  onRefresh,
   onLogout,
   message,
   onDismiss,
@@ -45,7 +44,6 @@ export default function AppLayout({
           user={session}
           theme={theme}
           onToggleTheme={onToggleTheme}
-          onRefresh={onRefresh}
           onLogout={onLogout}
         />
         {children}

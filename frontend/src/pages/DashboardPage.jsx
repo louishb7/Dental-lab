@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import {
   AlertTriangle,
   CalendarDays,
-  CircleDollarSign,
   PackageCheck,
   Plus,
   Trash2,
@@ -15,10 +14,7 @@ import DeadlineBadge from "../components/ui/DeadlineBadge.jsx";
 import EmptyState from "../components/ui/EmptyState.jsx";
 import LoadingState from "../components/ui/LoadingState.jsx";
 import StatCard from "../components/ui/StatCard.jsx";
-import {
-  formatCurrency,
-  getLocalDateKey,
-} from "../utils/formatters.js";
+import { getLocalDateKey } from "../utils/formatters.js";
 import {
   addDays,
   formatDayMonth,
@@ -140,11 +136,11 @@ function AttentionPanel({
 }
 
 export default function DashboardPage({
-  dashboard,
   cases = [],
   doctors = [],
   loading,
   onOpenNewCase,
+  onOpenNewCaseForDate,
   onOpenCase,
   onDeliverCases,
   onRemoveCase,
@@ -228,13 +224,6 @@ export default function DashboardPage({
             icon={PackageCheck}
             tone="success"
           />
-          <StatCard
-            title="Entregue no mês"
-            value={formatCurrency(dashboard?.delivered_total_month)}
-            description={`${dashboard?.delivered_count_month ?? 0} casos entregues`}
-            icon={CircleDollarSign}
-            tone="info"
-          />
         </div>
 
         <WeekSchedule
@@ -245,6 +234,7 @@ export default function DashboardPage({
           onPreviousWeek={() => shiftWeek(-1)}
           onNextWeek={() => shiftWeek(1)}
           onSelectDate={setSelectedDate}
+          onOpenNewCaseForDate={onOpenNewCaseForDate}
         />
 
         <div className="dashboard-main-grid">

@@ -352,6 +352,26 @@
   font-size: 0.72rem;
 }
 
+.week-empty-state {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  background: var(--color-subtle);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.week-empty-state .button {
+  min-height: 30px;
+}
+
 .button {
   min-height: 40px;
   display: inline-flex;

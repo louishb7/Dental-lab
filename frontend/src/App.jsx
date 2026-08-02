@@ -40,13 +40,37 @@ import {
   EMPTY_REGISTER,
   formatBrazilianPhone,
 } from "./utils/forms.js";
-import { formatCurrencyInput } from "./utils/formatters.js";
+import { formatCurrencyInput, getLocalDateKey } from "./utils/formatters.js";
 
 const THEME_STORAGE_KEY = "app-ui-theme";
+const LAST_CASE_DOCTOR_STORAGE_KEY = "cadista_last_case_doctor_id";
 
 function getStoredTheme() {
   const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
   return storedTheme === "light" ? "light" : "dark";
+}
+
+function getSuggestedCaseDeadline() {
+  const deadline = new Date();
+  deadline.setDate(deadline.getDate() + 1);
+
+  while (deadline.getDay() === 0 || deadline.getDay() === 6) {
+    deadline.setDate(deadline.getDate() + 1);
+  }
+
+  const year = deadline.getFullYear();
+  const month = String(deadline.getMonth() + 1).padStart(2, "0");
+  const day = String(deadline.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function createDefaultCaseForm(overrides = {}) {
+  return {
+    ...EMPTY_CASE,
+    deadline: getSuggestedCaseDeadline(),
+    ...overrides,
+  };
 }
 
 function createEmptyAuthErrors() {
@@ -329,6 +353,7 @@ export default function App() {
     setMessage(null);
     try {
       const createdCase = await createCase(buildCasePayload(selectedDoctorId, caseForm));
+      window.localStorage.setItem(LAST_CASE_DOCTOR_STORAGE_KEY, String(selectedDoctorId));
 
       if (automaticItems.length) {
         try {
@@ -465,11 +490,30 @@ export default function App() {
     setActivePage("cases");
   }
 
-  function openNewCaseFromDashboard() {
-    setCaseForm(EMPTY_CASE);
-    setSelectedDoctorId(null);
-    setActivePage("cases");
+  function getDefaultCaseDoctorId() {
+    const storedDoctorId = Number(window.localStorage.getItem(LAST_CASE_DOCTOR_STORAGE_KEY));
+
+    if (storedDoctorId && doctors.some((doctor) => doctor.id === storedDoctorId)) {
+      return storedDoctorId;
+    }
+
+    return doctors.length === 1 ? doctors[0].id : null;
+  }
+
+  function openNewCaseModal(defaults = {}) {
+    setCaseForm(createDefaultCaseForm(defaults));
+    setSelectedDoctorId(getDefaultCaseDoctorId());
     setShowCaseModal(true);
+  }
+
+  function openNewCaseFromDashboard() {
+    setActivePage("cases");
+    openNewCaseModal();
+  }
+
+  function openNewCaseFromDashboardDate(date) {
+    setActivePage("cases");
+    openNewCaseModal({ deadline: getLocalDateKey(date) || getSuggestedCaseDeadline() });
   }
 
   async function openCaseFromDashboard(caseId) {
@@ -625,18 +669,17 @@ export default function App() {
       session={session}
       theme={theme}
       onToggleTheme={toggleTheme}
-      onRefresh={loadAppData}
       onLogout={handleLogout}
       message={message}
       onDismiss={() => setMessage(null)}
     >
       {activePage === "dashboard" && (
         <DashboardPage
-          dashboard={dashboard}
           cases={cases}
           doctors={doctors}
           loading={loading}
           onOpenNewCase={openNewCaseFromDashboard}
+          onOpenNewCaseForDate={openNewCaseFromDashboardDate}
           onOpenCase={openCaseFromDashboard}
           onDeliverCases={handleBulkDeliverCases}
           onRemoveCase={removeCase}
@@ -657,6 +700,7 @@ export default function App() {
           setShowCaseModal={setShowCaseModal}
           selectedDoctorId={selectedDoctorId}
           setSelectedDoctorId={setSelectedDoctorId}
+          onNewCase={openNewCaseModal}
           onCaseChange={handleCaseChange}
           onCaseSubmit={handleCaseSubmit}
           onItemChange={handleItemChange}
