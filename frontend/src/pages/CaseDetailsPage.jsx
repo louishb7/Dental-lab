@@ -24,6 +24,7 @@ const EMPTY_ITEM_FORM = {
   color: "",
   notes: "",
 };
+const SERVICES_PER_PAGE = 5;
 
 function splitCaseNotes(value) {
   const notes = [];
@@ -74,15 +75,27 @@ export default function CaseDetailsPage({
 }) {
   const [showItemForm, setShowItemForm] = useState(false);
   const [editingItemId, setEditingItemId] = useState(null);
+  const [servicesPage, setServicesPage] = useState(1);
   const selectedTeeth = sortTeethByFdi(itemForm.selected_teeth);
   const unitValues = itemForm.unit_values || {};
   const caseNotes = splitCaseNotes(caseItem?.notes);
   const hasUrgentPriority = caseItem?.priority === "urgent";
+  const totalServicePages = Math.max(1, Math.ceil(items.length / SERVICES_PER_PAGE));
+  const currentServicesPage = Math.min(servicesPage, totalServicePages);
+  const pagedItems = items.slice(
+    (currentServicesPage - 1) * SERVICES_PER_PAGE,
+    currentServicesPage * SERVICES_PER_PAGE,
+  );
 
   useEffect(() => {
     setShowItemForm(false);
     setEditingItemId(null);
+    setServicesPage(1);
   }, [caseItem?.id]);
+
+  useEffect(() => {
+    setServicesPage((current) => Math.min(current, totalServicePages));
+  }, [totalServicePages]);
 
   function syncItemForm(nextValues) {
     Object.entries(nextValues).forEach(([name, value]) => {
@@ -219,7 +232,7 @@ export default function CaseDetailsPage({
             <section className="case-details-section">
               <h3>Serviços extras</h3>
               <div className="case-services-list">
-                {items.map((item) => {
+                {pagedItems.map((item) => {
                   const view = getItemView(item);
 
                   return (
@@ -256,6 +269,25 @@ export default function CaseDetailsPage({
                   );
                 })}
               </div>
+              {totalServicePages > 1 && (
+                <nav className="case-services-pagination" aria-label="Páginas de serviços extras">
+                  {Array.from({ length: totalServicePages }, (_, index) => {
+                    const page = index + 1;
+
+                    return (
+                      <button
+                        key={page}
+                        className={page === currentServicesPage ? "active" : ""}
+                        type="button"
+                        aria-current={page === currentServicesPage ? "page" : undefined}
+                        onClick={() => setServicesPage(page)}
+                      >
+                        {page}
+                      </button>
+                    );
+                  })}
+                </nav>
+              )}
             </section>
           )}
         </div>

@@ -1443,6 +1443,34 @@
   flex: 0 0 auto;
 }
 
+.case-services-pagination {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.case-services-pagination button {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-soft);
+  background: var(--color-subtle);
+  cursor: pointer;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.case-services-pagination button:hover,
+.case-services-pagination button.active {
+  color: var(--color-primary);
+  border-color: rgba(255, 138, 42, 0.38);
+  background: rgba(255, 138, 42, 0.08);
+}
+
 .case-service-modal {
   width: min(620px, calc(100vw - 32px));
   max-height: min(680px, calc(100vh - 32px));
