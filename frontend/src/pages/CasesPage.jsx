@@ -17,6 +17,9 @@ function formatCaseCount(count, singular, plural) {
   return `${count} ${count === 1 ? singular : plural}`;
 }
 
+const FILTER_CONTROL_CLASS =
+  "min-h-9 w-full rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(23,28,36,0.96)] px-3 text-sm text-[#f3f4f6] outline-none placeholder:text-[#aeb7c2]/75 focus:border-[#ff8a2a] focus:ring-2 focus:ring-[#ff8a2a]/25";
+
 export default function CasesPage({
   cases,
   doctors,
@@ -138,9 +141,9 @@ export default function CasesPage({
       key: "patient_ref",
       header: "Caso / Referência",
       render: (caseItem) => (
-        <span className="cell-main">
-          <strong>{caseItem.patient_ref}</strong>
-          <small>{doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`}</small>
+        <span className="grid min-w-0 gap-1">
+          <strong className="truncate text-sm font-bold text-[#f3f4f6]">{caseItem.patient_ref}</strong>
+          <small className="truncate text-xs text-[#aeb7c2]">{doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`}</small>
         </span>
       ),
     },
@@ -148,9 +151,9 @@ export default function CasesPage({
       key: "services",
       header: "Resumo",
       render: (caseItem) => (
-        <span className="cell-main">
-          <strong>{formatServiceItemCount(caseItem)}</strong>
-          <small>Linhas lançadas no caso</small>
+        <span className="grid min-w-0 gap-1">
+          <strong className="text-sm font-bold text-[#f3f4f6]">{formatServiceItemCount(caseItem)}</strong>
+          <small className="text-xs text-[#aeb7c2]">Linhas lançadas no caso</small>
         </span>
       ),
     },
@@ -158,7 +161,7 @@ export default function CasesPage({
       key: "deadline",
       header: "Prazo",
       render: (caseItem) => (
-        <span className="cell-main">
+        <span className="grid min-w-0 gap-1">
           <DeadlineBadge deadline={caseItem.deadline} status={caseItem.status} />
         </span>
       ),
@@ -170,7 +173,7 @@ export default function CasesPage({
       key: "actions",
       header: "Ações",
       render: (caseItem) => (
-        <div className="row-actions">
+        <div className="flex flex-wrap items-center gap-1.5">
           <Button
             variant="secondary"
             size="sm"
@@ -189,10 +192,10 @@ export default function CasesPage({
       header: "Pronto",
       render: (caseItem) =>
         caseItem.status === "pending" ? (
-          <div className="ready-cell">
+          <div className="flex justify-end">
             <Button
-              className="vertical-ready-button"
               variant="success"
+              size="sm"
               aria-label="Marcar como pronto"
               title="Marcar como pronto"
               onClick={() => onAdvanceCase(caseItem)}
@@ -201,8 +204,8 @@ export default function CasesPage({
             </Button>
           </div>
         ) : (
-          <div className="ready-cell">
-            <span className="vertical-ready-label" aria-label="Pedido pronto para entrega">
+          <div className="flex justify-end">
+            <span className="rounded-md border border-[rgba(115,201,143,0.28)] bg-[rgba(115,201,143,0.12)] px-2 py-1 text-xs font-bold text-[#d5f8e0]" aria-label="Pedido pronto para entrega">
               Pronto
             </span>
           </div>
@@ -215,9 +218,9 @@ export default function CasesPage({
       key: "patient_ref",
       header: "Caso / Referência",
       render: (caseItem) => (
-        <span className="cell-main">
-          <strong>{caseItem.patient_ref}</strong>
-          <small>{doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`}</small>
+        <span className="grid min-w-0 gap-1">
+          <strong className="truncate text-sm font-bold text-[#f3f4f6]">{caseItem.patient_ref}</strong>
+          <small className="truncate text-xs text-[#aeb7c2]">{doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`}</small>
         </span>
       ),
     },
@@ -225,9 +228,9 @@ export default function CasesPage({
       key: "services",
       header: "Itens de serviço",
       render: (caseItem) => (
-        <span className="cell-main">
-          <strong>{formatServiceItemCount(caseItem)}</strong>
-          <small>Histórico de entrega</small>
+        <span className="grid min-w-0 gap-1">
+          <strong className="text-sm font-bold text-[#f3f4f6]">{formatServiceItemCount(caseItem)}</strong>
+          <small className="text-xs text-[#aeb7c2]">Histórico de entrega</small>
         </span>
       ),
     },
@@ -245,7 +248,7 @@ export default function CasesPage({
       key: "actions",
       header: "Ações",
       render: (caseItem) => (
-        <div className="row-actions">
+        <div className="flex flex-wrap items-center gap-1.5">
           <Button
             variant="secondary"
             iconOnly
@@ -274,16 +277,18 @@ export default function CasesPage({
         </Button>
       }
     >
-      <div className="content-grid">
-        <div className="case-toolbar">
-          <div className="filter-bar">
+      <div className="grid gap-4">
+        <div className="grid gap-2">
+          <div className="grid grid-cols-[minmax(220px,1.8fr)_repeat(3,minmax(132px,1fr))_max-content] gap-2 rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(25,30,38,0.96)] p-3 max-[1120px]:grid-cols-2 max-[640px]:grid-cols-1">
             <input
+              className={FILTER_CONTROL_CLASS}
               value={filters.search}
               onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))}
               placeholder="Buscar por caso, paciente ou dentista"
               aria-label="Buscar casos"
             />
             <select
+              className={FILTER_CONTROL_CLASS}
               value={filters.status}
               onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))}
               aria-label="Filtrar por status"
@@ -294,6 +299,7 @@ export default function CasesPage({
               <option value="delivered">Entregue</option>
             </select>
             <select
+              className={FILTER_CONTROL_CLASS}
               value={filters.priority}
               onChange={(event) => setFilters((current) => ({ ...current, priority: event.target.value }))}
               aria-label="Filtrar por prioridade"
@@ -303,6 +309,7 @@ export default function CasesPage({
               <option value="urgent">Urgente</option>
             </select>
             <select
+              className={FILTER_CONTROL_CLASS}
               value={filters.doctorId}
               onChange={(event) => setFilters((current) => ({ ...current, doctorId: event.target.value }))}
               aria-label="Filtrar por dentista"
@@ -318,25 +325,25 @@ export default function CasesPage({
               Limpar filtros
             </Button>
           </div>
-          <div className="case-toolbar-meta" aria-live="polite">
+          <div className="flex flex-wrap gap-2 text-sm text-[#aeb7c2]" aria-live="polite">
             <span>{formatCaseCount(openCases.length, "caso em aberto", "casos em aberto")}</span>
             <span>{formatCaseCount(readyCases.length, "caso pronto", "casos prontos")}</span>
             <span>{formatCaseCount(historyCases.length, "caso entregue", "casos entregues")}</span>
           </div>
         </div>
 
-        <section className="panel panel-strong">
-          <div className="panel-header">
-            <div className="panel-title">
-              <h3>Casos em aberto</h3>
-              <p>Casos em produção e casos prontos aguardando entrega.</p>
+        <section className="rounded-md border border-[rgba(255,138,42,0.3)] bg-[rgba(25,30,38,0.96)] text-[#f3f4f6] shadow-sm">
+          <div className="flex items-start justify-between gap-3 border-b border-[rgba(229,235,241,0.13)] px-4 py-3 max-[640px]:flex-col">
+            <div className="grid gap-1">
+              <h3 className="text-base font-bold leading-tight">Casos em aberto</h3>
+              <p className="text-sm leading-snug text-[#aeb7c2]">Casos em produção e casos prontos aguardando entrega.</p>
             </div>
             <Button variant="success" onClick={openDeliverModal}>
               <PackageCheck size={18} />
               Registrar entrega
             </Button>
           </div>
-          <div className="panel-body">
+          <div className="p-4">
             <DataTable
               columns={openColumns}
               data={openCases}
@@ -348,14 +355,14 @@ export default function CasesPage({
           </div>
         </section>
 
-        <section className="panel">
-          <div className="panel-header">
-            <div className="panel-title">
-              <h3>Histórico de entregas</h3>
-              <p>Casos que já foram entregues.</p>
+        <section className="rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(25,30,38,0.96)] text-[#f3f4f6] shadow-sm">
+          <div className="border-b border-[rgba(229,235,241,0.13)] px-4 py-3">
+            <div className="grid gap-1">
+              <h3 className="text-base font-bold leading-tight">Histórico de entregas</h3>
+              <p className="text-sm leading-snug text-[#aeb7c2]">Casos que já foram entregues.</p>
             </div>
           </div>
-          <div className="panel-body">
+          <div className="p-4">
             <DataTable
               columns={historyColumns}
               data={historyCases}
@@ -373,7 +380,7 @@ export default function CasesPage({
           title="Novo caso"
           description="Ficha rápida de entrada."
           onClose={() => setShowCaseModal(false)}
-          className="case-modal-panel"
+          className="max-w-[1200px]"
         >
           <CaseIntakeForm
             doctors={doctors}
@@ -396,24 +403,25 @@ export default function CasesPage({
           description="Selecione os casos prontos que devem ser marcados como entregues."
           onClose={() => setShowDeliverModal(false)}
         >
-          <form className="form-grid" onSubmit={handleDeliverSubmit}>
-            <div className="deliver-list">
+          <form className="grid gap-4" onSubmit={handleDeliverSubmit}>
+            <div className="grid gap-2">
               {readyCases.length ? (
                 readyCases.map((caseItem) => (
-                  <label key={caseItem.id} className="deliver-choice">
+                  <label key={caseItem.id} className="grid cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)] p-3">
                     <input
+                      className="size-4 accent-[#ff8a2a]"
                       type="checkbox"
                       checked={selectedDeliveryIds.includes(caseItem.id)}
                       onChange={() => toggleDeliverySelection(caseItem.id)}
                     />
-                    <span className="deliver-choice-copy">
-                      <strong>{caseItem.patient_ref}</strong>
-                      <small>
+                    <span className="grid min-w-0 gap-1">
+                      <strong className="truncate text-sm font-bold text-[#f3f4f6]">{caseItem.patient_ref}</strong>
+                      <small className="truncate text-xs text-[#aeb7c2]">
                         {doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`} ·{" "}
                         {formatServiceItemCount(caseItem)}
                       </small>
                     </span>
-                    <strong>{formatCurrency(caseItem.total_value)}</strong>
+                    <strong className="text-sm font-bold text-[#f3f4f6]">{formatCurrency(caseItem.total_value)}</strong>
                   </label>
                 ))
               ) : (
@@ -424,7 +432,7 @@ export default function CasesPage({
                 />
               )}
             </div>
-            <div className="confirm-modal-actions">
+            <div className="flex flex-wrap justify-end gap-2">
               <Button variant="ghost" onClick={() => setShowDeliverModal(false)}>
                 Cancelar
               </Button>

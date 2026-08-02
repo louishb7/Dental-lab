@@ -40,9 +40,9 @@ export default function FinancePage({ dashboard, cases, loading }) {
       key: "case",
       header: "Caso",
       render: (caseItem) => (
-        <span className="cell-main">
-          <strong>{caseItem.patient_ref}</strong>
-          <small>{caseItem.doctor_name}</small>
+        <span className="grid min-w-0 gap-1">
+          <strong className="truncate text-sm font-bold text-[#f3f4f6]">{caseItem.patient_ref}</strong>
+          <small className="truncate text-xs text-[#aeb7c2]">{caseItem.doctor_name}</small>
         </span>
       ),
     },
@@ -61,8 +61,8 @@ export default function FinancePage({ dashboard, cases, loading }) {
       title="Resumo do mês"
       description="Acompanhe o valor entregue e os casos concluídos no período."
     >
-      <div className="content-grid">
-        <div className="stat-grid">
+      <div className="grid gap-4">
+        <div className="grid grid-cols-3 gap-4 max-[1120px]:grid-cols-2 max-[640px]:grid-cols-1">
           <StatCard
             title="Valor entregue no mês"
             value={formatCurrency(totalMes)}
@@ -79,27 +79,27 @@ export default function FinancePage({ dashboard, cases, loading }) {
           />
         </div>
 
-        <div className="split-grid">
-          <section className="panel panel-strong">
-            <div className="panel-header">
-              <div className="panel-title">
-                <h3>Ranking de receita no mês atual.</h3>
-                <p>Dentistas com maior valor entregue no período.</p>
+        <div className="grid grid-cols-[minmax(320px,420px)_minmax(0,1fr)] gap-4 max-[1120px]:grid-cols-1">
+          <section className="rounded-md border border-[rgba(255,138,42,0.3)] bg-[rgba(25,30,38,0.96)] text-[#f3f4f6] shadow-sm">
+            <div className="border-b border-[rgba(229,235,241,0.13)] px-4 py-3">
+              <div className="grid gap-1">
+                <h3 className="text-base font-bold leading-tight">Ranking de receita no mês atual.</h3>
+                <p className="text-sm leading-snug text-[#aeb7c2]">Dentistas com maior valor entregue no período.</p>
               </div>
             </div>
-            <div className="panel-body">
+            <div className="p-4">
               {topDoctors.length ? (
-                <div className="doctor-ranking">
+                <div className="grid">
                   {topDoctors.map((doctor, index) => (
-                    <div key={doctor.name} className="ranking-item">
-                      <span className="ranking-pos">#{index + 1}</span>
-                      <div className="cell-main">
-                        <strong>{doctor.name}</strong>
-                        <small>
+                    <div key={doctor.name} className="flex items-center gap-3 border-b border-[rgba(229,235,241,0.13)] py-3 last:border-b-0">
+                      <span className="min-w-7 text-sm font-extrabold text-[#ff8a2a]">#{index + 1}</span>
+                      <div className="grid min-w-0 gap-1">
+                        <strong className="truncate text-sm font-bold text-[#f3f4f6]">{doctor.name}</strong>
+                        <small className="text-xs text-[#aeb7c2]">
                           {doctor.count} {doctor.count === 1 ? "entrega" : "entregas"}
                         </small>
                       </div>
-                      <strong>{formatCurrency(doctor.total)}</strong>
+                      <strong className="ml-auto whitespace-nowrap text-sm font-bold text-[#f3f4f6]">{formatCurrency(doctor.total)}</strong>
                     </div>
                   ))}
                 </div>
@@ -109,15 +109,15 @@ export default function FinancePage({ dashboard, cases, loading }) {
             </div>
           </section>
 
-          <section className="panel panel-strong">
-            <div className="panel-header">
-              <div className="panel-title">
-                <h3>Entregas do mês</h3>
-                <p>Casos concluídos com valor registrado neste mês.</p>
+          <section className="rounded-md border border-[rgba(255,138,42,0.3)] bg-[rgba(25,30,38,0.96)] text-[#f3f4f6] shadow-sm">
+            <div className="border-b border-[rgba(229,235,241,0.13)] px-4 py-3">
+              <div className="grid gap-1">
+                <h3 className="text-base font-bold leading-tight">Entregas do mês</h3>
+                <p className="text-sm leading-snug text-[#aeb7c2]">Casos concluídos com valor registrado neste mês.</p>
               </div>
             </div>
-            <div className="panel-body">
-              <div className="table-scroll-compact">
+            <div className="p-4">
+              <div className="max-h-[520px] overflow-auto">
                 <DataTable
                   columns={deliveredColumns}
                   data={deliveredCases}

@@ -25,9 +25,9 @@ export default function DoctorsPage({
       key: "name",
       header: "Nome",
       render: (doctor) => (
-        <span className="cell-main">
-          <strong>{doctor.name}</strong>
-          {doctor.notes && <small>{doctor.notes}</small>}
+        <span className="grid min-w-0 gap-1">
+          <strong className="truncate text-sm font-bold text-[#f3f4f6]">{doctor.name}</strong>
+          {doctor.notes && <small className="truncate text-xs text-[#aeb7c2]">{doctor.notes}</small>}
         </span>
       ),
     },
@@ -38,7 +38,7 @@ export default function DoctorsPage({
       key: "actions",
       header: "Ações",
       render: (doctor) => (
-        <div className="row-actions">
+        <div className="flex flex-wrap items-center gap-1.5">
           <Button
             variant="secondary"
             iconOnly
@@ -80,9 +80,8 @@ export default function DoctorsPage({
         </Button>
       }
     >
-      <div className="content-grid">
-        <section className="panel panel-strong">
-          <div className="panel-body">
+      <div className="grid gap-4">
+        <section className="rounded-md border border-[rgba(255,138,42,0.3)] bg-[rgba(25,30,38,0.96)] p-4 text-[#f3f4f6] shadow-sm">
             <DataTable
               columns={columns}
               data={doctors}
@@ -91,7 +90,6 @@ export default function DoctorsPage({
               emptyTitle="Nenhum dentista cadastrado."
               emptyDescription="Cadastre um dentista para vincular casos."
             />
-          </div>
         </section>
       </div>
 
@@ -101,7 +99,7 @@ export default function DoctorsPage({
           description={editingDoctorId ? "Atualize os dados do dentista." : "Cadastre o dentista para vincular novos casos."}
           onClose={() => setShowDoctorModal(false)}
         >
-          <form className="form-grid" onSubmit={onDoctorSubmit}>
+          <form className="grid gap-3" onSubmit={onDoctorSubmit}>
             <FormField label="Nome">
               <input
                 name="name"

@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import Button from "../components/ui/Button.jsx";
 import FormField from "../components/ui/FormField.jsx";
+import { PRODUCT_NAME } from "../config/product.js";
 
-const AUTH_PRODUCT_NAME = "Dental Lab";
+const PASSWORD_INPUT_CLASS =
+  "min-h-9 w-full rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(23,28,36,0.96)] px-3 py-2 text-sm text-[#f3f4f6] outline-none placeholder:text-[#aeb7c2]/75 focus:border-[#ff8a2a] focus:ring-2 focus:ring-[#ff8a2a]/25";
 
 /**
  * Renderiza a tela compacta de login e cadastro do Cadista.
@@ -44,18 +46,23 @@ export default function AuthPage({
   const passwordToggleLabel = showPassword ? "Ocultar" : "Mostrar";
 
   return (
-    <main className="auth-shell">
-      <section className="auth-card" aria-labelledby="auth-title">
-        <header className="auth-header">
+    <main className="grid min-h-screen place-items-center bg-[linear-gradient(180deg,rgba(255,138,42,0.12),rgba(255,138,42,0.04)_38%,transparent_72%),linear-gradient(115deg,rgba(18,23,30,0.9),rgba(28,31,36,0.82)_54%,rgba(17,20,27,0.88))] p-6">
+      <section className="grid w-full max-w-[480px] gap-4 rounded-md border border-[rgba(255,138,42,0.3)] bg-[linear-gradient(180deg,rgba(255,138,42,0.08),transparent_120px),rgba(25,30,38,0.98)] p-5 text-[#f3f4f6] shadow-[0_24px_80px_rgba(0,0,0,0.28)]" aria-labelledby="auth-title">
+        <header className="grid gap-1">
           <div>
-            <h1 id="auth-title">{AUTH_PRODUCT_NAME}</h1>
-            <p>Acesse sua bancada de casos.</p>
+            <h1 id="auth-title" className="text-2xl font-bold leading-tight">{PRODUCT_NAME}</h1>
+            <p className="mt-1 text-sm leading-snug text-[#aeb7c2]">Acesse sua bancada de casos.</p>
           </div>
         </header>
 
-        <div className="auth-tabs" role="tablist" aria-label="Modo de autenticação">
+        <div className="grid grid-cols-2 gap-2" role="tablist" aria-label="Modo de autenticação">
           <button
-            className={authMode === "login" ? "auth-tab active" : "auth-tab"}
+            className={[
+              "min-h-10 rounded-md border px-3 text-sm font-extrabold",
+              authMode === "login"
+                ? "border-[#ff8a2a] bg-[#ff8a2a] text-[#1b120b]"
+                : "border-[rgba(229,235,241,0.13)] bg-[rgba(21,26,34,0.9)] text-[#aeb7c2] hover:text-[#f3f4f6]",
+            ].join(" ")}
             type="button"
             role="tab"
             aria-selected={authMode === "login"}
@@ -64,7 +71,12 @@ export default function AuthPage({
             Entrar
           </button>
           <button
-            className={authMode === "register" ? "auth-tab active" : "auth-tab"}
+            className={[
+              "min-h-10 rounded-md border px-3 text-sm font-extrabold",
+              authMode === "register"
+                ? "border-[#ff8a2a] bg-[#ff8a2a] text-[#1b120b]"
+                : "border-[rgba(229,235,241,0.13)] bg-[rgba(21,26,34,0.9)] text-[#aeb7c2] hover:text-[#f3f4f6]",
+            ].join(" ")}
             type="button"
             role="tab"
             aria-selected={authMode === "register"}
@@ -74,10 +86,21 @@ export default function AuthPage({
           </button>
         </div>
 
-        {authMessage && <p className={`feedback auth-feedback ${authMessage.type}`}>{authMessage.text}</p>}
+        {authMessage && (
+          <p
+            className={[
+              "rounded-md border px-3 py-2 text-sm font-bold",
+              authMessage.type === "success"
+                ? "border-[rgba(115,201,143,0.28)] bg-[rgba(115,201,143,0.12)] text-[#d5f8e0]"
+                : "border-[rgba(255,103,103,0.28)] bg-[rgba(255,103,103,0.12)] text-[#ffd3d3]",
+            ].join(" ")}
+          >
+            {authMessage.text}
+          </p>
+        )}
 
         {isRegisterMode ? (
-          <form className="auth-form" onSubmit={onRegister}>
+          <form className="grid gap-3" onSubmit={onRegister}>
             <FormField label="Email" errorText={authErrors.email}>
               <input
                 name="email"
@@ -110,8 +133,9 @@ export default function AuthPage({
               helperText="Mínimo 6 caracteres e pelo menos 1 número."
               errorText={authErrors.password}
             >
-              <div className="auth-password-field">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1.5 max-[640px]:grid-cols-1">
                 <input
+                  className={PASSWORD_INPUT_CLASS}
                   name="password"
                   type={passwordInputType}
                   autoComplete="new-password"
@@ -121,7 +145,7 @@ export default function AuthPage({
                   required
                 />
                 <button
-                  className="auth-password-toggle"
+                  className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(21,26,34,0.9)] px-2.5 text-xs font-bold text-[#aeb7c2] hover:text-[#f3f4f6]"
                   type="button"
                   onClick={() => setShowPassword((current) => !current)}
                   aria-pressed={showPassword}
@@ -133,12 +157,12 @@ export default function AuthPage({
               </div>
             </FormField>
 
-            <Button className="auth-submit" variant="primary" disabled={authLoading} type="submit">
+            <Button className="mt-1 w-full justify-center" variant="primary" disabled={authLoading} type="submit">
               Criar conta
             </Button>
           </form>
         ) : (
-          <form className="auth-form" onSubmit={onLogin}>
+          <form className="grid gap-3" onSubmit={onLogin}>
             <FormField label="Usuário ou email" errorText={authErrors.identifier}>
               <input
                 name="identifier"
@@ -152,8 +176,9 @@ export default function AuthPage({
             </FormField>
 
             <FormField label="Senha" errorText={authErrors.password}>
-              <div className="auth-password-field">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1.5 max-[640px]:grid-cols-1">
                 <input
+                  className={PASSWORD_INPUT_CLASS}
                   name="password"
                   type={passwordInputType}
                   autoComplete="current-password"
@@ -162,7 +187,7 @@ export default function AuthPage({
                   required
                 />
                 <button
-                  className="auth-password-toggle"
+                  className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(21,26,34,0.9)] px-2.5 text-xs font-bold text-[#aeb7c2] hover:text-[#f3f4f6]"
                   type="button"
                   onClick={() => setShowPassword((current) => !current)}
                   aria-pressed={showPassword}
@@ -174,7 +199,7 @@ export default function AuthPage({
               </div>
             </FormField>
 
-            <Button className="auth-submit" variant="primary" disabled={authLoading} type="submit">
+            <Button className="mt-1 w-full justify-center" variant="primary" disabled={authLoading} type="submit">
               Entrar
             </Button>
           </form>

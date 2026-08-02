@@ -79,29 +79,32 @@ function AttentionPanel({
   showActions = false,
 }) {
   return (
-    <section className={`panel attention-panel ${className}`.trim()}>
-      <div className="panel-header">
-        <div className="panel-title">
-          <h3>{title}</h3>
-          <p>{description}</p>
+    <section className={`rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(25,30,38,0.96)] text-[#f3f4f6] shadow-sm ${className}`.trim()}>
+      <div className="border-b border-[rgba(229,235,241,0.13)] px-4 py-3">
+        <div className="grid gap-1">
+          <h3 className="text-base font-bold leading-tight">{title}</h3>
+          <p className="text-sm leading-snug text-[#aeb7c2]">{description}</p>
         </div>
       </div>
-      <div className="panel-body">
+      <div className="p-4">
         {cases.length ? (
-          <div className="compact-case-list">
+          <div className="grid gap-2">
             {cases.slice(0, 3).map((caseItem) => (
-              <article key={caseItem.id} className="compact-case-item">
-                <button className="compact-case-open" type="button" onClick={() => onOpenCase(caseItem.id)}>
-                  <span className="compact-case-main">
-                    <strong>{caseItem.patient_ref}</strong>
-                    <small>{caseItem.doctor_name}</small>
+              <article
+                key={caseItem.id}
+                className="flex items-center justify-between gap-3 rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)] p-2.5"
+              >
+                <button className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left" type="button" onClick={() => onOpenCase(caseItem.id)}>
+                  <span className="grid min-w-0 gap-1">
+                    <strong className="truncate text-sm font-bold">{caseItem.patient_ref}</strong>
+                    <small className="truncate text-xs text-[#aeb7c2]">{caseItem.doctor_name}</small>
                   </span>
-                  <span className="compact-case-side">
+                  <span className="shrink-0">
                     <DeadlineBadge deadline={caseItem.deadline} status={caseItem.status} />
                   </span>
                 </button>
                 {showActions && (
-                  <span className="compact-case-actions">
+                  <span className="flex shrink-0 items-center gap-1.5">
                     <Button
                       variant="success"
                       size="sm"
@@ -152,7 +155,7 @@ export default function DashboardPage({
   if (loading) {
     return (
       <PageContainer title="Bancada" description="Carregando visão semanal dos casos.">
-        <section className="panel">
+        <section className="rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(25,30,38,0.96)] p-4">
           <LoadingState message="Carregando bancada..." />
         </section>
       </PageContainer>
@@ -201,8 +204,8 @@ export default function DashboardPage({
         </Button>
       }
     >
-      <div className="content-grid dashboard-surface">
-        <div className="stat-grid compact">
+      <div className="grid gap-4">
+        <div className="grid grid-cols-3 gap-4 max-[1120px]:grid-cols-2 max-[640px]:grid-cols-1">
           <StatCard
             title="Hoje"
             value={todayCases.length}
@@ -237,7 +240,7 @@ export default function DashboardPage({
           onOpenNewCaseForDate={onOpenNewCaseForDate}
         />
 
-        <div className="dashboard-main-grid">
+        <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(320px,0.8fr)] gap-4 max-[1120px]:grid-cols-1">
           <DayBoard
             title={getDayBoardTitle(selectedDate)}
             description={getDayBoardDescription(selectedDate, selectedDayCases.length)}
@@ -252,7 +255,6 @@ export default function DashboardPage({
             emptyTitle="Nenhum caso pronto."
             emptyIcon={PackageCheck}
             onOpenCase={onOpenCase}
-            className="attention-panel-primary"
           />
         </div>
 
@@ -267,7 +269,6 @@ export default function DashboardPage({
             onDeliverCase={(caseId) => onDeliverCases([caseId])}
             onRemoveCase={onRemoveCase}
             showActions
-            className="attention-panel-secondary"
           />
         )}
       </div>

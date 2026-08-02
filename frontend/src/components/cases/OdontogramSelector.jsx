@@ -41,7 +41,7 @@ const TEETH = [
 function Tooth({ tooth, selected, onToggle }) {
   return (
     <g
-      className="odontogram-tooth"
+      className="cursor-pointer transition-[filter] hover:brightness-110 focus:outline-none"
       role="button"
       tabIndex="0"
       aria-label={`Dente ${tooth.id}`}
@@ -112,9 +112,9 @@ export default function OdontogramSelector({
   );
 
   return (
-    <div className="odontogram-selector" role="group" aria-label="Selecionar dentes do caso">
+    <div className="grid w-full max-w-full justify-items-center gap-2" role="group" aria-label="Selecionar dentes do caso">
       <svg
-        className="odontogram-svg"
+        className="block w-full max-h-[500px] overflow-visible"
         viewBox="0 0 420 550"
         width="100%"
         style={{ display: "block", margin: "0 auto" }}
@@ -122,7 +122,7 @@ export default function OdontogramSelector({
         pointerEvents="all"
         aria-hidden="false"
       >
-        <rect className="odontogram-svg-bg" x="0" y="0" width="420" height="550" rx="18" />
+        <rect fill="#1c1c1e" x="0" y="0" width="420" height="550" rx="18" />
         {TEETH.map((tooth) => (
           <Tooth
             key={tooth.id}
@@ -133,15 +133,15 @@ export default function OdontogramSelector({
         ))}
       </svg>
 
-      <div className="odontogram-selection-bar">
+      <div className="grid min-h-11 w-full grid-cols-[max-content_minmax(0,1fr)_max-content] items-center gap-2 rounded-md border border-[rgba(156,163,175,0.22)] bg-[rgba(17,17,17,0.86)] px-2 py-1.5 text-xs font-semibold text-[#f5f7fa]">
         <span>Dentes selecionados:</span>
-        <div className="odontogram-selection-list">
+        <div className="flex min-w-0 items-center gap-1 overflow-x-auto pb-0.5">
           {selectedItems.length ? (
             selectedItems.map((tooth) => (
               <button
                 key={tooth}
                 type="button"
-                className="selected-tooth-badge selecionado"
+                className="min-h-6 min-w-8 rounded bg-[#f97316] px-2 text-[11px] font-extrabold text-white"
                 title={`Dente ${tooth}`}
                 onClick={() => toggleTooth(tooth)}
               >
@@ -149,12 +149,12 @@ export default function OdontogramSelector({
               </button>
             ))
           ) : (
-            <small>Nenhum dente selecionado.</small>
+            <small className="text-[#f5f7fa]/55">Nenhum dente selecionado.</small>
           )}
         </div>
         <button
           type="button"
-          className="odontogram-clear"
+          className="grid size-8 place-items-center rounded-md border border-[rgba(156,163,175,0.22)] bg-white/5 text-[#f5f7fa]/80 disabled:cursor-not-allowed disabled:opacity-40"
           aria-label="Limpar seleção de dentes"
           disabled={!selectedItems.length}
           onClick={clearSelection}

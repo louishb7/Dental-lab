@@ -9,6 +9,9 @@ import {
 } from "../../utils/formatters.js";
 import { sortTeethByFdi } from "../../utils/odontogram.js";
 
+const CONTROL_CLASS =
+  "min-h-9 w-full rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(23,28,36,0.96)] px-3 py-2 text-sm text-[#f3f4f6] outline-none placeholder:text-[#aeb7c2]/75 focus:border-[#ff8a2a] focus:ring-2 focus:ring-[#ff8a2a]/25";
+
 export default function CaseIntakeForm({
   doctors,
   selectedDoctorId,
@@ -55,9 +58,9 @@ export default function CaseIntakeForm({
   }
 
   return (
-    <form className={`case-creation-workspace case-intake-form ${layout}`} onSubmit={onSubmit}>
-      <section className="case-create-panel case-create-info">
-        <div className="case-create-section-title">Informações do caso</div>
+    <form className="grid min-h-[min(660px,calc(100vh-2rem))] grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)_minmax(260px,0.9fr)] gap-2 max-[1120px]:min-h-0 max-[1120px]:grid-cols-1" onSubmit={onSubmit}>
+      <section className="grid min-w-0 content-start gap-3 rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(25,30,38,0.96)] p-3">
+        <div className="text-xs font-extrabold uppercase tracking-[0.05em] text-[#ff8a2a]">Informações do caso</div>
 
         <FormField label="Dentista responsável">
           <select
@@ -97,12 +100,17 @@ export default function CaseIntakeForm({
           />
         </FormField>
 
-        <div className="form-field">
+        <div className="grid gap-1.5 text-xs font-bold text-[#aeb7c2]">
           <span>Cobrança</span>
-          <div className="pricing-mode-grid" role="radiogroup" aria-label="Forma de cobrança">
+          <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Forma de cobrança">
             <button
               type="button"
-              className={`choice-card ${caseForm.pricing_mode === "fixed" ? "active" : ""}`}
+              className={[
+                "flex min-h-11 items-center justify-center gap-2 rounded-md border px-3 text-sm font-bold text-[#f3f4f6]",
+                caseForm.pricing_mode === "fixed"
+                  ? "border-[rgba(255,138,42,0.45)] bg-[rgba(255,138,42,0.12)]"
+                  : "border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)]",
+              ].join(" ")}
               aria-pressed={caseForm.pricing_mode === "fixed"}
               onClick={() => syncField("pricing_mode", "fixed")}
             >
@@ -111,7 +119,12 @@ export default function CaseIntakeForm({
             </button>
             <button
               type="button"
-              className={`choice-card ${caseForm.pricing_mode === "services" ? "active" : ""}`}
+              className={[
+                "flex min-h-11 items-center justify-center gap-2 rounded-md border px-3 text-sm font-bold text-[#f3f4f6]",
+                caseForm.pricing_mode === "services"
+                  ? "border-[rgba(255,138,42,0.45)] bg-[rgba(255,138,42,0.12)]"
+                  : "border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)]",
+              ].join(" ")}
               aria-pressed={caseForm.pricing_mode === "services"}
               onClick={() => syncField("pricing_mode", "services")}
             >
@@ -132,27 +145,28 @@ export default function CaseIntakeForm({
             />
           </FormField>
         ) : (
-          <div className="case-pricing-total" aria-live="polite">
-            <small>Total calculado</small>
-            <strong>{formatCurrency(totalValue)}</strong>
+          <div className="grid min-h-10 content-center gap-1 rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)] px-3 py-2" aria-live="polite">
+            <small className="text-xs font-semibold text-[#aeb7c2]">Total calculado</small>
+            <strong className="text-base font-bold text-[#f3f4f6]">{formatCurrency(totalValue)}</strong>
           </div>
         )}
       </section>
 
-      <section className="case-create-panel case-create-teeth">
-        <div className="case-create-heading">
-          <h3>Dentes do caso</h3>
-          <p>Selecione os dentes envolvidos</p>
+      <section className="grid min-w-0 content-start justify-items-center gap-3 overflow-hidden rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(25,30,38,0.96)] p-3">
+        <div className="grid gap-1 justify-self-stretch">
+          <h3 className="text-base font-bold text-[#f3f4f6]">Dentes do caso</h3>
+          <p className="text-sm text-[#aeb7c2]">Selecione os dentes envolvidos</p>
         </div>
 
         <OdontogramSelector selectedTeeth={selectedTeeth} onChange={handleTeethChange} />
 
         {caseForm.pricing_mode === "services" && selectedTeeth.length > 0 && (
-          <div className="tooth-pricing-list">
+          <div className="grid max-h-32 w-full grid-cols-2 gap-2 overflow-auto pr-1 max-[1120px]:grid-cols-1">
             {selectedTeeth.map((tooth) => (
-              <label key={tooth} className="tooth-pricing-item">
+              <label key={tooth} className="grid gap-1 text-xs font-bold text-[#aeb7c2]">
                 <span>Dente {tooth}</span>
                 <input
+                  className={CONTROL_CLASS}
                   value={unitValues[tooth] || ""}
                   onChange={(event) => handleUnitValueChange(tooth, event.target.value)}
                   placeholder="R$ 0,00"
@@ -164,41 +178,41 @@ export default function CaseIntakeForm({
         )}
       </section>
 
-      <aside className="case-create-panel case-create-summary">
-        <div className="case-create-heading">
-          <h3>Resumo do caso</h3>
+      <aside className="grid min-w-0 content-start gap-3 rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(25,30,38,0.96)] p-3">
+        <div className="grid gap-1">
+          <h3 className="text-base font-bold text-[#f3f4f6]">Resumo do caso</h3>
         </div>
 
-        <div className="case-summary-box">
-          <dl>
-            <div>
-              <dt>Dentista</dt>
-              <dd>{selectedDoctor?.name || "-"}</dd>
+        <div className="rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)] p-3">
+          <dl className="grid gap-2">
+            <div className="grid grid-cols-[88px_1fr] gap-2 text-sm">
+              <dt className="text-[#aeb7c2]">Dentista</dt>
+              <dd className="m-0 text-[#f3f4f6]">{selectedDoctor?.name || "-"}</dd>
             </div>
-            <div>
-              <dt>Paciente</dt>
-              <dd>{caseForm.patient_ref || "-"}</dd>
+            <div className="grid grid-cols-[88px_1fr] gap-2 text-sm">
+              <dt className="text-[#aeb7c2]">Paciente</dt>
+              <dd className="m-0 text-[#f3f4f6]">{caseForm.patient_ref || "-"}</dd>
             </div>
-            <div>
-              <dt>Prazo</dt>
-              <dd>{caseForm.deadline || "-"}</dd>
+            <div className="grid grid-cols-[88px_1fr] gap-2 text-sm">
+              <dt className="text-[#aeb7c2]">Prazo</dt>
+              <dd className="m-0 text-[#f3f4f6]">{caseForm.deadline || "-"}</dd>
             </div>
-            <div>
-              <dt>Cobrança</dt>
-              <dd>{caseForm.pricing_mode === "fixed" ? "Valor fixo" : "Por dente"}</dd>
+            <div className="grid grid-cols-[88px_1fr] gap-2 text-sm">
+              <dt className="text-[#aeb7c2]">Cobrança</dt>
+              <dd className="m-0 text-[#f3f4f6]">{caseForm.pricing_mode === "fixed" ? "Valor fixo" : "Por dente"}</dd>
             </div>
-            <div>
-              <dt>Valor</dt>
-              <dd>{formatCurrency(totalValue)}</dd>
+            <div className="grid grid-cols-[88px_1fr] gap-2 text-sm">
+              <dt className="text-[#aeb7c2]">Valor</dt>
+              <dd className="m-0 text-[#f3f4f6]">{formatCurrency(totalValue)}</dd>
             </div>
-            <div>
-              <dt>Dentes</dt>
-              <dd>{selectedTeeth.length ? selectedTeeth.join(", ") : "Nenhum"}</dd>
+            <div className="grid grid-cols-[88px_1fr] gap-2 text-sm">
+              <dt className="text-[#aeb7c2]">Dentes</dt>
+              <dd className="m-0 text-[#f3f4f6]">{selectedTeeth.length ? selectedTeeth.join(", ") : "Nenhum"}</dd>
             </div>
           </dl>
         </div>
 
-        <div className="case-create-submit">
+        <div className="mt-3 flex">
           <Button variant="primary" disabled={busy} type="submit">
             <SubmitIcon size={17} />
             {submitLabel}

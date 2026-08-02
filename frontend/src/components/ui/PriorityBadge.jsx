@@ -1,3 +1,5 @@
+import { Badge } from "./badge.jsx";
+
 const PRIORITY_LABELS = {
   normal: "Normal",
   urgent: "Urgente",
@@ -11,8 +13,11 @@ export default function PriorityBadge({ priority }) {
   }
 
   return (
-    <span className={`badge badge-priority ${normalized}`}>
+    <Badge
+      variant="outline"
+      className="border-[rgba(255,103,103,0.32)] bg-[rgba(255,103,103,0.12)] text-[#ffd3d3]"
+    >
       {PRIORITY_LABELS[normalized] || normalized}
-    </span>
+    </Badge>
   );
 }

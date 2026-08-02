@@ -35,10 +35,10 @@ export default function AppLayout({
   const meta = PAGE_META[activePage] || PAGE_META.dashboard;
 
   return (
-    <div className="app-layout">
+    <div className="grid min-h-screen grid-cols-[278px_minmax(0,1fr)]">
       <AppSidebar activePage={activePage} onNavigate={onNavigate} />
       <Toast message={message} onDismiss={onDismiss} />
-      <main className="app-main workspace-main">
+      <main className="flex min-w-0 flex-col bg-[linear-gradient(180deg,rgba(255,138,42,0.02),transparent_14%)]">
         <AppHeader
           title={meta.title}
           user={session}

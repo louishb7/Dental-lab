@@ -1,6 +1,14 @@
 import EmptyState from "./EmptyState.jsx";
 import ErrorState from "./ErrorState.jsx";
 import LoadingState from "./LoadingState.jsx";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "./table.jsx";
 
 export default function DataTable({
   columns,
@@ -25,28 +33,35 @@ export default function DataTable({
   }
 
   return (
-    <div className="table-wrap">
-      <table className="data-table">
-        <thead>
-          <tr>
+    <div className="overflow-x-auto rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.03)]">
+      <Table className="min-w-[780px]">
+        <TableHeader>
+          <TableRow className="border-[rgba(229,235,241,0.13)] hover:bg-transparent">
             {columns.map((column) => (
-              <th key={column.key}>{column.header}</th>
+              <TableHead
+                key={column.key}
+                className="h-10 px-3 text-xs font-extrabold uppercase tracking-[0.04em] text-[#aeb7c2]"
+              >
+                {column.header}
+              </TableHead>
             ))}
-          </tr>
-        </thead>
-        <tbody>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {data.map((row) => (
-            <tr key={row.id}>
+            <TableRow
+              key={row.id}
+              className="border-[rgba(229,235,241,0.1)] hover:bg-[rgba(255,138,42,0.04)]"
+            >
               {columns.map((column) => (
-                <td key={column.key}>
+                <TableCell key={column.key} className="px-3 py-3 text-sm text-[#d7dde5]">
                   {column.render ? column.render(row) : row[column.key]}
-                </td>
+                </TableCell>
               ))}
-            </tr>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }
-

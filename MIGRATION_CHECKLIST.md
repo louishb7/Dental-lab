@@ -366,6 +366,14 @@ CHECKLIST DE SIMPLIFICAÇÃO:
 - [x] No bloco "Semana de produção" da Bancada, permitir adicionar um caso diretamente a partir de um dia específico da semana (clique no dia abre o formulário de novo caso já com aquele prazo/data pré-preenchido), em vez de o bloco ser só um espelho passivo de leitura dos casos já cadastrados
 - [x] Auditar a tela Bancada e mover para o Financeiro qualquer elemento que seja informativo/analítico em vez de acionável no dia a dia
 - [x] Introduzir Tailwind CSS + shadcn/ui no frontend como piloto pelo componente "Semana de produção"; decisão antecipada em relação ao plano original porque resolve diretamente a inconsistência visual desse bloco, mantendo as demais telas no CSS existente até validação específica.
+- [x] Habilitar Preflight do Tailwind CSS v4 para a migração completa do frontend, assumindo a substituição do CSS puro legado tela por tela.
+- [x] Migrar header/topbar e branding global para Tailwind/shadcn, renomeando o produto visível para Cadisk e simplificando a barra superior.
+- [x] Migrar a tela Bancada para Tailwind/shadcn, completando cards de métrica, "Casos de hoje", "Prontos para entrega" e estados da "Semana de produção".
+- [x] Migrar a tela Casos para Tailwind/shadcn, incluindo filtros, tabelas, badges, ações e modal de entrega.
+- [x] Migrar o modal "Novo caso" para Tailwind/shadcn, preservando a lógica do odontograma e alterando apenas o styling ao redor.
+- [x] Migrar a tela Dentistas e o modal "Novo dentista" para Tailwind/shadcn.
+- [x] Migrar a tela Financeiro para Tailwind/shadcn, preservando a camada analítica com ranking e entregas do mês.
+- [x] Remover CSS puro legado em `frontend/src/styles/`, mantendo apenas `tailwind.css` como entrada de estilos do frontend.
 
 ## Decisoes e Notas
 
