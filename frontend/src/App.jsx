@@ -43,7 +43,7 @@ import {
 import { formatCurrencyInput, getLocalDateKey } from "./utils/formatters.js";
 
 const THEME_STORAGE_KEY = "app-ui-theme";
-const THEME_SEQUENCE = ["dark", "light", "focus"];
+const THEME_SEQUENCE = ["dark", "light"];
 const LAST_CASE_DOCTOR_STORAGE_KEY = "cadista_last_case_doctor_id";
 
 function getStoredTheme() {

@@ -376,7 +376,7 @@ CHECKLIST DE SIMPLIFICAÇÃO:
 - [x] Remover CSS puro legado em `frontend/src/styles/`, mantendo apenas `tailwind.css` como entrada de estilos do frontend.
 - [x] Passo 1 refinamento visual: reduzir padding, altura e escala dos cards de métrica "Hoje", "Pendentes" e "Prontos para entrega" no topo da Bancada.
 - [x] Passo 2 refinamento visual: repaginar a paleta de cores, trocar a cor primária laranja por tom clínico/confiável, reservar âmbar/laranja para atenção e documentar tokens semânticos.
-- [x] Passo 3 refinamento visual: implementar sistema de temas com CSS custom properties no padrão shadcn/ui, incluindo tema escuro, tema claro corrigido e terceiro tema coerente.
+- [x] Passo 3 refinamento visual: implementar sistema de temas com CSS custom properties no padrão shadcn/ui, mantendo apenas tema escuro e tema claro corrigido.
 - [x] Passo 4 refinamento visual: compactar os cards de dia da "Semana de produção" em formato de tira de calendário, preservando estados de hoje, selecionado e dia off.
 - [x] Passo 5 refinamento de fluxo: reposicionar o botão "+ Novo Caso" próximo ao bloco "Semana de produção", mantendo distinção entre criação geral e criação por dia.
 - [x] Passo 6 refinamento de navegação: após criar caso ou abrir caso pela Bancada, navegar automaticamente para "Casos" e exibir/abrir o caso correspondente.
@@ -386,7 +386,7 @@ CHECKLIST DE SIMPLIFICAÇÃO:
 ## Decisoes e Notas
 
 - Refinamento visual Passo 2: a cor primaria do frontend foi consolidada em teal clinico proprio (`#0E7C7B`, com derivados `#096766`/`#095f60`), mantendo ambar/laranja reservado para estados de atencao como `warning` e `pending`. O contraste de `#0E7C7B` com texto claro foi validado em WCAG AA.
-- Refinamento visual Passo 3: o frontend agora alterna entre os temas `dark`, `light` e `focus`, persistidos em `localStorage` por `app-ui-theme` e aplicados em `document.documentElement.dataset.theme`. Os tokens `--color-*` alimentam os aliases shadcn (`--shadcn-*`) tambem no terceiro tema; a auditoria de `frontend/src` removeu cores literais fora de `tailwind.css`; e o tema `focus` foi redesenhado como modo de concentracao de alto contraste, sem gradientes decorativos nem textura de fundo.
+- Refinamento visual Passo 3: o frontend agora alterna apenas entre os temas `dark` e `light`, persistidos em `localStorage` por `app-ui-theme` e aplicados em `document.documentElement.dataset.theme`. Valores legados de um terceiro tema removido voltam automaticamente para `dark`.
 - Refinamento visual Passos 4 e 5: a "Semana de producao" foi compactada em uma tira de calendario com cards menores, preservando os estados `Hoje`, selecionado e dia livre/off. A criacao geral de caso saiu do cabecalho da Bancada e foi reposicionada no proprio bloco da semana; a criacao por dia permanece como acao discreta dentro de cada card de data.
 - Refinamento visual Passo 6: a criacao de caso agora navega para `Casos`, recarrega a lista com o novo `selectedCaseId` e abre os detalhes do caso criado. Ao abrir um caso pela Bancada, o mesmo caso tambem fica selecionado antes da navegacao para garantir exibicao imediata do painel de detalhes.
 - Refinamento visual Passos 7 e 8: o painel `Casos de hoje` da Bancada agora exibe a acao `Pronto` para casos pendentes, reutilizando a mesma mutacao `pending -> completed` da tela `Casos`. O filtro `Prioridade` foi removido da tela `Casos` e sua logica de filtragem eliminada; a coluna/badge de prioridade foi mantida como informacao operacional.

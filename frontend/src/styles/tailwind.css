@@ -97,46 +97,6 @@
   --shadow-soft: 0 24px 60px rgba(28, 49, 68, 0.12);
 }
 
-[data-theme="focus"] {
-  --color-bg: #050505;
-  --color-sidebar: #050505;
-  --color-surface: #0c0c0c;
-  --color-surface-soft: #111111;
-  --color-surface-muted: #171717;
-  --color-border: rgba(255, 255, 255, 0.26);
-  --color-border-strong: rgba(255, 255, 255, 0.5);
-  --color-text: #f8f8f8;
-  --color-text-muted: #c2c2c2;
-  --color-text-soft: #e2e2e2;
-  --color-primary: #f5f5f5;
-  --color-primary-strong: #ffffff;
-  --color-danger: #ff6b6b;
-  --color-warning: #f0c15b;
-  --color-success: #8fe39b;
-  --color-info: #d9d9d9;
-  --color-header: #050505;
-  --color-input-bg: #090909;
-  --color-table-head: #111111;
-  --color-table-hover: #151515;
-  --color-subtle: rgba(255, 255, 255, 0.06);
-  --color-overlay: rgba(0, 0, 0, 0.82);
-  --color-body-gradient: #050505;
-  --color-body-accent-top: transparent;
-  --color-body-accent-grid: transparent;
-  --color-body-accent-depth: transparent;
-  --color-body-grid-x: transparent;
-  --color-body-grid-y: transparent;
-  --color-body-depth: transparent;
-  --color-control-bg: #101010;
-  --color-elevated-bg: #151515;
-  --color-primary-contrast: #050505;
-  --color-danger-soft: #ffe2e2;
-  --color-warning-soft: #fff0c7;
-  --color-success-soft: #e1ffe5;
-  --color-info-soft: #f2f2f2;
-  --shadow-soft: none;
-}
-
 @layer base {
   html {
     background: var(--color-bg);
@@ -238,8 +198,7 @@
 
 :root,
 [data-theme="dark"],
-[data-theme="light"],
-[data-theme="focus"] {
+[data-theme="light"] {
   --shadcn-background: var(--color-bg);
   --shadcn-foreground: var(--color-text);
   --shadcn-card: var(--color-surface);

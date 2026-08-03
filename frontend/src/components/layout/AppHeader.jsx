@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, LogOut, Moon, Palette, Sun, User } from "lucide-react";
+import { ChevronDown, LogOut, Moon, Sun, User } from "lucide-react";
 
 const NEXT_THEME_ACTION = {
   dark: {
@@ -7,10 +7,6 @@ const NEXT_THEME_ACTION = {
     label: "Tema claro",
   },
   light: {
-    icon: Palette,
-    label: "Tema foco",
-  },
-  focus: {
     icon: Moon,
     label: "Tema escuro",
   },
