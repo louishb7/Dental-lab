@@ -19,6 +19,10 @@ function formatCaseCount(count, singular, plural) {
 
 const FILTER_CONTROL_CLASS =
   "min-h-9 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-muted)]/75 focus:border-primary focus:ring-2 focus:ring-primary/25";
+const VERTICAL_READY_CLASS =
+  "!h-auto !min-h-[118px] !w-12 !min-w-0 !rounded-2xl !px-1.5 !py-2.5 !text-[0.68rem] !font-black uppercase !tracking-[0.18em] [text-orientation:mixed] [writing-mode:vertical-rl]";
+const VERTICAL_READY_LABEL_CLASS =
+  "inline-flex min-h-[118px] w-12 items-center justify-center rounded-2xl border border-[color-mix(in_srgb,var(--color-success-soft)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-success-soft)_10%,transparent)] px-1.5 py-2.5 text-[0.68rem] font-black uppercase tracking-[0.18em] text-[var(--color-success-soft)] [text-orientation:mixed] [writing-mode:vertical-rl]";
 
 export default function CasesPage({
   cases,
@@ -193,18 +197,18 @@ export default function CasesPage({
           <div className="flex justify-end">
             <Button
               variant="success"
-              size="sm"
+              className={VERTICAL_READY_CLASS}
               aria-label="Marcar como pronto"
               title="Marcar como pronto"
               onClick={() => onAdvanceCase(caseItem)}
             >
-              Pronto
+              PRONTO
             </Button>
           </div>
         ) : (
           <div className="flex justify-end">
-            <span className="rounded-md border border-[color-mix(in_srgb,var(--color-success)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-success)_12%,transparent)] px-2 py-1 text-xs font-bold text-[var(--color-success-soft)]" aria-label="Pedido pronto para entrega">
-              Pronto
+            <span className={VERTICAL_READY_LABEL_CLASS} aria-label="Pedido pronto para entrega">
+              PRONTO
             </span>
           </div>
         ),

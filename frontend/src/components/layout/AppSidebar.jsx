@@ -2,10 +2,10 @@ import {
   BarChart3,
   ClipboardList,
   CreditCard,
-  FlaskConical,
   Stethoscope,
 } from "lucide-react";
 import { PRODUCT_NAME } from "../../config/product.js";
+import ToothIcon from "../icons/ToothIcon.jsx";
 
 const NAV_ITEMS = [
   { id: "dashboard", label: "Bancada", icon: BarChart3 },
@@ -22,7 +22,7 @@ export default function AppSidebar({ activePage, onNavigate }) {
     <aside className="sticky top-0 flex h-screen flex-col border-r border-[var(--color-border)] bg-[var(--color-sidebar)] backdrop-blur">
       <div className="flex min-h-[76px] items-center gap-3 border-b border-[var(--color-border)] px-5 py-4">
         <span className="grid size-11 place-items-center rounded-lg border border-primary/30 bg-primary/10 text-primary">
-          <FlaskConical size={22} strokeWidth={1.9} />
+          <ToothIcon size={22} strokeWidth={1.9} />
         </span>
         <div className="grid gap-1">
           <strong className="text-base leading-none text-[var(--color-text)]">{PRODUCT_NAME}</strong>

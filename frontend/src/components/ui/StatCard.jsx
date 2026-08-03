@@ -3,16 +3,16 @@ import { cn } from "../../lib/utils.js";
 
 const TONE_CLASSES = {
   info: {
-    icon: "bg-[color-mix(in_srgb,var(--color-info)_12%,transparent)] text-[var(--color-info-soft)]",
+    icon: "bg-[color-mix(in_srgb,var(--color-info-soft)_12%,transparent)] text-[var(--color-info-soft)]",
   },
   warning: {
-    icon: "bg-[color-mix(in_srgb,var(--color-warning)_14%,transparent)] text-[var(--color-warning-soft)]",
+    icon: "bg-[color-mix(in_srgb,var(--color-warning-soft)_12%,transparent)] text-[var(--color-warning-soft)]",
   },
   success: {
-    icon: "bg-[color-mix(in_srgb,var(--color-success)_12%,transparent)] text-[var(--color-success-soft)]",
+    icon: "bg-[color-mix(in_srgb,var(--color-success-soft)_12%,transparent)] text-[var(--color-success-soft)]",
   },
   danger: {
-    icon: "bg-[color-mix(in_srgb,var(--color-danger)_12%,transparent)] text-[var(--color-danger-soft)]",
+    icon: "bg-[color-mix(in_srgb,var(--color-danger-soft)_12%,transparent)] text-[var(--color-danger-soft)]",
   },
 };
 

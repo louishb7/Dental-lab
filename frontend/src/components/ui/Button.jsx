@@ -8,9 +8,9 @@ const VARIANT_CLASSES = {
   ghost:
     "border-transparent bg-transparent text-[var(--color-text-soft)] shadow-none hover:bg-[var(--color-subtle)] hover:text-[var(--color-text)]",
   danger:
-    "border-[color-mix(in_srgb,var(--color-danger)_34%,transparent)] bg-[color-mix(in_srgb,var(--color-danger)_12%,transparent)] text-[var(--color-danger-soft)] hover:bg-[color-mix(in_srgb,var(--color-danger)_20%,transparent)]",
+    "border-[color-mix(in_srgb,var(--color-danger-soft)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-danger-soft)_10%,transparent)] text-[var(--color-danger-soft)] hover:bg-[color-mix(in_srgb,var(--color-danger-soft)_16%,transparent)]",
   success:
-    "border-[color-mix(in_srgb,var(--color-success)_38%,transparent)] bg-[color-mix(in_srgb,var(--color-success)_14%,transparent)] text-[var(--color-success-soft)] hover:bg-[color-mix(in_srgb,var(--color-success)_22%,transparent)]",
+    "border-[color-mix(in_srgb,var(--color-success-soft)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-success-soft)_10%,transparent)] text-[var(--color-success-soft)] hover:bg-[color-mix(in_srgb,var(--color-success-soft)_16%,transparent)]",
 };
 
 export default function Button({

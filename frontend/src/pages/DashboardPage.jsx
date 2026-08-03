@@ -205,7 +205,7 @@ export default function DashboardPage({
             value={todayCases.length}
             description={formatCaseCount(todayCases.length)}
             icon={CalendarDays}
-            tone="warning"
+            tone="info"
             compact
           />
           <StatCard
