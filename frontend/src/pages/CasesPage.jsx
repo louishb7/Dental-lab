@@ -18,7 +18,7 @@ function formatCaseCount(count, singular, plural) {
 }
 
 const FILTER_CONTROL_CLASS =
-  "min-h-9 w-full rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(23,28,36,0.96)] px-3 text-sm text-[#f3f4f6] outline-none placeholder:text-[#aeb7c2]/75 focus:border-[#38bdf8] focus:ring-2 focus:ring-[#38bdf8]/25";
+  "min-h-9 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-muted)]/75 focus:border-primary focus:ring-2 focus:ring-primary/25";
 
 export default function CasesPage({
   cases,
@@ -142,8 +142,8 @@ export default function CasesPage({
       header: "Caso / Referência",
       render: (caseItem) => (
         <span className="grid min-w-0 gap-1">
-          <strong className="truncate text-sm font-bold text-[#f3f4f6]">{caseItem.patient_ref}</strong>
-          <small className="truncate text-xs text-[#aeb7c2]">{doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`}</small>
+          <strong className="truncate text-sm font-bold text-[var(--color-text)]">{caseItem.patient_ref}</strong>
+          <small className="truncate text-xs text-[var(--color-text-muted)]">{doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`}</small>
         </span>
       ),
     },
@@ -152,8 +152,8 @@ export default function CasesPage({
       header: "Resumo",
       render: (caseItem) => (
         <span className="grid min-w-0 gap-1">
-          <strong className="text-sm font-bold text-[#f3f4f6]">{formatServiceItemCount(caseItem)}</strong>
-          <small className="text-xs text-[#aeb7c2]">Linhas lançadas no caso</small>
+          <strong className="text-sm font-bold text-[var(--color-text)]">{formatServiceItemCount(caseItem)}</strong>
+          <small className="text-xs text-[var(--color-text-muted)]">Linhas lançadas no caso</small>
         </span>
       ),
     },
@@ -205,7 +205,7 @@ export default function CasesPage({
           </div>
         ) : (
           <div className="flex justify-end">
-            <span className="rounded-md border border-[rgba(115,201,143,0.28)] bg-[rgba(115,201,143,0.12)] px-2 py-1 text-xs font-bold text-[#d5f8e0]" aria-label="Pedido pronto para entrega">
+            <span className="rounded-md border border-[color-mix(in_srgb,var(--color-success)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-success)_12%,transparent)] px-2 py-1 text-xs font-bold text-[var(--color-success-soft)]" aria-label="Pedido pronto para entrega">
               Pronto
             </span>
           </div>
@@ -219,8 +219,8 @@ export default function CasesPage({
       header: "Caso / Referência",
       render: (caseItem) => (
         <span className="grid min-w-0 gap-1">
-          <strong className="truncate text-sm font-bold text-[#f3f4f6]">{caseItem.patient_ref}</strong>
-          <small className="truncate text-xs text-[#aeb7c2]">{doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`}</small>
+          <strong className="truncate text-sm font-bold text-[var(--color-text)]">{caseItem.patient_ref}</strong>
+          <small className="truncate text-xs text-[var(--color-text-muted)]">{doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`}</small>
         </span>
       ),
     },
@@ -229,8 +229,8 @@ export default function CasesPage({
       header: "Itens de serviço",
       render: (caseItem) => (
         <span className="grid min-w-0 gap-1">
-          <strong className="text-sm font-bold text-[#f3f4f6]">{formatServiceItemCount(caseItem)}</strong>
-          <small className="text-xs text-[#aeb7c2]">Histórico de entrega</small>
+          <strong className="text-sm font-bold text-[var(--color-text)]">{formatServiceItemCount(caseItem)}</strong>
+          <small className="text-xs text-[var(--color-text-muted)]">Histórico de entrega</small>
         </span>
       ),
     },
@@ -279,7 +279,7 @@ export default function CasesPage({
     >
       <div className="grid gap-4">
         <div className="grid gap-2">
-          <div className="grid grid-cols-[minmax(220px,1.8fr)_repeat(3,minmax(132px,1fr))_max-content] gap-2 rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(25,30,38,0.96)] p-3 max-[1120px]:grid-cols-2 max-[640px]:grid-cols-1">
+          <div className="grid grid-cols-[minmax(220px,1.8fr)_repeat(3,minmax(132px,1fr))_max-content] gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-3 max-[1120px]:grid-cols-2 max-[640px]:grid-cols-1">
             <input
               className={FILTER_CONTROL_CLASS}
               value={filters.search}
@@ -325,18 +325,18 @@ export default function CasesPage({
               Limpar filtros
             </Button>
           </div>
-          <div className="flex flex-wrap gap-2 text-sm text-[#aeb7c2]" aria-live="polite">
+          <div className="flex flex-wrap gap-2 text-sm text-[var(--color-text-muted)]" aria-live="polite">
             <span>{formatCaseCount(openCases.length, "caso em aberto", "casos em aberto")}</span>
             <span>{formatCaseCount(readyCases.length, "caso pronto", "casos prontos")}</span>
             <span>{formatCaseCount(historyCases.length, "caso entregue", "casos entregues")}</span>
           </div>
         </div>
 
-        <section className="rounded-md border border-[rgba(56,189,248,0.3)] bg-[rgba(25,30,38,0.96)] text-[#f3f4f6] shadow-sm">
-          <div className="flex items-start justify-between gap-3 border-b border-[rgba(229,235,241,0.13)] px-4 py-3 max-[640px]:flex-col">
+        <section className="rounded-md border border-primary/30 bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm">
+          <div className="flex items-start justify-between gap-3 border-b border-[var(--color-border)] px-4 py-3 max-[640px]:flex-col">
             <div className="grid gap-1">
               <h3 className="text-base font-bold leading-tight">Casos em aberto</h3>
-              <p className="text-sm leading-snug text-[#aeb7c2]">Casos em produção e casos prontos aguardando entrega.</p>
+              <p className="text-sm leading-snug text-[var(--color-text-muted)]">Casos em produção e casos prontos aguardando entrega.</p>
             </div>
             <Button variant="success" onClick={openDeliverModal}>
               <PackageCheck size={18} />
@@ -355,11 +355,11 @@ export default function CasesPage({
           </div>
         </section>
 
-        <section className="rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(25,30,38,0.96)] text-[#f3f4f6] shadow-sm">
-          <div className="border-b border-[rgba(229,235,241,0.13)] px-4 py-3">
+        <section className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm">
+          <div className="border-b border-[var(--color-border)] px-4 py-3">
             <div className="grid gap-1">
               <h3 className="text-base font-bold leading-tight">Histórico de entregas</h3>
-              <p className="text-sm leading-snug text-[#aeb7c2]">Casos que já foram entregues.</p>
+              <p className="text-sm leading-snug text-[var(--color-text-muted)]">Casos que já foram entregues.</p>
             </div>
           </div>
           <div className="p-4">
@@ -407,21 +407,21 @@ export default function CasesPage({
             <div className="grid gap-2">
               {readyCases.length ? (
                 readyCases.map((caseItem) => (
-                  <label key={caseItem.id} className="grid cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)] p-3">
+                  <label key={caseItem.id} className="grid cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-subtle)] p-3">
                     <input
-                      className="size-4 accent-[#38bdf8]"
+                      className="size-4 accent-[var(--color-primary)]"
                       type="checkbox"
                       checked={selectedDeliveryIds.includes(caseItem.id)}
                       onChange={() => toggleDeliverySelection(caseItem.id)}
                     />
                     <span className="grid min-w-0 gap-1">
-                      <strong className="truncate text-sm font-bold text-[#f3f4f6]">{caseItem.patient_ref}</strong>
-                      <small className="truncate text-xs text-[#aeb7c2]">
+                      <strong className="truncate text-sm font-bold text-[var(--color-text)]">{caseItem.patient_ref}</strong>
+                      <small className="truncate text-xs text-[var(--color-text-muted)]">
                         {doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`} ·{" "}
                         {formatServiceItemCount(caseItem)}
                       </small>
                     </span>
-                    <strong className="text-sm font-bold text-[#f3f4f6]">{formatCurrency(caseItem.total_value)}</strong>
+                    <strong className="text-sm font-bold text-[var(--color-text)]">{formatCurrency(caseItem.total_value)}</strong>
                   </label>
                 ))
               ) : (

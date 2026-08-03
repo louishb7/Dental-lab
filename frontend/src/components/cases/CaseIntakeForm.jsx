@@ -10,7 +10,7 @@ import {
 import { sortTeethByFdi } from "../../utils/odontogram.js";
 
 const CONTROL_CLASS =
-  "min-h-9 w-full rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(23,28,36,0.96)] px-3 py-2 text-sm text-[#f3f4f6] outline-none placeholder:text-[#aeb7c2]/75 focus:border-[#38bdf8] focus:ring-2 focus:ring-[#38bdf8]/25";
+  "min-h-9 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-2 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-muted)]/75 focus:border-primary focus:ring-2 focus:ring-primary/25";
 
 export default function CaseIntakeForm({
   doctors,
@@ -59,8 +59,8 @@ export default function CaseIntakeForm({
 
   return (
     <form className="grid min-h-[min(660px,calc(100vh-2rem))] grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)_minmax(260px,0.9fr)] gap-2 max-[1120px]:min-h-0 max-[1120px]:grid-cols-1" onSubmit={onSubmit}>
-      <section className="grid min-w-0 content-start gap-3 rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(25,30,38,0.96)] p-3">
-        <div className="text-xs font-extrabold uppercase tracking-[0.05em] text-[#38bdf8]">Informações do caso</div>
+      <section className="grid min-w-0 content-start gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
+        <div className="text-xs font-extrabold uppercase tracking-[0.05em] text-primary">Informações do caso</div>
 
         <FormField label="Dentista responsável">
           <select
@@ -100,16 +100,16 @@ export default function CaseIntakeForm({
           />
         </FormField>
 
-        <div className="grid gap-1.5 text-xs font-bold text-[#aeb7c2]">
+        <div className="grid gap-1.5 text-xs font-bold text-[var(--color-text-muted)]">
           <span>Cobrança</span>
           <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Forma de cobrança">
             <button
               type="button"
               className={[
-                "flex min-h-11 items-center justify-center gap-2 rounded-md border px-3 text-sm font-bold text-[#f3f4f6]",
+                "flex min-h-11 items-center justify-center gap-2 rounded-md border px-3 text-sm font-bold text-[var(--color-text)]",
                 caseForm.pricing_mode === "fixed"
-                  ? "border-[rgba(56,189,248,0.45)] bg-[rgba(56,189,248,0.12)]"
-                  : "border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)]",
+                  ? "border-primary/30 bg-primary/10"
+                  : "border-[var(--color-border)] bg-[var(--color-subtle)]",
               ].join(" ")}
               aria-pressed={caseForm.pricing_mode === "fixed"}
               onClick={() => syncField("pricing_mode", "fixed")}
@@ -120,10 +120,10 @@ export default function CaseIntakeForm({
             <button
               type="button"
               className={[
-                "flex min-h-11 items-center justify-center gap-2 rounded-md border px-3 text-sm font-bold text-[#f3f4f6]",
+                "flex min-h-11 items-center justify-center gap-2 rounded-md border px-3 text-sm font-bold text-[var(--color-text)]",
                 caseForm.pricing_mode === "services"
-                  ? "border-[rgba(56,189,248,0.45)] bg-[rgba(56,189,248,0.12)]"
-                  : "border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)]",
+                  ? "border-primary/30 bg-primary/10"
+                  : "border-[var(--color-border)] bg-[var(--color-subtle)]",
               ].join(" ")}
               aria-pressed={caseForm.pricing_mode === "services"}
               onClick={() => syncField("pricing_mode", "services")}
@@ -145,17 +145,17 @@ export default function CaseIntakeForm({
             />
           </FormField>
         ) : (
-          <div className="grid min-h-10 content-center gap-1 rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)] px-3 py-2" aria-live="polite">
-            <small className="text-xs font-semibold text-[#aeb7c2]">Total calculado</small>
-            <strong className="text-base font-bold text-[#f3f4f6]">{formatCurrency(totalValue)}</strong>
+          <div className="grid min-h-10 content-center gap-1 rounded-md border border-[var(--color-border)] bg-[var(--color-subtle)] px-3 py-2" aria-live="polite">
+            <small className="text-xs font-semibold text-[var(--color-text-muted)]">Total calculado</small>
+            <strong className="text-base font-bold text-[var(--color-text)]">{formatCurrency(totalValue)}</strong>
           </div>
         )}
       </section>
 
-      <section className="grid min-w-0 content-start justify-items-center gap-3 overflow-hidden rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(25,30,38,0.96)] p-3">
+      <section className="grid min-w-0 content-start justify-items-center gap-3 overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
         <div className="grid gap-1 justify-self-stretch">
-          <h3 className="text-base font-bold text-[#f3f4f6]">Dentes do caso</h3>
-          <p className="text-sm text-[#aeb7c2]">Selecione os dentes envolvidos</p>
+          <h3 className="text-base font-bold text-[var(--color-text)]">Dentes do caso</h3>
+          <p className="text-sm text-[var(--color-text-muted)]">Selecione os dentes envolvidos</p>
         </div>
 
         <OdontogramSelector selectedTeeth={selectedTeeth} onChange={handleTeethChange} />
@@ -163,7 +163,7 @@ export default function CaseIntakeForm({
         {caseForm.pricing_mode === "services" && selectedTeeth.length > 0 && (
           <div className="grid max-h-32 w-full grid-cols-2 gap-2 overflow-auto pr-1 max-[1120px]:grid-cols-1">
             {selectedTeeth.map((tooth) => (
-              <label key={tooth} className="grid gap-1 text-xs font-bold text-[#aeb7c2]">
+              <label key={tooth} className="grid gap-1 text-xs font-bold text-[var(--color-text-muted)]">
                 <span>Dente {tooth}</span>
                 <input
                   className={CONTROL_CLASS}
@@ -178,36 +178,36 @@ export default function CaseIntakeForm({
         )}
       </section>
 
-      <aside className="grid min-w-0 content-start gap-3 rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(25,30,38,0.96)] p-3">
+      <aside className="grid min-w-0 content-start gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
         <div className="grid gap-1">
-          <h3 className="text-base font-bold text-[#f3f4f6]">Resumo do caso</h3>
+          <h3 className="text-base font-bold text-[var(--color-text)]">Resumo do caso</h3>
         </div>
 
-        <div className="rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)] p-3">
+        <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-subtle)] p-3">
           <dl className="grid gap-2">
             <div className="grid grid-cols-[88px_1fr] gap-2 text-sm">
-              <dt className="text-[#aeb7c2]">Dentista</dt>
-              <dd className="m-0 text-[#f3f4f6]">{selectedDoctor?.name || "-"}</dd>
+              <dt className="text-[var(--color-text-muted)]">Dentista</dt>
+              <dd className="m-0 text-[var(--color-text)]">{selectedDoctor?.name || "-"}</dd>
             </div>
             <div className="grid grid-cols-[88px_1fr] gap-2 text-sm">
-              <dt className="text-[#aeb7c2]">Paciente</dt>
-              <dd className="m-0 text-[#f3f4f6]">{caseForm.patient_ref || "-"}</dd>
+              <dt className="text-[var(--color-text-muted)]">Paciente</dt>
+              <dd className="m-0 text-[var(--color-text)]">{caseForm.patient_ref || "-"}</dd>
             </div>
             <div className="grid grid-cols-[88px_1fr] gap-2 text-sm">
-              <dt className="text-[#aeb7c2]">Prazo</dt>
-              <dd className="m-0 text-[#f3f4f6]">{caseForm.deadline || "-"}</dd>
+              <dt className="text-[var(--color-text-muted)]">Prazo</dt>
+              <dd className="m-0 text-[var(--color-text)]">{caseForm.deadline || "-"}</dd>
             </div>
             <div className="grid grid-cols-[88px_1fr] gap-2 text-sm">
-              <dt className="text-[#aeb7c2]">Cobrança</dt>
-              <dd className="m-0 text-[#f3f4f6]">{caseForm.pricing_mode === "fixed" ? "Valor fixo" : "Por dente"}</dd>
+              <dt className="text-[var(--color-text-muted)]">Cobrança</dt>
+              <dd className="m-0 text-[var(--color-text)]">{caseForm.pricing_mode === "fixed" ? "Valor fixo" : "Por dente"}</dd>
             </div>
             <div className="grid grid-cols-[88px_1fr] gap-2 text-sm">
-              <dt className="text-[#aeb7c2]">Valor</dt>
-              <dd className="m-0 text-[#f3f4f6]">{formatCurrency(totalValue)}</dd>
+              <dt className="text-[var(--color-text-muted)]">Valor</dt>
+              <dd className="m-0 text-[var(--color-text)]">{formatCurrency(totalValue)}</dd>
             </div>
             <div className="grid grid-cols-[88px_1fr] gap-2 text-sm">
-              <dt className="text-[#aeb7c2]">Dentes</dt>
-              <dd className="m-0 text-[#f3f4f6]">{selectedTeeth.length ? selectedTeeth.join(", ") : "Nenhum"}</dd>
+              <dt className="text-[var(--color-text-muted)]">Dentes</dt>
+              <dd className="m-0 text-[var(--color-text)]">{selectedTeeth.length ? selectedTeeth.join(", ") : "Nenhum"}</dd>
             </div>
           </dl>
         </div>

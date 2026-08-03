@@ -11,7 +11,7 @@ export default function ConfirmModal({
   return (
     <Modal title={title} onClose={onCancel}>
       <div className="grid gap-4">
-        <p className="text-sm leading-relaxed text-[#d7dde5]">{description}</p>
+        <p className="text-sm leading-relaxed text-[var(--color-text-soft)]">{description}</p>
         <div className="flex flex-wrap justify-end gap-2">
           <Button variant="ghost" onClick={onCancel}>
             Cancelar

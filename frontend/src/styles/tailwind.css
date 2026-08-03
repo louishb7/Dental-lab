@@ -19,8 +19,8 @@
   --color-text: #f3f4f6;
   --color-text-muted: #aeb7c2;
   --color-text-soft: #d7dde5;
-  --color-primary: #38bdf8;
-  --color-primary-strong: #0ea5e9;
+  --color-primary: #0e7c7b;
+  --color-primary-strong: #096766;
   --color-danger: #ff6767;
   --color-warning: #f2b949;
   --color-success: #73c98f;
@@ -32,12 +32,15 @@
   --color-subtle: rgba(237, 237, 237, 0.034);
   --color-overlay: rgba(7, 10, 14, 0.72);
   --color-body-gradient: linear-gradient(115deg, rgba(18, 23, 30, 0.9), rgba(28, 31, 36, 0.82) 54%, rgba(17, 20, 27, 0.88));
+  --color-body-accent-top: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  --color-body-accent-grid: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  --color-body-accent-depth: color-mix(in srgb, var(--color-primary) 6%, transparent);
   --color-body-grid-x: rgba(237, 237, 237, 0.03);
   --color-body-grid-y: rgba(237, 237, 237, 0.022);
   --color-body-depth: linear-gradient(180deg, transparent, rgba(9, 12, 17, 0.28));
   --color-control-bg: rgba(21, 26, 34, 0.9);
   --color-elevated-bg: rgba(32, 38, 47, 0.96);
-  --color-primary-contrast: #07131c;
+  --color-primary-contrast: #f5fdff;
   --color-danger-soft: #ffd3d3;
   --color-warning-soft: #ffe5a9;
   --color-success-soft: #d5f8e0;
@@ -55,18 +58,18 @@
 
 [data-theme="light"] {
   /* Keep semantic roles aligned across themes; do not use warning as a brand/action color. */
-  --color-bg: #f3f5f7;
+  --color-bg: #f5f8fb;
   --color-sidebar: rgba(255, 255, 255, 0.96);
   --color-surface: rgba(255, 255, 255, 0.98);
-  --color-surface-soft: #f8fafc;
-  --color-surface-muted: #edf1f5;
-  --color-border: rgba(34, 49, 64, 0.13);
-  --color-border-strong: rgba(15, 111, 143, 0.28);
-  --color-text: #17202b;
-  --color-text-muted: #667382;
-  --color-text-soft: #344253;
-  --color-primary: #0f6f8f;
-  --color-primary-strong: #0b5563;
+  --color-surface-soft: #f7fafc;
+  --color-surface-muted: #e8eef4;
+  --color-border: rgba(23, 39, 54, 0.14);
+  --color-border-strong: rgba(15, 111, 143, 0.32);
+  --color-text: #142231;
+  --color-text-muted: #5f6f7e;
+  --color-text-soft: #304355;
+  --color-primary: #0e7c7b;
+  --color-primary-strong: #095f60;
   --color-danger: #c44848;
   --color-warning: #a66f10;
   --color-success: #2f8a52;
@@ -77,10 +80,13 @@
   --color-table-hover: rgba(15, 111, 143, 0.05);
   --color-subtle: rgba(40, 58, 76, 0.045);
   --color-overlay: rgba(19, 27, 37, 0.34);
-  --color-body-gradient: linear-gradient(140deg, rgba(242, 245, 248, 0.96), rgba(249, 246, 241, 0.92));
-  --color-body-grid-x: rgba(34, 49, 64, 0.045);
-  --color-body-grid-y: rgba(34, 49, 64, 0.04);
-  --color-body-depth: linear-gradient(180deg, transparent, rgba(221, 228, 235, 0.28));
+  --color-body-gradient: linear-gradient(140deg, rgba(245, 248, 251, 0.98), rgba(237, 244, 249, 0.94));
+  --color-body-accent-top: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  --color-body-accent-grid: color-mix(in srgb, var(--color-primary) 9%, transparent);
+  --color-body-accent-depth: color-mix(in srgb, var(--color-primary) 4%, transparent);
+  --color-body-grid-x: rgba(23, 39, 54, 0.045);
+  --color-body-grid-y: rgba(23, 39, 54, 0.04);
+  --color-body-depth: linear-gradient(180deg, transparent, rgba(216, 226, 236, 0.28));
   --color-control-bg: #ffffff;
   --color-elevated-bg: #ffffff;
   --color-primary-contrast: #f5fdff;
@@ -88,7 +94,47 @@
   --color-warning-soft: #6f4d10;
   --color-success-soft: #1d5f39;
   --color-info-soft: #20457d;
-  --shadow-soft: 0 24px 60px rgba(53, 34, 19, 0.12);
+  --shadow-soft: 0 24px 60px rgba(28, 49, 68, 0.12);
+}
+
+[data-theme="focus"] {
+  --color-bg: #050505;
+  --color-sidebar: #050505;
+  --color-surface: #0c0c0c;
+  --color-surface-soft: #111111;
+  --color-surface-muted: #171717;
+  --color-border: rgba(255, 255, 255, 0.26);
+  --color-border-strong: rgba(255, 255, 255, 0.5);
+  --color-text: #f8f8f8;
+  --color-text-muted: #c2c2c2;
+  --color-text-soft: #e2e2e2;
+  --color-primary: #f5f5f5;
+  --color-primary-strong: #ffffff;
+  --color-danger: #ff6b6b;
+  --color-warning: #f0c15b;
+  --color-success: #8fe39b;
+  --color-info: #d9d9d9;
+  --color-header: #050505;
+  --color-input-bg: #090909;
+  --color-table-head: #111111;
+  --color-table-hover: #151515;
+  --color-subtle: rgba(255, 255, 255, 0.06);
+  --color-overlay: rgba(0, 0, 0, 0.82);
+  --color-body-gradient: #050505;
+  --color-body-accent-top: transparent;
+  --color-body-accent-grid: transparent;
+  --color-body-accent-depth: transparent;
+  --color-body-grid-x: transparent;
+  --color-body-grid-y: transparent;
+  --color-body-depth: transparent;
+  --color-control-bg: #101010;
+  --color-elevated-bg: #151515;
+  --color-primary-contrast: #050505;
+  --color-danger-soft: #ffe2e2;
+  --color-warning-soft: #fff0c7;
+  --color-success-soft: #e1ffe5;
+  --color-info-soft: #f2f2f2;
+  --shadow-soft: none;
 }
 
 @layer base {
@@ -102,7 +148,7 @@
     color: var(--color-text);
     background:
       var(--color-body-gradient),
-      radial-gradient(circle at top, rgba(56, 189, 248, 0.12), transparent 28%),
+      radial-gradient(circle at top, var(--color-body-accent-top), transparent 28%),
       var(--color-bg);
     font-family: "IBM Plex Sans", "Aptos", "Segoe UI", sans-serif;
     font-size: 14px;
@@ -117,7 +163,7 @@
     background:
       linear-gradient(90deg, var(--color-body-grid-x) 0 1px, transparent 1px 88px),
       linear-gradient(180deg, var(--color-body-grid-y) 0 1px, transparent 1px 88px),
-      radial-gradient(circle at top, rgba(56, 189, 248, 0.14), transparent 34%);
+      radial-gradient(circle at top, var(--color-body-accent-grid), transparent 34%);
     opacity: 0.5;
     pointer-events: none;
   }
@@ -128,7 +174,7 @@
     inset: 0;
     z-index: -1;
     background:
-      radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.06), transparent 18%),
+      radial-gradient(circle at 50% 0%, var(--color-body-accent-depth), transparent 18%),
       var(--color-body-depth);
     pointer-events: none;
   }
@@ -152,7 +198,7 @@
   input:focus-visible,
   textarea:focus-visible,
   select:focus-visible {
-    outline: 2px solid rgba(56, 189, 248, 0.82);
+    outline: 2px solid color-mix(in srgb, var(--color-primary) 82%, transparent);
     outline-offset: 2px;
   }
 
@@ -192,7 +238,8 @@
 
 :root,
 [data-theme="dark"],
-[data-theme="light"] {
+[data-theme="light"],
+[data-theme="focus"] {
   --shadcn-background: var(--color-bg);
   --shadcn-foreground: var(--color-text);
   --shadcn-card: var(--color-surface);

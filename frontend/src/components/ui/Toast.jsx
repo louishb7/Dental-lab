@@ -27,10 +27,10 @@ export default function Toast({ message, onDismiss }) {
   return (
     <div
       className={cn(
-        "fixed bottom-5 right-5 z-30 flex min-w-[280px] max-w-[420px] items-center gap-3 rounded-md border p-3.5 text-sm font-bold shadow-[0_24px_80px_rgba(0,0,0,0.28)] max-[640px]:left-3 max-[640px]:right-3 max-[640px]:bottom-3 max-[640px]:min-w-0 max-[640px]:max-w-none",
+        "fixed bottom-5 right-5 z-30 flex min-w-[280px] max-w-[420px] items-center gap-3 rounded-md border p-3.5 text-sm font-bold shadow-[var(--shadow-soft)] max-[640px]:left-3 max-[640px]:right-3 max-[640px]:bottom-3 max-[640px]:min-w-0 max-[640px]:max-w-none",
         message.type === "success"
-          ? "border-[rgba(115,201,143,0.28)] bg-[rgba(14,27,20,0.96)] text-[#d5f8e0]"
-          : "border-[rgba(255,103,103,0.28)] bg-[rgba(36,13,13,0.96)] text-[#ffd3d3]",
+          ? "border-[color-mix(in_srgb,var(--color-success)_28%,transparent)] bg-[var(--color-surface)] text-[var(--color-success-soft)]"
+          : "border-[color-mix(in_srgb,var(--color-danger)_30%,transparent)] bg-[var(--color-surface)] text-[var(--color-danger-soft)]",
       )}
       role="status"
       aria-live="polite"

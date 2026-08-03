@@ -5,7 +5,7 @@ import FormField from "../components/ui/FormField.jsx";
 import { PRODUCT_NAME } from "../config/product.js";
 
 const PASSWORD_INPUT_CLASS =
-  "min-h-9 w-full rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(23,28,36,0.96)] px-3 py-2 text-sm text-[#f3f4f6] outline-none placeholder:text-[#aeb7c2]/75 focus:border-[#38bdf8] focus:ring-2 focus:ring-[#38bdf8]/25";
+  "min-h-9 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-2 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-muted)]/75 focus:border-primary focus:ring-2 focus:ring-primary/25";
 
 /**
  * Renderiza a tela compacta de login e cadastro do Cadista.
@@ -46,12 +46,12 @@ export default function AuthPage({
   const passwordToggleLabel = showPassword ? "Ocultar" : "Mostrar";
 
   return (
-    <main className="grid min-h-screen place-items-center bg-[linear-gradient(180deg,rgba(56,189,248,0.12),rgba(56,189,248,0.04)_38%,transparent_72%),linear-gradient(115deg,rgba(18,23,30,0.9),rgba(28,31,36,0.82)_54%,rgba(17,20,27,0.88))] p-6">
-      <section className="grid w-full max-w-[480px] gap-4 rounded-md border border-[rgba(56,189,248,0.3)] bg-[linear-gradient(180deg,rgba(56,189,248,0.08),transparent_120px),rgba(25,30,38,0.98)] p-5 text-[#f3f4f6] shadow-[0_24px_80px_rgba(0,0,0,0.28)]" aria-labelledby="auth-title">
+    <main className="grid min-h-screen place-items-center bg-[var(--color-bg)] p-6">
+      <section className="grid w-full max-w-[480px] gap-4 rounded-md border border-primary/30 bg-[var(--color-surface)] p-5 text-[var(--color-text)] shadow-[var(--shadow-soft)]" aria-labelledby="auth-title">
         <header className="grid gap-1">
           <div>
             <h1 id="auth-title" className="text-2xl font-bold leading-tight">{PRODUCT_NAME}</h1>
-            <p className="mt-1 text-sm leading-snug text-[#aeb7c2]">Acesse sua bancada de casos.</p>
+            <p className="mt-1 text-sm leading-snug text-[var(--color-text-muted)]">Acesse sua bancada de casos.</p>
           </div>
         </header>
 
@@ -60,8 +60,8 @@ export default function AuthPage({
             className={[
               "min-h-10 rounded-md border px-3 text-sm font-extrabold",
               authMode === "login"
-                ? "border-[#38bdf8] bg-[#38bdf8] text-[#07131c]"
-                : "border-[rgba(229,235,241,0.13)] bg-[rgba(21,26,34,0.9)] text-[#aeb7c2] hover:text-[#f3f4f6]",
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-[var(--color-border)] bg-[var(--color-control-bg)] text-[var(--color-text-muted)] hover:text-[var(--color-text)]",
             ].join(" ")}
             type="button"
             role="tab"
@@ -74,8 +74,8 @@ export default function AuthPage({
             className={[
               "min-h-10 rounded-md border px-3 text-sm font-extrabold",
               authMode === "register"
-                ? "border-[#38bdf8] bg-[#38bdf8] text-[#07131c]"
-                : "border-[rgba(229,235,241,0.13)] bg-[rgba(21,26,34,0.9)] text-[#aeb7c2] hover:text-[#f3f4f6]",
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-[var(--color-border)] bg-[var(--color-control-bg)] text-[var(--color-text-muted)] hover:text-[var(--color-text)]",
             ].join(" ")}
             type="button"
             role="tab"
@@ -91,8 +91,8 @@ export default function AuthPage({
             className={[
               "rounded-md border px-3 py-2 text-sm font-bold",
               authMessage.type === "success"
-                ? "border-[rgba(115,201,143,0.28)] bg-[rgba(115,201,143,0.12)] text-[#d5f8e0]"
-                : "border-[rgba(255,103,103,0.28)] bg-[rgba(255,103,103,0.12)] text-[#ffd3d3]",
+                ? "border-[color-mix(in_srgb,var(--color-success)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-success)_12%,transparent)] text-[var(--color-success-soft)]"
+                : "border-[color-mix(in_srgb,var(--color-danger)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-danger)_12%,transparent)] text-[var(--color-danger-soft)]",
             ].join(" ")}
           >
             {authMessage.text}
@@ -145,7 +145,7 @@ export default function AuthPage({
                   required
                 />
                 <button
-                  className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(21,26,34,0.9)] px-2.5 text-xs font-bold text-[#aeb7c2] hover:text-[#f3f4f6]"
+                  className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-md border border-[var(--color-border)] bg-[var(--color-control-bg)] px-2.5 text-xs font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                   type="button"
                   onClick={() => setShowPassword((current) => !current)}
                   aria-pressed={showPassword}
@@ -187,7 +187,7 @@ export default function AuthPage({
                   required
                 />
                 <button
-                  className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(21,26,34,0.9)] px-2.5 text-xs font-bold text-[#aeb7c2] hover:text-[#f3f4f6]"
+                  className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-md border border-[var(--color-border)] bg-[var(--color-control-bg)] px-2.5 text-xs font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                   type="button"
                   onClick={() => setShowPassword((current) => !current)}
                   aria-pressed={showPassword}

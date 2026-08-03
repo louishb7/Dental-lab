@@ -2,15 +2,15 @@ import { Button as ShadcnButton } from "./button.jsx";
 import { cn } from "../../lib/utils.js";
 
 const VARIANT_CLASSES = {
-  primary: "border-[#38bdf8] bg-[#38bdf8] text-[#07131c] hover:bg-[#0ea5e9]",
+  primary: "border-primary bg-primary text-primary-foreground hover:bg-primary/90",
   secondary:
-    "border-[rgba(229,235,241,0.13)] bg-[rgba(42,49,59,0.72)] text-[#f3f4f6] hover:bg-[rgba(52,60,72,0.9)]",
+    "border-[var(--color-border)] bg-[var(--color-surface-muted)] text-[var(--color-text)] hover:bg-[var(--color-elevated-bg)]",
   ghost:
-    "border-transparent bg-transparent text-[#d7dde5] shadow-none hover:bg-[rgba(237,237,237,0.06)] hover:text-[#f3f4f6]",
+    "border-transparent bg-transparent text-[var(--color-text-soft)] shadow-none hover:bg-[var(--color-subtle)] hover:text-[var(--color-text)]",
   danger:
-    "border-[rgba(255,103,103,0.34)] bg-[rgba(255,103,103,0.12)] text-[#ffd3d3] hover:bg-[rgba(255,103,103,0.2)]",
+    "border-[color-mix(in_srgb,var(--color-danger)_34%,transparent)] bg-[color-mix(in_srgb,var(--color-danger)_12%,transparent)] text-[var(--color-danger-soft)] hover:bg-[color-mix(in_srgb,var(--color-danger)_20%,transparent)]",
   success:
-    "border-[rgba(115,201,143,0.38)] bg-[rgba(115,201,143,0.14)] text-[#d5f8e0] hover:bg-[rgba(115,201,143,0.22)]",
+    "border-[color-mix(in_srgb,var(--color-success)_38%,transparent)] bg-[color-mix(in_srgb,var(--color-success)_14%,transparent)] text-[var(--color-success-soft)] hover:bg-[color-mix(in_srgb,var(--color-success)_22%,transparent)]",
 };
 
 export default function Button({

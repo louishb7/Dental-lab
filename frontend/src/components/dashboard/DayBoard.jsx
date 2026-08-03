@@ -8,11 +8,11 @@ export default function DayBoard({
   onOpenCase,
 }) {
   return (
-    <section className="rounded-md border border-[rgba(56,189,248,0.3)] bg-[rgba(25,30,38,0.96)] text-[#f3f4f6] shadow-sm">
-      <div className="border-b border-[rgba(229,235,241,0.13)] px-4 py-3">
+    <section className="rounded-md border border-primary/30 bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm">
+      <div className="border-b border-[var(--color-border)] px-4 py-3">
         <div className="grid gap-1">
           <h3 className="text-base font-bold leading-tight">{title}</h3>
-          <p className="text-sm leading-snug text-[#aeb7c2]">{description}</p>
+          <p className="text-sm leading-snug text-[var(--color-text-muted)]">{description}</p>
         </div>
       </div>
       <div className="p-4">

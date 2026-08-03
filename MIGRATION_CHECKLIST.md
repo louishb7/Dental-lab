@@ -376,16 +376,18 @@ CHECKLIST DE SIMPLIFICAÇÃO:
 - [x] Remover CSS puro legado em `frontend/src/styles/`, mantendo apenas `tailwind.css` como entrada de estilos do frontend.
 - [x] Passo 1 refinamento visual: reduzir padding, altura e escala dos cards de métrica "Hoje", "Pendentes" e "Prontos para entrega" no topo da Bancada.
 - [x] Passo 2 refinamento visual: repaginar a paleta de cores, trocar a cor primária laranja por tom clínico/confiável, reservar âmbar/laranja para atenção e documentar tokens semânticos.
-- [ ] Passo 3 refinamento visual: implementar sistema de temas com CSS custom properties no padrão shadcn/ui, incluindo tema escuro, tema claro corrigido e terceiro tema coerente.
-- [ ] Passo 4 refinamento visual: compactar os cards de dia da "Semana de produção" em formato de tira de calendário, preservando estados de hoje, selecionado e dia off.
-- [ ] Passo 5 refinamento de fluxo: reposicionar o botão "+ Novo Caso" próximo ao bloco "Semana de produção", mantendo distinção entre criação geral e criação por dia.
+- [x] Passo 3 refinamento visual: implementar sistema de temas com CSS custom properties no padrão shadcn/ui, incluindo tema escuro, tema claro corrigido e terceiro tema coerente.
+- [x] Passo 4 refinamento visual: compactar os cards de dia da "Semana de produção" em formato de tira de calendário, preservando estados de hoje, selecionado e dia off.
+- [x] Passo 5 refinamento de fluxo: reposicionar o botão "+ Novo Caso" próximo ao bloco "Semana de produção", mantendo distinção entre criação geral e criação por dia.
 - [ ] Passo 6 refinamento de navegação: após criar caso ou abrir caso pela Bancada, navegar automaticamente para "Casos" e exibir/abrir o caso correspondente.
 - [ ] Passo 7 refinamento de interação: adicionar ação "Pronto" ao painel "Casos de hoje" da Bancada reutilizando o mesmo padrão de painel lateral da tela "Casos".
 - [ ] Passo 8 refinamento de produto: remover o filtro "Prioridade" da tela "Casos" e eliminar a lógica de filtragem correspondente se ficar sem uso.
 
 ## Decisoes e Notas
 
-- Refinamento visual Passo 2: a cor primaria do frontend foi substituida por azul-clinico/teal (`#38bdf8` no tema escuro e `#0f6f8f` no tema claro), mantendo ambar/laranja reservado para estados de atencao como `warning` e `pending`. Os papeis semanticos dos tokens foram documentados em `frontend/src/styles/tailwind.css`.
+- Refinamento visual Passo 2: a cor primaria do frontend foi consolidada em teal clinico proprio (`#0E7C7B`, com derivados `#096766`/`#095f60`), mantendo ambar/laranja reservado para estados de atencao como `warning` e `pending`. O contraste de `#0E7C7B` com texto claro foi validado em WCAG AA.
+- Refinamento visual Passo 3: o frontend agora alterna entre os temas `dark`, `light` e `focus`, persistidos em `localStorage` por `app-ui-theme` e aplicados em `document.documentElement.dataset.theme`. Os tokens `--color-*` alimentam os aliases shadcn (`--shadcn-*`) tambem no terceiro tema; a auditoria de `frontend/src` removeu cores literais fora de `tailwind.css`; e o tema `focus` foi redesenhado como modo de concentracao de alto contraste, sem gradientes decorativos nem textura de fundo.
+- Refinamento visual Passos 4 e 5: a "Semana de producao" foi compactada em uma tira de calendario com cards menores, preservando os estados `Hoje`, selecionado e dia livre/off. A criacao geral de caso saiu do cabecalho da Bancada e foi reposicionada no proprio bloco da semana; a criacao por dia permanece como acao discreta dentro de cada card de data.
 - Fase 9 concluida: o frontend React/Vite foi mantido sem mudancas funcionais de UI e o fallback local de API foi repontado de `http://localhost:8000` para `http://localhost:3001`, preservando `VITE_API_BASE_URL` como override por ambiente. Esta e a mudanca esperada da Fase 9; o FastAPI continua no repositorio como implementacao de referencia ate o cutover.
 - Fase 9 contrato frontend/API: `frontend/src/services/api.js` continua centralizando login, cadastro, sessao, dashboard, doctors, cases, bulk-deliver e case-items. A validacao de contrato foi feita pelos testes e2e do backend Nest para os endpoints consumidos e pelo build Vite do frontend.
 - Fase 9 tratamento de estados: nenhum fluxo de UI foi reescrito; foram preservados os caminhos existentes de carregamento, sucesso, erro, lista vazia, falha de rede e mensagens `detail`/validacao tratados pelo cliente HTTP atual.

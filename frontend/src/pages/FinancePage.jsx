@@ -41,8 +41,8 @@ export default function FinancePage({ dashboard, cases, loading }) {
       header: "Caso",
       render: (caseItem) => (
         <span className="grid min-w-0 gap-1">
-          <strong className="truncate text-sm font-bold text-[#f3f4f6]">{caseItem.patient_ref}</strong>
-          <small className="truncate text-xs text-[#aeb7c2]">{caseItem.doctor_name}</small>
+          <strong className="truncate text-sm font-bold text-[var(--color-text)]">{caseItem.patient_ref}</strong>
+          <small className="truncate text-xs text-[var(--color-text-muted)]">{caseItem.doctor_name}</small>
         </span>
       ),
     },
@@ -80,26 +80,26 @@ export default function FinancePage({ dashboard, cases, loading }) {
         </div>
 
         <div className="grid grid-cols-[minmax(320px,420px)_minmax(0,1fr)] gap-4 max-[1120px]:grid-cols-1">
-          <section className="rounded-md border border-[rgba(56,189,248,0.3)] bg-[rgba(25,30,38,0.96)] text-[#f3f4f6] shadow-sm">
-            <div className="border-b border-[rgba(229,235,241,0.13)] px-4 py-3">
+          <section className="rounded-md border border-primary/30 bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm">
+            <div className="border-b border-[var(--color-border)] px-4 py-3">
               <div className="grid gap-1">
                 <h3 className="text-base font-bold leading-tight">Ranking de receita no mês atual.</h3>
-                <p className="text-sm leading-snug text-[#aeb7c2]">Dentistas com maior valor entregue no período.</p>
+                <p className="text-sm leading-snug text-[var(--color-text-muted)]">Dentistas com maior valor entregue no período.</p>
               </div>
             </div>
             <div className="p-4">
               {topDoctors.length ? (
                 <div className="grid">
                   {topDoctors.map((doctor, index) => (
-                    <div key={doctor.name} className="flex items-center gap-3 border-b border-[rgba(229,235,241,0.13)] py-3 last:border-b-0">
-                      <span className="min-w-7 text-sm font-extrabold text-[#38bdf8]">#{index + 1}</span>
+                    <div key={doctor.name} className="flex items-center gap-3 border-b border-[var(--color-border)] py-3 last:border-b-0">
+                      <span className="min-w-7 text-sm font-extrabold text-primary">#{index + 1}</span>
                       <div className="grid min-w-0 gap-1">
-                        <strong className="truncate text-sm font-bold text-[#f3f4f6]">{doctor.name}</strong>
-                        <small className="text-xs text-[#aeb7c2]">
+                        <strong className="truncate text-sm font-bold text-[var(--color-text)]">{doctor.name}</strong>
+                        <small className="text-xs text-[var(--color-text-muted)]">
                           {doctor.count} {doctor.count === 1 ? "entrega" : "entregas"}
                         </small>
                       </div>
-                      <strong className="ml-auto whitespace-nowrap text-sm font-bold text-[#f3f4f6]">{formatCurrency(doctor.total)}</strong>
+                      <strong className="ml-auto whitespace-nowrap text-sm font-bold text-[var(--color-text)]">{formatCurrency(doctor.total)}</strong>
                     </div>
                   ))}
                 </div>
@@ -109,11 +109,11 @@ export default function FinancePage({ dashboard, cases, loading }) {
             </div>
           </section>
 
-          <section className="rounded-md border border-[rgba(56,189,248,0.3)] bg-[rgba(25,30,38,0.96)] text-[#f3f4f6] shadow-sm">
-            <div className="border-b border-[rgba(229,235,241,0.13)] px-4 py-3">
+          <section className="rounded-md border border-primary/30 bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm">
+            <div className="border-b border-[var(--color-border)] px-4 py-3">
               <div className="grid gap-1">
                 <h3 className="text-base font-bold leading-tight">Entregas do mês</h3>
-                <p className="text-sm leading-snug text-[#aeb7c2]">Casos concluídos com valor registrado neste mês.</p>
+                <p className="text-sm leading-snug text-[var(--color-text-muted)]">Casos concluídos com valor registrado neste mês.</p>
               </div>
             </div>
             <div className="p-4">

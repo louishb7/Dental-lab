@@ -46,18 +46,18 @@ const TOOTH_VARIANTS = {
 
 const TOOTH_COLORS = {
   normal: {
-    fill: "#D9DADD",
-    stroke: "#A9ADB4",
-    text: "#151A21",
-    groove: "#6B7280",
-    highlight: "#FFFFFF",
+    fill: "var(--color-surface-muted)",
+    stroke: "var(--color-border-strong)",
+    text: "var(--color-text)",
+    groove: "var(--color-text-muted)",
+    highlight: "var(--color-text-soft)",
   },
   selected: {
-    fill: "#F97316",
-    stroke: "#D75D0D",
-    text: "#FFFFFF",
-    groove: "#FFFFFF",
-    highlight: "#FFF7ED",
+    fill: "var(--color-primary)",
+    stroke: "var(--color-primary-strong)",
+    text: "var(--color-primary-contrast)",
+    groove: "var(--color-primary-contrast)",
+    highlight: "var(--color-primary-contrast)",
   },
 };
 
@@ -120,7 +120,7 @@ export default function ToothShape({
         fontWeight="800"
         fill={colors.text}
         paintOrder="stroke"
-        stroke={selected ? "rgba(0,0,0,0.16)" : "rgba(255,255,255,0.42)"}
+        stroke={selected ? "var(--color-primary-strong)" : "var(--color-surface)"}
         strokeWidth="1.4"
         style={{ userSelect: "none", pointerEvents: "none" }}
       >

@@ -13,11 +13,11 @@ function formatItemsLabel(caseItem) {
 
 export default function CaseBoardCard({ caseItem, onOpenCase }) {
   return (
-    <article className="grid gap-2 rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)] p-3">
+    <article className="grid gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-subtle)] p-3">
       <div className="flex items-start justify-between gap-3">
         <div className="grid min-w-0 gap-1">
-          <strong className="truncate text-sm font-bold text-[#f3f4f6]">{caseItem.patient_ref}</strong>
-          <small className="truncate text-xs text-[#aeb7c2]">{caseItem.doctor_name}</small>
+          <strong className="truncate text-sm font-bold text-[var(--color-text)]">{caseItem.patient_ref}</strong>
+          <small className="truncate text-xs text-[var(--color-text-muted)]">{caseItem.doctor_name}</small>
         </div>
         <div className="flex flex-wrap justify-end gap-1.5">
           <PriorityBadge priority={caseItem.priority} />
@@ -25,13 +25,13 @@ export default function CaseBoardCard({ caseItem, onOpenCase }) {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 text-xs text-[#aeb7c2]">
+      <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-muted)]">
         <span className="inline-flex items-center gap-1.5">
           <Layers3 size={13} />
           {formatItemsLabel(caseItem)}
         </span>
         <DeadlineBadge deadline={caseItem.deadline} status={caseItem.status} />
-        <span className="ml-auto font-bold text-[#f3f4f6]">{formatCurrency(caseItem.total_value)}</span>
+        <span className="ml-auto font-bold text-[var(--color-text)]">{formatCurrency(caseItem.total_value)}</span>
       </div>
 
       <div className="flex justify-end">

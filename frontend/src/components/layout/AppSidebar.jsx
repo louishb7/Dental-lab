@@ -19,14 +19,14 @@ const NAV_ITEMS = [
  */
 export default function AppSidebar({ activePage, onNavigate }) {
   return (
-    <aside className="sticky top-0 flex h-screen flex-col border-r border-[rgba(229,235,241,0.13)] bg-[rgba(18,22,29,0.96)] backdrop-blur">
-      <div className="flex min-h-[76px] items-center gap-3 border-b border-[rgba(229,235,241,0.13)] px-5 py-4">
-        <span className="grid size-11 place-items-center rounded-lg border border-[rgba(56,189,248,0.32)] bg-[linear-gradient(135deg,rgba(56,189,248,0.18),rgba(42,49,59,0.72))] text-[#38bdf8] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+    <aside className="sticky top-0 flex h-screen flex-col border-r border-[var(--color-border)] bg-[var(--color-sidebar)] backdrop-blur">
+      <div className="flex min-h-[76px] items-center gap-3 border-b border-[var(--color-border)] px-5 py-4">
+        <span className="grid size-11 place-items-center rounded-lg border border-primary/30 bg-primary/10 text-primary">
           <FlaskConical size={22} strokeWidth={1.9} />
         </span>
         <div className="grid gap-1">
-          <strong className="text-base leading-none text-[#f3f4f6]">{PRODUCT_NAME}</strong>
-          <span className="text-xs font-semibold text-[#aeb7c2]">Laboratório dental</span>
+          <strong className="text-base leading-none text-[var(--color-text)]">{PRODUCT_NAME}</strong>
+          <span className="text-xs font-semibold text-[var(--color-text-muted)]">Laboratório dental</span>
         </div>
       </div>
 
@@ -41,8 +41,8 @@ export default function AppSidebar({ activePage, onNavigate }) {
               className={[
                 "flex min-h-11 items-center gap-3 rounded-md border px-3.5 text-left text-sm font-bold transition-colors",
                 isActive
-                  ? "border-[rgba(56,189,248,0.3)] bg-[rgba(56,189,248,0.07)] text-[#f3f4f6] shadow-[inset_2px_0_0_#38bdf8]"
-                  : "border-transparent bg-transparent text-[#d7dde5] hover:border-[rgba(56,189,248,0.18)] hover:bg-[rgba(56,189,248,0.05)] hover:text-[#f3f4f6]",
+                  ? "border-primary/30 bg-primary/10 text-[var(--color-text)] shadow-[inset_2px_0_0_var(--color-primary)]"
+                  : "border-transparent bg-transparent text-[var(--color-text-soft)] hover:border-primary/20 hover:bg-primary/5 hover:text-[var(--color-text)]",
                 item.disabled ? "cursor-default opacity-50" : "cursor-pointer",
               ]
                 .filter(Boolean)

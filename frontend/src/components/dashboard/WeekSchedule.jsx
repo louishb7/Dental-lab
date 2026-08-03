@@ -1,4 +1,5 @@
 import {
+  formatDayMonth,
   formatWeekRange,
   formatWeekdayLabel,
   isToday,
@@ -15,17 +16,13 @@ import {
   CardTitle,
 } from "../ui/card.jsx";
 
-function formatCaseCount(count) {
-  return `${count} ${count === 1 ? "caso" : "casos"}`;
-}
-
 function CaseCountBadge({ count }) {
   return (
     <Badge
       variant="outline"
-      className="w-fit border-[rgba(229,235,241,0.14)] bg-[rgba(42,49,59,0.72)] px-2 py-0.5 text-[0.7rem] font-bold text-[#f3f4f6]"
+      className="h-5 w-fit border-[var(--color-border)] bg-[var(--color-surface-muted)] px-1.5 py-0 text-[0.64rem] font-bold text-[var(--color-text)]"
     >
-      {formatCaseCount(count)}
+      {count}
     </Badge>
   );
 }
@@ -38,49 +35,52 @@ function DayCard({ day, cases, selected, onSelect, onOpenNewCaseForDate }) {
   return (
     <div
       className={[
-        "grid min-h-[92px] min-w-0 gap-2 rounded-md border bg-[rgba(32,38,47,0.96)] p-2 text-[#f3f4f6] transition-colors",
-        selected ? "border-[rgba(56,189,248,0.45)] shadow-[inset_0_0_0_1px_rgba(56,189,248,0.18)]" : "border-[rgba(229,235,241,0.13)]",
+        "grid min-h-[74px] min-w-0 grid-rows-[1fr_auto] gap-1 rounded-md border bg-[var(--color-elevated-bg)] p-1.5 text-[var(--color-text)] transition-colors",
+        selected ? "border-primary/30 shadow-[inset_0_0_0_1px_var(--color-primary)]" : "border-[var(--color-border)]",
       ].join(" ")}
     >
       <button
-        className="grid min-w-0 gap-2 text-left"
+        className="grid min-w-0 content-start gap-1 text-left"
         type="button"
         aria-pressed={selected}
         onClick={() => onSelect(day)}
       >
-        <div className="flex min-h-6 items-center justify-between gap-2">
-          <span className="text-[0.68rem] font-bold uppercase text-[#aeb7c2]">
+        <div className="flex min-h-5 items-center justify-between gap-1">
+          <span className="text-[0.64rem] font-bold uppercase text-[var(--color-text-muted)]">
             {formatWeekdayLabel(day)}
           </span>
           {isCurrentDay && (
             <Badge
               variant="outline"
-              className="border-[rgba(56,189,248,0.28)] bg-[rgba(56,189,248,0.1)] px-1.5 py-0 text-[0.58rem] font-bold text-[#38bdf8]"
+              className="h-4 border-primary/30 bg-primary/10 px-1 py-0 text-[0.55rem] font-bold text-primary"
             >
               Hoje
             </Badge>
           )}
         </div>
+        <strong className="text-sm font-extrabold leading-none text-[var(--color-text)]">
+          {formatDayMonth(day)}
+        </strong>
         {isOffDay ? (
-          <Badge variant="outline" className="w-fit border-[rgba(229,235,241,0.12)] bg-[rgba(237,237,237,0.05)] px-2 py-0.5 text-[0.64rem] font-bold text-[#aeb7c2]">
+          <Badge variant="outline" className="h-5 w-fit border-[var(--color-border)] bg-[var(--color-subtle)] px-1.5 py-0 text-[0.6rem] font-bold text-[var(--color-text-muted)]">
             Dia off
           </Badge>
         ) : (
           <CaseCountBadge count={cases.length} />
         )}
-        <small className="min-h-4 text-[0.64rem] leading-none text-[#aeb7c2]">
+        <small className="min-h-3 text-[0.58rem] leading-none text-[var(--color-text-muted)]">
           {urgentCount > 0 ? `${urgentCount} urg.` : " "}
         </small>
       </button>
       <Button
-        className="h-7 w-fit justify-self-end px-2 text-[#aeb7c2] hover:text-[#38bdf8]"
+        className="h-5 w-fit justify-self-end px-1.5 text-[var(--color-text-muted)] hover:text-primary"
         variant="ghost"
-        size="xs"
+        size="icon-xs"
         type="button"
         aria-label={`Criar caso em ${formatWeekdayLabel(day)}`}
         onClick={() => onOpenNewCaseForDate(day)}
       >
-        <Plus className="size-3.5" />
+        <Plus className="size-3" />
         <span className="sr-only">Criar caso</span>
       </Button>
     </div>
@@ -95,6 +95,7 @@ export default function WeekSchedule({
   onPreviousWeek,
   onNextWeek,
   onSelectDate,
+  onOpenNewCase,
   onOpenNewCaseForDate,
 }) {
   const weekHasCases = weekDays.some((day) => {
@@ -103,27 +104,35 @@ export default function WeekSchedule({
   });
 
   return (
-    <Card className="gap-3 rounded-md border-[rgba(229,235,241,0.13)] bg-[rgba(25,30,38,0.96)] py-0 text-[#f3f4f6] shadow-sm">
-      <CardHeader className="gap-1 px-4 pt-4 pb-0">
-        <CardTitle className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#f3f4f6]">
-          Semana de produção
-        </CardTitle>
-        <CardDescription className="text-[#aeb7c2]">Casos do dia na bancada.</CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-2 px-4 pb-4">
-        <div className="grid grid-cols-[minmax(86px,0.3fr)_minmax(120px,1fr)_minmax(86px,0.3fr)] items-center gap-2 rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)] p-1">
-          <Button variant="outline" size="xs" type="button" onClick={onPreviousWeek}>
-            ← Semana
+    <Card className="gap-2 rounded-md border-[var(--color-border)] bg-[var(--color-surface)] py-0 text-[var(--color-text)] shadow-sm">
+      <CardHeader className="grid gap-2 px-4 pt-4 pb-0">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="grid gap-1">
+            <CardTitle className="text-xs font-extrabold uppercase tracking-[0.08em] text-[var(--color-text)]">
+              Semana de produção
+            </CardTitle>
+            <CardDescription className="text-[var(--color-text-muted)]">Selecione um dia ou crie um caso direto no prazo.</CardDescription>
+          </div>
+          <Button variant="default" size="sm" type="button" onClick={onOpenNewCase}>
+            <Plus className="size-3.5" />
+            Novo caso
           </Button>
-          <strong className="truncate text-center text-sm font-semibold text-[#f3f4f6]">
+        </div>
+        <div className="grid grid-cols-[minmax(76px,0.28fr)_minmax(120px,1fr)_minmax(76px,0.28fr)] items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-subtle)] p-1">
+          <Button variant="outline" size="xs" type="button" onClick={onPreviousWeek}>
+            Anterior
+          </Button>
+          <strong className="truncate text-center text-xs font-semibold text-[var(--color-text)]">
             {formatWeekRange(weekStart)}
           </strong>
           <Button variant="outline" size="xs" type="button" onClick={onNextWeek}>
-            Semana →
+            Próxima
           </Button>
         </div>
+      </CardHeader>
+      <CardContent className="grid gap-2 px-4 pb-4">
         {weekHasCases ? (
-          <div className="grid grid-cols-7 gap-2 max-[1120px]:grid-cols-4 max-[640px]:grid-flow-col max-[640px]:auto-cols-[minmax(128px,1fr)] max-[640px]:overflow-x-auto max-[640px]:pb-1" aria-label="Dias da semana">
+          <div className="grid grid-cols-7 gap-1.5 max-[1120px]:grid-flow-col max-[1120px]:auto-cols-[minmax(104px,1fr)] max-[1120px]:overflow-x-auto max-[1120px]:pb-1" aria-label="Dias da semana">
             {weekDays.map((day) => {
               const dayKey = getLocalDateKey(day);
               const dayCases = groupedCases.get(dayKey) || [];
@@ -141,7 +150,7 @@ export default function WeekSchedule({
             })}
           </div>
         ) : (
-          <div className="flex min-h-14 flex-wrap items-center justify-center gap-3 rounded-md border border-dashed border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)] p-3 text-sm font-semibold text-[#aeb7c2]">
+          <div className="flex min-h-14 flex-wrap items-center justify-center gap-3 rounded-md border border-dashed border-[var(--color-border)] bg-[var(--color-subtle)] p-3 text-sm font-semibold text-[var(--color-text-muted)]">
             <span>Nenhum caso agendado nesta semana.</span>
             <Button
               variant="outline"

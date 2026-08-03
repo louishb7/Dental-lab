@@ -2,7 +2,7 @@ import { cloneElement, isValidElement } from "react";
 import { cn } from "../../lib/utils.js";
 
 const CONTROL_CLASS =
-  "min-h-9 w-full rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(23,28,36,0.96)] px-3 py-2 text-sm text-[#f3f4f6] outline-none placeholder:text-[#aeb7c2]/75 focus:border-[#38bdf8] focus:ring-2 focus:ring-[#38bdf8]/25 disabled:cursor-not-allowed disabled:opacity-60";
+  "min-h-9 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-2 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-muted)]/75 focus:border-primary focus:ring-2 focus:ring-primary/25 disabled:cursor-not-allowed disabled:opacity-60";
 
 /**
  * Renders a labeled form control with optional helper text.
@@ -25,11 +25,11 @@ export default function FormField({ label, helperText, errorText, children }) {
     : children;
 
   return (
-    <label className="grid gap-1.5 text-xs font-bold text-[#aeb7c2]">
+    <label className="grid gap-1.5 text-xs font-bold text-[var(--color-text-muted)]">
       <span>{label}</span>
       {child}
-      {helperText ? <small className="text-xs font-medium leading-snug text-[#aeb7c2]">{helperText}</small> : null}
-      {errorText ? <small className="text-xs font-semibold leading-snug text-[#ff6767]">{errorText}</small> : null}
+      {helperText ? <small className="text-xs font-medium leading-snug text-[var(--color-text-muted)]">{helperText}</small> : null}
+      {errorText ? <small className="text-xs font-semibold leading-snug text-[var(--color-danger)]">{errorText}</small> : null}
     </label>
   );
 }

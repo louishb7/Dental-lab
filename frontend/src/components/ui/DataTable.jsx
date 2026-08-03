@@ -33,14 +33,14 @@ export default function DataTable({
   }
 
   return (
-    <div className="overflow-x-auto rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.03)]">
+    <div className="overflow-x-auto rounded-md border border-[var(--color-border)] bg-[var(--color-subtle)]">
       <Table className="min-w-[780px]">
         <TableHeader>
-          <TableRow className="border-[rgba(229,235,241,0.13)] hover:bg-transparent">
+          <TableRow className="border-[var(--color-border)] hover:bg-transparent">
             {columns.map((column) => (
               <TableHead
                 key={column.key}
-                className="h-10 px-3 text-xs font-extrabold uppercase tracking-[0.04em] text-[#aeb7c2]"
+                className="h-10 px-3 text-xs font-extrabold uppercase tracking-[0.04em] text-[var(--color-text-muted)]"
               >
                 {column.header}
               </TableHead>
@@ -51,10 +51,10 @@ export default function DataTable({
           {data.map((row) => (
             <TableRow
               key={row.id}
-              className="border-[rgba(229,235,241,0.1)] hover:bg-[rgba(56,189,248,0.04)]"
+              className="border-[var(--color-border)] hover:bg-primary/5"
             >
               {columns.map((column) => (
-                <TableCell key={column.key} className="px-3 py-3 text-sm text-[#d7dde5]">
+                <TableCell key={column.key} className="px-3 py-3 text-sm text-[var(--color-text-soft)]">
                   {column.render ? column.render(row) : row[column.key]}
                 </TableCell>
               ))}

@@ -38,7 +38,7 @@ export default function AppLayout({
     <div className="grid min-h-screen grid-cols-[278px_minmax(0,1fr)]">
       <AppSidebar activePage={activePage} onNavigate={onNavigate} />
       <Toast message={message} onDismiss={onDismiss} />
-      <main className="flex min-w-0 flex-col bg-[linear-gradient(180deg,rgba(56,189,248,0.02),transparent_14%)]">
+      <main className="flex min-w-0 flex-col bg-transparent">
         <AppHeader
           title={meta.title}
           user={session}

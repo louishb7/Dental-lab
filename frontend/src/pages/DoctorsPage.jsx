@@ -26,8 +26,8 @@ export default function DoctorsPage({
       header: "Nome",
       render: (doctor) => (
         <span className="grid min-w-0 gap-1">
-          <strong className="truncate text-sm font-bold text-[#f3f4f6]">{doctor.name}</strong>
-          {doctor.notes && <small className="truncate text-xs text-[#aeb7c2]">{doctor.notes}</small>}
+          <strong className="truncate text-sm font-bold text-[var(--color-text)]">{doctor.name}</strong>
+          {doctor.notes && <small className="truncate text-xs text-[var(--color-text-muted)]">{doctor.notes}</small>}
         </span>
       ),
     },
@@ -81,7 +81,7 @@ export default function DoctorsPage({
       }
     >
       <div className="grid gap-4">
-        <section className="rounded-md border border-[rgba(56,189,248,0.3)] bg-[rgba(25,30,38,0.96)] p-4 text-[#f3f4f6] shadow-sm">
+        <section className="rounded-md border border-primary/30 bg-[var(--color-surface)] p-4 text-[var(--color-text)] shadow-sm">
             <DataTable
               columns={columns}
               data={doctors}

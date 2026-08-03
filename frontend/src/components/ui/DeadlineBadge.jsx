@@ -2,11 +2,11 @@ import { getDeadlineBadge } from "../../utils/formatters.js";
 import { Badge } from "./badge.jsx";
 
 const TONE_CLASSES = {
-  neutral: "border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.05)] text-[#aeb7c2]",
-  success: "border-[rgba(115,201,143,0.28)] bg-[rgba(115,201,143,0.12)] text-[#d5f8e0]",
-  warning: "border-[rgba(242,185,73,0.32)] bg-[rgba(242,185,73,0.12)] text-[#ffe5a9]",
-  danger: "border-[rgba(255,103,103,0.32)] bg-[rgba(255,103,103,0.12)] text-[#ffd3d3]",
-  info: "border-[rgba(138,180,255,0.28)] bg-[rgba(138,180,255,0.1)] text-[#d6e5ff]",
+  neutral: "border-[var(--color-border)] bg-[var(--color-subtle)] text-[var(--color-text-muted)]",
+  success: "border-[color-mix(in_srgb,var(--color-success)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-success)_12%,transparent)] text-[var(--color-success-soft)]",
+  warning: "border-[color-mix(in_srgb,var(--color-warning)_32%,transparent)] bg-[color-mix(in_srgb,var(--color-warning)_12%,transparent)] text-[var(--color-warning-soft)]",
+  danger: "border-[color-mix(in_srgb,var(--color-danger)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-danger)_12%,transparent)] text-[var(--color-danger-soft)]",
+  info: "border-[color-mix(in_srgb,var(--color-info)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] text-[var(--color-info-soft)]",
 };
 
 export default function DeadlineBadge({ deadline, status }) {

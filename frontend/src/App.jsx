@@ -43,11 +43,18 @@ import {
 import { formatCurrencyInput, getLocalDateKey } from "./utils/formatters.js";
 
 const THEME_STORAGE_KEY = "app-ui-theme";
+const THEME_SEQUENCE = ["dark", "light", "focus"];
 const LAST_CASE_DOCTOR_STORAGE_KEY = "cadista_last_case_doctor_id";
 
 function getStoredTheme() {
   const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-  return storedTheme === "light" ? "light" : "dark";
+  return THEME_SEQUENCE.includes(storedTheme) ? storedTheme : "dark";
+}
+
+function getNextTheme(currentTheme) {
+  const currentIndex = THEME_SEQUENCE.indexOf(currentTheme);
+  const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % THEME_SEQUENCE.length;
+  return THEME_SEQUENCE[nextIndex];
 }
 
 function getSuggestedCaseDeadline() {
@@ -145,7 +152,7 @@ export default function App() {
   }
 
   function toggleTheme() {
-    setTheme((current) => (current === "dark" ? "light" : "dark"));
+    setTheme((current) => getNextTheme(current));
   }
 
   async function loadAppData(options = {}) {

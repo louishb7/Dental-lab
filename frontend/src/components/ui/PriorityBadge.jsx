@@ -15,7 +15,7 @@ export default function PriorityBadge({ priority }) {
   return (
     <Badge
       variant="outline"
-      className="border-[rgba(255,103,103,0.32)] bg-[rgba(255,103,103,0.12)] text-[#ffd3d3]"
+      className="border-[color-mix(in_srgb,var(--color-danger)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-danger)_12%,transparent)] text-[var(--color-danger-soft)]"
     >
       {PRIORITY_LABELS[normalized] || normalized}
     </Badge>

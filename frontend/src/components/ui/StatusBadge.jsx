@@ -7,9 +7,9 @@ const STATUS_LABELS = {
 };
 
 const STATUS_CLASSES = {
-  pending: "border-[rgba(242,185,73,0.32)] bg-[rgba(242,185,73,0.12)] text-[#ffe5a9]",
-  completed: "border-[rgba(115,201,143,0.28)] bg-[rgba(115,201,143,0.12)] text-[#d5f8e0]",
-  delivered: "border-[rgba(138,180,255,0.28)] bg-[rgba(138,180,255,0.1)] text-[#d6e5ff]",
+  pending: "border-[color-mix(in_srgb,var(--color-warning)_32%,transparent)] bg-[color-mix(in_srgb,var(--color-warning)_12%,transparent)] text-[var(--color-warning-soft)]",
+  completed: "border-[color-mix(in_srgb,var(--color-success)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-success)_12%,transparent)] text-[var(--color-success-soft)]",
+  delivered: "border-[color-mix(in_srgb,var(--color-info)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] text-[var(--color-info-soft)]",
 };
 
 export default function StatusBadge({ status }) {

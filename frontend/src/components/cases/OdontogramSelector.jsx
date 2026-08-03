@@ -122,7 +122,7 @@ export default function OdontogramSelector({
         pointerEvents="all"
         aria-hidden="false"
       >
-        <rect fill="#1c1c1e" x="0" y="0" width="420" height="550" rx="18" />
+        <rect fill="var(--color-elevated-bg)" x="0" y="0" width="420" height="550" rx="18" />
         {TEETH.map((tooth) => (
           <Tooth
             key={tooth.id}
@@ -133,7 +133,7 @@ export default function OdontogramSelector({
         ))}
       </svg>
 
-      <div className="grid min-h-11 w-full grid-cols-[max-content_minmax(0,1fr)_max-content] items-center gap-2 rounded-md border border-[rgba(156,163,175,0.22)] bg-[rgba(17,17,17,0.86)] px-2 py-1.5 text-xs font-semibold text-[#f5f7fa]">
+      <div className="grid min-h-11 w-full grid-cols-[max-content_minmax(0,1fr)_max-content] items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1.5 text-xs font-semibold text-[var(--color-text)]">
         <span>Dentes selecionados:</span>
         <div className="flex min-w-0 items-center gap-1 overflow-x-auto pb-0.5">
           {selectedItems.length ? (
@@ -141,7 +141,7 @@ export default function OdontogramSelector({
               <button
                 key={tooth}
                 type="button"
-                className="min-h-6 min-w-8 rounded bg-[#38bdf8] px-2 text-[11px] font-extrabold text-white"
+                className="min-h-6 min-w-8 rounded bg-primary px-2 text-[11px] font-extrabold text-primary-foreground"
                 title={`Dente ${tooth}`}
                 onClick={() => toggleTooth(tooth)}
               >
@@ -149,12 +149,12 @@ export default function OdontogramSelector({
               </button>
             ))
           ) : (
-            <small className="text-[#f5f7fa]/55">Nenhum dente selecionado.</small>
+            <small className="text-[var(--color-text-muted)]">Nenhum dente selecionado.</small>
           )}
         </div>
         <button
           type="button"
-          className="grid size-8 place-items-center rounded-md border border-[rgba(156,163,175,0.22)] bg-white/5 text-[#f5f7fa]/80 disabled:cursor-not-allowed disabled:opacity-40"
+          className="grid size-8 place-items-center rounded-md border border-[var(--color-border)] bg-[var(--color-subtle)] text-[var(--color-text-soft)] disabled:cursor-not-allowed disabled:opacity-40"
           aria-label="Limpar seleção de dentes"
           disabled={!selectedItems.length}
           onClick={clearSelection}

@@ -26,7 +26,7 @@ const EMPTY_ITEM_FORM = {
 };
 const SERVICES_PER_PAGE = 5;
 const CONTROL_CLASS =
-  "min-h-9 w-full rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(23,28,36,0.96)] px-3 py-2 text-sm text-[#f3f4f6] outline-none placeholder:text-[#aeb7c2]/75 focus:border-[#38bdf8] focus:ring-2 focus:ring-[#38bdf8]/25";
+  "min-h-9 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-2 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-muted)]/75 focus:border-primary focus:ring-2 focus:ring-primary/25";
 
 function splitCaseNotes(value) {
   const notes = [];
@@ -180,7 +180,7 @@ export default function CaseDetailsPage({
         className="max-w-[760px]"
       >
         <div className="grid gap-3">
-          <section className="grid gap-4 rounded-md border border-[rgba(56,189,248,0.3)] bg-[rgba(25,30,38,0.96)] p-4">
+          <section className="grid gap-4 rounded-md border border-primary/30 bg-[var(--color-surface)] p-4">
             <div className="flex justify-end">
               <Button variant="primary" size="sm" onClick={() => openItemForm()}>
                 <Plus size={16} />
@@ -190,27 +190,27 @@ export default function CaseDetailsPage({
 
             <div className="grid grid-cols-4 gap-3 max-[640px]:grid-cols-2">
               <div className="grid min-w-0 gap-1">
-                <small className="text-xs font-bold text-[#aeb7c2]">Paciente</small>
-                <strong className="truncate text-sm font-bold text-[#f3f4f6]">{caseItem.patient_ref}</strong>
+                <small className="text-xs font-bold text-[var(--color-text-muted)]">Paciente</small>
+                <strong className="truncate text-sm font-bold text-[var(--color-text)]">{caseItem.patient_ref}</strong>
               </div>
               <div className="grid min-w-0 gap-1">
-                <small className="text-xs font-bold text-[#aeb7c2]">Dentista</small>
-                <strong className="truncate text-sm font-bold text-[#f3f4f6]">{doctor?.name || `#${caseItem.doctor_id}`}</strong>
+                <small className="text-xs font-bold text-[var(--color-text-muted)]">Dentista</small>
+                <strong className="truncate text-sm font-bold text-[var(--color-text)]">{doctor?.name || `#${caseItem.doctor_id}`}</strong>
               </div>
               <div className="grid min-w-0 gap-1">
-                <small className="text-xs font-bold text-[#aeb7c2]">Prazo</small>
+                <small className="text-xs font-bold text-[var(--color-text-muted)]">Prazo</small>
                 <DeadlineBadge deadline={caseItem.deadline} status={caseItem.status} />
               </div>
               <div className="grid min-w-0 gap-1">
-                <small className="text-xs font-bold text-[#aeb7c2]">Total</small>
-                <strong className="text-sm font-bold text-[#f3f4f6]">{formatCurrency(caseItem.total_value)}</strong>
+                <small className="text-xs font-bold text-[var(--color-text-muted)]">Total</small>
+                <strong className="text-sm font-bold text-[var(--color-text)]">{formatCurrency(caseItem.total_value)}</strong>
               </div>
             </div>
 
             <div className="flex flex-wrap gap-2">
               <StatusBadge status={caseItem.status} />
               {hasUrgentPriority && (
-                <span className="rounded-full border border-[rgba(255,103,103,0.32)] bg-[rgba(255,103,103,0.12)] px-2 py-0.5 text-xs font-medium text-[#ffd3d3]">
+                <span className="rounded-full border border-[color-mix(in_srgb,var(--color-danger)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-danger)_12%,transparent)] px-2 py-0.5 text-xs font-medium text-[var(--color-danger-soft)]">
                   Urgente
                 </span>
               )}
@@ -219,15 +219,15 @@ export default function CaseDetailsPage({
             {(caseNotes.notes || caseNotes.teeth) && (
               <div className="grid gap-2">
                 {caseNotes.notes && (
-                  <div className="grid gap-1 border-t border-[rgba(229,235,241,0.13)] pt-2">
-                    <small className="text-xs font-bold text-[#aeb7c2]">Observações</small>
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-[#d7dde5]">{caseNotes.notes}</p>
+                  <div className="grid gap-1 border-t border-[var(--color-border)] pt-2">
+                    <small className="text-xs font-bold text-[var(--color-text-muted)]">Observações</small>
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--color-text-soft)]">{caseNotes.notes}</p>
                   </div>
                 )}
                 {caseNotes.teeth && (
-                  <div className="grid gap-1 border-t border-[rgba(229,235,241,0.13)] pt-2">
-                    <small className="text-xs font-bold text-[#aeb7c2]">Dentes selecionados</small>
-                    <p className="text-sm leading-relaxed text-[#d7dde5]">{caseNotes.teeth}</p>
+                  <div className="grid gap-1 border-t border-[var(--color-border)] pt-2">
+                    <small className="text-xs font-bold text-[var(--color-text-muted)]">Dentes selecionados</small>
+                    <p className="text-sm leading-relaxed text-[var(--color-text-soft)]">{caseNotes.teeth}</p>
                   </div>
                 )}
               </div>
@@ -235,24 +235,24 @@ export default function CaseDetailsPage({
           </section>
 
           {items.length > 0 && (
-            <section className="grid gap-3 rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)] p-4">
-              <h3 className="text-base font-bold text-[#f3f4f6]">Serviços extras</h3>
+            <section className="grid gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-subtle)] p-4">
+              <h3 className="text-base font-bold text-[var(--color-text)]">Serviços extras</h3>
               <div className="grid gap-2">
                 {pagedItems.map((item) => {
                   const view = getItemView(item);
 
                   return (
-                    <article key={item.id} className="flex items-start justify-between gap-3 rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(25,30,38,0.96)] p-3 max-[640px]:flex-col">
+                    <article key={item.id} className="flex items-start justify-between gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-3 max-[640px]:flex-col">
                       <div className="grid min-w-0 gap-1">
-                        <strong className="text-sm font-bold text-[#f3f4f6]">{item.tooth ? `Dente ${item.tooth}` : "Serviço extra"}</strong>
-                        {view.notes && <small className="text-xs leading-snug text-[#aeb7c2]">{view.notes}</small>}
+                        <strong className="text-sm font-bold text-[var(--color-text)]">{item.tooth ? `Dente ${item.tooth}` : "Serviço extra"}</strong>
+                        {view.notes && <small className="text-xs leading-snug text-[var(--color-text-muted)]">{view.notes}</small>}
                       </div>
                       <div className="grid shrink-0 justify-items-end gap-2 max-[640px]:justify-items-start">
                         {item.unit_value !== null && item.unit_value !== undefined && (
                           <>
-                            <strong className="text-sm font-bold text-[#f3f4f6]">{formatCurrency(view.totalValue ?? item.unit_value)}</strong>
+                            <strong className="text-sm font-bold text-[var(--color-text)]">{formatCurrency(view.totalValue ?? item.unit_value)}</strong>
                             {view.quantity > 1 && (
-                              <small className="text-xs text-[#aeb7c2]">{`${view.quantity} x ${formatCurrency(item.unit_value)}`}</small>
+                              <small className="text-xs text-[var(--color-text-muted)]">{`${view.quantity} x ${formatCurrency(item.unit_value)}`}</small>
                             )}
                           </>
                         )}
@@ -286,8 +286,8 @@ export default function CaseDetailsPage({
                         className={[
                           "grid size-8 place-items-center rounded-md border text-xs font-bold",
                           page === currentServicesPage
-                            ? "border-[rgba(56,189,248,0.45)] bg-[rgba(56,189,248,0.12)] text-[#38bdf8]"
-                            : "border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)] text-[#d7dde5]",
+                            ? "border-primary/30 bg-primary/10 text-primary"
+                            : "border-[var(--color-border)] bg-[var(--color-subtle)] text-[var(--color-text-soft)]",
                         ].join(" ")}
                         type="button"
                         aria-current={page === currentServicesPage ? "page" : undefined}
@@ -323,21 +323,21 @@ export default function CaseDetailsPage({
               </FormField>
             ) : (
               <div className="grid gap-2">
-                <span className="text-xs font-bold text-[#aeb7c2]">Dentes selecionados</span>
+                <span className="text-xs font-bold text-[var(--color-text-muted)]">Dentes selecionados</span>
                 <OdontogramSelector selectedTeeth={selectedTeeth} onChange={handleTeethChange} />
               </div>
             )}
 
-            <div className="grid gap-1.5 text-xs font-bold text-[#aeb7c2]">
+            <div className="grid gap-1.5 text-xs font-bold text-[var(--color-text-muted)]">
               <span>Cobrança deste item de serviço</span>
               <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Cobrança deste item de serviço">
                 <button
                   type="button"
                   className={[
-                    "flex min-h-10 items-center justify-center rounded-md border px-3 text-sm font-bold text-[#f3f4f6]",
+                    "flex min-h-10 items-center justify-center rounded-md border px-3 text-sm font-bold text-[var(--color-text)]",
                     itemForm.pricing_mode === "fixed"
-                      ? "border-[rgba(56,189,248,0.45)] bg-[rgba(56,189,248,0.12)]"
-                      : "border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)]",
+                      ? "border-primary/30 bg-primary/10"
+                      : "border-[var(--color-border)] bg-[var(--color-subtle)]",
                   ].join(" ")}
                   aria-pressed={itemForm.pricing_mode === "fixed"}
                   onClick={() => setServicePricingMode("fixed")}
@@ -347,10 +347,10 @@ export default function CaseDetailsPage({
                 <button
                   type="button"
                   className={[
-                    "flex min-h-10 items-center justify-center rounded-md border px-3 text-sm font-bold text-[#f3f4f6]",
+                    "flex min-h-10 items-center justify-center rounded-md border px-3 text-sm font-bold text-[var(--color-text)]",
                     itemForm.pricing_mode === "services"
-                      ? "border-[rgba(56,189,248,0.45)] bg-[rgba(56,189,248,0.12)]"
-                      : "border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)]",
+                      ? "border-primary/30 bg-primary/10"
+                      : "border-[var(--color-border)] bg-[var(--color-subtle)]",
                   ].join(" ")}
                   aria-pressed={itemForm.pricing_mode === "services"}
                   onClick={() => setServicePricingMode("services")}
@@ -374,7 +374,7 @@ export default function CaseDetailsPage({
               ) : selectedTeeth.length > 0 && (
                 <div className="grid max-h-40 grid-cols-2 gap-2 overflow-auto pr-1 max-[640px]:grid-cols-1">
                   {selectedTeeth.map((tooth) => (
-                    <label key={tooth} className="grid gap-1 text-xs font-bold text-[#aeb7c2]">
+                    <label key={tooth} className="grid gap-1 text-xs font-bold text-[var(--color-text-muted)]">
                       <span>Dente {tooth}</span>
                       <input
                         className={CONTROL_CLASS}
