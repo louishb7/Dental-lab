@@ -2,7 +2,7 @@ import { cloneElement, isValidElement } from "react";
 import { cn } from "../../lib/utils.js";
 
 const CONTROL_CLASS =
-  "min-h-9 w-full rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(23,28,36,0.96)] px-3 py-2 text-sm text-[#f3f4f6] outline-none placeholder:text-[#aeb7c2]/75 focus:border-[#ff8a2a] focus:ring-2 focus:ring-[#ff8a2a]/25 disabled:cursor-not-allowed disabled:opacity-60";
+  "min-h-9 w-full rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(23,28,36,0.96)] px-3 py-2 text-sm text-[#f3f4f6] outline-none placeholder:text-[#aeb7c2]/75 focus:border-[#38bdf8] focus:ring-2 focus:ring-[#38bdf8]/25 disabled:cursor-not-allowed disabled:opacity-60";
 
 /**
  * Renders a labeled form control with optional helper text.

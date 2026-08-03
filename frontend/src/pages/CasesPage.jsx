@@ -18,7 +18,7 @@ function formatCaseCount(count, singular, plural) {
 }
 
 const FILTER_CONTROL_CLASS =
-  "min-h-9 w-full rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(23,28,36,0.96)] px-3 text-sm text-[#f3f4f6] outline-none placeholder:text-[#aeb7c2]/75 focus:border-[#ff8a2a] focus:ring-2 focus:ring-[#ff8a2a]/25";
+  "min-h-9 w-full rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(23,28,36,0.96)] px-3 text-sm text-[#f3f4f6] outline-none placeholder:text-[#aeb7c2]/75 focus:border-[#38bdf8] focus:ring-2 focus:ring-[#38bdf8]/25";
 
 export default function CasesPage({
   cases,
@@ -332,7 +332,7 @@ export default function CasesPage({
           </div>
         </div>
 
-        <section className="rounded-md border border-[rgba(255,138,42,0.3)] bg-[rgba(25,30,38,0.96)] text-[#f3f4f6] shadow-sm">
+        <section className="rounded-md border border-[rgba(56,189,248,0.3)] bg-[rgba(25,30,38,0.96)] text-[#f3f4f6] shadow-sm">
           <div className="flex items-start justify-between gap-3 border-b border-[rgba(229,235,241,0.13)] px-4 py-3 max-[640px]:flex-col">
             <div className="grid gap-1">
               <h3 className="text-base font-bold leading-tight">Casos em aberto</h3>
@@ -409,7 +409,7 @@ export default function CasesPage({
                 readyCases.map((caseItem) => (
                   <label key={caseItem.id} className="grid cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)] p-3">
                     <input
-                      className="size-4 accent-[#ff8a2a]"
+                      className="size-4 accent-[#38bdf8]"
                       type="checkbox"
                       checked={selectedDeliveryIds.includes(caseItem.id)}
                       onChange={() => toggleDeliverySelection(caseItem.id)}

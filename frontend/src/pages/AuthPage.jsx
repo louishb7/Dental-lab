@@ -5,7 +5,7 @@ import FormField from "../components/ui/FormField.jsx";
 import { PRODUCT_NAME } from "../config/product.js";
 
 const PASSWORD_INPUT_CLASS =
-  "min-h-9 w-full rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(23,28,36,0.96)] px-3 py-2 text-sm text-[#f3f4f6] outline-none placeholder:text-[#aeb7c2]/75 focus:border-[#ff8a2a] focus:ring-2 focus:ring-[#ff8a2a]/25";
+  "min-h-9 w-full rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(23,28,36,0.96)] px-3 py-2 text-sm text-[#f3f4f6] outline-none placeholder:text-[#aeb7c2]/75 focus:border-[#38bdf8] focus:ring-2 focus:ring-[#38bdf8]/25";
 
 /**
  * Renderiza a tela compacta de login e cadastro do Cadista.
@@ -46,8 +46,8 @@ export default function AuthPage({
   const passwordToggleLabel = showPassword ? "Ocultar" : "Mostrar";
 
   return (
-    <main className="grid min-h-screen place-items-center bg-[linear-gradient(180deg,rgba(255,138,42,0.12),rgba(255,138,42,0.04)_38%,transparent_72%),linear-gradient(115deg,rgba(18,23,30,0.9),rgba(28,31,36,0.82)_54%,rgba(17,20,27,0.88))] p-6">
-      <section className="grid w-full max-w-[480px] gap-4 rounded-md border border-[rgba(255,138,42,0.3)] bg-[linear-gradient(180deg,rgba(255,138,42,0.08),transparent_120px),rgba(25,30,38,0.98)] p-5 text-[#f3f4f6] shadow-[0_24px_80px_rgba(0,0,0,0.28)]" aria-labelledby="auth-title">
+    <main className="grid min-h-screen place-items-center bg-[linear-gradient(180deg,rgba(56,189,248,0.12),rgba(56,189,248,0.04)_38%,transparent_72%),linear-gradient(115deg,rgba(18,23,30,0.9),rgba(28,31,36,0.82)_54%,rgba(17,20,27,0.88))] p-6">
+      <section className="grid w-full max-w-[480px] gap-4 rounded-md border border-[rgba(56,189,248,0.3)] bg-[linear-gradient(180deg,rgba(56,189,248,0.08),transparent_120px),rgba(25,30,38,0.98)] p-5 text-[#f3f4f6] shadow-[0_24px_80px_rgba(0,0,0,0.28)]" aria-labelledby="auth-title">
         <header className="grid gap-1">
           <div>
             <h1 id="auth-title" className="text-2xl font-bold leading-tight">{PRODUCT_NAME}</h1>
@@ -60,7 +60,7 @@ export default function AuthPage({
             className={[
               "min-h-10 rounded-md border px-3 text-sm font-extrabold",
               authMode === "login"
-                ? "border-[#ff8a2a] bg-[#ff8a2a] text-[#1b120b]"
+                ? "border-[#38bdf8] bg-[#38bdf8] text-[#07131c]"
                 : "border-[rgba(229,235,241,0.13)] bg-[rgba(21,26,34,0.9)] text-[#aeb7c2] hover:text-[#f3f4f6]",
             ].join(" ")}
             type="button"
@@ -74,7 +74,7 @@ export default function AuthPage({
             className={[
               "min-h-10 rounded-md border px-3 text-sm font-extrabold",
               authMode === "register"
-                ? "border-[#ff8a2a] bg-[#ff8a2a] text-[#1b120b]"
+                ? "border-[#38bdf8] bg-[#38bdf8] text-[#07131c]"
                 : "border-[rgba(229,235,241,0.13)] bg-[rgba(21,26,34,0.9)] text-[#aeb7c2] hover:text-[#f3f4f6]",
             ].join(" ")}
             type="button"

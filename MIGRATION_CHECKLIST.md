@@ -375,9 +375,17 @@ CHECKLIST DE SIMPLIFICAÇÃO:
 - [x] Migrar a tela Financeiro para Tailwind/shadcn, preservando a camada analítica com ranking e entregas do mês.
 - [x] Remover CSS puro legado em `frontend/src/styles/`, mantendo apenas `tailwind.css` como entrada de estilos do frontend.
 - [x] Passo 1 refinamento visual: reduzir padding, altura e escala dos cards de métrica "Hoje", "Pendentes" e "Prontos para entrega" no topo da Bancada.
+- [x] Passo 2 refinamento visual: repaginar a paleta de cores, trocar a cor primária laranja por tom clínico/confiável, reservar âmbar/laranja para atenção e documentar tokens semânticos.
+- [ ] Passo 3 refinamento visual: implementar sistema de temas com CSS custom properties no padrão shadcn/ui, incluindo tema escuro, tema claro corrigido e terceiro tema coerente.
+- [ ] Passo 4 refinamento visual: compactar os cards de dia da "Semana de produção" em formato de tira de calendário, preservando estados de hoje, selecionado e dia off.
+- [ ] Passo 5 refinamento de fluxo: reposicionar o botão "+ Novo Caso" próximo ao bloco "Semana de produção", mantendo distinção entre criação geral e criação por dia.
+- [ ] Passo 6 refinamento de navegação: após criar caso ou abrir caso pela Bancada, navegar automaticamente para "Casos" e exibir/abrir o caso correspondente.
+- [ ] Passo 7 refinamento de interação: adicionar ação "Pronto" ao painel "Casos de hoje" da Bancada reutilizando o mesmo padrão de painel lateral da tela "Casos".
+- [ ] Passo 8 refinamento de produto: remover o filtro "Prioridade" da tela "Casos" e eliminar a lógica de filtragem correspondente se ficar sem uso.
 
 ## Decisoes e Notas
 
+- Refinamento visual Passo 2: a cor primaria do frontend foi substituida por azul-clinico/teal (`#38bdf8` no tema escuro e `#0f6f8f` no tema claro), mantendo ambar/laranja reservado para estados de atencao como `warning` e `pending`. Os papeis semanticos dos tokens foram documentados em `frontend/src/styles/tailwind.css`.
 - Fase 9 concluida: o frontend React/Vite foi mantido sem mudancas funcionais de UI e o fallback local de API foi repontado de `http://localhost:8000` para `http://localhost:3001`, preservando `VITE_API_BASE_URL` como override por ambiente. Esta e a mudanca esperada da Fase 9; o FastAPI continua no repositorio como implementacao de referencia ate o cutover.
 - Fase 9 contrato frontend/API: `frontend/src/services/api.js` continua centralizando login, cadastro, sessao, dashboard, doctors, cases, bulk-deliver e case-items. A validacao de contrato foi feita pelos testes e2e do backend Nest para os endpoints consumidos e pelo build Vite do frontend.
 - Fase 9 tratamento de estados: nenhum fluxo de UI foi reescrito; foram preservados os caminhos existentes de carregamento, sucesso, erro, lista vazia, falha de rede e mensagens `detail`/validacao tratados pelo cliente HTTP atual.

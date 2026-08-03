@@ -51,7 +51,7 @@ export default function DataTable({
           {data.map((row) => (
             <TableRow
               key={row.id}
-              className="border-[rgba(229,235,241,0.1)] hover:bg-[rgba(255,138,42,0.04)]"
+              className="border-[rgba(229,235,241,0.1)] hover:bg-[rgba(56,189,248,0.04)]"
             >
               {columns.map((column) => (
                 <TableCell key={column.key} className="px-3 py-3 text-sm text-[#d7dde5]">

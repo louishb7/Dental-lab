@@ -39,7 +39,7 @@ function DayCard({ day, cases, selected, onSelect, onOpenNewCaseForDate }) {
     <div
       className={[
         "grid min-h-[92px] min-w-0 gap-2 rounded-md border bg-[rgba(32,38,47,0.96)] p-2 text-[#f3f4f6] transition-colors",
-        selected ? "border-[rgba(255,138,42,0.45)] shadow-[inset_0_0_0_1px_rgba(255,138,42,0.18)]" : "border-[rgba(229,235,241,0.13)]",
+        selected ? "border-[rgba(56,189,248,0.45)] shadow-[inset_0_0_0_1px_rgba(56,189,248,0.18)]" : "border-[rgba(229,235,241,0.13)]",
       ].join(" ")}
     >
       <button
@@ -55,7 +55,7 @@ function DayCard({ day, cases, selected, onSelect, onOpenNewCaseForDate }) {
           {isCurrentDay && (
             <Badge
               variant="outline"
-              className="border-[rgba(255,138,42,0.28)] bg-[rgba(255,138,42,0.1)] px-1.5 py-0 text-[0.58rem] font-bold text-[#ff8a2a]"
+              className="border-[rgba(56,189,248,0.28)] bg-[rgba(56,189,248,0.1)] px-1.5 py-0 text-[0.58rem] font-bold text-[#38bdf8]"
             >
               Hoje
             </Badge>
@@ -73,7 +73,7 @@ function DayCard({ day, cases, selected, onSelect, onOpenNewCaseForDate }) {
         </small>
       </button>
       <Button
-        className="h-7 w-fit justify-self-end px-2 text-[#aeb7c2] hover:text-[#ff8a2a]"
+        className="h-7 w-fit justify-self-end px-2 text-[#aeb7c2] hover:text-[#38bdf8]"
         variant="ghost"
         size="xs"
         type="button"

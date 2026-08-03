@@ -141,7 +141,7 @@ export default function OdontogramSelector({
               <button
                 key={tooth}
                 type="button"
-                className="min-h-6 min-w-8 rounded bg-[#f97316] px-2 text-[11px] font-extrabold text-white"
+                className="min-h-6 min-w-8 rounded bg-[#38bdf8] px-2 text-[11px] font-extrabold text-white"
                 title={`Dente ${tooth}`}
                 onClick={() => toggleTooth(tooth)}
               >

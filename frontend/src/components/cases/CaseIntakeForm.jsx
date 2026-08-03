@@ -10,7 +10,7 @@ import {
 import { sortTeethByFdi } from "../../utils/odontogram.js";
 
 const CONTROL_CLASS =
-  "min-h-9 w-full rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(23,28,36,0.96)] px-3 py-2 text-sm text-[#f3f4f6] outline-none placeholder:text-[#aeb7c2]/75 focus:border-[#ff8a2a] focus:ring-2 focus:ring-[#ff8a2a]/25";
+  "min-h-9 w-full rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(23,28,36,0.96)] px-3 py-2 text-sm text-[#f3f4f6] outline-none placeholder:text-[#aeb7c2]/75 focus:border-[#38bdf8] focus:ring-2 focus:ring-[#38bdf8]/25";
 
 export default function CaseIntakeForm({
   doctors,
@@ -60,7 +60,7 @@ export default function CaseIntakeForm({
   return (
     <form className="grid min-h-[min(660px,calc(100vh-2rem))] grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)_minmax(260px,0.9fr)] gap-2 max-[1120px]:min-h-0 max-[1120px]:grid-cols-1" onSubmit={onSubmit}>
       <section className="grid min-w-0 content-start gap-3 rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(25,30,38,0.96)] p-3">
-        <div className="text-xs font-extrabold uppercase tracking-[0.05em] text-[#ff8a2a]">Informações do caso</div>
+        <div className="text-xs font-extrabold uppercase tracking-[0.05em] text-[#38bdf8]">Informações do caso</div>
 
         <FormField label="Dentista responsável">
           <select
@@ -108,7 +108,7 @@ export default function CaseIntakeForm({
               className={[
                 "flex min-h-11 items-center justify-center gap-2 rounded-md border px-3 text-sm font-bold text-[#f3f4f6]",
                 caseForm.pricing_mode === "fixed"
-                  ? "border-[rgba(255,138,42,0.45)] bg-[rgba(255,138,42,0.12)]"
+                  ? "border-[rgba(56,189,248,0.45)] bg-[rgba(56,189,248,0.12)]"
                   : "border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)]",
               ].join(" ")}
               aria-pressed={caseForm.pricing_mode === "fixed"}
@@ -122,7 +122,7 @@ export default function CaseIntakeForm({
               className={[
                 "flex min-h-11 items-center justify-center gap-2 rounded-md border px-3 text-sm font-bold text-[#f3f4f6]",
                 caseForm.pricing_mode === "services"
-                  ? "border-[rgba(255,138,42,0.45)] bg-[rgba(255,138,42,0.12)]"
+                  ? "border-[rgba(56,189,248,0.45)] bg-[rgba(56,189,248,0.12)]"
                   : "border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)]",
               ].join(" ")}
               aria-pressed={caseForm.pricing_mode === "services"}

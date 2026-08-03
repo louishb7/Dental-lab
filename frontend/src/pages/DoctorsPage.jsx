@@ -81,7 +81,7 @@ export default function DoctorsPage({
       }
     >
       <div className="grid gap-4">
-        <section className="rounded-md border border-[rgba(255,138,42,0.3)] bg-[rgba(25,30,38,0.96)] p-4 text-[#f3f4f6] shadow-sm">
+        <section className="rounded-md border border-[rgba(56,189,248,0.3)] bg-[rgba(25,30,38,0.96)] p-4 text-[#f3f4f6] shadow-sm">
             <DataTable
               columns={columns}
               data={doctors}

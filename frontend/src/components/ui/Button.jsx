@@ -2,7 +2,7 @@ import { Button as ShadcnButton } from "./button.jsx";
 import { cn } from "../../lib/utils.js";
 
 const VARIANT_CLASSES = {
-  primary: "border-[#ff8a2a] bg-[#ff8a2a] text-[#1b120b] hover:bg-[#f47c17]",
+  primary: "border-[#38bdf8] bg-[#38bdf8] text-[#07131c] hover:bg-[#0ea5e9]",
   secondary:
     "border-[rgba(229,235,241,0.13)] bg-[rgba(42,49,59,0.72)] text-[#f3f4f6] hover:bg-[rgba(52,60,72,0.9)]",
   ghost:

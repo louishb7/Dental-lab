@@ -26,7 +26,7 @@ const EMPTY_ITEM_FORM = {
 };
 const SERVICES_PER_PAGE = 5;
 const CONTROL_CLASS =
-  "min-h-9 w-full rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(23,28,36,0.96)] px-3 py-2 text-sm text-[#f3f4f6] outline-none placeholder:text-[#aeb7c2]/75 focus:border-[#ff8a2a] focus:ring-2 focus:ring-[#ff8a2a]/25";
+  "min-h-9 w-full rounded-md border border-[rgba(229,235,241,0.13)] bg-[rgba(23,28,36,0.96)] px-3 py-2 text-sm text-[#f3f4f6] outline-none placeholder:text-[#aeb7c2]/75 focus:border-[#38bdf8] focus:ring-2 focus:ring-[#38bdf8]/25";
 
 function splitCaseNotes(value) {
   const notes = [];
@@ -180,7 +180,7 @@ export default function CaseDetailsPage({
         className="max-w-[760px]"
       >
         <div className="grid gap-3">
-          <section className="grid gap-4 rounded-md border border-[rgba(255,138,42,0.3)] bg-[rgba(25,30,38,0.96)] p-4">
+          <section className="grid gap-4 rounded-md border border-[rgba(56,189,248,0.3)] bg-[rgba(25,30,38,0.96)] p-4">
             <div className="flex justify-end">
               <Button variant="primary" size="sm" onClick={() => openItemForm()}>
                 <Plus size={16} />
@@ -286,7 +286,7 @@ export default function CaseDetailsPage({
                         className={[
                           "grid size-8 place-items-center rounded-md border text-xs font-bold",
                           page === currentServicesPage
-                            ? "border-[rgba(255,138,42,0.45)] bg-[rgba(255,138,42,0.12)] text-[#ff8a2a]"
+                            ? "border-[rgba(56,189,248,0.45)] bg-[rgba(56,189,248,0.12)] text-[#38bdf8]"
                             : "border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)] text-[#d7dde5]",
                         ].join(" ")}
                         type="button"
@@ -336,7 +336,7 @@ export default function CaseDetailsPage({
                   className={[
                     "flex min-h-10 items-center justify-center rounded-md border px-3 text-sm font-bold text-[#f3f4f6]",
                     itemForm.pricing_mode === "fixed"
-                      ? "border-[rgba(255,138,42,0.45)] bg-[rgba(255,138,42,0.12)]"
+                      ? "border-[rgba(56,189,248,0.45)] bg-[rgba(56,189,248,0.12)]"
                       : "border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)]",
                   ].join(" ")}
                   aria-pressed={itemForm.pricing_mode === "fixed"}
@@ -349,7 +349,7 @@ export default function CaseDetailsPage({
                   className={[
                     "flex min-h-10 items-center justify-center rounded-md border px-3 text-sm font-bold text-[#f3f4f6]",
                     itemForm.pricing_mode === "services"
-                      ? "border-[rgba(255,138,42,0.45)] bg-[rgba(255,138,42,0.12)]"
+                      ? "border-[rgba(56,189,248,0.45)] bg-[rgba(56,189,248,0.12)]"
                       : "border-[rgba(229,235,241,0.13)] bg-[rgba(237,237,237,0.04)]",
                   ].join(" ")}
                   aria-pressed={itemForm.pricing_mode === "services"}

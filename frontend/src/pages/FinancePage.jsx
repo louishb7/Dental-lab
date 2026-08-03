@@ -80,7 +80,7 @@ export default function FinancePage({ dashboard, cases, loading }) {
         </div>
 
         <div className="grid grid-cols-[minmax(320px,420px)_minmax(0,1fr)] gap-4 max-[1120px]:grid-cols-1">
-          <section className="rounded-md border border-[rgba(255,138,42,0.3)] bg-[rgba(25,30,38,0.96)] text-[#f3f4f6] shadow-sm">
+          <section className="rounded-md border border-[rgba(56,189,248,0.3)] bg-[rgba(25,30,38,0.96)] text-[#f3f4f6] shadow-sm">
             <div className="border-b border-[rgba(229,235,241,0.13)] px-4 py-3">
               <div className="grid gap-1">
                 <h3 className="text-base font-bold leading-tight">Ranking de receita no mês atual.</h3>
@@ -92,7 +92,7 @@ export default function FinancePage({ dashboard, cases, loading }) {
                 <div className="grid">
                   {topDoctors.map((doctor, index) => (
                     <div key={doctor.name} className="flex items-center gap-3 border-b border-[rgba(229,235,241,0.13)] py-3 last:border-b-0">
-                      <span className="min-w-7 text-sm font-extrabold text-[#ff8a2a]">#{index + 1}</span>
+                      <span className="min-w-7 text-sm font-extrabold text-[#38bdf8]">#{index + 1}</span>
                       <div className="grid min-w-0 gap-1">
                         <strong className="truncate text-sm font-bold text-[#f3f4f6]">{doctor.name}</strong>
                         <small className="text-xs text-[#aeb7c2]">
@@ -109,7 +109,7 @@ export default function FinancePage({ dashboard, cases, loading }) {
             </div>
           </section>
 
-          <section className="rounded-md border border-[rgba(255,138,42,0.3)] bg-[rgba(25,30,38,0.96)] text-[#f3f4f6] shadow-sm">
+          <section className="rounded-md border border-[rgba(56,189,248,0.3)] bg-[rgba(25,30,38,0.96)] text-[#f3f4f6] shadow-sm">
             <div className="border-b border-[rgba(229,235,241,0.13)] px-4 py-3">
               <div className="grid gap-1">
                 <h3 className="text-base font-bold leading-tight">Entregas do mês</h3>
