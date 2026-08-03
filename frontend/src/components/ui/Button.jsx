@@ -10,7 +10,7 @@ const VARIANT_CLASSES = {
   danger:
     "border-[color-mix(in_srgb,var(--color-danger-soft)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-danger-soft)_10%,transparent)] text-[var(--color-danger-soft)] hover:bg-[color-mix(in_srgb,var(--color-danger-soft)_16%,transparent)]",
   success:
-    "border-[color-mix(in_srgb,var(--color-success-soft)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-success-soft)_10%,transparent)] text-[var(--color-success-soft)] hover:bg-[color-mix(in_srgb,var(--color-success-soft)_16%,transparent)]",
+    "border-[color-mix(in_srgb,var(--color-success)_82%,black)] bg-[var(--color-success)] text-[var(--color-success-contrast)] hover:bg-[color-mix(in_srgb,var(--color-success)_88%,black)]",
 };
 
 export default function Button({
