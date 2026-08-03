@@ -6,6 +6,8 @@ export default function DayBoard({
   description,
   cases,
   onOpenCase,
+  onAdvanceCase,
+  showReadyAction = false,
 }) {
   return (
     <section className="rounded-md border border-primary/30 bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm">
@@ -19,7 +21,13 @@ export default function DayBoard({
         {cases.length ? (
           <div className="grid gap-2">
             {cases.map((caseItem) => (
-              <CaseBoardCard key={caseItem.id} caseItem={caseItem} onOpenCase={onOpenCase} />
+              <CaseBoardCard
+                key={caseItem.id}
+                caseItem={caseItem}
+                onOpenCase={onOpenCase}
+                onAdvanceCase={onAdvanceCase}
+                showReadyAction={showReadyAction}
+              />
             ))}
           </div>
         ) : (

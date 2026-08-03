@@ -1,4 +1,4 @@
-import { Eye, Layers3 } from "lucide-react";
+import { Eye, Layers3, PackageCheck } from "lucide-react";
 import Button from "../ui/Button.jsx";
 import DeadlineBadge from "../ui/DeadlineBadge.jsx";
 import PriorityBadge from "../ui/PriorityBadge.jsx";
@@ -11,7 +11,14 @@ function formatItemsLabel(caseItem) {
   return count ? formatServiceItemCount(caseItem) : "Sem itens de serviço";
 }
 
-export default function CaseBoardCard({ caseItem, onOpenCase }) {
+export default function CaseBoardCard({
+  caseItem,
+  onOpenCase,
+  onAdvanceCase,
+  showReadyAction = false,
+}) {
+  const canMarkReady = showReadyAction && caseItem.status === "pending" && onAdvanceCase;
+
   return (
     <article className="grid gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-subtle)] p-3">
       <div className="flex items-start justify-between gap-3">
@@ -34,7 +41,19 @@ export default function CaseBoardCard({ caseItem, onOpenCase }) {
         <span className="ml-auto font-bold text-[var(--color-text)]">{formatCurrency(caseItem.total_value)}</span>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-1.5">
+        {canMarkReady && (
+          <Button
+            variant="success"
+            size="sm"
+            aria-label="Marcar como pronto"
+            title="Marcar como pronto"
+            onClick={() => onAdvanceCase(caseItem)}
+          >
+            <PackageCheck size={14} />
+            Pronto
+          </Button>
+        )}
         <Button variant="ghost" size="sm" onClick={() => onOpenCase(caseItem.id)}>
           <Eye size={14} />
           Abrir

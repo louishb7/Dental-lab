@@ -144,6 +144,7 @@ export default function DashboardPage({
   onOpenNewCase,
   onOpenNewCaseForDate,
   onOpenCase,
+  onAdvanceCase,
   onDeliverCases,
   onRemoveCase,
 }) {
@@ -243,6 +244,8 @@ export default function DashboardPage({
             description={getDayBoardDescription(selectedDate, selectedDayCases.length)}
             cases={selectedDayCases}
             onOpenCase={onOpenCase}
+            onAdvanceCase={onAdvanceCase}
+            showReadyAction={isToday(selectedDate)}
           />
 
           <AttentionPanel

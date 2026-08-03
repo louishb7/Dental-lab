@@ -341,6 +341,12 @@ export default function App() {
     setShowDoctorModal(true);
   }
 
+  async function revealCaseInCases(caseId) {
+    setActivePage("cases");
+    setSelectedCaseId(caseId);
+    return loadAppData({ selectedCaseId: caseId });
+  }
+
   async function handleCaseSubmit(event) {
     event.preventDefault();
     if (!selectedDoctorId) return;
@@ -362,7 +368,7 @@ export default function App() {
         try {
           await Promise.all(automaticItems.map((item) => createCaseItem(createdCase.id, item)));
         } catch (error) {
-          const refreshed = await loadAppData();
+          const refreshed = await revealCaseInCases(createdCase.id);
           if (!refreshed) return;
           setCaseForm(EMPTY_CASE);
           setShowCaseModal(false);
@@ -374,7 +380,7 @@ export default function App() {
         }
       }
 
-      const refreshed = await loadAppData();
+      const refreshed = await revealCaseInCases(createdCase.id);
       if (!refreshed) return;
       setCaseForm(EMPTY_CASE);
       setShowCaseModal(false);
@@ -520,6 +526,7 @@ export default function App() {
   }
 
   async function openCaseFromDashboard(caseId) {
+    setSelectedCaseId(caseId);
     setActivePage("cases");
     await openCaseItems(caseId);
   }
@@ -684,6 +691,7 @@ export default function App() {
           onOpenNewCase={openNewCaseFromDashboard}
           onOpenNewCaseForDate={openNewCaseFromDashboardDate}
           onOpenCase={openCaseFromDashboard}
+          onAdvanceCase={advanceCase}
           onDeliverCases={handleBulkDeliverCases}
           onRemoveCase={removeCase}
         />

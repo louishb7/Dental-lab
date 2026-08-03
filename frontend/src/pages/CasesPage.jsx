@@ -48,7 +48,6 @@ export default function CasesPage({
   const [filters, setFilters] = useState({
     search: "",
     status: "",
-    priority: "",
     doctorId: selectedDoctorId ? String(selectedDoctorId) : "",
   });
   const [showDeliverModal, setShowDeliverModal] = useState(false);
@@ -56,7 +55,7 @@ export default function CasesPage({
   const lastReadyCaseIdsRef = useRef(new Set());
 
   function clearFilters() {
-    setFilters({ search: "", status: "", priority: "", doctorId: "" });
+    setFilters({ search: "", status: "", doctorId: "" });
     setSelectedDoctorId(null);
   }
 
@@ -81,10 +80,9 @@ export default function CasesPage({
         || String(caseItem.id).includes(search)
         || doctor?.name?.toLowerCase().includes(search);
       const matchesStatus = !filters.status || caseItem.status === filters.status;
-      const matchesPriority = !filters.priority || caseItem.priority === filters.priority;
       const matchesDoctor = !filters.doctorId || caseItem.doctor_id === Number(filters.doctorId);
 
-      return matchesSearch && matchesStatus && matchesPriority && matchesDoctor;
+      return matchesSearch && matchesStatus && matchesDoctor;
     });
   }, [cases, doctorById, filters]);
 
@@ -279,7 +277,7 @@ export default function CasesPage({
     >
       <div className="grid gap-4">
         <div className="grid gap-2">
-          <div className="grid grid-cols-[minmax(220px,1.8fr)_repeat(3,minmax(132px,1fr))_max-content] gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-3 max-[1120px]:grid-cols-2 max-[640px]:grid-cols-1">
+          <div className="grid grid-cols-[minmax(220px,1.8fr)_repeat(2,minmax(132px,1fr))_max-content] gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-3 max-[1120px]:grid-cols-2 max-[640px]:grid-cols-1">
             <input
               className={FILTER_CONTROL_CLASS}
               value={filters.search}
@@ -297,16 +295,6 @@ export default function CasesPage({
               <option value="pending">Pendente</option>
               <option value="completed">Pronto</option>
               <option value="delivered">Entregue</option>
-            </select>
-            <select
-              className={FILTER_CONTROL_CLASS}
-              value={filters.priority}
-              onChange={(event) => setFilters((current) => ({ ...current, priority: event.target.value }))}
-              aria-label="Filtrar por prioridade"
-            >
-              <option value="">Todas prioridades</option>
-              <option value="normal">Normal</option>
-              <option value="urgent">Urgente</option>
             </select>
             <select
               className={FILTER_CONTROL_CLASS}
