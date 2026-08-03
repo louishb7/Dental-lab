@@ -13,10 +13,6 @@ import { formatCurrency, formatDate } from "../utils/formatters.js";
 import { formatServiceItemCount, getServiceCount } from "../utils/cases.js";
 import CaseDetailsPage from "./CaseDetailsPage.jsx";
 
-function formatCaseCount(count, singular, plural) {
-  return `${count} ${count === 1 ? singular : plural}`;
-}
-
 const FILTER_CONTROL_CLASS =
   "min-h-9 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-muted)]/75 focus:border-primary focus:ring-2 focus:ring-primary/25";
 const VERTICAL_READY_CLASS =
@@ -272,12 +268,6 @@ export default function CasesPage({
       kicker="Casos"
       title="Casos"
       description="Consulte, filtre e acompanhe todos os casos da bancada."
-      action={
-        <Button variant="primary" onClick={onNewCase}>
-          <Plus size={18} />
-          Novo caso
-        </Button>
-      }
     >
       <div className="grid gap-4">
         <div className="grid gap-2">
@@ -317,11 +307,6 @@ export default function CasesPage({
               Limpar filtros
             </Button>
           </div>
-          <div className="flex flex-wrap gap-2 text-sm text-[var(--color-text-muted)]" aria-live="polite">
-            <span>{formatCaseCount(openCases.length, "caso em aberto", "casos em aberto")}</span>
-            <span>{formatCaseCount(readyCases.length, "caso pronto", "casos prontos")}</span>
-            <span>{formatCaseCount(historyCases.length, "caso entregue", "casos entregues")}</span>
-          </div>
         </div>
 
         <section className="rounded-md border border-primary/30 bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm">
@@ -330,10 +315,16 @@ export default function CasesPage({
               <h3 className="text-base font-bold leading-tight">Casos em aberto</h3>
               <p className="text-sm leading-snug text-[var(--color-text-muted)]">Casos em produção e casos prontos aguardando entrega.</p>
             </div>
-            <Button variant="success" onClick={openDeliverModal}>
-              <PackageCheck size={18} />
-              Registrar entrega
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="primary" onClick={onNewCase}>
+                <Plus size={18} />
+                Novo caso
+              </Button>
+              <Button variant="success" onClick={openDeliverModal}>
+                <PackageCheck size={18} />
+                Registrar entrega
+              </Button>
+            </div>
           </div>
           <div className="p-4">
             <DataTable
