@@ -692,8 +692,6 @@ export default function App() {
           onOpenNewCaseForDate={openNewCaseFromDashboardDate}
           onOpenCase={openCaseFromDashboard}
           onAdvanceCase={advanceCase}
-          onDeliverCases={handleBulkDeliverCases}
-          onRemoveCase={removeCase}
         />
       )}
 

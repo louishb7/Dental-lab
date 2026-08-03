@@ -121,7 +121,7 @@ export function getRelativeDeadlineLabel(deadline) {
  *
  * @param {string|null|undefined} deadline Deadline returned by the API.
  * @param {string|null|undefined} status Case status.
- * @returns {{label: string, tone: "danger"|"warning"|"info"|"neutral"}}
+ * @returns {{label: string, tone: "danger"|"warning"|"neutral"}}
  */
 export function getDeadlineBadge(deadline, status) {
   if (!deadline) return { label: "Sem prazo", tone: "neutral" };
@@ -131,7 +131,7 @@ export function getDeadlineBadge(deadline, status) {
   const tone = getDeadlineTone(deadline, status);
 
   if (relativeLabel === "Hoje") return { label: "Hoje", tone: "warning" };
-  if (relativeLabel === "Amanhã") return { label: "Amanhã", tone: "info" };
+  if (relativeLabel === "Amanhã") return { label: "Amanhã", tone: "neutral" };
 
   if (tone === "danger") return { label: formatDate(deadline), tone: "danger" };
 

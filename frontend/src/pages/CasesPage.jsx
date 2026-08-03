@@ -1,6 +1,7 @@
-import { Eye, Layers3, PackageCheck, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, Eye, Layers3, PackageCheck, Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import CaseIntakeForm from "../components/cases/CaseIntakeForm.jsx";
+import AttentionPanel from "../components/dashboard/AttentionPanel.jsx";
 import Button from "../components/ui/Button.jsx";
 import DataTable from "../components/ui/DataTable.jsx";
 import DeadlineBadge from "../components/ui/DeadlineBadge.jsx";
@@ -10,7 +11,8 @@ import PageContainer from "../components/layout/PageContainer.jsx";
 import PriorityBadge from "../components/ui/PriorityBadge.jsx";
 import StatusBadge from "../components/ui/StatusBadge.jsx";
 import { formatCurrency, formatDate } from "../utils/formatters.js";
-import { formatServiceItemCount, getServiceCount } from "../utils/cases.js";
+import { formatServiceItemCount } from "../utils/cases.js";
+import { isOverdue } from "../utils/productionWeek.js";
 import CaseDetailsPage from "./CaseDetailsPage.jsx";
 
 const FILTER_CONTROL_CLASS =
@@ -19,6 +21,14 @@ const VERTICAL_READY_CLASS =
   "!h-auto !min-h-[118px] !w-12 !min-w-0 !rounded-2xl !px-1.5 !py-2.5 !text-[0.68rem] !font-black uppercase !tracking-[0.18em] [text-orientation:mixed] [writing-mode:vertical-rl]";
 const VERTICAL_READY_LABEL_CLASS =
   "inline-flex min-h-[118px] w-12 items-center justify-center rounded-2xl border border-[color-mix(in_srgb,var(--color-success-soft)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-success-soft)_10%,transparent)] px-1.5 py-2.5 text-[0.68rem] font-black uppercase tracking-[0.18em] text-[var(--color-success-soft)] [text-orientation:mixed] [writing-mode:vertical-rl]";
+
+function sortByPriorityAndDeadline(a, b) {
+  if (a.priority !== b.priority) {
+    return a.priority === "urgent" ? -1 : 1;
+  }
+
+  return String(a.deadline || "").localeCompare(String(b.deadline || ""));
+}
 
 export default function CasesPage({
   cases,
@@ -89,6 +99,14 @@ export default function CasesPage({
   const openCases = filteredCases.filter((caseItem) => caseItem.status !== "delivered");
   const historyCases = filteredCases.filter((caseItem) => caseItem.status === "delivered");
   const readyCases = openCases.filter((caseItem) => caseItem.status === "completed");
+  const productionCaseCount = openCases.filter((caseItem) => caseItem.status === "pending").length;
+  const overdueCases = openCases
+    .filter(isOverdue)
+    .map((caseItem) => ({
+      ...caseItem,
+      doctor_name: doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`,
+    }))
+    .sort(sortByPriorityAndDeadline);
 
   useEffect(() => {
     if (!showDeliverModal) {
@@ -149,9 +167,8 @@ export default function CasesPage({
       key: "services",
       header: "Resumo",
       render: (caseItem) => (
-        <span className="grid min-w-0 gap-1">
+        <span className="block min-w-0">
           <strong className="text-sm font-bold text-[var(--color-text)]">{formatServiceItemCount(caseItem)}</strong>
-          <small className="text-xs text-[var(--color-text-muted)]">Linhas lançadas no caso</small>
         </span>
       ),
     },
@@ -188,26 +205,39 @@ export default function CasesPage({
     {
       key: "ready",
       header: "Pronto",
-      render: (caseItem) =>
-        caseItem.status === "pending" ? (
+      render: (caseItem) => {
+        if (caseItem.status === "pending") {
+          return (
+            <div className="flex justify-end">
+              <Button
+                variant="success"
+                className={VERTICAL_READY_CLASS}
+                aria-label="Marcar como pronto"
+                title="Marcar como pronto"
+                onClick={() => onAdvanceCase(caseItem)}
+              >
+                PRONTO
+              </Button>
+            </div>
+          );
+        }
+
+        if (caseItem.status === "completed") {
+          return (
+            <div className="flex justify-end">
+              <span className={VERTICAL_READY_LABEL_CLASS} aria-label="Pedido pronto para entrega">
+                PRONTO
+              </span>
+            </div>
+          );
+        }
+
+        return (
           <div className="flex justify-end">
-            <Button
-              variant="success"
-              className={VERTICAL_READY_CLASS}
-              aria-label="Marcar como pronto"
-              title="Marcar como pronto"
-              onClick={() => onAdvanceCase(caseItem)}
-            >
-              PRONTO
-            </Button>
+            <span className="text-sm text-[var(--color-text-muted)]">—</span>
           </div>
-        ) : (
-          <div className="flex justify-end">
-            <span className={VERTICAL_READY_LABEL_CLASS} aria-label="Pedido pronto para entrega">
-              PRONTO
-            </span>
-          </div>
-        ),
+        );
+      },
     },
   ];
 
@@ -226,9 +256,8 @@ export default function CasesPage({
       key: "services",
       header: "Itens de serviço",
       render: (caseItem) => (
-        <span className="grid min-w-0 gap-1">
+        <span className="block min-w-0">
           <strong className="text-sm font-bold text-[var(--color-text)]">{formatServiceItemCount(caseItem)}</strong>
-          <small className="text-xs text-[var(--color-text-muted)]">Histórico de entrega</small>
         </span>
       ),
     },
@@ -313,7 +342,9 @@ export default function CasesPage({
           <div className="flex items-start justify-between gap-3 border-b border-[var(--color-border)] px-4 py-3 max-[640px]:flex-col">
             <div className="grid gap-1">
               <h3 className="text-base font-bold leading-tight">Casos em aberto</h3>
-              <p className="text-sm leading-snug text-[var(--color-text-muted)]">Casos em produção e casos prontos aguardando entrega.</p>
+              <p className="text-sm leading-snug text-[var(--color-text-muted)]">
+                {productionCaseCount} em produção, {readyCases.length} prontos para entrega.
+              </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Button variant="primary" onClick={onNewCase}>
@@ -337,6 +368,20 @@ export default function CasesPage({
             />
           </div>
         </section>
+
+        {overdueCases.length > 0 && (
+          <AttentionPanel
+            title="Atrasados"
+            description="Casos fora do prazo."
+            cases={overdueCases}
+            emptyTitle="Nenhum caso atrasado."
+            emptyIcon={AlertTriangle}
+            onOpenCase={onOpenCaseItems}
+            onDeliverCase={(caseId) => onBulkDeliverCases([caseId])}
+            onRemoveCase={onRemoveCase}
+            showActions
+          />
+        )}
 
         <section className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm">
           <div className="border-b border-[var(--color-border)] px-4 py-3">

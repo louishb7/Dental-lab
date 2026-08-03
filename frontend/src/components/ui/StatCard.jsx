@@ -21,19 +21,19 @@ export default function StatCard({ title, value, description, icon: Icon, tone =
 
   return (
     <Card className="rounded-md border-[var(--color-border)] bg-[var(--color-surface)] py-0 text-[var(--color-text)] shadow-sm">
-      <CardContent className={cn("grid", compact ? "gap-2 p-3" : "gap-3 p-4")}>
+      <CardContent className={cn("grid", compact ? "gap-1.5 p-2.5" : "gap-3 p-4")}>
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs font-extrabold uppercase tracking-[0.05em] text-[var(--color-text-muted)]">{title}</span>
           {Icon && (
             <span
-              className={cn("grid place-items-center rounded-md", compact ? "size-7" : "size-9", toneClasses.icon)}
+              className={cn("grid place-items-center rounded-md", compact ? "size-6" : "size-9", toneClasses.icon)}
               aria-hidden="true"
             >
-              <Icon size={compact ? 16 : 20} />
+              <Icon size={compact ? 14 : 20} />
             </span>
           )}
         </div>
-        <strong className={cn("font-bold leading-none", compact ? "text-2xl" : "text-3xl")}>{value}</strong>
+        <strong className={cn("font-bold leading-none", compact ? "text-xl" : "text-3xl")}>{value}</strong>
         {description && (
           <p className={cn("leading-snug text-[var(--color-text-muted)]", compact ? "text-xs" : "text-sm")}>
             {description}
