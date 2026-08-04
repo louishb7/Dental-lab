@@ -160,6 +160,8 @@ export default function App() {
   const [itemForm, setItemForm] = useState(EMPTY_ITEM);
   const [selectedDoctorId, setSelectedDoctorId] = useState(null);
   const [selectedCaseId, setSelectedCaseId] = useState(null);
+  const [dashboardDetailOpen, setDashboardDetailOpen] = useState(false);
+  const [casesFilterResetSignal, setCasesFilterResetSignal] = useState(0);
   const [showDoctorModal, setShowDoctorModal] = useState(false);
   const [showCaseModal, setShowCaseModal] = useState(false);
   const [editingDoctorId, setEditingDoctorId] = useState(null);
@@ -203,6 +205,9 @@ export default function App() {
     const nextPage = APP_PAGES.includes(page) ? page : "dashboard";
     const nextHistoryCaseId = nextPage === "history" ? options.caseId ?? null : null;
 
+    if (nextPage !== "dashboard") {
+      setDashboardDetailOpen(false);
+    }
     setActivePage(nextPage);
     setHistoryFocusCaseId(nextHistoryCaseId);
     window.history.pushState({}, "", buildNavigationUrl(nextPage, nextHistoryCaseId));
@@ -404,6 +409,8 @@ export default function App() {
   async function revealCaseInCases(caseId) {
     navigateToPage("cases");
     setSelectedCaseId(caseId);
+    setSelectedDoctorId(null);
+    setCasesFilterResetSignal((current) => current + 1);
     return loadAppData({ selectedCaseId: caseId });
   }
 
@@ -586,9 +593,14 @@ export default function App() {
   }
 
   async function openCaseFromDashboard(caseId) {
-    setSelectedCaseId(caseId);
-    navigateToPage("cases");
+    setDashboardDetailOpen(true);
     await openCaseItems(caseId);
+  }
+
+  function closeDashboardCaseDetails() {
+    setDashboardDetailOpen(false);
+    setSelectedCaseId(null);
+    setItems([]);
   }
 
   async function commitCaseStatus(caseItem, nextStatus) {
@@ -748,10 +760,19 @@ export default function App() {
           cases={cases}
           doctors={doctors}
           loading={loading}
+          busy={busy}
+          selectedCase={dashboardDetailOpen ? selectedCase : null}
+          items={items}
+          itemForm={itemForm}
           onOpenNewCase={openNewCaseFromDashboard}
           onOpenNewCaseForDate={openNewCaseFromDashboardDate}
           onOpenCase={openCaseFromDashboard}
           onAdvanceCase={advanceCase}
+          onDeliverCase={(caseId) => handleBulkDeliverCases([caseId])}
+          onItemChange={handleItemChange}
+          onItemSubmit={handleItemSubmit}
+          onRemoveItem={removeItem}
+          onCloseDetails={closeDashboardCaseDetails}
         />
       )}
 
@@ -769,6 +790,7 @@ export default function App() {
           setShowCaseModal={setShowCaseModal}
           selectedDoctorId={selectedDoctorId}
           setSelectedDoctorId={setSelectedDoctorId}
+          filterResetSignal={casesFilterResetSignal}
           onNewCase={openNewCaseModal}
           onCaseChange={handleCaseChange}
           onCaseSubmit={handleCaseSubmit}

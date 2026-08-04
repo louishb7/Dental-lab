@@ -14,6 +14,9 @@ export default function AttentionPanel({
   onRemoveCase,
   className = "",
   showActions = false,
+  showDeliverAction = showActions,
+  showRemoveAction = showActions,
+  discreetActions = false,
 }) {
   return (
     <section className={`rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm ${className}`.trim()}>
@@ -40,24 +43,28 @@ export default function AttentionPanel({
                     <DeadlineBadge deadline={caseItem.deadline} status={caseItem.status} />
                   </span>
                 </button>
-                {showActions && (
+                {(showDeliverAction || showRemoveAction) && (
                   <span className="flex shrink-0 items-center gap-1.5">
-                    <Button
-                      variant="danger"
-                      iconOnly
-                      aria-label="Excluir caso"
-                      onClick={() => onRemoveCase(caseItem.id)}
-                    >
-                      <Trash2 size={14} />
-                    </Button>
-                    <Button
-                      variant="success"
-                      size="sm"
-                      onClick={() => onDeliverCase(caseItem.id)}
-                    >
-                      <PackageCheck size={14} />
-                      Entregue
-                    </Button>
+                    {showRemoveAction && onRemoveCase && (
+                      <Button
+                        variant="danger"
+                        iconOnly
+                        aria-label="Excluir caso"
+                        onClick={() => onRemoveCase(caseItem.id)}
+                      >
+                        <Trash2 size={14} />
+                      </Button>
+                    )}
+                    {showDeliverAction && onDeliverCase && (
+                      <Button
+                        variant={discreetActions ? "secondary" : "success"}
+                        size="sm"
+                        onClick={() => onDeliverCase(caseItem.id)}
+                      >
+                        <PackageCheck className={discreetActions ? "text-[var(--color-success-soft)]" : ""} size={14} />
+                        Entregar
+                      </Button>
+                    )}
                   </span>
                 )}
               </article>

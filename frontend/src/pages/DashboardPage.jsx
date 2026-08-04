@@ -5,6 +5,7 @@ import DayBoard from "../components/dashboard/DayBoard.jsx";
 import WeekSchedule from "../components/dashboard/WeekSchedule.jsx";
 import PageContainer from "../components/layout/PageContainer.jsx";
 import LoadingState from "../components/ui/LoadingState.jsx";
+import CaseDetailsPage from "./CaseDetailsPage.jsx";
 import { getLocalDateKey } from "../utils/formatters.js";
 import {
   addDays,
@@ -56,10 +57,19 @@ export default function DashboardPage({
   cases = [],
   doctors = [],
   loading,
+  busy,
+  selectedCase,
+  items = [],
+  itemForm,
   onOpenNewCase,
   onOpenNewCaseForDate,
   onOpenCase,
   onAdvanceCase,
+  onDeliverCase,
+  onItemChange,
+  onItemSubmit,
+  onRemoveItem,
+  onCloseDetails,
 }) {
   const today = useMemo(() => new Date(), []);
   const [weekStart, setWeekStart] = useState(() => getStartOfWeek(today));
@@ -139,7 +149,7 @@ export default function DashboardPage({
             cases={selectedDayCases}
             onOpenCase={onOpenCase}
             onAdvanceCase={onAdvanceCase}
-            showReadyAction={isToday(selectedDate)}
+            showReadyAction
           />
 
           <AttentionPanel
@@ -149,9 +159,27 @@ export default function DashboardPage({
             emptyTitle="Nenhum caso pronto."
             emptyIcon={PackageCheck}
             onOpenCase={onOpenCase}
+            onDeliverCase={onDeliverCase}
+            showActions
+            showRemoveAction={false}
+            discreetActions
           />
         </div>
       </div>
+
+      {selectedCase && (
+        <CaseDetailsPage
+          caseItem={selectedCase}
+          doctor={doctorById.get(selectedCase.doctor_id)}
+          items={items}
+          itemForm={itemForm}
+          busy={busy}
+          onItemChange={onItemChange}
+          onItemSubmit={onItemSubmit}
+          onRemoveItem={onRemoveItem}
+          onClose={onCloseDetails}
+        />
+      )}
     </PageContainer>
   );
 }

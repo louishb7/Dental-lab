@@ -44,13 +44,13 @@ export default function CaseBoardCard({
       <div className="flex justify-end gap-1.5">
         {canMarkReady && (
           <Button
-            variant="success"
+            variant="secondary"
             size="sm"
             aria-label="Marcar como pronto"
             title="Marcar como pronto"
             onClick={() => onAdvanceCase(caseItem)}
           >
-            <PackageCheck size={14} />
+            <PackageCheck className="text-[var(--color-success-soft)]" size={14} />
             Pronto
           </Button>
         )}

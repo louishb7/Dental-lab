@@ -43,6 +43,7 @@ export default function CasesPage({
   setShowCaseModal,
   selectedDoctorId,
   setSelectedDoctorId,
+  filterResetSignal,
   onNewCase,
   onCaseChange,
   onCaseSubmit,
@@ -74,6 +75,12 @@ export default function CasesPage({
 
     setFilters((current) => ({ ...current, doctorId: String(selectedDoctorId) }));
   }, [selectedDoctorId]);
+
+  useEffect(() => {
+    if (!filterResetSignal) return;
+
+    setFilters({ search: "", status: "", doctorId: "" });
+  }, [filterResetSignal]);
 
   const doctorById = useMemo(
     () => new Map(doctors.map((doctor) => [doctor.id, doctor])),
