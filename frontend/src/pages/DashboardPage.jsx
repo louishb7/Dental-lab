@@ -1,15 +1,10 @@
 import { useMemo, useState } from "react";
-import {
-  AlertTriangle,
-  CalendarDays,
-  PackageCheck,
-} from "lucide-react";
+import { PackageCheck } from "lucide-react";
 import AttentionPanel from "../components/dashboard/AttentionPanel.jsx";
 import DayBoard from "../components/dashboard/DayBoard.jsx";
 import WeekSchedule from "../components/dashboard/WeekSchedule.jsx";
 import PageContainer from "../components/layout/PageContainer.jsx";
 import LoadingState from "../components/ui/LoadingState.jsx";
-import StatCard from "../components/ui/StatCard.jsx";
 import { getLocalDateKey } from "../utils/formatters.js";
 import {
   addDays,
@@ -88,15 +83,11 @@ export default function DashboardPage({
   const readyCases = activeCases
     .filter((caseItem) => caseItem.status === "completed")
     .sort(sortByPriorityAndDeadline);
-  const pendingCases = activeCases
-    .filter((caseItem) => caseItem.status === "pending")
-    .sort(sortByPriorityAndDeadline);
-  const todayCases = activeCases
-    .filter((caseItem) => isSameDate(caseItem.deadline, today))
-    .sort(sortByPriorityAndDeadline);
   const weekDays = getWeekDays(weekStart);
   const selectedDayKey = getLocalDateKey(selectedDate);
   const selectedDayCases = [...(groupedCases.get(selectedDayKey) || [])].sort(sortByPriorityAndDeadline);
+  const selectedDayHasPending = selectedDayCases.some((caseItem) => caseItem.status === "pending");
+  const selectedDayTitle = getDayBoardTitle(selectedDate);
 
   function shiftWeek(amount) {
     const currentWeekDays = getWeekDays(weekStart);
@@ -116,33 +107,6 @@ export default function DashboardPage({
       description="Organize seus casos da semana e acompanhe o que precisa de atenção."
     >
       <div className="grid gap-4">
-        <div className="grid grid-cols-3 gap-4 max-[1120px]:grid-cols-2 max-[640px]:grid-cols-1">
-          <StatCard
-            title="Hoje"
-            value={todayCases.length}
-            description="Casos com prazo para hoje"
-            icon={CalendarDays}
-            tone="info"
-            compact
-          />
-          <StatCard
-            title="Pendentes"
-            value={pendingCases.length}
-            description="Casos ainda em produção"
-            icon={AlertTriangle}
-            tone="warning"
-            compact
-          />
-          <StatCard
-            title="Prontos para entrega"
-            value={readyCases.length}
-            description="Casos concluídos"
-            icon={PackageCheck}
-            tone="success"
-            compact
-          />
-        </div>
-
         <WeekSchedule
           groupedCases={groupedCases}
           selectedDate={selectedDate}
@@ -157,7 +121,20 @@ export default function DashboardPage({
 
         <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(320px,0.8fr)] gap-4 max-[1120px]:grid-cols-1">
           <DayBoard
-            title={getDayBoardTitle(selectedDate)}
+            title={
+              isToday(selectedDate) && selectedDayHasPending ? (
+                <span className="inline-flex items-center gap-2">
+                  {selectedDayTitle}
+                  <span
+                    className="size-2 rounded-full bg-[var(--color-warning-soft)] shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-warning-soft)_14%,transparent)]"
+                    aria-label="Há casos pendentes hoje"
+                    title="Há casos pendentes hoje"
+                  />
+                </span>
+              ) : (
+                selectedDayTitle
+              )
+            }
             description={getDayBoardDescription(selectedDate, selectedDayCases.length)}
             cases={selectedDayCases}
             onOpenCase={onOpenCase}

@@ -18,7 +18,7 @@ describe('CaseService integration', () => {
 
   async function resetDatabase(): Promise<void> {
     await prisma.$executeRawUnsafe(
-      'TRUNCATE TABLE case_items, cases, doctors, users RESTART IDENTITY CASCADE',
+      'TRUNCATE TABLE case_history_events, case_items, cases, doctors, users RESTART IDENTITY CASCADE',
     );
   }
 
@@ -256,6 +256,133 @@ describe('CaseService integration', () => {
       delivered_at: deliveredAt,
       status: 'delivered',
     });
+  });
+
+  it('updates only status for fixed cases without requiring total_value again', async () => {
+    const userId = await createUser('fixed-status@cadista.local', 'fixed1');
+    const doctorId = await createDoctor(userId);
+    const created = await cases.createCase(
+      {
+        doctor_id: doctorId,
+        patient_ref: 'Paciente Fixo Status',
+        pricing_mode: 'fixed',
+        priority: 'normal',
+        status: 'pending',
+        total_value: '450,00',
+      },
+      userId,
+    );
+
+    const beforeUpdate = await prisma.dentalCase.findUnique({
+      where: { id: created.id },
+      select: { pricingMode: true, status: true, totalValue: true },
+    });
+    expect(beforeUpdate).toMatchObject({
+      pricingMode: 'fixed',
+      status: 'pending',
+    });
+    expect(beforeUpdate?.totalValue?.toString()).toBe('450');
+
+    const updated = await cases.updateCase(created.id, { status: 'completed' }, userId);
+
+    expect(updated).toMatchObject({
+      pricing_mode: 'fixed',
+      status: 'completed',
+    });
+    expect(updated?.total_value?.toString()).toBe('450');
+    await expect(
+      prisma.caseHistoryEvent.findFirst({
+        where: {
+          caseId: created.id,
+          eventType: 'status_advanced',
+          fromStatus: 'pending',
+          toStatus: 'completed',
+        },
+      }),
+    ).resolves.toMatchObject({ userId });
+  });
+
+  it('updates only status for service-priced cases and preserves calculated total', async () => {
+    const userId = await createUser('service-status@cadista.local', 'servs1');
+    const doctorId = await createDoctor(userId);
+    const created = await cases.createCase(
+      {
+        doctor_id: doctorId,
+        patient_ref: 'Paciente Serviços Status',
+        pricing_mode: 'services',
+        priority: 'normal',
+        status: 'pending',
+      },
+      userId,
+    );
+
+    await prisma.caseItem.create({
+      data: {
+        caseId: created.id,
+        quantity: 2,
+        serviceType: 'coroa',
+        tooth: '11',
+        unitValue: new Prisma.Decimal('100.00'),
+      },
+    });
+    await cases.updateCase(created.id, { notes: 'Recalcular total' }, userId);
+
+    const beforeStatusUpdate = await prisma.dentalCase.findUnique({
+      where: { id: created.id },
+      select: { pricingMode: true, status: true, totalValue: true },
+    });
+    expect(beforeStatusUpdate?.totalValue?.toString()).toBe('200');
+
+    const updated = await cases.updateCase(created.id, { status: 'completed' }, userId);
+
+    expect(updated).toMatchObject({
+      pricing_mode: 'services',
+      status: 'completed',
+    });
+    expect(updated?.total_value?.toString()).toBe('200');
+    await expect(
+      prisma.caseHistoryEvent.findFirst({
+        where: {
+          caseId: created.id,
+          eventType: 'status_advanced',
+          fromStatus: 'pending',
+          toStatus: 'completed',
+        },
+      }),
+    ).resolves.toMatchObject({ userId });
+  });
+
+  it('still rejects genuinely invalid financial updates', async () => {
+    const userId = await createUser('invalid-finance@cadista.local', 'invf01');
+    const doctorId = await createDoctor(userId);
+    const fixed = await cases.createCase(
+      {
+        doctor_id: doctorId,
+        patient_ref: 'Paciente Fixo Inválido',
+        pricing_mode: 'fixed',
+        priority: 'normal',
+        status: 'pending',
+        total_value: '300,00',
+      },
+      userId,
+    );
+    const service = await cases.createCase(
+      {
+        doctor_id: doctorId,
+        patient_ref: 'Paciente Serviços Inválido',
+        pricing_mode: 'services',
+        priority: 'normal',
+        status: 'pending',
+      },
+      userId,
+    );
+
+    await expect(cases.updateCase(fixed.id, { total_value: null }, userId)).rejects.toThrow(
+      'Informe o valor fixo para este caso.',
+    );
+    await expect(cases.updateCase(service.id, { total_value: '100,00' }, userId)).rejects.toThrow(
+      'Casos por serviços não usam valor combinado.',
+    );
   });
 
   it('recalculates service totals from existing items and returns items_count', async () => {

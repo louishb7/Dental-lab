@@ -2,6 +2,7 @@ import {
   BarChart3,
   ClipboardList,
   CreditCard,
+  History,
   Stethoscope,
 } from "lucide-react";
 import { PRODUCT_NAME } from "../../config/product.js";
@@ -10,6 +11,7 @@ import ToothIcon from "../icons/ToothIcon.jsx";
 const NAV_ITEMS = [
   { id: "dashboard", label: "Bancada", icon: BarChart3 },
   { id: "cases", label: "Casos", icon: ClipboardList },
+  { id: "history", label: "Histórico", icon: History },
   { id: "doctors", label: "Dentistas", icon: Stethoscope },
   { id: "finance", label: "Financeiro", icon: CreditCard },
 ];

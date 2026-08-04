@@ -44,6 +44,22 @@ export function assertLinearStatusTransition(
   }
 }
 
+export function getPreviousCaseStatus(currentStatus: string): CaseStatus {
+  if (currentStatus === 'delivered') {
+    return 'completed';
+  }
+
+  if (currentStatus === 'completed') {
+    return 'pending';
+  }
+
+  if (currentStatus === 'pending') {
+    throw new Error('Caso pendente não possui status anterior.');
+  }
+
+  throw new Error('Status atual inválido.');
+}
+
 export function isCaseStatus(status: string): status is CaseStatus {
   return status === 'pending' || status === 'completed' || status === 'delivered';
 }

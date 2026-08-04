@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client';
 
 import { normalizeDecimalValue } from './case-money';
-import { assertLinearStatusTransition, resolvePricingMode } from './case-rules';
+import { assertLinearStatusTransition, getPreviousCaseStatus, resolvePricingMode } from './case-rules';
 
 describe('case money normalization', () => {
   it('normalizes legacy currency inputs', () => {
@@ -41,5 +41,11 @@ describe('case business rules', () => {
     expect(() => assertLinearStatusTransition('delivered', 'completed')).toThrow(
       'Fluxo de status inválido',
     );
+  });
+
+  it('resolves only the immediate previous status for explicit reverts', () => {
+    expect(getPreviousCaseStatus('delivered')).toBe('completed');
+    expect(getPreviousCaseStatus('completed')).toBe('pending');
+    expect(() => getPreviousCaseStatus('pending')).toThrow('Caso pendente não possui status anterior');
   });
 });

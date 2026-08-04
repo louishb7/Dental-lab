@@ -25,7 +25,7 @@ describe('case e2e', () => {
 
   async function resetDatabase(): Promise<void> {
     await prisma.$executeRawUnsafe(
-      'TRUNCATE TABLE case_items, cases, doctors, users RESTART IDENTITY CASCADE',
+      'TRUNCATE TABLE case_history_events, case_items, cases, doctors, users RESTART IDENTITY CASCADE',
     );
     loginRateLimit.resetLoginAttempts();
   }
@@ -270,6 +270,41 @@ describe('case e2e', () => {
     expect(delivered.body.status).toBe('delivered');
     expect(delivered.body.delivered_at).toEqual(expect.any(String));
     expect(delivered.body.status_revert_reason).toBeNull();
+  });
+
+  it('marks fixed-price cases as completed without resending total_value', async () => {
+    const user = await registerUser('fixed-status@cadista.local', 'fixed1');
+    const doctorId = await createDoctor(user.access_token);
+
+    const created = await request(app.getHttpServer())
+      .post('/cases/')
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .send({
+        doctor_id: doctorId,
+        patient_ref: 'Paciente Fixo Status',
+        pricing_mode: 'fixed',
+        total_value: '450,00',
+      })
+      .expect(201);
+
+    expect(created.body).toMatchObject({
+      pricing_mode: 'fixed',
+      status: 'pending',
+      total_value: '450',
+    });
+
+    await request(app.getHttpServer())
+      .put(`/cases/${created.body.id}`)
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .send({ status: 'completed' })
+      .expect(200)
+      .expect((response) => {
+        expect(response.body).toMatchObject({
+          pricing_mode: 'fixed',
+          status: 'completed',
+          total_value: '450',
+        });
+      });
   });
 
   it('returns items and recalculated service totals from case_items', async () => {

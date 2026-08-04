@@ -181,13 +181,6 @@ export default function CaseDetailsPage({
       >
         <div className="grid gap-3">
           <section className="grid gap-4 rounded-md border border-primary/30 bg-[var(--color-surface)] p-4">
-            <div className="flex justify-end">
-              <Button variant="primary" size="sm" onClick={() => openItemForm()}>
-                <Plus size={16} />
-                Adicionar serviço
-              </Button>
-            </div>
-
             <div className="grid grid-cols-4 gap-3 max-[640px]:grid-cols-2">
               <div className="grid min-w-0 gap-1">
                 <small className="text-xs font-bold text-[var(--color-text-muted)]">Paciente</small>
@@ -204,6 +197,10 @@ export default function CaseDetailsPage({
               <div className="grid min-w-0 gap-1">
                 <small className="text-xs font-bold text-[var(--color-text-muted)]">Total</small>
                 <strong className="text-sm font-bold text-[var(--color-text)]">{formatCurrency(caseItem.total_value)}</strong>
+                <Button variant="primary" size="sm" className="mt-2 justify-self-start" onClick={() => openItemForm()}>
+                  <Plus size={16} />
+                  Adicionar serviço
+                </Button>
               </div>
             </div>
 

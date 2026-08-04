@@ -11,6 +11,10 @@ const PAGE_META = {
     title: "Casos",
     subtitle: null,
   },
+  history: {
+    title: "Histórico",
+    subtitle: null,
+  },
   doctors: {
     title: "Dentistas",
     subtitle: null,

@@ -3,7 +3,12 @@ import { Prisma, type CaseItem, type DentalCase } from '@prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { normalizeDecimalValue } from './case-money';
-import { assertLinearStatusTransition, resolvePricingMode, type PricingMode } from './case-rules';
+import {
+  assertLinearStatusTransition,
+  getPreviousCaseStatus,
+  resolvePricingMode,
+  type PricingMode,
+} from './case-rules';
 import type { CaseBulkDeliverRequestDto } from './dto/case-bulk-deliver-request.dto';
 import type { CaseCreateRequestDto } from './dto/case-create-request.dto';
 import type { CaseListQueryDto } from './dto/case-list-query.dto';
@@ -11,6 +16,7 @@ import type { CaseUpdateRequestDto } from './dto/case-update-request.dto';
 import type { CaseItemResponse, CaseResponse } from './case.types';
 
 type CaseWithItems = DentalCase & { items: CaseItem[] };
+type CaseMutationClient = Prisma.TransactionClient | PrismaService;
 
 @Injectable()
 export class CaseService {
@@ -28,20 +34,33 @@ export class CaseService {
       throw new Error('Casos por serviços não usam valor combinado.');
     }
 
-    const createdCase = await this.prisma.dentalCase.create({
-      data: {
-        doctorId: input.doctor_id,
-        patientRef: input.patient_ref,
-        pricingMode,
-        deadline: input.deadline ?? null,
-        priority: input.priority,
-        status: 'pending',
-        totalValue: pricingMode === 'fixed' ? totalValue : null,
-        notes: input.notes ?? null,
-      },
-      include: {
-        items: true,
-      },
+    const createdCase = await this.prisma.$transaction(async (tx) => {
+      const foundCase = await tx.dentalCase.create({
+        data: {
+          doctorId: input.doctor_id,
+          patientRef: input.patient_ref,
+          pricingMode,
+          deadline: input.deadline ?? null,
+          priority: input.priority,
+          status: 'pending',
+          totalValue: pricingMode === 'fixed' ? totalValue : null,
+          notes: input.notes ?? null,
+        },
+        include: {
+          items: true,
+        },
+      });
+
+      await this.createHistoryEvent(tx, {
+        caseId: foundCase.id,
+        userId,
+        eventType: 'case_created',
+        fromStatus: null,
+        toStatus: 'pending',
+        createdAt: foundCase.createdAt,
+      });
+
+      return foundCase;
     });
 
     return this.toResponse(createdCase, 0);
@@ -113,7 +132,7 @@ export class CaseService {
       await this.assertActiveDoctor(input.doctor_id, userId);
     }
 
-    const totalValueProvided = Object.prototype.hasOwnProperty.call(input, 'total_value');
+    const totalValueProvided = input.total_value !== undefined;
     const newTotalValue = totalValueProvided
       ? normalizeDecimalValue(input.total_value, 'Valor combinado inválido')
       : null;
@@ -128,18 +147,36 @@ export class CaseService {
       totalValueProvided,
     });
 
-    const updatedCase = await this.prisma.dentalCase.update({
-      where: {
-        id: currentCase.id,
-      },
-      data,
-      include: {
-        items: {
-          orderBy: {
-            id: 'desc',
+    const shouldRecordStatusAdvance =
+      input.status !== undefined && input.status !== null && input.status !== currentCase.status;
+
+    const updatedCase = await this.prisma.$transaction(async (tx) => {
+      const foundCase = await tx.dentalCase.update({
+        where: {
+          id: currentCase.id,
+        },
+        data,
+        include: {
+          items: {
+            orderBy: {
+              id: 'desc',
+            },
           },
         },
-      },
+      });
+
+      if (shouldRecordStatusAdvance) {
+        await this.createHistoryEvent(tx, {
+          caseId: foundCase.id,
+          userId,
+          eventType: 'status_advanced',
+          fromStatus: currentCase.status,
+          toStatus: foundCase.status,
+          createdAt: new Date(),
+        });
+      }
+
+      return foundCase;
     });
 
     return this.toResponse(updatedCase, updatedCase.items.length);
@@ -222,9 +259,9 @@ export class CaseService {
     }
 
     const now = new Date();
-    await this.prisma.$transaction(
-      cases.map((foundCase) =>
-        this.prisma.dentalCase.update({
+    await this.prisma.$transaction(async (tx) => {
+      for (const foundCase of cases) {
+        const updatedCase = await tx.dentalCase.update({
           where: {
             id: foundCase.id,
           },
@@ -232,9 +269,20 @@ export class CaseService {
             status: 'delivered',
             deliveredAt: foundCase.deliveredAt ?? now,
           },
-        }),
-      ),
-    );
+        });
+
+        if (foundCase.status !== 'delivered') {
+          await this.createHistoryEvent(tx, {
+            caseId: foundCase.id,
+            userId,
+            eventType: 'status_advanced',
+            fromStatus: foundCase.status,
+            toStatus: updatedCase.status,
+            createdAt: now,
+          });
+        }
+      }
+    });
 
     const deliveredCases = await this.prisma.dentalCase.findMany({
       where: {
@@ -255,6 +303,65 @@ export class CaseService {
     });
 
     return deliveredCases.map((foundCase) => this.toResponse(foundCase, foundCase.items.length));
+  }
+
+  async revertCaseStatus(
+    caseId: number,
+    reason: string,
+    userId: number,
+  ): Promise<CaseResponse | null> {
+    const trimmedReason = reason.trim().replace(/\s+/g, ' ');
+    if (!trimmedReason) {
+      throw new Error('Informe o motivo do retorno de status.');
+    }
+
+    const currentCase = await this.prisma.dentalCase.findFirst({
+      where: this.activeCaseOwnershipWhere(caseId, userId),
+      include: {
+        items: true,
+      },
+    });
+
+    if (currentCase === null) {
+      return null;
+    }
+
+    const previousStatus = getPreviousCaseStatus(currentCase.status);
+    const now = new Date();
+
+    const revertedCase = await this.prisma.$transaction(async (tx) => {
+      const foundCase = await tx.dentalCase.update({
+        where: {
+          id: currentCase.id,
+        },
+        data: {
+          status: previousStatus,
+          deliveredAt: currentCase.status === 'delivered' ? null : currentCase.deliveredAt,
+          statusRevertReason: trimmedReason,
+        },
+        include: {
+          items: {
+            orderBy: {
+              id: 'desc',
+            },
+          },
+        },
+      });
+
+      await this.createHistoryEvent(tx, {
+        caseId: foundCase.id,
+        userId,
+        eventType: 'status_reverted',
+        fromStatus: currentCase.status,
+        toStatus: previousStatus,
+        reason: trimmedReason,
+        createdAt: now,
+      });
+
+      return foundCase;
+    });
+
+    return this.toResponse(revertedCase, revertedCase.items.length);
   }
 
   private async assertActiveDoctor(doctorId: number, userId: number): Promise<void> {
@@ -316,23 +423,27 @@ export class CaseService {
       data.notes = input.notes;
     }
 
-    if (pricing.targetPricingMode === 'fixed') {
-      if (pricing.totalValueProvided) {
-        if (pricing.newTotalValue === null) {
-          throw new Error('Informe o valor fixo para este caso.');
-        }
-        data.totalValue = pricing.newTotalValue;
-      } else if (currentCase.totalValue === null) {
+    if (pricing.totalValueProvided && pricing.targetPricingMode === 'fixed') {
+      if (pricing.newTotalValue === null) {
         throw new Error('Informe o valor fixo para este caso.');
       }
-    } else {
-      if (pricing.totalValueProvided && pricing.newTotalValue !== null) {
+      data.totalValue = pricing.newTotalValue;
+    }
+
+    if (pricing.totalValueProvided && pricing.targetPricingMode === 'services') {
+      if (pricing.newTotalValue !== null) {
         throw new Error('Casos por serviços não usam valor combinado.');
       }
       data.totalValue = await this.sumCaseItemValues(currentCase.id);
     }
 
-    data.pricingMode = pricing.targetPricingMode;
+    if (
+      !pricing.totalValueProvided &&
+      pricing.targetPricingMode === 'services' &&
+      this.hasNonStatusCaseUpdate(input)
+    ) {
+      data.totalValue = await this.sumCaseItemValues(currentCase.id);
+    }
 
     if (input.status !== undefined && input.status !== null) {
       assertLinearStatusTransition(currentCase.status, input.status);
@@ -351,6 +462,16 @@ export class CaseService {
     return data;
   }
 
+  private hasNonStatusCaseUpdate(input: CaseUpdateRequestDto): boolean {
+    return (
+      input.doctor_id !== undefined ||
+      input.patient_ref !== undefined ||
+      input.deadline !== undefined ||
+      input.priority !== undefined ||
+      input.notes !== undefined
+    );
+  }
+
   private async sumCaseItemValues(caseId: number): Promise<Prisma.Decimal | null> {
     const rows = await this.prisma.$queryRaw<Array<{ total: Prisma.Decimal | null }>>`
       SELECT SUM(quantity * unit_value) AS total
@@ -359,6 +480,31 @@ export class CaseService {
     `;
 
     return rows[0]?.total ?? null;
+  }
+
+  private async createHistoryEvent(
+    client: CaseMutationClient,
+    data: {
+      caseId: number;
+      userId: number;
+      eventType: 'case_created' | 'status_advanced' | 'status_reverted';
+      fromStatus: string | null;
+      toStatus: string | null;
+      reason?: string | null;
+      createdAt?: Date;
+    },
+  ): Promise<void> {
+    await client.caseHistoryEvent.create({
+      data: {
+        caseId: data.caseId,
+        userId: data.userId,
+        eventType: data.eventType,
+        fromStatus: data.fromStatus,
+        toStatus: data.toStatus,
+        reason: data.reason ?? null,
+        ...(data.createdAt ? { createdAt: data.createdAt } : {}),
+      },
+    });
   }
 
   private toResponse(foundCase: CaseWithItems, itemsCount: number): CaseResponse {

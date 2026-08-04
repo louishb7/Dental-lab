@@ -1,4 +1,4 @@
-import { AlertTriangle, Eye, Layers3, PackageCheck, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, Layers3, PackageCheck, Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import CaseIntakeForm from "../components/cases/CaseIntakeForm.jsx";
 import AttentionPanel from "../components/dashboard/AttentionPanel.jsx";
@@ -10,7 +10,7 @@ import Modal from "../components/ui/Modal.jsx";
 import PageContainer from "../components/layout/PageContainer.jsx";
 import PriorityBadge from "../components/ui/PriorityBadge.jsx";
 import StatusBadge from "../components/ui/StatusBadge.jsx";
-import { formatCurrency, formatDate } from "../utils/formatters.js";
+import { formatCurrency } from "../utils/formatters.js";
 import { formatServiceItemCount } from "../utils/cases.js";
 import { isOverdue } from "../utils/productionWeek.js";
 import CaseDetailsPage from "./CaseDetailsPage.jsx";
@@ -97,7 +97,6 @@ export default function CasesPage({
   }, [cases, doctorById, filters]);
 
   const openCases = filteredCases.filter((caseItem) => caseItem.status !== "delivered");
-  const historyCases = filteredCases.filter((caseItem) => caseItem.status === "delivered");
   const readyCases = openCases.filter((caseItem) => caseItem.status === "completed");
   const productionCaseCount = openCases.filter((caseItem) => caseItem.status === "pending").length;
   const overdueCases = openCases
@@ -241,57 +240,6 @@ export default function CasesPage({
     },
   ];
 
-  const historyColumns = [
-    {
-      key: "patient_ref",
-      header: "Caso / Referência",
-      render: (caseItem) => (
-        <span className="grid min-w-0 gap-1">
-          <strong className="truncate text-sm font-bold text-[var(--color-text)]">{caseItem.patient_ref}</strong>
-          <small className="truncate text-xs text-[var(--color-text-muted)]">{doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`}</small>
-        </span>
-      ),
-    },
-    {
-      key: "services",
-      header: "Itens de serviço",
-      render: (caseItem) => (
-        <span className="block min-w-0">
-          <strong className="text-sm font-bold text-[var(--color-text)]">{formatServiceItemCount(caseItem)}</strong>
-        </span>
-      ),
-    },
-    {
-      key: "delivered_at",
-      header: "Entregue em",
-      render: (caseItem) => formatDate(caseItem.delivered_at),
-    },
-    {
-      key: "total_value",
-      header: "Valor",
-      render: (caseItem) => formatCurrency(caseItem.total_value),
-    },
-    {
-      key: "actions",
-      header: "Ações",
-      render: (caseItem) => (
-        <div className="flex flex-wrap items-center gap-1.5">
-          <Button
-            variant="secondary"
-            iconOnly
-            aria-label="Abrir detalhes"
-            onClick={() => onOpenCaseItems(caseItem.id)}
-          >
-            <Eye size={16} />
-          </Button>
-          <Button variant="danger" iconOnly aria-label="Excluir caso" onClick={() => onRemoveCase(caseItem.id)}>
-            <Trash2 size={16} />
-          </Button>
-        </div>
-      ),
-    },
-  ];
-
   return (
     <PageContainer
       kicker="Casos"
@@ -317,7 +265,6 @@ export default function CasesPage({
               <option value="">Todos os status</option>
               <option value="pending">Pendente</option>
               <option value="completed">Pronto</option>
-              <option value="delivered">Entregue</option>
             </select>
             <select
               className={FILTER_CONTROL_CLASS}
@@ -383,24 +330,6 @@ export default function CasesPage({
           />
         )}
 
-        <section className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm">
-          <div className="border-b border-[var(--color-border)] px-4 py-3">
-            <div className="grid gap-1">
-              <h3 className="text-base font-bold leading-tight">Histórico de entregas</h3>
-              <p className="text-sm leading-snug text-[var(--color-text-muted)]">Casos que já foram entregues.</p>
-            </div>
-          </div>
-          <div className="p-4">
-            <DataTable
-              columns={historyColumns}
-              data={historyCases}
-              loading={loading}
-              emptyIcon={Layers3}
-              emptyTitle="Nenhuma entrega registrada."
-              emptyDescription="Os casos entregues ficam arquivados aqui."
-            />
-          </div>
-        </section>
       </div>
 
       {showCaseModal && (

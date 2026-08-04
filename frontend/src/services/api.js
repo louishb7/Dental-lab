@@ -2,6 +2,7 @@ const DEFAULT_API_ROOT_URL = "http://localhost:3001";
 const API_ROOT_URL = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_ROOT_URL).replace(/\/+$/, "");
 const DOCTORS_URL = `${API_ROOT_URL}/doctors`;
 const CASES_URL = `${API_ROOT_URL}/cases`;
+const CASE_HISTORY_URL = `${API_ROOT_URL}/case-history`;
 
 /**
  * Builds default request headers for the Cadista API.
@@ -304,6 +305,81 @@ export async function deleteCase(id) {
   const response = await fetch(`${CASES_URL}/${id}`, {
     method: "DELETE",
     headers: buildHeaders(),
+  });
+
+  return parseResponse(response);
+}
+
+function buildQueryString(filters = {}) {
+  const params = new URLSearchParams();
+
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      params.set(key, String(value));
+    }
+  });
+
+  return params.toString() ? `?${params.toString()}` : "";
+}
+
+/**
+ * Fetches paginated historical case records using server-side filters.
+ *
+ * @param {object} filters Query filters and pagination values.
+ * @returns {Promise<{items: Array, pagination: object}>} Paginated history list.
+ */
+export async function getCaseHistory(filters = {}) {
+  const response = await fetch(`${CASE_HISTORY_URL}${buildQueryString(filters)}`, {
+    method: "GET",
+    headers: buildHeaders(),
+  });
+
+  return parseResponse(response);
+}
+
+/**
+ * Fetches the detail summary for a case in the historical archive.
+ *
+ * @param {number} caseId Unique case identifier.
+ * @returns {Promise<object>} Case detail returned by the backend.
+ */
+export async function getCaseHistoryDetail(caseId) {
+  const response = await fetch(`${CASE_HISTORY_URL}/${caseId}`, {
+    method: "GET",
+    headers: buildHeaders(),
+  });
+
+  return parseResponse(response);
+}
+
+/**
+ * Fetches a paginated timeline for a single case.
+ *
+ * @param {number} caseId Unique case identifier.
+ * @param {{page?: number, limit?: number}} pagination Pagination controls.
+ * @returns {Promise<{items: Array, pagination: object}>} Paginated events.
+ */
+export async function getCaseHistoryEvents(caseId, pagination = {}) {
+  const response = await fetch(`${CASES_URL}/${caseId}/history${buildQueryString(pagination)}`, {
+    method: "GET",
+    headers: buildHeaders(),
+  });
+
+  return parseResponse(response);
+}
+
+/**
+ * Requests the backend to revert a case to its immediate previous status.
+ *
+ * @param {number} caseId Unique case identifier.
+ * @param {{reason: string}} data Reversion reason.
+ * @returns {Promise<object>} Updated case returned by the backend.
+ */
+export async function revertCaseStatus(caseId, data) {
+  const response = await fetch(`${CASES_URL}/${caseId}/revert-status`, {
+    method: "POST",
+    headers: buildHeaders(),
+    body: JSON.stringify(data),
   });
 
   return parseResponse(response);

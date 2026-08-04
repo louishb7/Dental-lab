@@ -24,7 +24,7 @@ describe('doctor e2e', () => {
 
   async function resetDatabase(): Promise<void> {
     await prisma.$executeRawUnsafe(
-      'TRUNCATE TABLE case_items, cases, doctors, users RESTART IDENTITY CASCADE',
+      'TRUNCATE TABLE case_history_events, case_items, cases, doctors, users RESTART IDENTITY CASCADE',
     );
     loginRateLimit.resetLoginAttempts();
   }

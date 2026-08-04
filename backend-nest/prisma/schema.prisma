@@ -19,6 +19,7 @@ model User {
   createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt           DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   doctors             Doctor[]
+  caseHistoryEvents   CaseHistoryEvent[]
 
   @@unique([email], map: "uq_users_email")
   @@unique([username], map: "uq_users_username")
@@ -59,6 +60,7 @@ model DentalCase {
   statusRevertReason String?    @map("status_revert_reason") @db.Text
   doctor             Doctor     @relation(fields: [doctorId], references: [id], onDelete: Restrict, map: "cases_doctor_id_fkey")
   items              CaseItem[]
+  historyEvents      CaseHistoryEvent[]
 
   @@index([doctorId], map: "ix_cases_doctor_id")
   @@index([patientRef], map: "ix_cases_patient_ref")
@@ -66,6 +68,23 @@ model DentalCase {
   @@index([status], map: "ix_cases_status")
   @@index([deletedAt], map: "ix_cases_deleted_at")
   @@map("cases")
+}
+
+model CaseHistoryEvent {
+  id         Int        @id @default(autoincrement())
+  caseId     Int        @map("case_id")
+  userId     Int        @map("user_id")
+  eventType  String     @map("event_type") @db.VarChar(40)
+  fromStatus String?    @map("from_status") @db.VarChar(20)
+  toStatus   String?    @map("to_status") @db.VarChar(20)
+  reason     String?    @db.Text
+  createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  case       DentalCase @relation(fields: [caseId], references: [id], onDelete: Restrict, map: "case_history_events_case_id_fkey")
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade, map: "case_history_events_user_id_fkey")
+
+  @@index([caseId, createdAt], map: "ix_case_history_events_case_id_created_at")
+  @@index([userId], map: "ix_case_history_events_user_id")
+  @@map("case_history_events")
 }
 
 model CaseItem {

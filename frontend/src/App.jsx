@@ -6,6 +6,7 @@ import CasesPage from "./pages/CasesPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import DoctorsPage from "./pages/DoctorsPage.jsx";
 import FinancePage from "./pages/FinancePage.jsx";
+import HistoryPage from "./pages/HistoryPage.jsx";
 import {
   clearSession,
   createCase,
@@ -45,6 +46,7 @@ import { formatCurrencyInput, getLocalDateKey } from "./utils/formatters.js";
 const THEME_STORAGE_KEY = "app-ui-theme";
 const THEME_SEQUENCE = ["dark", "light"];
 const LAST_CASE_DOCTOR_STORAGE_KEY = "cadista_last_case_doctor_id";
+const APP_PAGES = ["dashboard", "cases", "history", "doctors", "finance"];
 
 function getStoredTheme() {
   const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
@@ -74,6 +76,34 @@ function createDefaultCaseForm(overrides = {}) {
     deadline: getSuggestedCaseDeadline(),
     ...overrides,
   };
+}
+
+function readNavigationState() {
+  const params = new URLSearchParams(window.location.search);
+  const pathParts = window.location.pathname.split("/").filter(Boolean);
+  const pathPage = pathParts[0] === "historico" ? "history" : null;
+  const page = params.get("page") || pathPage || "dashboard";
+  const caseId = Number(params.get("caseId") || (pathPage === "history" ? pathParts[1] : null));
+
+  return {
+    page: APP_PAGES.includes(page) ? page : "dashboard",
+    historyCaseId: Number.isInteger(caseId) && caseId > 0 ? caseId : null,
+  };
+}
+
+function buildNavigationUrl(page, caseId = null) {
+  const url = new URL(window.location.href);
+  url.pathname = "/";
+  url.search = "";
+
+  if (page !== "dashboard") {
+    url.searchParams.set("page", page);
+  }
+  if (page === "history" && caseId) {
+    url.searchParams.set("caseId", String(caseId));
+  }
+
+  return `${url.pathname}${url.search}`;
 }
 
 function createEmptyAuthErrors() {
@@ -116,7 +146,10 @@ export default function App() {
   const [authMessage, setAuthMessage] = useState(null);
   const [authErrors, setAuthErrors] = useState(createEmptyAuthErrors());
 
-  const [activePage, setActivePage] = useState("dashboard");
+  const [activePage, setActivePage] = useState(() => readNavigationState().page);
+  const [historyFocusCaseId, setHistoryFocusCaseId] = useState(
+    () => readNavigationState().historyCaseId,
+  );
   const [theme, setTheme] = useState(() => getStoredTheme());
   const [dashboard, setDashboard] = useState(null);
   const [doctors, setDoctors] = useState([]);
@@ -145,6 +178,17 @@ export default function App() {
     window.localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
 
+  useEffect(() => {
+    function handlePopState() {
+      const navigation = readNavigationState();
+      setActivePage(navigation.page);
+      setHistoryFocusCaseId(navigation.historyCaseId);
+    }
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
   function changeAuthMode(mode) {
     setAuthMode(mode);
     setAuthMessage(null);
@@ -153,6 +197,22 @@ export default function App() {
 
   function toggleTheme() {
     setTheme((current) => getNextTheme(current));
+  }
+
+  function navigateToPage(page, options = {}) {
+    const nextPage = APP_PAGES.includes(page) ? page : "dashboard";
+    const nextHistoryCaseId = nextPage === "history" ? options.caseId ?? null : null;
+
+    setActivePage(nextPage);
+    setHistoryFocusCaseId(nextHistoryCaseId);
+    window.history.pushState({}, "", buildNavigationUrl(nextPage, nextHistoryCaseId));
+  }
+
+  function clearHistoryFocusCase() {
+    setHistoryFocusCaseId(null);
+    if (activePage === "history") {
+      window.history.replaceState({}, "", buildNavigationUrl("history"));
+    }
   }
 
   async function loadAppData(options = {}) {
@@ -342,7 +402,7 @@ export default function App() {
   }
 
   async function revealCaseInCases(caseId) {
-    setActivePage("cases");
+    navigateToPage("cases");
     setSelectedCaseId(caseId);
     return loadAppData({ selectedCaseId: caseId });
   }
@@ -496,7 +556,7 @@ export default function App() {
 
   function openDoctorCases(doctorId) {
     setSelectedDoctorId(doctorId);
-    setActivePage("cases");
+    navigateToPage("cases");
   }
 
   function getDefaultCaseDoctorId() {
@@ -516,18 +576,18 @@ export default function App() {
   }
 
   function openNewCaseFromDashboard() {
-    setActivePage("cases");
+    navigateToPage("cases");
     openNewCaseModal();
   }
 
   function openNewCaseFromDashboardDate(date) {
-    setActivePage("cases");
+    navigateToPage("cases");
     openNewCaseModal({ deadline: getLocalDateKey(date) || getSuggestedCaseDeadline() });
   }
 
   async function openCaseFromDashboard(caseId) {
     setSelectedCaseId(caseId);
-    setActivePage("cases");
+    navigateToPage("cases");
     await openCaseItems(caseId);
   }
 
@@ -675,7 +735,7 @@ export default function App() {
   return (
     <AppLayout
       activePage={activePage}
-      onNavigate={setActivePage}
+      onNavigate={navigateToPage}
       session={session}
       theme={theme}
       onToggleTheme={toggleTheme}
@@ -720,6 +780,17 @@ export default function App() {
           onRemoveCase={removeCase}
           onRemoveItem={removeItem}
           onCloseDetails={() => setSelectedCaseId(null)}
+        />
+      )}
+
+      {activePage === "history" && (
+        <HistoryPage
+          doctors={doctors}
+          focusCaseId={historyFocusCaseId}
+          busy={busy}
+          onStatusChanged={loadAppData}
+          onMessage={setMessage}
+          onClearFocusCase={clearHistoryFocusCase}
         />
       )}
 

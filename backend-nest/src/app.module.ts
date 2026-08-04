@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 import { AuthModule } from './auth/auth.module';
+import { CaseHistoryModule } from './case-history/case-history.module';
 import { CaseItemModule } from './case-item/case-item.module';
 import { CaseModule } from './case/case.module';
 import { validateEnvironment } from './config/app.config';
@@ -22,6 +23,7 @@ import { UserModule } from './user/user.module';
     AuthModule,
     DoctorModule,
     CaseModule,
+    CaseHistoryModule,
     CaseItemModule,
     DashboardModule,
     HealthModule,

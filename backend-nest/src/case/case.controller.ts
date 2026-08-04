@@ -23,6 +23,7 @@ import type { CaseResponse } from './case.types';
 import { CaseBulkDeliverRequestDto } from './dto/case-bulk-deliver-request.dto';
 import { CaseCreateRequestDto } from './dto/case-create-request.dto';
 import { CaseListQueryDto } from './dto/case-list-query.dto';
+import { CaseRevertStatusRequestDto } from './dto/case-revert-status-request.dto';
 import { CaseUpdateRequestDto } from './dto/case-update-request.dto';
 
 const caseIdPipe = new ParseIntPipe({
@@ -80,6 +81,33 @@ export class CaseController {
     try {
       return await this.cases.bulkDeliverCases(payload, user.id);
     } catch (error) {
+      if (error instanceof Error) {
+        throw new ConflictException({ detail: error.message });
+      }
+
+      throw error;
+    }
+  }
+
+  @Post('/:case_id/revert-status')
+  @HttpCode(200)
+  async revertCaseStatus(
+    @Param('case_id', caseIdPipe) caseId: number,
+    @Body() payload: CaseRevertStatusRequestDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<CaseResponse> {
+    try {
+      const revertedCase = await this.cases.revertCaseStatus(caseId, payload.reason, user.id);
+      if (revertedCase === null) {
+        throw new NotFoundException({ detail: 'Caso não encontrado' });
+      }
+
+      return revertedCase;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+
       if (error instanceof Error) {
         throw new ConflictException({ detail: error.message });
       }
