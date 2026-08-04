@@ -1,6 +1,6 @@
 import { IsOptional, IsString, Validate } from 'class-validator';
 
-import { CadistaBrazilianPhoneConstraint } from './doctor-create-request.dto';
+import { CadiskBrazilianPhoneConstraint } from './doctor-create-request.dto';
 
 export class DoctorUpdateRequestDto {
   @IsOptional()
@@ -13,7 +13,7 @@ export class DoctorUpdateRequestDto {
 
   @IsOptional()
   @IsString()
-  @Validate(CadistaBrazilianPhoneConstraint)
+  @Validate(CadiskBrazilianPhoneConstraint)
   phone?: string | null;
 
   @IsOptional()

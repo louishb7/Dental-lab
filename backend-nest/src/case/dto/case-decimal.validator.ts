@@ -2,8 +2,8 @@ import { type ValidatorConstraintInterface, ValidatorConstraint } from 'class-va
 
 import { isValidDecimalValue } from '../case-money';
 
-@ValidatorConstraint({ name: 'cadistaDecimalValue', async: false })
-export class CadistaDecimalValueConstraint implements ValidatorConstraintInterface {
+@ValidatorConstraint({ name: 'cadiskDecimalValue', async: false })
+export class CadiskDecimalValueConstraint implements ValidatorConstraintInterface {
   validate(value: unknown): boolean {
     return isValidDecimalValue(value);
   }

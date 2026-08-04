@@ -5,7 +5,7 @@ const CASES_URL = `${API_ROOT_URL}/cases`;
 const CASE_HISTORY_URL = `${API_ROOT_URL}/case-history`;
 
 /**
- * Builds default request headers for the Cadista API.
+ * Builds default request headers for the Cadisk API.
  *
  * The token is optional and keeps this doctors module compatible with the
  * authenticated backend without coupling the UI to a login screen.
@@ -65,7 +65,7 @@ export function saveSession(payload) {
 }
 
 /**
- * Reads the saved Cadista user session from browser storage.
+ * Reads the saved Cadisk user session from browser storage.
  *
  * @returns {{username: string, email: string}|null} Stored user data or null.
  */
@@ -86,7 +86,7 @@ export function getStoredSession() {
 }
 
 /**
- * Removes the current Cadista authentication data from browser storage.
+ * Removes the current Cadisk authentication data from browser storage.
  *
  * @returns {void}
  */
@@ -158,7 +158,7 @@ export async function getDashboardOverview() {
 }
 
 /**
- * Fetches the active doctors registered in Cadista.
+ * Fetches the active doctors registered in Cadisk.
  *
  * @returns {Promise<Array>} List of doctors returned by the backend.
  */

@@ -2,7 +2,7 @@ import { Type } from 'class-transformer';
 import { IsDate, IsIn, IsInt, IsOptional, IsString, Validate } from 'class-validator';
 
 import { CASE_PRIORITIES, CASE_STATUSES, type CasePriority, type CaseStatus } from '../case-rules';
-import { CadistaDecimalValueConstraint } from './case-decimal.validator';
+import { CadiskDecimalValueConstraint } from './case-decimal.validator';
 
 export class CaseUpdateRequestDto {
   @IsOptional()
@@ -27,7 +27,7 @@ export class CaseUpdateRequestDto {
   status?: CaseStatus | null;
 
   @IsOptional()
-  @Validate(CadistaDecimalValueConstraint)
+  @Validate(CadiskDecimalValueConstraint)
   total_value?: unknown;
 
   @IsOptional()

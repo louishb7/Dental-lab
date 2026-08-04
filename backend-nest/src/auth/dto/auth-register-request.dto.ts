@@ -8,8 +8,8 @@ import {
 
 const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
-@ValidatorConstraint({ name: 'cadistaUsername', async: false })
-class CadistaUsernameConstraint implements ValidatorConstraintInterface {
+@ValidatorConstraint({ name: 'cadiskUsername', async: false })
+class CadiskUsernameConstraint implements ValidatorConstraintInterface {
   validate(value: unknown): boolean {
     if (typeof value !== 'string') {
       return false;
@@ -35,8 +35,8 @@ class CadistaUsernameConstraint implements ValidatorConstraintInterface {
   }
 }
 
-@ValidatorConstraint({ name: 'cadistaPassword', async: false })
-class CadistaPasswordConstraint implements ValidatorConstraintInterface {
+@ValidatorConstraint({ name: 'cadiskPassword', async: false })
+class CadiskPasswordConstraint implements ValidatorConstraintInterface {
   validate(value: unknown): boolean {
     return typeof value === 'string' && value.length >= 6 && /\d/.test(value);
   }
@@ -58,10 +58,10 @@ export class AuthRegisterRequestDto {
   @IsString()
   @MaxLength(80)
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
-  @Validate(CadistaUsernameConstraint)
+  @Validate(CadiskUsernameConstraint)
   username!: string;
 
   @IsString()
-  @Validate(CadistaPasswordConstraint)
+  @Validate(CadiskPasswordConstraint)
   password!: string;
 }

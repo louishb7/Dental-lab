@@ -1,41 +1,54 @@
 # Cadisk
 
-Cadisk é uma aplicação web para cadistas controlarem trabalhos recebidos de dentistas: cadastro de dentistas, criação de casos, organização por prazo, acompanhamento de status, histórico permanente e visão financeira de entregas recebidas.
+Cadisk é uma aplicação web para cadistas controlarem trabalhos recebidos de dentistas. O sistema organiza casos por prazo, acompanha o fluxo de produção, preserva histórico operacional e apresenta uma visão financeira baseada nas entregas recebidas.
 
 ## Funcionalidades
 
 - Autenticação com isolamento de dados por usuário.
 - Cadastro e gerenciamento de dentistas.
 - Criação de casos com cobrança por valor fixo ou por itens de serviço.
-- Bancada operacional por semana de produção.
-- Página Casos para trabalhos ativos e ações de status.
-- Página Histórico para consulta paginada de casos e eventos persistentes.
-- Retorno controlado de status com motivo registrado em histórico.
-- Financeiro baseado em casos atualmente entregues, com tendência de receita dos últimos meses.
-- Temas claro e escuro via tokens CSS.
+- Bancada semanal para planejamento e execução do trabalho.
+- Página Casos para localizar casos ativos, editar detalhes e avançar status.
+- Página Histórico com paginação, filtros e timeline persistente por caso.
+- Retorno controlado de status com motivo registrado.
+- Financeiro com receita entregue no mês, tendência dos últimos 6 meses, ranking e entregas recentes.
+- Temas claro e escuro baseados em tokens CSS.
 
-## Stack Atual
+## Stack
 
 - Frontend: React + Vite + Tailwind CSS v4.
-- Backend atual: NestJS + Prisma + PostgreSQL.
+- Backend: NestJS + Prisma.
+- Banco de dados: PostgreSQL.
 - Autenticação: JWT, bcrypt e rate limit de login.
 - Testes backend: Jest unitário, integração e E2E.
-- Backend legado: FastAPI + SQLAlchemy + Alembic permanece no repositório como referência histórica da migração e para testes de paridade, mas o frontend atual consome o NestJS por padrão.
 
 ## Arquitetura
 
 ```text
 frontend/      SPA React/Vite
-backend-nest/  API principal NestJS/Prisma/PostgreSQL
-backend/       API FastAPI legada mantida como referência de migração
-tests/         testes Python do backend legado
+backend-nest/  API NestJS, Prisma, PostgreSQL e testes
 ```
 
-O contrato entre frontend e backend é HTTP + JSON. O frontend não acessa banco de dados diretamente.
+O contrato entre frontend e backend é HTTP + JSON. O frontend consome a API pelo cliente centralizado em `frontend/src/services/api.js`.
 
-## Como Executar
+## Instalação
 
-### Backend NestJS
+Requisitos:
+
+- Node.js 20 ou superior.
+- npm.
+- PostgreSQL acessível localmente ou via Docker Compose.
+
+### Banco Com Docker Compose
+
+```bash
+cd backend-nest
+npm run db:up:docker
+```
+
+O compose sobe PostgreSQL na porta `5433` por padrão e cria também o banco de teste.
+
+### Backend
 
 ```bash
 cd backend-nest
@@ -46,7 +59,7 @@ npm run prisma:migrate:deploy
 npm run dev
 ```
 
-Por padrão a API sobe em `http://localhost:3001`.
+Por padrão a API roda em `http://localhost:3001`.
 
 ### Frontend
 
@@ -57,11 +70,11 @@ cp .env.example .env
 npm run dev
 ```
 
-Por padrão o Vite usa `VITE_API_BASE_URL=http://localhost:3001`.
+Por padrão o frontend usa `VITE_API_BASE_URL=http://localhost:3001`.
 
-## Variáveis De Ambiente
+## Variáveis
 
-Principais variáveis do backend NestJS:
+Backend (`backend-nest/.env`):
 
 ```env
 NODE_ENV=development
@@ -80,7 +93,7 @@ CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 TRUSTED_HOSTS=localhost,127.0.0.1
 ```
 
-Principais variáveis do frontend:
+Frontend (`frontend/.env`):
 
 ```env
 VITE_API_BASE_URL=http://localhost:3001
@@ -88,9 +101,9 @@ VITE_API_BASE_URL=http://localhost:3001
 
 `ACCESS_TOKEN_EXPIRE_MINUTES=0` mantém a sessão persistente até logout manual, troca de segredo ou invalidação operacional relevante.
 
-## Como Testar
+## Testes
 
-### Frontend
+Frontend:
 
 ```bash
 cd frontend
@@ -98,27 +111,28 @@ npm install
 npm run build
 ```
 
-O frontend não possui scripts dedicados de lint ou teste automatizado neste momento.
-
-### Backend NestJS
+Backend:
 
 ```bash
 cd backend-nest
 npm install
 npm run lint
+npx tsc --noEmit
 npm run build
 npm run test
 npm run test:integration
 npm run test:e2e
 npm run prisma:generate
 npx prisma validate --schema=prisma/schema.prisma
+npm run prisma:migrate:test
 ```
 
-### Backend FastAPI Legado
+## Estrutura
 
-```bash
-pip install -r requirements.txt
-pytest
+```text
+AGENTS.md                 Governança de agentes
+MIGRATION_CHECKLIST.md    Histórico completo da migração encerrada
+README.md                 Apresentação pública do projeto
+backend-nest/             Backend atual
+frontend/                 Interface web atual
 ```
-
-Use este backend apenas para validação de paridade ou consulta histórica da migração.

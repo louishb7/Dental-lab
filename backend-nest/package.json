@@ -1,8 +1,8 @@
 {
-  "name": "cadista-backend-nest",
+  "name": "cadisk-backend-nest",
   "version": "0.1.0",
   "private": true,
-  "description": "Cadista NestJS backend migration target.",
+  "description": "Cadisk NestJS backend.",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "api:dev": "npm run start:dev",

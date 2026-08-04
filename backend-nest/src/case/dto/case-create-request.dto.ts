@@ -9,7 +9,7 @@ import {
   type CaseStatus,
   type PricingMode,
 } from '../case-rules';
-import { CadistaDecimalValueConstraint } from './case-decimal.validator';
+import { CadiskDecimalValueConstraint } from './case-decimal.validator';
 
 export class CaseCreateRequestDto {
   @IsInt()
@@ -36,7 +36,7 @@ export class CaseCreateRequestDto {
   status: CaseStatus = 'pending';
 
   @IsOptional()
-  @Validate(CadistaDecimalValueConstraint)
+  @Validate(CadiskDecimalValueConstraint)
   total_value?: unknown;
 
   @IsOptional()

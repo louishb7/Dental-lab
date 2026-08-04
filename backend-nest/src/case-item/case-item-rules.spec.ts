@@ -4,7 +4,7 @@ import { normalizeDecimalValue } from '../case/case-money';
 import { assertValidQuantity, normalizeTooth } from './case-item-rules';
 
 describe('case item rules', () => {
-  it('normalizes and validates tooth values like the FastAPI schema', () => {
+  it('normalizes and validates tooth values', () => {
     expect(normalizeTooth(' 11 ')).toBe('11');
     expect(normalizeTooth('protocolo total')).toBe('protocolo total');
     expect(() => normalizeTooth('')).toThrow('O campo tooth não pode ser vazio');

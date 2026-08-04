@@ -66,7 +66,7 @@ CREATE TABLE "case_items" (
 ALTER TABLE "users" ADD CONSTRAINT "uq_users_email" UNIQUE ("email");
 ALTER TABLE "users" ADD CONSTRAINT "uq_users_username" UNIQUE ("username");
 
--- Custom SQL parity: functional case-insensitive uniqueness from Alembic.
+-- Custom SQL: functional case-insensitive uniqueness.
 CREATE UNIQUE INDEX "uq_users_email_lower" ON "users" (lower("email"));
 CREATE UNIQUE INDEX "uq_users_username_lower" ON "users" (lower("username"));
 

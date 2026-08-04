@@ -133,7 +133,7 @@ describe('schema parity integration', () => {
   it('enforces case-insensitive user identity and domain checks', async () => {
     await prisma.$executeRaw`
       INSERT INTO "users" ("email", "username", "password_hash")
-      VALUES ('Admin@Cadista.Local', 'AdminUser', 'hash')
+      VALUES ('Admin@Cadisk.Local', 'AdminUser', 'hash')
     `;
     await prisma.$executeRaw`
       INSERT INTO "doctors" ("user_id", "name")
@@ -146,11 +146,11 @@ describe('schema parity integration', () => {
 
     await expect(prisma.$executeRaw`
       INSERT INTO "users" ("email", "username", "password_hash")
-      VALUES ('admin@cadista.local', 'OtherUser', 'hash')
+      VALUES ('admin@cadisk.local', 'OtherUser', 'hash')
     `).rejects.toThrow();
     await expect(prisma.$executeRaw`
       INSERT INTO "users" ("email", "username", "password_hash")
-      VALUES ('other@cadista.local', 'adminuser', 'hash')
+      VALUES ('other@cadisk.local', 'adminuser', 'hash')
     `).rejects.toThrow();
     await expect(prisma.$executeRaw`
       INSERT INTO "cases" ("doctor_id", "patient_ref", "priority")
@@ -189,7 +189,7 @@ describe('schema parity integration', () => {
   it('enforces foreign key delete actions', async () => {
     await prisma.$executeRaw`
       INSERT INTO "users" ("email", "username", "password_hash")
-      VALUES ('owner@cadista.local', 'OwnerUser', 'hash')
+      VALUES ('owner@cadisk.local', 'OwnerUser', 'hash')
     `;
     await prisma.$executeRaw`
       INSERT INTO "doctors" ("user_id", "name")

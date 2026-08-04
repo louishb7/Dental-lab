@@ -49,12 +49,12 @@ describe('UserService integration', () => {
 
   it('creates users with legacy normalization and hashed passwords', async () => {
     const user = await users.createUser({
-      email: ' Admin@Cadista.Local ',
+      email: ' Admin@Cadisk.Local ',
       username: ' admin1 ',
       password: 'StrongPass123!',
     });
 
-    expect(user.email).toBe('admin@cadista.local');
+    expect(user.email).toBe('admin@cadisk.local');
     expect(user.username).toBe('admin1');
     expect(user.passwordHash).not.toBe('StrongPass123!');
     expect(user.failedLoginAttempts).toBe(0);
@@ -62,14 +62,14 @@ describe('UserService integration', () => {
 
   it('rejects duplicate email and username case-insensitively', async () => {
     await users.createUser({
-      email: 'admin@cadista.local',
+      email: 'admin@cadisk.local',
       username: 'admin1',
       password: 'StrongPass123!',
     });
 
     await expect(
       users.createUser({
-        email: 'ADMIN@cadista.local',
+        email: 'ADMIN@cadisk.local',
         username: 'other1',
         password: 'StrongPass123!',
       }),
@@ -77,7 +77,7 @@ describe('UserService integration', () => {
 
     await expect(
       users.createUser({
-        email: 'other@cadista.local',
+        email: 'other@cadisk.local',
         username: 'ADMIN1',
         password: 'StrongPass123!',
       }),
@@ -86,7 +86,7 @@ describe('UserService integration', () => {
 
   it('authenticates by username or email and updates login timestamps', async () => {
     await users.createUser({
-      email: 'admin@cadista.local',
+      email: 'admin@cadisk.local',
       username: 'admin1',
       password: 'StrongPass123!',
     });
@@ -95,13 +95,13 @@ describe('UserService integration', () => {
     expect(byUsername?.username).toBe('admin1');
     expect(byUsername?.lastLoginAt).toBeInstanceOf(Date);
 
-    const byEmail = await users.authenticateUser('ADMIN@CADISTA.LOCAL', 'StrongPass123!');
-    expect(byEmail?.email).toBe('admin@cadista.local');
+    const byEmail = await users.authenticateUser('ADMIN@CADISK.LOCAL', 'StrongPass123!');
+    expect(byEmail?.email).toBe('admin@cadisk.local');
   });
 
   it('locks an account after repeated failed logins and clears expired locks on success', async () => {
     const user = await users.createUser({
-      email: 'admin@cadista.local',
+      email: 'admin@cadisk.local',
       username: 'admin1',
       password: 'StrongPass123!',
     });

@@ -24,7 +24,7 @@ describe('case money normalization', () => {
 });
 
 describe('case business rules', () => {
-  it('resolves pricing mode like the FastAPI service', () => {
+  it('resolves pricing mode from domain inputs', () => {
     expect(resolvePricingMode(undefined, new Prisma.Decimal('100'))).toBe('fixed');
     expect(resolvePricingMode(undefined, null)).toBe('services');
     expect(resolvePricingMode(undefined, null, 'fixed')).toBe('fixed');

@@ -36,7 +36,7 @@ describe('auth e2e', () => {
   }
 
   async function registerUser(
-    email = 'admin@cadista.local',
+    email = 'admin@cadisk.local',
     username = 'admin1',
   ): Promise<{ access_token: string; email: string; token_type: 'bearer'; username: string }> {
     const response = await request(app.getHttpServer())
@@ -81,11 +81,11 @@ describe('auth e2e', () => {
   });
 
   it('registers, logs in and returns the current user', async () => {
-    const registerPayload = await registerUser('Admin@Cadista.Local', 'admin1');
+    const registerPayload = await registerUser('Admin@Cadisk.Local', 'admin1');
 
     expect(registerPayload.token_type).toBe('bearer');
     expect(registerPayload.username).toBe('admin1');
-    expect(registerPayload.email).toBe('admin@cadista.local');
+    expect(registerPayload.email).toBe('admin@cadisk.local');
     expect(registerPayload.access_token).toEqual(expect.any(String));
     const tokenPayload = decodeJwtPayload(registerPayload.access_token);
     expect(tokenPayload.iat).toEqual(expect.any(Number));
@@ -98,7 +98,7 @@ describe('auth e2e', () => {
       .expect({
         id: 1,
         username: 'admin1',
-        email: 'admin@cadista.local',
+        email: 'admin@cadisk.local',
       });
 
     const loginByUsername = await request(app.getHttpServer())
@@ -109,9 +109,9 @@ describe('auth e2e', () => {
 
     const loginByEmailAlias = await request(app.getHttpServer())
       .post('/auth/login')
-      .send({ email: 'ADMIN@CADISTA.LOCAL', password: STRONG_PASSWORD })
+      .send({ email: 'ADMIN@CADISK.LOCAL', password: STRONG_PASSWORD })
       .expect(200);
-    expect(loginByEmailAlias.body.email).toBe('admin@cadista.local');
+    expect(loginByEmailAlias.body.email).toBe('admin@cadisk.local');
   });
 
   it('allows multiple users and rejects duplicate identities', async () => {
@@ -120,7 +120,7 @@ describe('auth e2e', () => {
     const secondResponse = await request(app.getHttpServer())
       .post('/auth/register')
       .send({
-        email: 'operator@cadista.local',
+        email: 'operator@cadisk.local',
         password: STRONG_PASSWORD,
         username: 'operator1',
       })
@@ -130,7 +130,7 @@ describe('auth e2e', () => {
     const duplicateEmail = await request(app.getHttpServer())
       .post('/auth/register')
       .send({
-        email: 'ADMIN@cadista.local',
+        email: 'ADMIN@cadisk.local',
         password: STRONG_PASSWORD,
         username: 'another1',
       })
@@ -140,7 +140,7 @@ describe('auth e2e', () => {
     const duplicateUsername = await request(app.getHttpServer())
       .post('/auth/register')
       .send({
-        email: 'another@cadista.local',
+        email: 'another@cadisk.local',
         password: STRONG_PASSWORD,
         username: 'ADMIN1',
       })
@@ -154,7 +154,7 @@ describe('auth e2e', () => {
     const missingPassword = await request(app.getHttpServer())
       .post('/auth/register')
       .send({
-        email: 'missing@cadista.local',
+        email: 'missing@cadisk.local',
         username: 'missing1',
       })
       .expect(422);
@@ -166,7 +166,7 @@ describe('auth e2e', () => {
     const weakPassword = await request(app.getHttpServer())
       .post('/auth/register')
       .send({
-        email: 'weak@cadista.local',
+        email: 'weak@cadisk.local',
         password: 'weakpass',
         username: 'weak1',
       })
@@ -178,7 +178,7 @@ describe('auth e2e', () => {
     const digitsOnly = await request(app.getHttpServer())
       .post('/auth/register')
       .send({
-        email: 'digits@cadista.local',
+        email: 'digits@cadisk.local',
         password: STRONG_PASSWORD,
         username: '12345',
       })
@@ -190,7 +190,7 @@ describe('auth e2e', () => {
     const specialChars = await request(app.getHttpServer())
       .post('/auth/register')
       .send({
-        email: 'special@cadista.local',
+        email: 'special@cadisk.local',
         password: STRONG_PASSWORD,
         username: 'user@1',
       })
@@ -204,7 +204,7 @@ describe('auth e2e', () => {
     await request(app.getHttpServer())
       .post('/auth/register')
       .send({
-        email: 'symbols@cadista.local',
+        email: 'symbols@cadisk.local',
         password: SPECIAL_PASSWORD,
         username: 'symbols1',
       })

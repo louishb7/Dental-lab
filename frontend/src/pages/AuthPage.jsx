@@ -8,7 +8,7 @@ const PASSWORD_INPUT_CLASS =
   "min-h-9 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 py-2 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-muted)]/75 focus:border-primary focus:ring-2 focus:ring-primary/25";
 
 /**
- * Renderiza a tela compacta de login e cadastro do Cadista.
+ * Renderiza a tela compacta de login e cadastro do Cadisk.
  *
  * @param {object} props Component props.
  * @param {"login" | "register"} props.authMode Modo de autenticação ativo.

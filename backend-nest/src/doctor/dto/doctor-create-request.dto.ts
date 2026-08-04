@@ -3,8 +3,8 @@ import { type ValidatorConstraintInterface, ValidatorConstraint } from 'class-va
 
 import { isValidBrazilianPhone } from '../doctor-phone';
 
-@ValidatorConstraint({ name: 'cadistaBrazilianPhone', async: false })
-export class CadistaBrazilianPhoneConstraint implements ValidatorConstraintInterface {
+@ValidatorConstraint({ name: 'cadiskBrazilianPhone', async: false })
+export class CadiskBrazilianPhoneConstraint implements ValidatorConstraintInterface {
   validate(value: unknown): boolean {
     if (value === null || value === undefined) {
       return true;
@@ -28,7 +28,7 @@ export class DoctorCreateRequestDto {
 
   @IsOptional()
   @IsString()
-  @Validate(CadistaBrazilianPhoneConstraint)
+  @Validate(CadiskBrazilianPhoneConstraint)
   phone?: string | null;
 
   @IsOptional()

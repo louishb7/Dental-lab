@@ -65,8 +65,7 @@ Observação: “cadista” também é o nome da profissão/público-alvo. Porta
 
 O repositório é dividido estritamente em aplicações independentes:
 
-- `backend/`: API FastAPI legada e funcional. Durante a migração, é a fonte de verdade comportamental para regras de negócio, contrato HTTP, status codes, mensagens de erro, serialização, migrations e testes.
-- `backend-nest/`: API alvo em TypeScript/NestJS + Prisma + PostgreSQL. Deve ser criada e evoluída sem sobrescrever nem quebrar o backend FastAPI até o cutover.
+- `backend-nest/`: API atual em TypeScript/NestJS + Prisma + PostgreSQL.
 - `frontend/`: SPA React autônoma, responsável pela experiência de usuário e pelo consumo da API via HTTP.
 
 Backends não devem renderizar HTML, templates ou assets do frontend.
@@ -77,18 +76,15 @@ O contrato entre as camadas é HTTP + JSON.
 
 ---
 
-## Migração de Paridade
+## Migração
 
-A migração para NestJS é uma tradução fiel de stack, não uma reescrita livre.
+A migração para NestJS foi encerrada. O repositório atual deve representar somente a aplicação vigente em React, NestJS, Prisma e PostgreSQL.
 
 Regras obrigatórias:
 
-- O backend Python/FastAPI e seus Pytests são o gabarito de comportamento até o cutover.
-- Nenhuma regra de negócio deve ser melhorada, removida ou reinterpretada durante a tradução sem decisão explícita do usuário.
-- Divergências intencionais devem ser registradas em `MIGRATION_CHECKLIST.md`, na seção "Decisões e Notas", antes da implementação.
-- O FastAPI deve permanecer executável em paralelo com o NestJS durante a migração.
-- O frontend só deve ser repontado para o NestJS na fase planejada.
-- Cada módulo Nest só é considerado concluído quando possui testes equivalentes aos Pytests de referência.
+- Não reintroduzir outro backend, rollback histórico ou implementação paralela sem decisão explícita do usuário.
+- Divergências intencionais relevantes devem ser registradas em `MIGRATION_CHECKLIST.md`, na seção "Decisões e Notas".
+- O backend NestJS é a fonte atual de regras de negócio, contrato HTTP, persistência e testes.
 
 ---
 
@@ -105,30 +101,13 @@ Regras obrigatórias:
 - Todas as consultas e mutações de domínio devem incluir ownership no filtro, mesmo quando o cliente fornece IDs.
 - Recursos de outro usuário devem se comportar como inexistentes, retornando o mesmo resultado usado para recursos não encontrados.
 - Testes de isolamento entre pelo menos dois usuários são obrigatórios em cada módulo de domínio relevante.
-- Se o banco legado permitir `Doctor.user_id` nulo, preserve isso apenas quando necessário para compatibilidade ou migração de dados; registros novos criados pela aplicação devem ter proprietário obrigatório.
+- Registros novos criados pela aplicação devem ter proprietário obrigatório.
 
 ---
 
-## Padrão Backend FastAPI Legado
+## Padrão Backend NestJS
 
-Enquanto existir, o backend em `backend/` deve seguir FastAPI, SQLAlchemy, Pydantic e Alembic.
-
-Regras obrigatórias:
-
-- Rotas em `backend/routes/` recebem requisições, validam dependências, chamam services e retornam JSON.
-- Persistência CRUD permanece procedural em `backend/services/`, usando funções explícitas para criar, listar, atualizar e excluir entidades.
-- Modelos ORM ficam em `backend/models/` e devem manter relacionamentos simétricos com `relationship(..., back_populates=...)`.
-- Schemas Pydantic ficam em `backend/schemas/` e definem entrada e saída da API.
-- Toda alteração estrutural de banco deve possuir migration Alembic.
-- Dados financeiros usam `Decimal` no domínio Python/Pydantic e `Numeric(10, 2)` no SQLAlchemy.
-- Funções públicas, services, handlers relevantes e utilitários reutilizáveis devem possuir docstrings objetivas.
-- Funções internas triviais podem dispensar docstring se o nome e o contexto forem autoexplicativos.
-
----
-
-## Padrão Backend NestJS Alvo
-
-O backend alvo em `backend-nest/` deve seguir NestJS, TypeScript estrito, Prisma e PostgreSQL.
+O backend em `backend-nest/` deve seguir NestJS, TypeScript estrito, Prisma e PostgreSQL.
 
 Regras obrigatórias:
 
@@ -235,13 +214,7 @@ O agente deve validar as mudanças sempre que possível.
 
 Validações comuns:
 
-Backend FastAPI legado:
-
-```bash
-pytest
-```
-
-Backend NestJS alvo:
+Backend NestJS:
 
 ```bash
 cd backend-nest
