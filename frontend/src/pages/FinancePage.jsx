@@ -1,6 +1,8 @@
 import {
   CheckCircle2,
   CircleDollarSign,
+  TrendingDown,
+  TrendingUp,
 } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import PageContainer from "../components/layout/PageContainer.jsx";
@@ -43,20 +45,22 @@ function formatCompactCurrency(value) {
 }
 
 function getMonthComparison(trend) {
-  if (!Array.isArray(trend) || trend.length < 2) return "";
+  if (!Array.isArray(trend) || trend.length < 2) return null;
 
   const current = parseCurrencyToNumber(trend[trend.length - 1]?.total_value) ?? 0;
   const previous = parseCurrencyToNumber(trend[trend.length - 2]?.total_value) ?? 0;
 
-  if (previous <= 0 && current <= 0) return "";
-  if (previous <= 0) return "Novo faturamento vs mês passado";
+  if (previous <= 0) return null;
 
   const variation = ((current - previous) / previous) * 100;
   const sign = variation >= 0 ? "+" : "";
 
-  return `${sign}${variation.toLocaleString("pt-BR", {
-    maximumFractionDigits: 0,
-  })}% vs mês passado`;
+  return {
+    direction: variation >= 0 ? "up" : "down",
+    label: `${sign}${variation.toLocaleString("pt-BR", {
+      maximumFractionDigits: 0,
+    })}% vs mês passado`,
+  };
 }
 
 function buildFallbackRevenueTrend(totalMes, countMes) {
@@ -134,35 +138,39 @@ export default function FinancePage({ dashboard, loading, onOpenHistory }) {
       description="Acompanhe o valor entregue e os casos concluídos no período."
     >
       <div className="grid gap-4">
-        <div className="grid grid-cols-[minmax(260px,360px)_minmax(0,1fr)] gap-4 max-[980px]:grid-cols-1">
-          <section className="rounded-md border border-primary/30 bg-[var(--color-surface)] p-4 text-[var(--color-text)] shadow-sm">
-            <div className="grid gap-3">
-              <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">
-                <CircleDollarSign className="size-4 text-[var(--color-success)]" />
-                Receita entregue no mês
+        <section className="rounded-md border border-primary/30 bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm">
+          <div className="grid gap-4 p-4">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="grid gap-3">
+                <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">
+                  <CircleDollarSign className="size-4 text-[var(--color-success)]" />
+                  Receita entregue no mês
+                </div>
+                <strong className="text-3xl font-extrabold leading-none text-[var(--color-text)]">
+                  {formatCurrency(totalMes)}
+                </strong>
+                <p className="text-sm font-semibold text-[var(--color-text-muted)]">
+                  {countMes} {countMes === 1 ? "caso entregue" : "casos entregues"} • média {formatCurrency(averageTicket)}
+                </p>
               </div>
-              <strong className="text-3xl font-extrabold leading-none text-[var(--color-text)]">
-                {formatCurrency(totalMes)}
-              </strong>
-              <p className="text-sm font-semibold text-[var(--color-text-muted)]">
-                {countMes} {countMes === 1 ? "caso entregue" : "casos entregues"} • média {formatCurrency(averageTicket)}
-              </p>
               {monthComparison && (
-                <span className="w-fit rounded-full border border-[color-mix(in_srgb,var(--color-success)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-success)_10%,transparent)] px-2 py-0.5 text-xs font-bold text-[var(--color-success-soft)]">
-                  {monthComparison}
+                <span
+                  className={[
+                    "inline-flex w-fit items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-bold",
+                    monthComparison.direction === "up"
+                      ? "border-[color-mix(in_srgb,var(--color-success)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-success)_10%,transparent)] text-[var(--color-success-soft)]"
+                      : "border-[color-mix(in_srgb,var(--color-warning-soft)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-warning-soft)_10%,transparent)] text-[var(--color-warning-soft)]",
+                  ].join(" ")}
+                >
+                  {monthComparison.direction === "up" ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+                  {monthComparison.label}
                 </span>
               )}
             </div>
-          </section>
-
-          <section className="rounded-md border border-primary/30 bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm">
-            <div className="border-b border-[var(--color-border)] px-4 py-3">
-              <div className="grid gap-1">
-                <h3 className="text-base font-bold leading-tight">Tendência de receita</h3>
-                <p className="text-sm leading-snug text-[var(--color-text-muted)]">Receita entregue nos últimos 6 meses.</p>
+            <div className="grid gap-2 border-t border-[var(--color-border)] pt-4">
+              <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">
+                Tendência de receita
               </div>
-            </div>
-            <div className="p-4">
               <ChartContainer config={chartConfig} className="h-[220px] w-full aspect-auto">
                 <BarChart accessibilityLayer data={chartData} margin={{ left: 0, right: 8, top: 8 }}>
                   <CartesianGrid vertical={false} stroke="var(--color-border)" />
@@ -194,10 +202,10 @@ export default function FinancePage({ dashboard, loading, onOpenHistory }) {
                 </BarChart>
               </ChartContainer>
             </div>
-          </section>
-        </div>
+          </div>
+        </section>
 
-        <div className="grid grid-cols-[minmax(320px,420px)_minmax(0,1fr)] gap-4 max-[1120px]:grid-cols-1">
+        <div className="grid grid-cols-[minmax(280px,0.75fr)_minmax(0,1.35fr)] items-start gap-4 max-[1120px]:grid-cols-1">
           <section className="rounded-md border border-primary/30 bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm">
             <div className="border-b border-[var(--color-border)] px-4 py-3">
               <div className="grid gap-1">
