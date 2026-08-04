@@ -82,7 +82,11 @@ export default function CaseIntakeForm({
             name="patient_ref"
             value={caseForm.patient_ref}
             onChange={onCaseChange}
-            placeholder="Paciente, referência ou código interno"
+            placeholder="Paciente ou referência"
+            autoComplete="off"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
             required
           />
         </FormField>
