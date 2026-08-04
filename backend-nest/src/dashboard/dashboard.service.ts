@@ -3,9 +3,18 @@ import { Prisma, type DentalCase, type Doctor } from '@prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { getUtcDayStart, getUtcMonthWindow } from './dashboard-date';
-import type { DashboardCaseResponse, DashboardSummaryResponse } from './dashboard.types';
+import type {
+  DashboardCaseResponse,
+  DashboardRevenueTrendItem,
+  DashboardSummaryResponse,
+} from './dashboard.types';
 
-type DashboardCaseWithDoctor = DentalCase & { doctor: Pick<Doctor, 'name'> | null };
+type DashboardCaseWithDoctor = DentalCase & {
+  doctor: Pick<Doctor, 'name'> | null;
+  _count?: {
+    items: number;
+  };
+};
 
 @Injectable()
 export class DashboardService {
@@ -43,6 +52,11 @@ export class DashboardService {
                 name: true,
               },
             },
+            _count: {
+              select: {
+                items: true,
+              },
+            },
           },
         }),
         this.prisma.dentalCase.findMany({
@@ -58,6 +72,11 @@ export class DashboardService {
             doctor: {
               select: {
                 name: true,
+              },
+            },
+            _count: {
+              select: {
+                items: true,
               },
             },
           },
@@ -82,6 +101,11 @@ export class DashboardService {
                 name: true,
               },
             },
+            _count: {
+              select: {
+                items: true,
+              },
+            },
           },
         }),
         this.prisma.dentalCase.aggregate({
@@ -102,6 +126,7 @@ export class DashboardService {
           },
         }),
       ]);
+    const revenueTrend = await this.getRevenueTrend(userId, now);
 
     const statusCounts: Record<string, number> = {
       pending: 0,
@@ -120,7 +145,49 @@ export class DashboardService {
       delivered_cases_month: deliveredCasesMonth.map((foundCase) => this.toCaseResponse(foundCase)),
       delivered_total_month: deliveredTotal._sum.totalValue ?? new Prisma.Decimal(0),
       delivered_count_month: deliveredCasesMonth.length,
+      revenue_trend: revenueTrend,
     };
+  }
+
+  private async getRevenueTrend(userId: number, now: Date): Promise<DashboardRevenueTrendItem[]> {
+    const windows = Array.from({ length: 6 }, (_, index) => {
+      const monthOffset = index - 5;
+      const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + monthOffset, 1, 0, 0, 0, 0));
+      const end = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 1, 0, 0, 0, 0));
+
+      return { start, end };
+    });
+
+    const rows = await this.prisma.$transaction(
+      windows.map((window) =>
+        this.prisma.dentalCase.aggregate({
+          where: {
+            ...this.activeOwnedCasesWhere(userId),
+            status: 'delivered',
+            deliveredAt: {
+              gte: window.start,
+              lt: window.end,
+              not: null,
+            },
+            totalValue: {
+              not: null,
+            },
+          },
+          _count: {
+            id: true,
+          },
+          _sum: {
+            totalValue: true,
+          },
+        }),
+      ),
+    );
+
+    return windows.map((window, index) => ({
+      month: `${window.start.getUTCFullYear()}-${String(window.start.getUTCMonth() + 1).padStart(2, '0')}`,
+      total_value: rows[index]?._sum.totalValue ?? new Prisma.Decimal(0),
+      delivered_count: rows[index]?._count.id ?? 0,
+    }));
   }
 
   private activeOwnedCasesWhere(userId: number): Prisma.DentalCaseWhereInput {
@@ -144,6 +211,7 @@ export class DashboardService {
       total_value: foundCase.totalValue,
       created_at: foundCase.createdAt,
       delivered_at: foundCase.deliveredAt,
+      items_count: foundCase._count?.items ?? 0,
     };
   }
 }

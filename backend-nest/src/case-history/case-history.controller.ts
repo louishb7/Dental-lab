@@ -1,5 +1,7 @@
 import {
+  Body,
   Controller,
+  Delete,
   Get,
   HttpStatus,
   NotFoundException,
@@ -15,9 +17,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CaseHistoryService } from './case-history.service';
 import type {
   CaseHistoryDetailResponse,
+  CaseHistoryDeleteResponse,
   CaseHistoryEventsResponse,
   CaseHistoryListResponse,
 } from './case-history.types';
+import { CaseHistoryDeleteRequestDto } from './dto/case-history-delete-request.dto';
 import { CaseHistoryEventsQueryDto } from './dto/case-history-events-query.dto';
 import { CaseHistoryListQueryDto } from './dto/case-history-list-query.dto';
 
@@ -49,6 +53,27 @@ export class CaseHistoryController {
     }
 
     return foundCase;
+  }
+
+  @Delete('/case-history')
+  async deleteCaseHistoryRecords(
+    @Body() input: CaseHistoryDeleteRequestDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<CaseHistoryDeleteResponse> {
+    return this.history.permanentlyDeleteCases(input.case_ids, user.id);
+  }
+
+  @Delete('/case-history/:case_id')
+  async deleteCaseHistoryRecord(
+    @Param('case_id', caseIdPipe) caseId: number,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<CaseHistoryDeleteResponse> {
+    const deleted = await this.history.permanentlyDeleteCase(caseId, user.id);
+    if (deleted === null) {
+      throw new NotFoundException({ detail: 'Caso não encontrado' });
+    }
+
+    return deleted;
   }
 
   @Get('/cases/:case_id/history')

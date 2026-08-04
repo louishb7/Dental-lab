@@ -1,5 +1,5 @@
-import { History, RotateCcw, Search } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { History, RotateCcw, Search, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import PageContainer from "../components/layout/PageContainer.jsx";
 import Button from "../components/ui/Button.jsx";
 import DataTable from "../components/ui/DataTable.jsx";
@@ -12,6 +12,8 @@ import {
   getCaseHistory,
   getCaseHistoryDetail,
   getCaseHistoryEvents,
+  deleteCaseHistoryRecord,
+  deleteCaseHistoryRecords,
   revertCaseStatus,
 } from "../services/api.js";
 import { formatServiceItemCount } from "../utils/cases.js";
@@ -20,6 +22,7 @@ import { formatCurrency, formatDate } from "../utils/formatters.js";
 const FILTER_CONTROL_CLASS =
   "min-h-9 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-muted)]/75 focus:border-primary focus:ring-2 focus:ring-primary/25";
 const EVENT_PAGE_SIZE = 8;
+const HISTORY_PAGE_SIZE = 10;
 
 const STATUS_LABELS = {
   pending: "Em andamento",
@@ -69,42 +72,43 @@ function formatEvent(event) {
   return label;
 }
 
-function getDateKey(value) {
-  const year = value.getFullYear();
-  const month = String(value.getMonth() + 1).padStart(2, "0");
-  const day = String(value.getDate()).padStart(2, "0");
+function getUtcDateKey(value) {
+  const year = value.getUTCFullYear();
+  const month = String(value.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(value.getUTCDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
 }
 
 function getPeriodRange(period) {
   const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(now.getDate() + 1);
+  const currentMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const nextMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
 
   if (period === "month") {
     return {
-      delivered_from: getDateKey(new Date(now.getFullYear(), now.getMonth(), 1)),
-      delivered_to: getDateKey(tomorrow),
+      delivered_from: getUtcDateKey(currentMonthStart),
+      delivered_to: getUtcDateKey(nextMonthStart),
     };
   }
 
   if (period === "last_3_months") {
-    const start = new Date(now);
-    start.setMonth(now.getMonth() - 3);
-    return { delivered_from: getDateKey(start), delivered_to: getDateKey(tomorrow) };
+    const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 2, 1));
+    return { delivered_from: getUtcDateKey(start), delivered_to: getUtcDateKey(nextMonthStart) };
   }
 
   if (period === "last_6_months") {
-    const start = new Date(now);
-    start.setMonth(now.getMonth() - 6);
-    return { delivered_from: getDateKey(start), delivered_to: getDateKey(tomorrow) };
+    const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 5, 1));
+    return { delivered_from: getUtcDateKey(start), delivered_to: getUtcDateKey(nextMonthStart) };
   }
 
   if (period === "year") {
+    const yearStart = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
+    const nextYearStart = new Date(Date.UTC(now.getUTCFullYear() + 1, 0, 1));
+
     return {
-      delivered_from: getDateKey(new Date(now.getFullYear(), 0, 1)),
-      delivered_to: getDateKey(tomorrow),
+      delivered_from: getUtcDateKey(yearStart),
+      delivered_to: getUtcDateKey(nextYearStart),
     };
   }
 
@@ -116,7 +120,7 @@ function buildHistoryQuery(filters, page) {
 
   return {
     page,
-    limit: 25,
+    limit: HISTORY_PAGE_SIZE,
     q: filters.search.trim(),
     doctor_id: filters.doctorId,
     ...period,
@@ -140,6 +144,8 @@ export default function HistoryPage({
   const [historyData, setHistoryData] = useState({ items: [], pagination: null });
   const [listLoading, setListLoading] = useState(false);
   const [listError, setListError] = useState("");
+  const [selectedIds, setSelectedIds] = useState(() => new Set());
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [selectedCaseId, setSelectedCaseId] = useState(null);
   const [detail, setDetail] = useState(null);
   const [events, setEvents] = useState([]);
@@ -154,54 +160,73 @@ export default function HistoryPage({
   const pagination = historyData.pagination;
   const revertTarget = getRevertTarget(detail?.status);
   const hasActiveFilters = Boolean(filters.search.trim() || filters.doctorId || filters.period);
+  const pageIds = historyData.items.map((caseItem) => caseItem.id);
+  const hasPageItems = pageIds.length > 0;
+  const allPageSelected = hasPageItems && pageIds.every((id) => selectedIds.has(id));
 
-  const columns = useMemo(
-    () => [
-      {
-        key: "patient_ref",
-        header: "Caso / Referência",
-        render: (caseItem) => (
-          <span className="grid min-w-0 gap-1">
-            <strong className="truncate text-sm font-bold text-[var(--color-text)]">{caseItem.patient_ref}</strong>
-            <small className="truncate text-xs text-[var(--color-text-muted)]">{caseItem.doctor_name}</small>
-          </span>
-        ),
-      },
-      {
-        key: "items_summary",
-        header: "Dentes / Itens",
-        render: (caseItem) => (
-          <span className="grid min-w-0 gap-1">
-            <strong className="truncate text-sm font-bold text-[var(--color-text)]">{caseItem.items_summary}</strong>
-            <small className="text-xs text-[var(--color-text-muted)]">{caseItem.items_count} itens de serviço</small>
-          </span>
-        ),
-      },
-      { key: "total_value", header: "Valor", render: (caseItem) => formatCurrency(caseItem.total_value) },
-      { key: "status", header: "Status", render: (caseItem) => <StatusBadge status={caseItem.status} /> },
-      { key: "created_at", header: "Criado em", render: (caseItem) => formatDate(caseItem.created_at) },
-      { key: "delivered_at", header: "Entrega", render: (caseItem) => formatDate(caseItem.delivered_at) },
-      {
-        key: "has_reverted",
-        header: "Retorno",
-        render: (caseItem) => (
-          <span className={caseItem.has_reverted ? "font-bold text-[var(--color-warning-soft)]" : "text-[var(--color-text-muted)]"}>
-            {caseItem.has_reverted ? "Sim" : "Não"}
-          </span>
-        ),
-      },
-      {
-        key: "actions",
-        header: "Ações",
-        render: (caseItem) => (
+  const columns = [
+    {
+      key: "select",
+      header: (
+        <input
+          type="checkbox"
+          className="size-4 accent-[var(--color-primary)]"
+          checked={allPageSelected}
+          disabled={!hasPageItems || deleteLoading}
+          onChange={(event) => togglePageSelection(event.target.checked)}
+          aria-label="Selecionar registros desta página"
+        />
+      ),
+      render: (caseItem) => (
+        <input
+          type="checkbox"
+          className="size-4 accent-[var(--color-primary)]"
+          checked={selectedIds.has(caseItem.id)}
+          disabled={deleteLoading}
+          onChange={(event) => toggleCaseSelection(caseItem.id, event.target.checked)}
+          aria-label={`Selecionar ${caseItem.patient_ref}`}
+        />
+      ),
+    },
+    {
+      key: "patient_ref",
+      header: "Caso / Referência",
+      render: (caseItem) => (
+        <span className="grid min-w-0 gap-1">
+          <strong className="truncate text-sm font-bold text-[var(--color-text)]">{caseItem.patient_ref}</strong>
+          <small className="truncate text-xs text-[var(--color-text-muted)]">{caseItem.doctor_name}</small>
+        </span>
+      ),
+    },
+    {
+      key: "items_summary",
+      header: "Dentes / Itens",
+      render: (caseItem) => (
+        <span className="grid min-w-0 gap-1">
+          <strong className="truncate text-sm font-bold text-[var(--color-text)]">{caseItem.items_summary}</strong>
+          <small className="text-xs text-[var(--color-text-muted)]">{caseItem.items_count} itens de serviço</small>
+        </span>
+      ),
+    },
+    { key: "total_value", header: "Valor", render: (caseItem) => formatCurrency(caseItem.total_value) },
+    { key: "status", header: "Status", render: (caseItem) => <StatusBadge status={caseItem.status} /> },
+    { key: "delivered_at", header: "Entregue", render: (caseItem) => formatDate(caseItem.delivered_at) },
+    {
+      key: "actions",
+      header: "Ações",
+      render: (caseItem) => (
+        <span className="flex flex-wrap gap-2">
           <Button variant="secondary" size="sm" onClick={() => openDetails(caseItem.id)}>
             Ver histórico
           </Button>
-        ),
-      },
-    ],
-    [],
-  );
+          <Button variant="danger" size="sm" disabled={deleteLoading} onClick={() => deleteOne(caseItem.id)}>
+            <Trash2 size={14} />
+            Apagar
+          </Button>
+        </span>
+      ),
+    },
+  ];
 
   useEffect(() => {
     void loadHistoryList();
@@ -221,6 +246,7 @@ export default function HistoryPage({
         items: Array.isArray(data?.items) ? data.items : [],
         pagination: data?.pagination || null,
       });
+      setSelectedIds(new Set());
     } catch (error) {
       setListError(error.message);
     } finally {
@@ -297,6 +323,80 @@ export default function HistoryPage({
     setPage(1);
   }
 
+  function toggleCaseSelection(caseId, checked) {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (checked) {
+        next.add(caseId);
+      } else {
+        next.delete(caseId);
+      }
+
+      return next;
+    });
+  }
+
+  function togglePageSelection(checked) {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      pageIds.forEach((id) => {
+        if (checked) {
+          next.add(id);
+        } else {
+          next.delete(id);
+        }
+      });
+
+      return next;
+    });
+  }
+
+  async function refreshAfterDelete(deletedCount) {
+    if (deletedCount > 0 && historyData.items.length === deletedCount && page > 1) {
+      setPage((current) => Math.max(1, current - 1));
+      return;
+    }
+
+    await loadHistoryList();
+  }
+
+  async function deleteOne(caseId) {
+    setDeleteLoading(true);
+    setListError("");
+    try {
+      const result = await deleteCaseHistoryRecord(caseId);
+      if (selectedCaseId === caseId) {
+        closeDetails();
+      }
+      await Promise.all([refreshAfterDelete(result?.deleted_count ?? 1), onStatusChanged?.()]);
+      onMessage?.({ type: "success", text: "Registro apagado permanentemente." });
+    } catch (error) {
+      setListError(error.message);
+    } finally {
+      setDeleteLoading(false);
+    }
+  }
+
+  async function deleteSelected() {
+    const caseIds = [...selectedIds];
+    if (!caseIds.length) return;
+
+    setDeleteLoading(true);
+    setListError("");
+    try {
+      const result = await deleteCaseHistoryRecords(caseIds);
+      if (selectedCaseId && caseIds.includes(selectedCaseId)) {
+        closeDetails();
+      }
+      await Promise.all([refreshAfterDelete(result?.deleted_count ?? caseIds.length), onStatusChanged?.()]);
+      onMessage?.({ type: "success", text: "Registros selecionados apagados permanentemente." });
+    } catch (error) {
+      setListError(error.message);
+    } finally {
+      setDeleteLoading(false);
+    }
+  }
+
   async function submitRevert(event) {
     event.preventDefault();
     if (!selectedCaseId) return;
@@ -331,7 +431,7 @@ export default function HistoryPage({
                 className={`${FILTER_CONTROL_CLASS} pl-9`}
                 value={filters.search}
                 onChange={(event) => updateFilter("search", event.target.value)}
-                placeholder="Buscar paciente, referência ou dentista"
+                placeholder="Buscar paciente ou referência"
                 aria-label="Buscar histórico"
               />
             </label>
@@ -376,6 +476,12 @@ export default function HistoryPage({
                 {pagination ? `${pagination.total} registros encontrados.` : "Busque trabalhos antigos por caso, dentista ou entrega."}
               </p>
             </div>
+            {selectedIds.size > 0 && (
+              <Button variant="danger" size="sm" disabled={deleteLoading} onClick={deleteSelected}>
+                <Trash2 size={14} />
+                Apagar selecionados
+              </Button>
+            )}
           </div>
           <div className="grid gap-3 p-4">
             <DataTable
@@ -438,11 +544,7 @@ export default function HistoryPage({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-4 gap-3 max-[760px]:grid-cols-2">
-                  <div className="grid gap-1">
-                    <small className="text-xs font-bold text-[var(--color-text-muted)]">Criado em</small>
-                    <strong className="text-sm text-[var(--color-text)]">{formatDate(detail.created_at)}</strong>
-                  </div>
+                <div className="grid grid-cols-3 gap-3 max-[760px]:grid-cols-2">
                   <div className="grid gap-1">
                     <small className="text-xs font-bold text-[var(--color-text-muted)]">Entrega recente</small>
                     <strong className="text-sm text-[var(--color-text)]">{formatDate(detail.delivered_at)}</strong>

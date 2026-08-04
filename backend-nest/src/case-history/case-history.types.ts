@@ -31,6 +31,10 @@ export interface CaseHistoryListResponse {
   pagination: PaginationMeta;
 }
 
+export interface CaseHistoryDeleteResponse {
+  deleted_count: number;
+}
+
 export interface CaseHistoryEventResponse {
   id: number;
   case_id: number;

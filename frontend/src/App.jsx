@@ -812,7 +812,13 @@ export default function App() {
         />
       )}
 
-      {activePage === "finance" && <FinancePage dashboard={dashboard} cases={cases} loading={loading} />}
+      {activePage === "finance" && (
+        <FinancePage
+          dashboard={dashboard}
+          loading={loading}
+          onOpenHistory={() => navigateToPage("history")}
+        />
+      )}
 
       {confirmPending && (
         <ConfirmModal

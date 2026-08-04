@@ -14,8 +14,8 @@ export class CaseHistoryListQueryDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  @Max(75)
-  limit = 25;
+  @Max(50)
+  limit = 10;
 
   @IsOptional()
   @IsString()

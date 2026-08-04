@@ -19,6 +19,7 @@ export default function DataTable({
   emptyTitle = "Nenhum registro encontrado.",
   emptyDescription,
   onRetry,
+  tableClassName = "min-w-[780px]",
 }) {
   if (loading) return <LoadingState message="Carregando dados..." />;
   if (error) return <ErrorState message={error} onRetry={onRetry} />;
@@ -34,7 +35,7 @@ export default function DataTable({
 
   return (
     <div className="overflow-x-auto rounded-md border border-[var(--color-border)] bg-[var(--color-subtle)]">
-      <Table className="min-w-[780px]">
+      <Table className={tableClassName}>
         <TableHeader>
           <TableRow className="border-[var(--color-border)] hover:bg-transparent">
             {columns.map((column) => (

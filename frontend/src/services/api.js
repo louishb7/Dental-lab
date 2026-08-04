@@ -369,6 +369,37 @@ export async function getCaseHistoryEvents(caseId, pagination = {}) {
 }
 
 /**
+ * Permanently deletes one historical case record owned by the authenticated user.
+ *
+ * @param {number} caseId Unique case identifier.
+ * @returns {Promise<{deleted_count: number}>} Deletion summary.
+ */
+export async function deleteCaseHistoryRecord(caseId) {
+  const response = await fetch(`${CASE_HISTORY_URL}/${caseId}`, {
+    method: "DELETE",
+    headers: buildHeaders(),
+  });
+
+  return parseResponse(response);
+}
+
+/**
+ * Permanently deletes selected historical case records owned by the authenticated user.
+ *
+ * @param {number[]} caseIds Case identifiers selected in the archive.
+ * @returns {Promise<{deleted_count: number}>} Deletion summary.
+ */
+export async function deleteCaseHistoryRecords(caseIds) {
+  const response = await fetch(CASE_HISTORY_URL, {
+    method: "DELETE",
+    headers: buildHeaders(),
+    body: JSON.stringify({ case_ids: caseIds }),
+  });
+
+  return parseResponse(response);
+}
+
+/**
  * Requests the backend to revert a case to its immediate previous status.
  *
  * @param {number} caseId Unique case identifier.

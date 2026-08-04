@@ -207,4 +207,54 @@ describe('case history e2e', () => {
       .expect(404)
       .expect({ detail: 'Caso não encontrado' });
   });
+
+  it('permanently deletes individual and selected history records through authenticated endpoints', async () => {
+    const user = await registerUser('delete-history@cadista.local', 'dhist1');
+    const otherUser = await registerUser('delete-other-history@cadista.local', 'dothr1');
+    const doctorId = await createDoctor(user.access_token, 'Dr. Apagar');
+    const otherDoctorId = await createDoctor(otherUser.access_token, 'Dr. Outro');
+
+    const firstCase = await request(app.getHttpServer())
+      .post('/cases/')
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .send({ doctor_id: doctorId, patient_ref: 'Apagar HTTP 1' })
+      .expect(201);
+    const secondCase = await request(app.getHttpServer())
+      .post('/cases/')
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .send({ doctor_id: doctorId, patient_ref: 'Apagar HTTP 2' })
+      .expect(201);
+    const foreignCase = await request(app.getHttpServer())
+      .post('/cases/')
+      .set('Authorization', `Bearer ${otherUser.access_token}`)
+      .send({ doctor_id: otherDoctorId, patient_ref: 'Privado HTTP' })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .delete(`/case-history/${firstCase.body.id}`)
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .expect(200)
+      .expect({ deleted_count: 1 });
+
+    await expect(prisma.dentalCase.findUnique({ where: { id: firstCase.body.id } })).resolves.toBeNull();
+    await expect(prisma.caseHistoryEvent.count({ where: { caseId: firstCase.body.id } })).resolves.toBe(0);
+
+    await request(app.getHttpServer())
+      .delete(`/case-history/${foreignCase.body.id}`)
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .expect(404)
+      .expect({ detail: 'Caso não encontrado' });
+
+    await request(app.getHttpServer())
+      .delete('/case-history')
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .send({ case_ids: [secondCase.body.id, foreignCase.body.id] })
+      .expect(200)
+      .expect({ deleted_count: 1 });
+
+    await expect(prisma.dentalCase.findUnique({ where: { id: secondCase.body.id } })).resolves.toBeNull();
+    await expect(prisma.dentalCase.findUnique({ where: { id: foreignCase.body.id } })).resolves.toMatchObject({
+      id: foreignCase.body.id,
+    });
+  });
 });

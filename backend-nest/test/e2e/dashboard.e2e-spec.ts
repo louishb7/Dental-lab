@@ -137,6 +137,20 @@ describe('dashboard e2e', () => {
         },
       ],
     });
+    const deliveredCase = await prisma.dentalCase.findFirstOrThrow({
+      where: {
+        doctorId: doctorB,
+        patientRef: 'Paciente entregue',
+      },
+    });
+    await prisma.caseItem.create({
+      data: {
+        caseId: deliveredCase.id,
+        tooth: '11',
+        serviceType: 'Coroa',
+        quantity: 1,
+      },
+    });
 
     await request(app.getHttpServer())
       .get('/dashboard/overview')
@@ -168,6 +182,14 @@ describe('dashboard e2e', () => {
             (foundCase: { patient_ref: string }) => foundCase.patient_ref,
           ),
         ).toEqual(['Paciente entregue']);
+        expect(response.body.delivered_cases_month[0]).toMatchObject({
+          items_count: 1,
+        });
+        expect(response.body.revenue_trend).toHaveLength(6);
+        expect(response.body.revenue_trend[5]).toMatchObject({
+          delivered_count: 1,
+          total_value: '250',
+        });
       });
   });
 

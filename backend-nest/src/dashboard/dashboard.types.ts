@@ -11,6 +11,13 @@ export interface DashboardCaseResponse {
   total_value: Prisma.Decimal | null;
   created_at: Date;
   delivered_at: Date | null;
+  items_count: number;
+}
+
+export interface DashboardRevenueTrendItem {
+  month: string;
+  total_value: Prisma.Decimal;
+  delivered_count: number;
 }
 
 export interface DashboardSummaryResponse {
@@ -21,4 +28,5 @@ export interface DashboardSummaryResponse {
   delivered_cases_month: DashboardCaseResponse[];
   delivered_total_month: Prisma.Decimal;
   delivered_count_month: number;
+  revenue_trend: DashboardRevenueTrendItem[];
 }

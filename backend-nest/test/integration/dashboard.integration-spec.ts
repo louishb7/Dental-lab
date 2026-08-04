@@ -132,12 +132,18 @@ describe('DashboardService integration', () => {
       deadline: new Date('2026-08-02T12:00:00.000Z'),
       status: 'completed',
     });
-    await createCase({
+    const deliveredCaseId = await createCase({
       doctorId: doctorB,
       patientRef: 'Paciente entregue',
       status: 'delivered',
       totalValue: new Prisma.Decimal('250.00'),
       deliveredAt: new Date('2026-07-20T10:00:00.000Z'),
+    });
+    await prisma.caseItem.createMany({
+      data: [
+        { caseId: deliveredCaseId, tooth: '11', serviceType: 'Coroa', quantity: 1 },
+        { caseId: deliveredCaseId, tooth: '12', serviceType: 'Coroa', quantity: 1 },
+      ],
     });
 
     const summary = await dashboard.getDashboardSummary(userId, now);
@@ -159,8 +165,15 @@ describe('DashboardService integration', () => {
     expect(summary.delivered_cases_month.map((foundCase) => foundCase.patient_ref)).toEqual([
       'Paciente entregue',
     ]);
+    expect(summary.delivered_cases_month[0]?.items_count).toBe(2);
     expect(summary.delivered_total_month.toString()).toBe('250');
     expect(summary.delivered_count_month).toBe(1);
+    expect(summary.revenue_trend).toHaveLength(6);
+    expect(summary.revenue_trend[5]).toMatchObject({
+      month: '2026-07',
+      delivered_count: 1,
+    });
+    expect(summary.revenue_trend[5]?.total_value.toString()).toBe('250');
   });
 
   it('keeps aggregations scoped to the authenticated user and excludes soft-deleted cases', async () => {
@@ -245,6 +258,8 @@ describe('DashboardService integration', () => {
     ]);
     expect(summary.delivered_total_month.toString()).toBe('300');
     expect(summary.delivered_count_month).toBe(2);
+    expect(summary.revenue_trend[5]?.month).toBe('2026-07');
+    expect(summary.revenue_trend[5]?.total_value.toString()).toBe('300');
   });
 
   it('orders urgent open cases by deadline asc with nulls last and id desc', async () => {

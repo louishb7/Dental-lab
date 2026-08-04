@@ -13,6 +13,7 @@ import type { CaseHistoryEventsQueryDto } from './dto/case-history-events-query.
 import type { CaseHistoryListQueryDto } from './dto/case-history-list-query.dto';
 import type {
   CaseHistoryDetailResponse,
+  CaseHistoryDeleteResponse,
   CaseHistoryEventResponse,
   CaseHistoryEventsResponse,
   CaseHistoryListItem,
@@ -143,6 +144,83 @@ export class CaseHistoryService {
     };
   }
 
+  async permanentlyDeleteCase(
+    caseId: number,
+    userId: number,
+  ): Promise<CaseHistoryDeleteResponse | null> {
+    const foundCase = await this.prisma.dentalCase.findFirst({
+      where: {
+        id: caseId,
+        doctor: {
+          userId,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (foundCase === null) {
+      return null;
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.caseHistoryEvent.deleteMany({ where: { caseId: foundCase.id } }),
+      this.prisma.dentalCase.delete({ where: { id: foundCase.id } }),
+    ]);
+
+    return { deleted_count: 1 };
+  }
+
+  async permanentlyDeleteCases(
+    caseIds: number[],
+    userId: number,
+  ): Promise<CaseHistoryDeleteResponse> {
+    const normalizedIds = [...new Set(caseIds)];
+    if (normalizedIds.length === 0) {
+      return { deleted_count: 0 };
+    }
+
+    const ownedCases = await this.prisma.dentalCase.findMany({
+      where: {
+        id: {
+          in: normalizedIds,
+        },
+        doctor: {
+          userId,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+    const ownedIds = ownedCases.map((foundCase) => foundCase.id);
+
+    if (ownedIds.length === 0) {
+      return { deleted_count: 0 };
+    }
+
+    const deletedCases = await this.prisma.$transaction(async (tx) => {
+      await tx.caseHistoryEvent.deleteMany({
+        where: {
+          caseId: {
+            in: ownedIds,
+          },
+        },
+      });
+
+      return tx.dentalCase.deleteMany({
+        where: {
+          id: {
+            in: ownedIds,
+          },
+        },
+      });
+    });
+
+    return { deleted_count: deletedCases.count };
+  }
+
   private buildHistoryWhere(
     query: CaseHistoryListQueryDto,
     userId: number,
@@ -154,7 +232,7 @@ export class CaseHistoryService {
       deliveredAt.gte = query.delivered_from;
     }
     if (query.delivered_to !== undefined) {
-      deliveredAt.lte = query.delivered_to;
+      deliveredAt.lt = query.delivered_to;
     }
 
     return {

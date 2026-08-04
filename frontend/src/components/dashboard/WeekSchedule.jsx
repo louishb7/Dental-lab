@@ -1,5 +1,4 @@
 import {
-  formatDayMonth,
   formatWeekRange,
   formatWeekdayLabel,
   isToday,
@@ -23,31 +22,29 @@ function DayCard({ day, cases, selected, onSelect, onOpenNewCaseForDate }) {
   return (
     <div
       className={[
-        "grid min-h-[96px] min-w-0 grid-rows-[1fr_auto] gap-2 rounded-md border p-2.5 text-[var(--color-text)] transition-colors",
+        "grid min-h-[88px] min-w-0 grid-rows-[1fr_auto] gap-1.5 rounded-md border p-2.5 text-[var(--color-text)] transition-colors",
         selected
           ? "border-primary/40 bg-primary/10 shadow-[inset_0_0_0_1px_var(--color-primary)]"
           : "border-[var(--color-border)] bg-[var(--color-elevated-bg)] hover:border-primary/30 hover:bg-primary/5",
       ].join(" ")}
     >
       <button
-        className="grid min-w-0 content-start gap-2 text-left"
+        className="grid min-w-0 place-items-center gap-1 text-center"
         type="button"
         aria-pressed={selected}
         onClick={() => onSelect(day)}
       >
-        <div className="flex min-h-4 items-center justify-between gap-1">
-          <span className="text-[0.66rem] font-extrabold uppercase text-[var(--color-text-muted)]">
+        <div className="inline-flex min-h-4 items-center justify-center gap-1.5">
+          <strong className="text-sm font-extrabold uppercase tracking-[0.08em] text-[var(--color-text)]">
             {formatWeekdayLabel(day)}
-          </span>
+          </strong>
           {isCurrentDay && !selected && (
             <span className="size-1.5 rounded-full bg-primary" aria-label="Hoje" />
           )}
         </div>
-        <strong className="text-xl font-extrabold leading-none text-[var(--color-text)]">
-          {formatDayMonth(day)}
-        </strong>
-        <span className="text-xs font-semibold text-[var(--color-text-muted)]">
-          {cases.length} {cases.length === 1 ? "caso" : "casos"}
+        <strong className="text-2xl font-extrabold leading-none text-[var(--color-text)]">{cases.length}</strong>
+        <span className="text-[0.68rem] font-bold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">
+          {cases.length === 1 ? "caso" : "casos"}
         </span>
         {urgentCount > 0 && (
           <Badge variant="outline" className="h-5 w-fit border-[color-mix(in_srgb,var(--color-danger)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-danger)_10%,transparent)] px-1.5 py-0 text-[0.62rem] font-bold text-[var(--color-danger-soft)]">

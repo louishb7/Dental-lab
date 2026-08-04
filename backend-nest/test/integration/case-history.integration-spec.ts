@@ -87,11 +87,11 @@ describe('CaseHistory integration', () => {
   it('returns an empty paginated list when the user has no historical cases', async () => {
     const userId = await createUser('empty-history@cadista.local', 'empty1');
 
-    await expect(history.listCases({ page: 1, limit: 25 }, userId)).resolves.toEqual({
+    await expect(history.listCases({ page: 1, limit: 10 }, userId)).resolves.toEqual({
       items: [],
       pagination: {
         page: 1,
-        limit: 25,
+        limit: 10,
         total: 0,
         total_pages: 1,
         has_next_page: false,
@@ -375,5 +375,56 @@ describe('CaseHistory integration', () => {
       .resolves
       .toBeNull();
     await expect(cases.revertCaseStatus(oldDelivered.id, 'Tentativa', secondUserId)).resolves.toBeNull();
+  });
+
+  it('permanently deletes owned history records without deleting another user data', async () => {
+    const firstUserId = await createUser('delete-history@cadista.local', 'dhist1');
+    const secondUserId = await createUser('delete-other-history@cadista.local', 'dothr1');
+    const firstDoctorId = await createDoctor(firstUserId, 'Dr. Apagar');
+    const secondDoctorId = await createDoctor(secondUserId, 'Dr. Preservar');
+
+    const firstCase = await cases.createCase(
+      {
+        doctor_id: firstDoctorId,
+        patient_ref: 'Apagar individual',
+        priority: 'normal',
+        status: 'pending',
+      },
+      firstUserId,
+    );
+    const secondCase = await cases.createCase(
+      {
+        doctor_id: firstDoctorId,
+        patient_ref: 'Apagar em lote',
+        priority: 'normal',
+        status: 'pending',
+      },
+      firstUserId,
+    );
+    const foreignCase = await cases.createCase(
+      {
+        doctor_id: secondDoctorId,
+        patient_ref: 'Nao apagar',
+        priority: 'normal',
+        status: 'pending',
+      },
+      secondUserId,
+    );
+
+    await expect(history.permanentlyDeleteCase(firstCase.id, firstUserId)).resolves.toEqual({
+      deleted_count: 1,
+    });
+    await expect(prisma.dentalCase.findUnique({ where: { id: firstCase.id } })).resolves.toBeNull();
+    await expect(prisma.caseHistoryEvent.count({ where: { caseId: firstCase.id } })).resolves.toBe(0);
+
+    await expect(history.permanentlyDeleteCase(foreignCase.id, firstUserId)).resolves.toBeNull();
+
+    await expect(
+      history.permanentlyDeleteCases([secondCase.id, secondCase.id, foreignCase.id], firstUserId),
+    ).resolves.toEqual({ deleted_count: 1 });
+    await expect(prisma.dentalCase.findUnique({ where: { id: secondCase.id } })).resolves.toBeNull();
+    await expect(prisma.dentalCase.findUnique({ where: { id: foreignCase.id } })).resolves.toMatchObject({
+      id: foreignCase.id,
+    });
   });
 });

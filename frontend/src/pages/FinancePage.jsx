@@ -1,18 +1,81 @@
 import {
   CheckCircle2,
   CircleDollarSign,
-  PackageCheck,
-  Wrench,
 } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import PageContainer from "../components/layout/PageContainer.jsx";
+import Button from "../components/ui/Button.jsx";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "../components/ui/chart.jsx";
 import DataTable from "../components/ui/DataTable.jsx";
 import EmptyState from "../components/ui/EmptyState.jsx";
 import LoadingState from "../components/ui/LoadingState.jsx";
-import StatCard from "../components/ui/StatCard.jsx";
-import { formatServiceItemCount, getServiceCount } from "../utils/cases.js";
+import { formatServiceItemCount } from "../utils/cases.js";
 import { formatCurrency, formatDate, parseCurrencyToNumber } from "../utils/formatters.js";
 
-export default function FinancePage({ dashboard, cases, loading }) {
+const chartConfig = {
+  receita: {
+    label: "Receita",
+    color: "var(--color-success)",
+  },
+};
+
+function formatMonthLabel(monthKey) {
+  const [year, month] = String(monthKey).split("-").map(Number);
+  if (!year || !month) return monthKey;
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    month: "short",
+  }).format(new Date(Date.UTC(year, month - 1, 1))).replace(".", "");
+}
+
+function formatCompactCurrency(value) {
+  if (value >= 1000) {
+    return `R$ ${(value / 1000).toLocaleString("pt-BR", {
+      maximumFractionDigits: 1,
+    })} mil`;
+  }
+
+  return formatCurrency(value);
+}
+
+function getMonthComparison(trend) {
+  if (!Array.isArray(trend) || trend.length < 2) return "";
+
+  const current = parseCurrencyToNumber(trend[trend.length - 1]?.total_value) ?? 0;
+  const previous = parseCurrencyToNumber(trend[trend.length - 2]?.total_value) ?? 0;
+
+  if (previous <= 0 && current <= 0) return "";
+  if (previous <= 0) return "Novo faturamento vs mês passado";
+
+  const variation = ((current - previous) / previous) * 100;
+  const sign = variation >= 0 ? "+" : "";
+
+  return `${sign}${variation.toLocaleString("pt-BR", {
+    maximumFractionDigits: 0,
+  })}% vs mês passado`;
+}
+
+function buildFallbackRevenueTrend(totalMes, countMes) {
+  const now = new Date();
+
+  return Array.from({ length: 6 }, (_, index) => {
+    const monthOffset = index - 5;
+    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + monthOffset, 1));
+    const isCurrentMonth = index === 5;
+
+    return {
+      month: `${monthStart.getUTCFullYear()}-${String(monthStart.getUTCMonth() + 1).padStart(2, "0")}`,
+      total_value: isCurrentMonth ? totalMes : 0,
+      delivered_count: isCurrentMonth ? countMes : 0,
+    };
+  });
+}
+
+export default function FinancePage({ dashboard, loading, onOpenHistory }) {
   if (loading) {
     return <LoadingState message="Carregando financeiro..." />;
   }
@@ -20,6 +83,17 @@ export default function FinancePage({ dashboard, cases, loading }) {
   const totalMes = parseCurrencyToNumber(dashboard?.delivered_total_month) ?? 0;
   const countMes = dashboard?.delivered_count_month ?? 0;
   const deliveredCases = dashboard?.delivered_cases_month ?? [];
+  const recentDeliveredCases = deliveredCases.slice(0, 5);
+  const averageTicket = countMes > 0 ? totalMes / countMes : 0;
+  const revenueTrend = Array.isArray(dashboard?.revenue_trend) && dashboard.revenue_trend.length
+    ? dashboard.revenue_trend
+    : buildFallbackRevenueTrend(totalMes, countMes);
+  const chartData = revenueTrend.map((item) => ({
+    month: item.month,
+    monthLabel: formatMonthLabel(item.month),
+    receita: parseCurrencyToNumber(item.total_value) ?? 0,
+  }));
+  const monthComparison = getMonthComparison(revenueTrend);
   const topDoctorsMap = {};
 
   deliveredCases.forEach((caseItem) => {
@@ -32,8 +106,6 @@ export default function FinancePage({ dashboard, cases, loading }) {
   const topDoctors = Object.values(topDoctorsMap)
     .sort((a, b) => b.total - a.total)
     .slice(0, 5);
-
-  const totalServices = cases.reduce((sum, caseItem) => sum + getServiceCount(caseItem), 0);
 
   const deliveredColumns = [
     {
@@ -62,21 +134,67 @@ export default function FinancePage({ dashboard, cases, loading }) {
       description="Acompanhe o valor entregue e os casos concluídos no período."
     >
       <div className="grid gap-4">
-        <div className="grid grid-cols-3 gap-4 max-[1120px]:grid-cols-2 max-[640px]:grid-cols-1">
-          <StatCard
-            title="Valor entregue no mês"
-            value={formatCurrency(totalMes)}
-            icon={CircleDollarSign}
-            tone="success"
-          />
-          <StatCard title="Casos entregues" value={countMes} icon={PackageCheck} tone="info" />
-          <StatCard
-            title="Itens de serviço lançados"
-            value={totalServices}
-            icon={Wrench}
-            tone="info"
-            description="Linhas de serviço somadas em todos os casos"
-          />
+        <div className="grid grid-cols-[minmax(260px,360px)_minmax(0,1fr)] gap-4 max-[980px]:grid-cols-1">
+          <section className="rounded-md border border-primary/30 bg-[var(--color-surface)] p-4 text-[var(--color-text)] shadow-sm">
+            <div className="grid gap-3">
+              <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">
+                <CircleDollarSign className="size-4 text-[var(--color-success)]" />
+                Receita entregue no mês
+              </div>
+              <strong className="text-3xl font-extrabold leading-none text-[var(--color-text)]">
+                {formatCurrency(totalMes)}
+              </strong>
+              <p className="text-sm font-semibold text-[var(--color-text-muted)]">
+                {countMes} {countMes === 1 ? "caso entregue" : "casos entregues"} • média {formatCurrency(averageTicket)}
+              </p>
+              {monthComparison && (
+                <span className="w-fit rounded-full border border-[color-mix(in_srgb,var(--color-success)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-success)_10%,transparent)] px-2 py-0.5 text-xs font-bold text-[var(--color-success-soft)]">
+                  {monthComparison}
+                </span>
+              )}
+            </div>
+          </section>
+
+          <section className="rounded-md border border-primary/30 bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm">
+            <div className="border-b border-[var(--color-border)] px-4 py-3">
+              <div className="grid gap-1">
+                <h3 className="text-base font-bold leading-tight">Tendência de receita</h3>
+                <p className="text-sm leading-snug text-[var(--color-text-muted)]">Receita entregue nos últimos 6 meses.</p>
+              </div>
+            </div>
+            <div className="p-4">
+              <ChartContainer config={chartConfig} className="h-[220px] w-full aspect-auto">
+                <BarChart accessibilityLayer data={chartData} margin={{ left: 0, right: 8, top: 8 }}>
+                  <CartesianGrid vertical={false} stroke="var(--color-border)" />
+                  <XAxis
+                    dataKey="monthLabel"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                  />
+                  <YAxis
+                    width={64}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={formatCompactCurrency}
+                  />
+                  <ChartTooltip
+                    cursor={false}
+                    content={
+                      <ChartTooltipContent
+                        formatter={(value) => (
+                          <span className="font-mono font-bold text-[var(--color-text)]">
+                            {formatCurrency(value)}
+                          </span>
+                        )}
+                      />
+                    }
+                  />
+                  <Bar dataKey="receita" fill="var(--color-receita)" radius={[6, 6, 2, 2]} />
+                </BarChart>
+              </ChartContainer>
+            </div>
+          </section>
         </div>
 
         <div className="grid grid-cols-[minmax(320px,420px)_minmax(0,1fr)] gap-4 max-[1120px]:grid-cols-1">
@@ -117,13 +235,21 @@ export default function FinancePage({ dashboard, cases, loading }) {
               </div>
             </div>
             <div className="p-4">
-              <div className="max-h-[520px] overflow-auto">
+              <div className="grid gap-3">
                 <DataTable
                   columns={deliveredColumns}
-                  data={deliveredCases}
+                  data={recentDeliveredCases}
                   emptyIcon={CheckCircle2}
                   emptyTitle="Nenhuma entrega registrada."
+                  tableClassName="w-full min-w-0"
                 />
+                {deliveredCases.length > recentDeliveredCases.length && (
+                  <div className="flex justify-end">
+                    <Button variant="secondary" size="sm" onClick={onOpenHistory}>
+                      Ver todas no Histórico
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </section>
