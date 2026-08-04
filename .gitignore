@@ -5,6 +5,8 @@
 !frontend/.env.example
 .envrc.local
 .direnv/
+.agents/
+.codex/
 repomix-output*.xml
 .venv/
 __pycache__/
@@ -21,4 +23,3 @@ site/
 node_modules/
 .DS_Store
 *.py[cod]
-decisoes.md

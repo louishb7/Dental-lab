@@ -1,4 +1,4 @@
-# Cadista - Governança de Agentes
+# Cadisk - Governança de Agentes
 
 Este arquivo define regras obrigatórias para qualquer agente que altere, revise ou gere código neste repositório.
 
@@ -46,17 +46,17 @@ O Modo Aula só é ativado quando explicitamente solicitado. Em todas as outras 
 
 ## Nomenclatura do Projeto
 
-O nome de trabalho atual do produto é **Cadista**.
+O nome atual do produto na interface é **Cadisk**.
 
-Neste repositório, use `Cadista` como nome padrão em documentação, mensagens de interface, comentários e descrições técnicas enquanto não houver decisão formal de renomeação.
+Neste repositório, use `Cadisk` como nome padrão em documentação pública, mensagens de interface, comentários e descrições técnicas novas.
 
-Evite variantes como `Kadista`, `K-dista` ou outras grafias inconsistentes, especialmente em arquivos novos, mensagens de interface e documentação.
+Evite variantes como `Cadista`, `Kadista`, `K-dista` ou outras grafias inconsistentes, especialmente em arquivos novos, mensagens de interface e documentação.
 
 Quando encontrar uma grafia incorreta no mesmo arquivo ou escopo da tarefa atual, corrija se isso for seguro e não gerar refatoração ampla. Não faça varreduras globais apenas para renomear termos, a menos que a tarefa peça explicitamente.
 
 Observação: “cadista” também é o nome da profissão/público-alvo. Portanto, diferencie quando necessário:
 
-- **Cadista**: nome de trabalho do produto;
+- **Cadisk**: nome atual do produto;
 - **cadista**: profissional que utiliza o sistema.
 
 ---
@@ -94,7 +94,7 @@ Regras obrigatórias:
 
 ## Multiusuário e Ownership
 
-O Cadista é oficialmente um sistema multiusuário.
+O Cadisk é oficialmente um sistema multiusuário.
 
 Regras obrigatórias:
 

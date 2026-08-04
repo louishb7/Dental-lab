@@ -365,6 +365,20 @@ export default function App() {
     setAuthMessage(null);
   }
 
+  function handleAuthExpired(messageText = "Sessão expirada. Faça login novamente.") {
+    clearSession();
+    setSession(null);
+    setDoctors([]);
+    setCases([]);
+    setItems([]);
+    setDashboard(null);
+    setSelectedCaseId(null);
+    setDashboardDetailOpen(false);
+    setConfirmPending(null);
+    setMessage(null);
+    setAuthMessage({ type: "error", text: messageText });
+  }
+
   async function handleDoctorSubmit(event) {
     event.preventDefault();
     setBusy(true);
@@ -812,6 +826,7 @@ export default function App() {
           busy={busy}
           onStatusChanged={loadAppData}
           onMessage={setMessage}
+          onAuthExpired={handleAuthExpired}
           onClearFocusCase={clearHistoryFocusCase}
         />
       )}

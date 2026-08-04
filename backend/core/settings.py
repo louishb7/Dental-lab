@@ -65,9 +65,11 @@ if len(SECRET_KEY) < 32:
     raise RuntimeError("SECRET_KEY must be at least 32 characters long.")
 
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
-if not 5 <= ACCESS_TOKEN_EXPIRE_MINUTES <= 24 * 60:
-    raise RuntimeError("ACCESS_TOKEN_EXPIRE_MINUTES must be between 5 and 1440.")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "0"))
+if ACCESS_TOKEN_EXPIRE_MINUTES != 0 and not 5 <= ACCESS_TOKEN_EXPIRE_MINUTES <= 24 * 60:
+    raise RuntimeError(
+        "ACCESS_TOKEN_EXPIRE_MINUTES must be 0 for persistent sessions or between 5 and 1440."
+    )
 
 # Regra fixa do produto: cadastro com senha de no mínimo 6 caracteres.
 PASSWORD_MIN_LENGTH = 6

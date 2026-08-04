@@ -106,6 +106,18 @@ function parseIntegerInRange(
   return parsed;
 }
 
+function parseAccessTokenExpireMinutes(value: string | undefined): number {
+  const parsed = Number(value || '0');
+
+  if (!Number.isInteger(parsed) || (parsed !== 0 && (parsed < 5 || parsed > 1440))) {
+    throw new Error(
+      'ACCESS_TOKEN_EXPIRE_MINUTES must be 0 for persistent sessions or an integer between 5 and 1440.',
+    );
+  }
+
+  return parsed;
+}
+
 function parseBcryptRounds(value: string | undefined, nodeEnvironment: NodeEnvironment): number {
   const minRounds = nodeEnvironment === 'test' ? 4 : 12;
   return parseIntegerInRange(value, 'BCRYPT_ROUNDS', 12, minRounds, 16);
@@ -226,12 +238,8 @@ export function validateEnvironment(config: Record<string, unknown>): Environmen
     DATABASE_URL: parseDatabaseUrl(readString(config, 'DATABASE_URL')),
     SECRET_KEY: parseSecretKey(readString(config, 'SECRET_KEY')),
     ALGORITHM: parseAlgorithm(readString(config, 'ALGORITHM')),
-    ACCESS_TOKEN_EXPIRE_MINUTES: parseIntegerInRange(
+    ACCESS_TOKEN_EXPIRE_MINUTES: parseAccessTokenExpireMinutes(
       readString(config, 'ACCESS_TOKEN_EXPIRE_MINUTES'),
-      'ACCESS_TOKEN_EXPIRE_MINUTES',
-      60,
-      5,
-      1440,
     ),
     BCRYPT_ROUNDS: parseBcryptRounds(readString(config, 'BCRYPT_ROUNDS'), nodeEnvironment),
     LOGIN_MAX_ATTEMPTS: parseIntegerInRange(

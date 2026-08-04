@@ -28,12 +28,13 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def create_access_token(username: str) -> str:
     now = datetime.now(timezone.utc)
-    expire = now + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     payload = {
         "sub": username,
         "iat": int(now.timestamp()),
-        "exp": expire,
     }
+    if settings.ACCESS_TOKEN_EXPIRE_MINUTES > 0:
+        payload["exp"] = now + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+
     return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 

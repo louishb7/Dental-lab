@@ -133,6 +133,7 @@ export default function HistoryPage({
   busy,
   onStatusChanged,
   onMessage,
+  onAuthExpired,
   onClearFocusCase,
 }) {
   const [filters, setFilters] = useState({
@@ -248,6 +249,7 @@ export default function HistoryPage({
       });
       setSelectedIds(new Set());
     } catch (error) {
+      if (handleUnauthorizedError(error)) return;
       setListError(error.message);
     } finally {
       setListLoading(false);
@@ -274,6 +276,7 @@ export default function HistoryPage({
       setEvents(Array.isArray(timeline?.items) ? timeline.items : []);
       setEventsPagination(timeline?.pagination || null);
     } catch (error) {
+      if (handleUnauthorizedError(error)) return;
       setDetailError(error.message);
     } finally {
       setDetailLoading(false);
@@ -294,6 +297,7 @@ export default function HistoryPage({
       setEvents((current) => [...current, ...(Array.isArray(timeline?.items) ? timeline.items : [])]);
       setEventsPagination(timeline?.pagination || null);
     } catch (error) {
+      if (handleUnauthorizedError(error)) return;
       setDetailError(error.message);
     } finally {
       setDetailLoading(false);
@@ -371,6 +375,7 @@ export default function HistoryPage({
       await Promise.all([refreshAfterDelete(result?.deleted_count ?? 1), onStatusChanged?.()]);
       onMessage?.({ type: "success", text: "Registro apagado permanentemente." });
     } catch (error) {
+      if (handleUnauthorizedError(error)) return;
       setListError(error.message);
     } finally {
       setDeleteLoading(false);
@@ -391,6 +396,7 @@ export default function HistoryPage({
       await Promise.all([refreshAfterDelete(result?.deleted_count ?? caseIds.length), onStatusChanged?.()]);
       onMessage?.({ type: "success", text: "Registros selecionados apagados permanentemente." });
     } catch (error) {
+      if (handleUnauthorizedError(error)) return;
       setListError(error.message);
     } finally {
       setDeleteLoading(false);
@@ -410,10 +416,18 @@ export default function HistoryPage({
       await Promise.all([openDetails(selectedCaseId), loadHistoryList(), onStatusChanged?.()]);
       onMessage?.({ type: "success", text: "Status retornado com histórico registrado." });
     } catch (error) {
+      if (handleUnauthorizedError(error)) return;
       setRevertError(error.message);
     } finally {
       setRevertLoading(false);
     }
+  }
+
+  function handleUnauthorizedError(error) {
+    if (error?.status !== 401) return false;
+
+    onAuthExpired?.("Sessão expirada. Faça login novamente.");
+    return true;
   }
 
   return (

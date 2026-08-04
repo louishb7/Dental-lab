@@ -38,13 +38,15 @@ export class AuthService {
   }
 
   private createAccessToken(username: string): string {
+    const expiresInMinutes = this.config.getOrThrow<number>('ACCESS_TOKEN_EXPIRE_MINUTES');
+
     return this.jwt.sign(
       {
         sub: username,
       },
       {
         algorithm: this.config.getOrThrow('ALGORITHM'),
-        expiresIn: `${this.config.getOrThrow<number>('ACCESS_TOKEN_EXPIRE_MINUTES')}m`,
+        ...(expiresInMinutes > 0 ? { expiresIn: `${expiresInMinutes}m` } : {}),
       },
     );
   }

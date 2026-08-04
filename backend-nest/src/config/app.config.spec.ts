@@ -17,7 +17,7 @@ describe('validateEnvironment', () => {
       DATABASE_URL: VALID_ENV.DATABASE_URL,
       SECRET_KEY: VALID_ENV.SECRET_KEY,
       ALGORITHM: 'HS256',
-      ACCESS_TOKEN_EXPIRE_MINUTES: 60,
+      ACCESS_TOKEN_EXPIRE_MINUTES: 0,
       BCRYPT_ROUNDS: 12,
       LOGIN_MAX_ATTEMPTS: 5,
       LOGIN_LOCKOUT_MINUTES: 15,
@@ -70,6 +70,20 @@ describe('validateEnvironment', () => {
     expect(() =>
       validateEnvironment({ ...VALID_ENV, NODE_ENV: 'development', BCRYPT_ROUNDS: '4' }),
     ).toThrow('BCRYPT_ROUNDS must be an integer between 12 and 16.');
+  });
+
+  it('accepts explicit positive access token expiration within the supported range', () => {
+    expect(validateEnvironment({ ...VALID_ENV, ACCESS_TOKEN_EXPIRE_MINUTES: '1440' }))
+      .toMatchObject({
+        ACCESS_TOKEN_EXPIRE_MINUTES: 1440,
+      });
+  });
+
+  it('rejects unsupported access token expiration values', () => {
+    expect(() => validateEnvironment({ ...VALID_ENV, ACCESS_TOKEN_EXPIRE_MINUTES: '1' }))
+      .toThrow('ACCESS_TOKEN_EXPIRE_MINUTES must be 0 for persistent sessions');
+    expect(() => validateEnvironment({ ...VALID_ENV, ACCESS_TOKEN_EXPIRE_MINUTES: '1441' }))
+      .toThrow('ACCESS_TOKEN_EXPIRE_MINUTES must be 0 for persistent sessions');
   });
 
   it('enables dynamic local CORS ports outside production', () => {

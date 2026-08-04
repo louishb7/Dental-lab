@@ -18,13 +18,17 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     PassportModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService<EnvironmentVariables>) => ({
-        secret: config.getOrThrow('SECRET_KEY'),
-        signOptions: {
-          algorithm: config.getOrThrow('ALGORITHM'),
-          expiresIn: `${config.getOrThrow<number>('ACCESS_TOKEN_EXPIRE_MINUTES')}m`,
-        },
-      }),
+      useFactory: (config: ConfigService<EnvironmentVariables>) => {
+        const expiresInMinutes = config.getOrThrow<number>('ACCESS_TOKEN_EXPIRE_MINUTES');
+
+        return {
+          secret: config.getOrThrow('SECRET_KEY'),
+          signOptions: {
+            ...(expiresInMinutes > 0 ? { expiresIn: `${expiresInMinutes}m` } : {}),
+            algorithm: config.getOrThrow('ALGORITHM'),
+          },
+        };
+      },
     }),
     UserModule,
   ],

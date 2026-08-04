@@ -11,6 +11,18 @@ import { PrismaService } from '../../src/prisma/prisma.service';
 const STRONG_PASSWORD = 'StrongPass123!';
 const SPECIAL_PASSWORD = 'Ab!1cd';
 
+function decodeJwtPayload(token: string): { exp?: number; iat?: number } {
+  const [, payload] = token.split('.');
+  if (!payload) {
+    throw new Error('JWT payload is missing.');
+  }
+
+  return JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as {
+    exp?: number;
+    iat?: number;
+  };
+}
+
 describe('auth e2e', () => {
   let app: INestApplication;
   let prisma: PrismaService;
@@ -75,6 +87,9 @@ describe('auth e2e', () => {
     expect(registerPayload.username).toBe('admin1');
     expect(registerPayload.email).toBe('admin@cadista.local');
     expect(registerPayload.access_token).toEqual(expect.any(String));
+    const tokenPayload = decodeJwtPayload(registerPayload.access_token);
+    expect(tokenPayload.iat).toEqual(expect.any(Number));
+    expect(tokenPayload.exp).toBeUndefined();
 
     await request(app.getHttpServer())
       .get('/auth/me')

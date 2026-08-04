@@ -137,8 +137,3 @@ export function getDeadlineBadge(deadline, status) {
 
   return { label: formatDate(deadline), tone: "neutral" };
 }
-
-export function formatDeadline(deadline, status) {
-  const badge = getDeadlineBadge(deadline, status);
-  return badge.label;
-}
