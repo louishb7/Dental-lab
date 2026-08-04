@@ -16,7 +16,7 @@ function buildHeaders() {
   const headers = {
     "Content-Type": "application/json",
   };
-  const token = window.localStorage.getItem("cadista_token");
+  const token = window.localStorage.getItem("cadisk_token");
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;
@@ -55,9 +55,9 @@ async function parseResponse(response) {
  * @returns {{username: string, email: string}} Public session data for the UI.
  */
 export function saveSession(payload) {
-  window.localStorage.setItem("cadista_token", payload.access_token);
+  window.localStorage.setItem("cadisk_token", payload.access_token);
   window.localStorage.setItem(
-    "cadista_user",
+    "cadisk_user",
     JSON.stringify({ username: payload.username, email: payload.email }),
   );
 
@@ -70,8 +70,8 @@ export function saveSession(payload) {
  * @returns {{username: string, email: string}|null} Stored user data or null.
  */
 export function getStoredSession() {
-  const rawUser = window.localStorage.getItem("cadista_user");
-  const token = window.localStorage.getItem("cadista_token");
+  const rawUser = window.localStorage.getItem("cadisk_user");
+  const token = window.localStorage.getItem("cadisk_token");
 
   if (!rawUser || !token) {
     return null;
@@ -91,8 +91,8 @@ export function getStoredSession() {
  * @returns {void}
  */
 export function clearSession() {
-  window.localStorage.removeItem("cadista_token");
-  window.localStorage.removeItem("cadista_user");
+  window.localStorage.removeItem("cadisk_token");
+  window.localStorage.removeItem("cadisk_user");
 }
 
 /**

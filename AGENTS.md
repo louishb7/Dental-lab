@@ -119,7 +119,7 @@ Regras obrigatórias:
 - Quando Prisma não representar uma constraint diretamente, usar SQL customizado na migration e documentar a razão.
 - Dados financeiros devem preservar precisão: banco com `Numeric(10, 2)`/`Decimal`, Prisma `Decimal`, domínio sem `number` para cálculos monetários críticos, serialização compatível com a API atual.
 - TypeScript deve permanecer estrito; não desativar verificações para fazer o projeto compilar.
-- Não criar controllers/services de domínio fictícios antes da fase correspondente.
+- Não criar controllers/services de domínio fictícios.
 
 ---
 
@@ -204,7 +204,7 @@ Quando uma melhoria relevante estiver fora do escopo, o agente deve registrá-la
 - Não quebrar compatibilidade de rotas sem atualizar o frontend e os testes.
 - Não remover funcionalidades existentes sem substituição equivalente ou justificativa clara.
 - Não criar funcionalidade falsa apenas visualmente se a API ou o domínio ainda não suportarem.
-- Não avançar fases da migração automaticamente; cada fase começa apenas após validação e confirmação do usuário.
+- Não avançar fases de uma tarefa automaticamente quando o usuário exigir pausas explícitas; cada fase começa apenas após validação e confirmação do usuário.
 
 ---
 

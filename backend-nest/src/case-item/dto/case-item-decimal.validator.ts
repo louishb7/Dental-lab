@@ -2,7 +2,7 @@ import { type ValidatorConstraintInterface, ValidatorConstraint } from 'class-va
 
 import { isValidDecimalValue } from '../../case/case-money';
 
-@ValidatorConstraint({ name: 'cadistaCaseItemDecimalValue', async: false })
+@ValidatorConstraint({ name: 'cadiskCaseItemDecimalValue', async: false })
 export class CaseItemDecimalValueConstraint implements ValidatorConstraintInterface {
   validate(value: unknown): boolean {
     return isValidDecimalValue(value);

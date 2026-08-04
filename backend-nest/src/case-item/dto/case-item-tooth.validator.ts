@@ -6,7 +6,7 @@ import {
 
 import { isValidTooth, normalizeTooth } from '../case-item-rules';
 
-@ValidatorConstraint({ name: 'cadistaCaseItemTooth', async: false })
+@ValidatorConstraint({ name: 'cadiskCaseItemTooth', async: false })
 export class CaseItemToothConstraint implements ValidatorConstraintInterface {
   validate(value: unknown): boolean {
     return isValidTooth(value);

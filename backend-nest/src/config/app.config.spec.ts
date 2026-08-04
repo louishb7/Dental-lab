@@ -5,8 +5,8 @@ const VALID_ENV = {
   NODE_ENV: 'test',
   PORT: '3001',
   DATABASE_URL:
-    'postgresql://cadista_user:cadista777@localhost:5432/cadista_db?schema=cadista_nest_test',
-  SECRET_KEY: 'test-secret-key-for-cadista-nest-auth',
+    'postgresql://cadisk_dev:cadisk_dev_password@localhost:5433/cadisk_nest_test?schema=public',
+  SECRET_KEY: 'test-secret-key-for-cadisk-nest-auth',
 };
 
 describe('validateEnvironment', () => {
@@ -42,7 +42,7 @@ describe('validateEnvironment', () => {
 
   it('fails early when DATABASE_URL is not PostgreSQL', () => {
     expect(() =>
-      validateEnvironment({ ...VALID_ENV, DATABASE_URL: 'mysql://localhost/cadista' }),
+      validateEnvironment({ ...VALID_ENV, DATABASE_URL: 'mysql://localhost/cadisk' }),
     ).toThrow('DATABASE_URL must use the postgresql:// or postgres:// protocol.');
   });
 
@@ -176,7 +176,7 @@ describe('assertSafeTestDatabaseUrl', () => {
     process.env.NODE_ENV = 'test';
 
     const schemaScopedUrl =
-      'postgresql://cadista:cadista_dev_password@localhost:5432/cadista_db?schema=cadista_nest_test';
+      'postgresql://cadisk:cadisk_dev_password@localhost:5432/cadisk_db?schema=cadisk_nest_test';
 
     expect(assertSafeTestDatabaseUrl(schemaScopedUrl)).toBe(schemaScopedUrl);
   });
@@ -186,7 +186,7 @@ describe('assertSafeTestDatabaseUrl', () => {
 
     expect(() =>
       assertSafeTestDatabaseUrl(
-        'postgresql://cadista_user:cadista777@localhost:5432/cadista_db?schema=cadista_nest',
+        'postgresql://cadisk_dev:cadisk_dev_password@localhost:5433/cadisk_nest?schema=public',
       ),
     ).toThrow('Refusing to run destructive tests outside a database or schema ending in _test.');
   });

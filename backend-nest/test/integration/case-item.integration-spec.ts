@@ -99,7 +99,7 @@ describe('CaseItemService integration', () => {
   });
 
   it('creates, lists, gets, updates and deletes items with legacy fields', async () => {
-    const userId = await createUser('item@cadista.local', 'item01');
+    const userId = await createUser('item@cadisk.local', 'item01');
     const doctorId = await createDoctor(userId);
     const caseId = await createCase(userId, doctorId);
 
@@ -162,7 +162,7 @@ describe('CaseItemService integration', () => {
   });
 
   it('requires unit values for service cases and keeps fixed case total unchanged', async () => {
-    const userId = await createUser('billing@cadista.local', 'bill01');
+    const userId = await createUser('billing@cadisk.local', 'bill01');
     const doctorId = await createDoctor(userId);
     const serviceCaseId = await createCase(userId, doctorId, 'services');
 
@@ -195,7 +195,7 @@ describe('CaseItemService integration', () => {
   });
 
   it('recalculates service case totals on create, update and delete', async () => {
-    const userId = await createUser('recalc@cadista.local', 'recalc1');
+    const userId = await createUser('recalc@cadisk.local', 'recalc1');
     const doctorId = await createDoctor(userId);
     const caseId = await createCase(userId, doctorId, 'services');
 
@@ -238,8 +238,8 @@ describe('CaseItemService integration', () => {
   });
 
   it('blocks deleted and foreign cases as missing resources', async () => {
-    const firstUserId = await createUser('first@cadista.local', 'first1');
-    const secondUserId = await createUser('second@cadista.local', 'second1');
+    const firstUserId = await createUser('first@cadisk.local', 'first1');
+    const secondUserId = await createUser('second@cadisk.local', 'second1');
     const firstDoctorId = await createDoctor(firstUserId, 'Dr. Primeiro');
     const secondDoctorId = await createDoctor(secondUserId, 'Dr. Segundo');
     const firstCaseId = await createCase(firstUserId, firstDoctorId, 'services');

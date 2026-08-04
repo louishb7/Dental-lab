@@ -77,7 +77,7 @@ describe('case history e2e', () => {
   });
 
   it('lists history cases, opens timeline and reverts status through authenticated endpoints', async () => {
-    const user = await registerUser('history@cadista.local', 'hist01');
+    const user = await registerUser('history@cadisk.local', 'hist01');
     const doctorId = await createDoctor(user.access_token);
 
     const created = await request(app.getHttpServer())
@@ -178,8 +178,8 @@ describe('case history e2e', () => {
   });
 
   it('does not leak history or status reversion across users', async () => {
-    const firstUser = await registerUser('first-history@cadista.local', 'fhist1');
-    const secondUser = await registerUser('second-history@cadista.local', 'shist1');
+    const firstUser = await registerUser('first-history@cadisk.local', 'fhist1');
+    const secondUser = await registerUser('second-history@cadisk.local', 'shist1');
     const firstDoctorId = await createDoctor(firstUser.access_token, 'Dr. Primeiro');
 
     const created = await request(app.getHttpServer())
@@ -209,8 +209,8 @@ describe('case history e2e', () => {
   });
 
   it('permanently deletes individual and selected history records through authenticated endpoints', async () => {
-    const user = await registerUser('delete-history@cadista.local', 'dhist1');
-    const otherUser = await registerUser('delete-other-history@cadista.local', 'dothr1');
+    const user = await registerUser('delete-history@cadisk.local', 'dhist1');
+    const otherUser = await registerUser('delete-other-history@cadisk.local', 'dothr1');
     const doctorId = await createDoctor(user.access_token, 'Dr. Apagar');
     const otherDoctorId = await createDoctor(otherUser.access_token, 'Dr. Outro');
 

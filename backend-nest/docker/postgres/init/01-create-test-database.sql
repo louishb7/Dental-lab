@@ -1,1 +1,1 @@
-CREATE DATABASE cadista_nest_test;
+CREATE DATABASE cadisk_nest_test;

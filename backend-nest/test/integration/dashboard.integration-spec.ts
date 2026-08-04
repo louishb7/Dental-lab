@@ -106,7 +106,7 @@ describe('DashboardService integration', () => {
   });
 
   it('returns status counts and dashboard lists matching the legacy summary shape', async () => {
-    const userId = await createUser('dashboard@cadista.local', 'dash01');
+    const userId = await createUser('dashboard@cadisk.local', 'dash01');
     const doctorA = await createDoctor(userId, 'Dr. Dashboard A');
     const doctorB = await createDoctor(userId, 'Dr. Dashboard B');
 
@@ -177,8 +177,8 @@ describe('DashboardService integration', () => {
   });
 
   it('keeps aggregations scoped to the authenticated user and excludes soft-deleted cases', async () => {
-    const firstUserId = await createUser('first@cadista.local', 'first1');
-    const secondUserId = await createUser('second@cadista.local', 'second1');
+    const firstUserId = await createUser('first@cadisk.local', 'first1');
+    const secondUserId = await createUser('second@cadisk.local', 'second1');
     const firstDoctor = await createDoctor(firstUserId, 'Dr. Primeiro');
     const secondDoctor = await createDoctor(secondUserId, 'Dr. Segundo');
 
@@ -212,7 +212,7 @@ describe('DashboardService integration', () => {
   });
 
   it('preserves UTC deadline and month boundaries', async () => {
-    const userId = await createUser('dates@cadista.local', 'dates1');
+    const userId = await createUser('dates@cadisk.local', 'dates1');
     const doctorId = await createDoctor(userId, 'Dr. Datas');
 
     await createCase({
@@ -263,7 +263,7 @@ describe('DashboardService integration', () => {
   });
 
   it('orders urgent open cases by deadline asc with nulls last and id desc', async () => {
-    const userId = await createUser('urgent@cadista.local', 'urgent1');
+    const userId = await createUser('urgent@cadisk.local', 'urgent1');
     const doctorId = await createDoctor(userId, 'Dr. Urgente');
 
     await createCase({

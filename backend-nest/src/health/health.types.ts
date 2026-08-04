@@ -1,6 +1,6 @@
 export interface AppHealthResponse {
   status: 'ok';
-  service: 'cadista-nest';
+  service: 'cadisk-nest';
 }
 
 export interface DatabaseHealthResponse {

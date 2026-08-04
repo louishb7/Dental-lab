@@ -28,7 +28,7 @@ describe('health e2e', () => {
   it('returns application health', async () => {
     await request(app.getHttpServer()).get('/health').expect(200).expect({
       status: 'ok',
-      service: 'cadista-nest',
+      service: 'cadisk-nest',
     });
   });
 

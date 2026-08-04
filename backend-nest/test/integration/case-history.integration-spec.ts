@@ -85,7 +85,7 @@ describe('CaseHistory integration', () => {
   });
 
   it('returns an empty paginated list when the user has no historical cases', async () => {
-    const userId = await createUser('empty-history@cadista.local', 'empty1');
+    const userId = await createUser('empty-history@cadisk.local', 'empty1');
 
     await expect(history.listCases({ page: 1, limit: 10 }, userId)).resolves.toEqual({
       items: [],
@@ -100,7 +100,7 @@ describe('CaseHistory integration', () => {
   });
 
   it('records creation, status advances, bulk delivery and preserves events after soft delete', async () => {
-    const userId = await createUser('history@cadista.local', 'hist01');
+    const userId = await createUser('history@cadisk.local', 'hist01');
     const doctorId = await createDoctor(userId);
 
     const created = await cases.createCase(
@@ -171,7 +171,7 @@ describe('CaseHistory integration', () => {
   });
 
   it('reverts only to the immediate previous status and keeps finance based on current delivery state', async () => {
-    const userId = await createUser('revert@cadista.local', 'rev001');
+    const userId = await createUser('revert@cadisk.local', 'rev001');
     const doctorId = await createDoctor(userId);
     const created = await cases.createCase(
       {
@@ -245,7 +245,7 @@ describe('CaseHistory integration', () => {
   });
 
   it('keeps case and history writes atomic when event creation fails', async () => {
-    const userId = await createUser('atomic@cadista.local', 'atom01');
+    const userId = await createUser('atomic@cadisk.local', 'atom01');
     const doctorId = await createDoctor(userId);
     const created = await cases.createCase(
       {
@@ -278,8 +278,8 @@ describe('CaseHistory integration', () => {
   });
 
   it('paginates and filters history cases without leaking another user data', async () => {
-    const firstUserId = await createUser('first-history@cadista.local', 'fhist1');
-    const secondUserId = await createUser('second-history@cadista.local', 'shist1');
+    const firstUserId = await createUser('first-history@cadisk.local', 'fhist1');
+    const secondUserId = await createUser('second-history@cadisk.local', 'shist1');
     const firstDoctorId = await createDoctor(firstUserId, 'Dr. Filtro');
     const secondDoctorId = await createDoctor(secondUserId, 'Dr. Outro');
 
@@ -378,8 +378,8 @@ describe('CaseHistory integration', () => {
   });
 
   it('permanently deletes owned history records without deleting another user data', async () => {
-    const firstUserId = await createUser('delete-history@cadista.local', 'dhist1');
-    const secondUserId = await createUser('delete-other-history@cadista.local', 'dothr1');
+    const firstUserId = await createUser('delete-history@cadisk.local', 'dhist1');
+    const secondUserId = await createUser('delete-other-history@cadisk.local', 'dothr1');
     const firstDoctorId = await createDoctor(firstUserId, 'Dr. Apagar');
     const secondDoctorId = await createDoctor(secondUserId, 'Dr. Preservar');
 

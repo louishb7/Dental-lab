@@ -10,7 +10,7 @@ export class HealthService {
   getAppHealth(): AppHealthResponse {
     return {
       status: 'ok',
-      service: 'cadista-nest',
+      service: 'cadisk-nest',
     };
   }
 

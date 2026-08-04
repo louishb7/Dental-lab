@@ -104,7 +104,7 @@ describe('case item e2e', () => {
   });
 
   it('creates, lists, gets, updates and deletes items with legacy response shape', async () => {
-    const user = await registerUser('item@cadista.local', 'item01');
+    const user = await registerUser('item@cadisk.local', 'item01');
     const doctorId = await createDoctor(user.access_token);
     const caseId = await createCase(user.access_token, doctorId);
 
@@ -178,7 +178,7 @@ describe('case item e2e', () => {
   });
 
   it('validates tooth, quantity and unit value like the legacy DTOs', async () => {
-    const user = await registerUser('validation@cadista.local', 'valid1');
+    const user = await registerUser('validation@cadisk.local', 'valid1');
     const doctorId = await createDoctor(user.access_token);
     const caseId = await createCase(user.access_token, doctorId);
 
@@ -215,7 +215,7 @@ describe('case item e2e', () => {
   });
 
   it('recalculates service case totals and keeps fixed case totals unchanged', async () => {
-    const user = await registerUser('billing@cadista.local', 'bill01');
+    const user = await registerUser('billing@cadisk.local', 'bill01');
     const doctorId = await createDoctor(user.access_token);
     const serviceCaseId = await createCase(user.access_token, doctorId, 'services');
 
@@ -269,8 +269,8 @@ describe('case item e2e', () => {
   });
 
   it('isolates item routes between users and treats foreign resources as missing', async () => {
-    const firstUser = await registerUser('first@cadista.local', 'first1');
-    const secondUser = await registerUser('second@cadista.local', 'second1');
+    const firstUser = await registerUser('first@cadisk.local', 'first1');
+    const secondUser = await registerUser('second@cadisk.local', 'second1');
     const firstDoctorId = await createDoctor(firstUser.access_token, 'Dr. Primeiro');
     const secondDoctorId = await createDoctor(secondUser.access_token, 'Dr. Segundo');
     const firstCaseId = await createCase(firstUser.access_token, firstDoctorId);

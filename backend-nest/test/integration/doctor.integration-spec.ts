@@ -62,7 +62,7 @@ describe('DoctorService integration', () => {
   });
 
   it('creates, updates and soft deletes a doctor with phone normalization', async () => {
-    const userId = await createUser('admin@cadista.local', 'admin1');
+    const userId = await createUser('admin@cadisk.local', 'admin1');
 
     const created = await doctors.createDoctor(
       {
@@ -100,8 +100,8 @@ describe('DoctorService integration', () => {
   });
 
   it('scopes reads and writes by authenticated user ownership', async () => {
-    const firstUserId = await createUser('first@cadista.local', 'first1');
-    const secondUserId = await createUser('second@cadista.local', 'second1');
+    const firstUserId = await createUser('first@cadisk.local', 'first1');
+    const secondUserId = await createUser('second@cadisk.local', 'second1');
     const firstDoctor = await doctors.createDoctor({ name: 'Dr. Primeiro' }, firstUserId);
     const secondDoctor = await doctors.createDoctor({ name: 'Dr. Segundo' }, secondUserId);
 
@@ -120,7 +120,7 @@ describe('DoctorService integration', () => {
   });
 
   it('counts only active cases and blocks delete only for pending/completed active cases', async () => {
-    const userId = await createUser('admin@cadista.local', 'admin1');
+    const userId = await createUser('admin@cadisk.local', 'admin1');
     const doctor = await doctors.createDoctor({ name: 'Dr. Casos' }, userId);
 
     await prisma.dentalCase.create({

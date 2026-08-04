@@ -79,8 +79,8 @@ Backend (`backend-nest/.env`):
 ```env
 NODE_ENV=development
 PORT=3001
-DATABASE_URL=postgresql://cadista_user:cadista777@localhost:5432/cadista_db?schema=cadista_nest
-TEST_DATABASE_URL=postgresql://cadista_user:cadista777@localhost:5432/cadista_db?schema=cadista_nest_test
+DATABASE_URL=postgresql://cadisk_dev:cadisk_dev_password@localhost:5433/cadisk_nest?schema=public
+TEST_DATABASE_URL=postgresql://cadisk_dev:cadisk_dev_password@localhost:5433/cadisk_nest_test?schema=public
 SECRET_KEY=replace-with-at-least-32-characters
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=0

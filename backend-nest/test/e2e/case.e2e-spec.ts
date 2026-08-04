@@ -86,7 +86,7 @@ describe('case e2e', () => {
   });
 
   it('creates, lists, gets, updates and soft deletes cases with legacy response shape', async () => {
-    const user = await registerUser('case@cadista.local', 'case01');
+    const user = await registerUser('case@cadisk.local', 'case01');
     const doctorId = await createDoctor(user.access_token);
 
     const created = await request(app.getHttpServer())
@@ -155,8 +155,8 @@ describe('case e2e', () => {
   });
 
   it('rejects invalid pricing and doctor ownership with legacy status codes', async () => {
-    const firstUser = await registerUser('first@cadista.local', 'first1');
-    const secondUser = await registerUser('second@cadista.local', 'second1');
+    const firstUser = await registerUser('first@cadisk.local', 'first1');
+    const secondUser = await registerUser('second@cadisk.local', 'second1');
     const firstDoctorId = await createDoctor(firstUser.access_token, 'Dr. Primeiro');
 
     await request(app.getHttpServer())
@@ -183,8 +183,8 @@ describe('case e2e', () => {
   });
 
   it('isolates cases between users and treats foreign resources as missing', async () => {
-    const firstUser = await registerUser('first@cadista.local', 'first1');
-    const secondUser = await registerUser('second@cadista.local', 'second1');
+    const firstUser = await registerUser('first@cadisk.local', 'first1');
+    const secondUser = await registerUser('second@cadisk.local', 'second1');
     const firstDoctorId = await createDoctor(firstUser.access_token, 'Dr. Primeiro');
     const secondDoctorId = await createDoctor(secondUser.access_token, 'Dr. Segundo');
 
@@ -230,7 +230,7 @@ describe('case e2e', () => {
   });
 
   it('preserves linear status flow and ignores status_revert_reason', async () => {
-    const user = await registerUser('case@cadista.local', 'case01');
+    const user = await registerUser('case@cadisk.local', 'case01');
     const doctorId = await createDoctor(user.access_token);
 
     await request(app.getHttpServer())
@@ -273,7 +273,7 @@ describe('case e2e', () => {
   });
 
   it('marks fixed-price cases as completed without resending total_value', async () => {
-    const user = await registerUser('fixed-status@cadista.local', 'fixed1');
+    const user = await registerUser('fixed-status@cadisk.local', 'fixed1');
     const doctorId = await createDoctor(user.access_token);
 
     const created = await request(app.getHttpServer())
@@ -308,7 +308,7 @@ describe('case e2e', () => {
   });
 
   it('returns items and recalculated service totals from case_items', async () => {
-    const user = await registerUser('case@cadista.local', 'case01');
+    const user = await registerUser('case@cadisk.local', 'case01');
     const doctorId = await createDoctor(user.access_token);
     const created = await request(app.getHttpServer())
       .post('/cases/')
@@ -347,7 +347,7 @@ describe('case e2e', () => {
   });
 
   it('bulk-delivers selected cases with dedupe and rolls back on missing ids', async () => {
-    const user = await registerUser('case@cadista.local', 'case01');
+    const user = await registerUser('case@cadisk.local', 'case01');
     const doctorId = await createDoctor(user.access_token);
 
     const pending = await request(app.getHttpServer())

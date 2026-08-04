@@ -82,7 +82,7 @@ describe('dashboard e2e', () => {
   });
 
   it('returns the legacy dashboard summary shape for the authenticated user', async () => {
-    const user = await registerUser('dashboard@cadista.local', 'dash01');
+    const user = await registerUser('dashboard@cadisk.local', 'dash01');
     const doctorA = await createDoctor(user.access_token, 'Dr. Dashboard A');
     const doctorB = await createDoctor(user.access_token, 'Dr. Dashboard B');
     const now = new Date();
@@ -194,8 +194,8 @@ describe('dashboard e2e', () => {
   });
 
   it('isolates dashboard aggregations between users', async () => {
-    const firstUser = await registerUser('first@cadista.local', 'first1');
-    const secondUser = await registerUser('second@cadista.local', 'second1');
+    const firstUser = await registerUser('first@cadisk.local', 'first1');
+    const secondUser = await registerUser('second@cadisk.local', 'second1');
     const firstDoctor = await createDoctor(firstUser.access_token, 'Dr. Primeiro');
     const secondDoctor = await createDoctor(secondUser.access_token, 'Dr. Segundo');
 
@@ -247,7 +247,7 @@ describe('dashboard e2e', () => {
   });
 
   it('excludes delivered cases outside the current UTC month from monthly finance', async () => {
-    const user = await registerUser('month@cadista.local', 'month1');
+    const user = await registerUser('month@cadisk.local', 'month1');
     const doctorId = await createDoctor(user.access_token, 'Dr. Mês');
     const now = new Date();
     const currentMonthDeliveredAt = new Date(

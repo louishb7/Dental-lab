@@ -6,7 +6,7 @@ import {
 
 import { assertValidQuantity } from '../case-item-rules';
 
-@ValidatorConstraint({ name: 'cadistaCaseItemQuantity', async: false })
+@ValidatorConstraint({ name: 'cadiskCaseItemQuantity', async: false })
 export class CaseItemQuantityConstraint implements ValidatorConstraintInterface {
   validate(value: number | null | undefined): boolean {
     try {

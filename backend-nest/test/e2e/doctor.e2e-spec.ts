@@ -75,7 +75,7 @@ describe('doctor e2e', () => {
   });
 
   it('creates, lists, gets, updates and soft deletes doctors', async () => {
-    const user = await registerUser('admin@cadista.local', 'admin1');
+    const user = await registerUser('admin@cadisk.local', 'admin1');
 
     const created = await request(app.getHttpServer())
       .post('/doctors/')
@@ -146,7 +146,7 @@ describe('doctor e2e', () => {
   });
 
   it('normalizes blank phone and rejects invalid phone with legacy detail', async () => {
-    const user = await registerUser('admin@cadista.local', 'admin1');
+    const user = await registerUser('admin@cadisk.local', 'admin1');
 
     await request(app.getHttpServer())
       .post('/doctors/')
@@ -175,8 +175,8 @@ describe('doctor e2e', () => {
   });
 
   it('isolates doctors between users and treats foreign resources as not found', async () => {
-    const firstUser = await registerUser('first@cadista.local', 'first1');
-    const secondUser = await registerUser('second@cadista.local', 'second1');
+    const firstUser = await registerUser('first@cadisk.local', 'first1');
+    const secondUser = await registerUser('second@cadisk.local', 'second1');
 
     const firstDoctor = await request(app.getHttpServer())
       .post('/doctors/')
@@ -221,7 +221,7 @@ describe('doctor e2e', () => {
   });
 
   it('returns cases_count for active cases and blocks delete with pending/completed cases', async () => {
-    const user = await registerUser('admin@cadista.local', 'admin1');
+    const user = await registerUser('admin@cadisk.local', 'admin1');
     const created = await request(app.getHttpServer())
       .post('/doctors/')
       .set('Authorization', `Bearer ${user.access_token}`)

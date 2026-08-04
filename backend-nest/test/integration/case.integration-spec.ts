@@ -75,7 +75,7 @@ describe('CaseService integration', () => {
   });
 
   it('creates fixed cases with money normalization and pending status', async () => {
-    const userId = await createUser('case@cadista.local', 'case01');
+    const userId = await createUser('case@cadisk.local', 'case01');
     const doctorId = await createDoctor(userId);
 
     const created = await cases.createCase(
@@ -98,7 +98,7 @@ describe('CaseService integration', () => {
   });
 
   it('rejects invalid pricing payloads with legacy messages', async () => {
-    const userId = await createUser('case@cadista.local', 'case01');
+    const userId = await createUser('case@cadisk.local', 'case01');
     const doctorId = await createDoctor(userId);
 
     await expect(
@@ -130,8 +130,8 @@ describe('CaseService integration', () => {
   });
 
   it('requires active doctors within ownership for create and move', async () => {
-    const firstUserId = await createUser('first@cadista.local', 'first1');
-    const secondUserId = await createUser('second@cadista.local', 'second1');
+    const firstUserId = await createUser('first@cadisk.local', 'first1');
+    const secondUserId = await createUser('second@cadisk.local', 'second1');
     const firstDoctorId = await createDoctor(firstUserId, 'Dr. Primeiro');
     const secondDoctorId = await createDoctor(secondUserId, 'Dr. Segundo');
 
@@ -180,8 +180,8 @@ describe('CaseService integration', () => {
   });
 
   it('keeps case ownership isolated across users', async () => {
-    const firstUserId = await createUser('first@cadista.local', 'first1');
-    const secondUserId = await createUser('second@cadista.local', 'second1');
+    const firstUserId = await createUser('first@cadisk.local', 'first1');
+    const secondUserId = await createUser('second@cadisk.local', 'second1');
     const firstDoctorId = await createDoctor(firstUserId, 'Dr. Primeiro');
     const secondDoctorId = await createDoctor(secondUserId, 'Dr. Segundo');
 
@@ -219,7 +219,7 @@ describe('CaseService integration', () => {
   });
 
   it('preserves linear status flow and existing delivered_at', async () => {
-    const userId = await createUser('case@cadista.local', 'case01');
+    const userId = await createUser('case@cadisk.local', 'case01');
     const doctorId = await createDoctor(userId);
     const created = await cases.createCase(
       {
@@ -259,7 +259,7 @@ describe('CaseService integration', () => {
   });
 
   it('updates only status for fixed cases without requiring total_value again', async () => {
-    const userId = await createUser('fixed-status@cadista.local', 'fixed1');
+    const userId = await createUser('fixed-status@cadisk.local', 'fixed1');
     const doctorId = await createDoctor(userId);
     const created = await cases.createCase(
       {
@@ -303,7 +303,7 @@ describe('CaseService integration', () => {
   });
 
   it('updates only status for service-priced cases and preserves calculated total', async () => {
-    const userId = await createUser('service-status@cadista.local', 'servs1');
+    const userId = await createUser('service-status@cadisk.local', 'servs1');
     const doctorId = await createDoctor(userId);
     const created = await cases.createCase(
       {
@@ -353,7 +353,7 @@ describe('CaseService integration', () => {
   });
 
   it('still rejects genuinely invalid financial updates', async () => {
-    const userId = await createUser('invalid-finance@cadista.local', 'invf01');
+    const userId = await createUser('invalid-finance@cadisk.local', 'invf01');
     const doctorId = await createDoctor(userId);
     const fixed = await cases.createCase(
       {
@@ -386,7 +386,7 @@ describe('CaseService integration', () => {
   });
 
   it('recalculates service totals from existing items and returns items_count', async () => {
-    const userId = await createUser('case@cadista.local', 'case01');
+    const userId = await createUser('case@cadisk.local', 'case01');
     const doctorId = await createDoctor(userId);
     const created = await cases.createCase(
       {
@@ -425,7 +425,7 @@ describe('CaseService integration', () => {
   });
 
   it('soft deletes cases and excludes them from reads', async () => {
-    const userId = await createUser('case@cadista.local', 'case01');
+    const userId = await createUser('case@cadisk.local', 'case01');
     const doctorId = await createDoctor(userId);
     const created = await cases.createCase(
       {
@@ -443,7 +443,7 @@ describe('CaseService integration', () => {
   });
 
   it('bulk delivers with ids, dedupe, default completed filter and rollback on missing ids', async () => {
-    const userId = await createUser('case@cadista.local', 'case01');
+    const userId = await createUser('case@cadisk.local', 'case01');
     const doctorId = await createDoctor(userId);
     const pending = await cases.createCase(
       {
