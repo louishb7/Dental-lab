@@ -2,6 +2,7 @@ import { History, RotateCcw, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import PageContainer from "../components/layout/PageContainer.jsx";
 import Button from "../components/ui/Button.jsx";
+import ConfirmModal from "../components/ui/ConfirmModal.jsx";
 import DataTable from "../components/ui/DataTable.jsx";
 import EmptyState from "../components/ui/EmptyState.jsx";
 import ErrorState from "../components/ui/ErrorState.jsx";
@@ -157,6 +158,7 @@ export default function HistoryPage({
   const [revertReason, setRevertReason] = useState("");
   const [revertLoading, setRevertLoading] = useState(false);
   const [revertError, setRevertError] = useState("");
+  const [pendingDelete, setPendingDelete] = useState(null);
 
   const pagination = historyData.pagination;
   const revertTarget = getRevertTarget(detail?.status);
@@ -220,7 +222,12 @@ export default function HistoryPage({
           <Button variant="secondary" size="sm" onClick={() => openDetails(caseItem.id)}>
             Ver histórico
           </Button>
-          <Button variant="danger" size="sm" disabled={deleteLoading} onClick={() => deleteOne(caseItem.id)}>
+          <Button
+            variant="danger"
+            size="sm"
+            disabled={deleteLoading}
+            onClick={() => requestDeleteOne(caseItem.id)}
+          >
             <Trash2 size={14} />
             Apagar
           </Button>
@@ -403,6 +410,32 @@ export default function HistoryPage({
     }
   }
 
+  function requestDeleteOne(caseId) {
+    setPendingDelete({
+      title: "Apagar registro",
+      description: "Esta ação remove permanentemente o caso e seu histórico. Não pode ser desfeita.",
+      confirmLabel: "Apagar",
+      action: () => {
+        void deleteOne(caseId);
+      },
+    });
+  }
+
+  function requestDeleteSelected() {
+    if (!selectedIds.size) return;
+
+    setPendingDelete({
+      title: "Apagar selecionados",
+      description: `${selectedIds.size} ${
+        selectedIds.size === 1 ? "registro será removido" : "registros serão removidos"
+      } permanentemente. Esta ação não pode ser desfeita.`,
+      confirmLabel: "Apagar",
+      action: () => {
+        void deleteSelected();
+      },
+    });
+  }
+
   async function submitRevert(event) {
     event.preventDefault();
     if (!selectedCaseId) return;
@@ -491,7 +524,7 @@ export default function HistoryPage({
               </p>
             </div>
             {selectedIds.size > 0 && (
-              <Button variant="danger" size="sm" disabled={deleteLoading} onClick={deleteSelected}>
+              <Button variant="danger" size="sm" disabled={deleteLoading} onClick={requestDeleteSelected}>
                 <Trash2 size={14} />
                 Apagar selecionados
               </Button>
@@ -660,6 +693,19 @@ export default function HistoryPage({
             </div>
           </form>
         </Modal>
+      )}
+
+      {pendingDelete && (
+        <ConfirmModal
+          title={pendingDelete.title}
+          description={pendingDelete.description}
+          confirmLabel={pendingDelete.confirmLabel}
+          onConfirm={() => {
+            pendingDelete.action();
+            setPendingDelete(null);
+          }}
+          onCancel={() => setPendingDelete(null)}
+        />
       )}
     </PageContainer>
   );

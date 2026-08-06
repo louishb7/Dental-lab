@@ -74,6 +74,20 @@ describe('doctor e2e', () => {
       .expect(401);
   });
 
+  it('rejects unsafe doctor pagination values', async () => {
+    const user = await registerUser('doctor-pagination@cadisk.local', 'docpg1');
+
+    await request(app.getHttpServer())
+      .get('/doctors/?skip=-1')
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .expect(422);
+
+    await request(app.getHttpServer())
+      .get('/doctors/?limit=101')
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .expect(422);
+  });
+
   it('creates, lists, gets, updates and soft deletes doctors', async () => {
     const user = await registerUser('admin@cadisk.local', 'admin1');
 

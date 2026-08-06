@@ -85,6 +85,25 @@ describe('case e2e', () => {
       .expect(401);
   });
 
+  it('rejects unsafe case pagination values', async () => {
+    const user = await registerUser('case-pagination@cadisk.local', 'casepg1');
+
+    await request(app.getHttpServer())
+      .get('/cases/?skip=-1')
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .expect(422);
+
+    await request(app.getHttpServer())
+      .get('/cases/?limit=101')
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .expect(422);
+
+    await request(app.getHttpServer())
+      .get('/cases/?doctor_id=0')
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .expect(422);
+  });
+
   it('creates, lists, gets, updates and soft deletes cases with legacy response shape', async () => {
     const user = await registerUser('case@cadisk.local', 'case01');
     const doctorId = await createDoctor(user.access_token);
