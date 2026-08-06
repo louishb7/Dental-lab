@@ -479,11 +479,11 @@ CHECKLIST DE SIMPLIFICAÇÃO:
 - Correções aplicadas:
   - `frontend/src/pages/HistoryPage.jsx` passou a exigir `ConfirmModal` antes de apagar registros permanentes, tanto individualmente quanto em lote.
   - `backend-nest/src/case/dto/case-list-query.dto.ts` e `backend-nest/src/doctor/dto/doctor-list-query.dto.ts` agora validam `skip >= 0`, `limit` entre `1` e `100`, e `doctor_id >= 1` em casos.
+  - Acessibilidade dos modais corrigida em `frontend/src/components/ui/Modal.jsx` e `frontend/src/components/ui/ConfirmModal.jsx`: foco inicial ao abrir, fechamento por Escape, ciclo de Tab/Shift+Tab dentro do modal, retorno de foco ao elemento que abriu, `aria-labelledby` no título e `aria-describedby` na descrição quando disponível.
 - Problemas de Média prioridade:
   - `POST /cases/` ainda converte erros de regra de cobrança em `404` por compatibilidade histórica, o que prejudica clareza de contrato; correção sugerida: introduzir erros de domínio tipados e mapear validação/regra para `409` ou `422` em mudança de contrato controlada.
   - Dashboard/Financeiro ainda retorna coleções completas de atrasados, urgentes e entregues do mês; correção sugerida: limitar listas ou paginar detalhes mantendo agregações no backend.
   - Tela Casos e Dentistas ainda dependem de lista ativa carregada inteira no frontend; correção sugerida: paginação e busca server-side quando o volume real passar de uma bancada pequena.
-  - Modais possuem `role="dialog"` e `aria-modal`, mas não centralizam foco inicial, Escape e focus trap; correção sugerida: evoluir o componente `Modal` com gestão de foco testada.
   - Frontend não possui scripts de lint/teste automatizado; correção sugerida: adicionar lint/testes quando houver estabilização do fluxo visual.
 - Problemas de Baixa prioridade:
   - Build frontend emite aviso de chunk acima de 500 kB; correção sugerida: code-splitting por páginas analíticas, especialmente Financeiro/Recharts.
@@ -494,6 +494,7 @@ CHECKLIST DE SIMPLIFICAÇÃO:
   - E2E para rejeitar paginação insegura em `GET /doctors/`.
 - Validações executadas:
   - Frontend: `npm install`, `npm audit`, `npm run build`.
+  - Acessibilidade de modais: validação técnica por build após implementação; validação manual assistida por browser automation não executada neste ambiente porque não há Playwright/Puppeteer/jsdom/geckodriver instalados e a tarefa não permite introduzir nova stack de testes.
   - Backend: `npm install`, `npm audit`, `npm run lint`, `npx tsc --noEmit`, `npm run build`, `npm run test`, `npm run test:integration`, `npm run test:e2e`, `npm run prisma:generate`, `npx prisma validate --schema=prisma/schema.prisma`, `npm run prisma:migrate:test`.
   - Repositório: `git diff --check`, `git status --short`, `git diff --stat`, `git ls-files .agents .codex`, buscas finais por legado Python/FastAPI, artefatos gerados, caches, segredos e nomenclatura.
 - Vulnerabilidades encontradas: nenhuma vulnerabilidade reportada por `npm audit` em frontend ou backend.
@@ -502,6 +503,5 @@ CHECKLIST DE SIMPLIFICAÇÃO:
   - Deploy público final continua pendente de produto.
   - Melhorar contrato HTTP de erros de regra em criação de caso.
   - Planejar paginação/busca server-side para listas ativas e limites nos blocos detalhados do dashboard quando houver volume real.
-  - Evoluir acessibilidade do componente `Modal`.
   - Adicionar lint/testes frontend em etapa própria.
 - Conclusão da revisão: revisão concluída; nenhuma pendência de Alta prioridade permanece; projeto validado no estado atual para portfólio e manutenção contínua local, com pendências médias documentadas para evolução controlada.

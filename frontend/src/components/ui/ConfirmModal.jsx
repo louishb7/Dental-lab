@@ -1,3 +1,4 @@
+import { useId } from "react";
 import Button from "./Button.jsx";
 import Modal from "./Modal.jsx";
 
@@ -8,10 +9,12 @@ export default function ConfirmModal({
   onConfirm,
   onCancel,
 }) {
+  const descriptionId = useId();
+
   return (
-    <Modal title={title} onClose={onCancel}>
+    <Modal title={title} onClose={onCancel} ariaDescribedBy={descriptionId}>
       <div className="grid gap-4">
-        <p className="text-sm leading-relaxed text-[var(--color-text-soft)]">{description}</p>
+        <p id={descriptionId} className="text-sm leading-relaxed text-[var(--color-text-soft)]">{description}</p>
         <div className="flex flex-wrap justify-end gap-2">
           <Button variant="ghost" onClick={onCancel}>
             Cancelar
