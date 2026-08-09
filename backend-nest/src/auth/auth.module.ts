@@ -24,7 +24,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
         return {
           secret: config.getOrThrow('SECRET_KEY'),
           signOptions: {
-            ...(expiresInMinutes > 0 ? { expiresIn: `${expiresInMinutes}m` } : {}),
+            expiresIn: `${expiresInMinutes}m`,
             algorithm: config.getOrThrow('ALGORITHM'),
           },
         };

@@ -35,37 +35,81 @@ export class CaseItemService {
     input: CaseItemCreateRequestDto,
     userId: number,
   ): Promise<CaseItemResponse> {
-    const currentCase = await this.assertActiveCase(caseId, userId);
-    if (currentCase.status === 'delivered') {
-      throw new Error('Não é possível adicionar itens a um caso entregue.');
-    }
-    const unitValue = normalizeDecimalValue(input.unit_value, 'Valor unitário inválido');
-
-    if (currentCase.pricingMode === 'services' && unitValue === null) {
-      throw new Error('Informe o valor unitário do serviço para este caso.');
-    }
-
-    const data: Prisma.CaseItemUncheckedCreateInput = {
-      caseId,
-      tooth: normalizeTooth(input.tooth),
-      serviceType: input.service_type,
-      quantity: this.normalizeQuantity(input.quantity),
-      unitValue,
-      material: input.material ?? null,
-      color: input.color ?? null,
-      notes: input.notes ?? null,
-    };
-
-    if (currentCase.pricingMode !== 'services') {
-      const createdItem = await this.prisma.caseItem.create({ data });
-      return this.toResponse(createdItem);
-    }
-
     return this.prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT 1 FROM cases WHERE id = ${caseId} FOR UPDATE`;
+      
+      const currentCase = await this.assertActiveCaseTx(tx, caseId, userId);
+      if (currentCase.status === 'delivered') {
+        throw new Error('Não é possível adicionar itens a um caso entregue.');
+      }
+      
+      const unitValue = normalizeDecimalValue(input.unit_value, 'Valor unitário inválido');
+      if (currentCase.pricingMode === 'services' && unitValue === null) {
+        throw new Error('Informe o valor unitário do serviço para este caso.');
+      }
+
+      const data: Prisma.CaseItemUncheckedCreateInput = {
+        caseId,
+        tooth: normalizeTooth(input.tooth),
+        serviceType: input.service_type,
+        quantity: this.normalizeQuantity(input.quantity),
+        unitValue,
+        material: input.material ?? null,
+        color: input.color ?? null,
+        notes: input.notes ?? null,
+      };
+
       const createdItem = await tx.caseItem.create({ data });
-      await this.recalculateServiceCaseTotal(tx, caseId);
+      if (currentCase.pricingMode === 'services') {
+        await this.recalculateServiceCaseTotal(tx, caseId);
+      }
       return this.toResponse(createdItem);
+    });
+  }
+
+  async createCaseItemsBulk(
+    caseId: number,
+    inputs: CaseItemCreateRequestDto[],
+    userId: number,
+  ): Promise<CaseItemResponse[]> {
+    if (!inputs || inputs.length === 0) {
+      return [];
+    }
+    
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT 1 FROM cases WHERE id = ${caseId} FOR UPDATE`;
+      
+      const currentCase = await this.assertActiveCaseTx(tx, caseId, userId);
+      if (currentCase.status === 'delivered') {
+        throw new Error('Não é possível adicionar itens a um caso entregue.');
+      }
+      
+      const data = inputs.map(input => {
+        const unitValue = normalizeDecimalValue(input.unit_value, 'Valor unitário inválido');
+        if (currentCase.pricingMode === 'services' && unitValue === null) {
+          throw new Error('Informe o valor unitário do serviço para este caso.');
+        }
+        return {
+          caseId,
+          tooth: normalizeTooth(input.tooth),
+          serviceType: input.service_type,
+          quantity: this.normalizeQuantity(input.quantity),
+          unitValue,
+          material: input.material ?? null,
+          color: input.color ?? null,
+          notes: input.notes ?? null,
+        };
+      });
+
+      const createdItems = await Promise.all(
+        data.map(itemData => tx.caseItem.create({ data: itemData }))
+      );
+
+      if (currentCase.pricingMode === 'services') {
+        await this.recalculateServiceCaseTotal(tx, caseId);
+      }
+
+      return createdItems.map(item => this.toResponse(item));
     });
   }
 
@@ -91,75 +135,87 @@ export class CaseItemService {
     input: CaseItemUpdateRequestDto,
     userId: number,
   ): Promise<CaseItemResponse | null> {
-    const currentCase = await this.assertActiveCase(caseId, userId);
-    if (currentCase.status === 'delivered') {
-      throw new Error('Não é possível modificar itens de um caso entregue.');
-    }
-    const currentItem = await this.prisma.caseItem.findFirst({
-      where: this.itemOwnershipWhere(caseId, itemId, userId),
-    });
-
-    if (currentItem === null) {
-      return null;
-    }
-
-    const data = this.buildUpdateData(input, currentCase);
-
-    if (currentCase.pricingMode !== 'services') {
-      const updatedItem = await this.prisma.caseItem.update({
-        where: {
-          id: currentItem.id,
-        },
-        data,
-      });
-      return this.toResponse(updatedItem);
-    }
-
     return this.prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT 1 FROM cases WHERE id = ${caseId} FOR UPDATE`;
+
+      const currentCase = await this.assertActiveCaseTx(tx, caseId, userId);
+      if (currentCase.status === 'delivered') {
+        throw new Error('Não é possível modificar itens de um caso entregue.');
+      }
+      
+      const currentItem = await tx.caseItem.findFirst({
+        where: this.itemOwnershipWhere(caseId, itemId, userId),
+      });
+
+      if (currentItem === null) {
+        return null;
+      }
+
+      const data = this.buildUpdateData(input, currentCase);
+
       const updatedItem = await tx.caseItem.update({
-        where: {
-          id: currentItem.id,
-        },
+        where: { id: currentItem.id },
         data,
       });
-      await this.recalculateServiceCaseTotal(tx, caseId);
+
+      if (currentCase.pricingMode === 'services') {
+        await this.recalculateServiceCaseTotal(tx, caseId);
+      }
+
       return this.toResponse(updatedItem);
     });
   }
 
   async deleteCaseItem(caseId: number, itemId: number, userId: number): Promise<boolean> {
-    const currentCase = await this.assertActiveCase(caseId, userId);
-    if (currentCase.status === 'delivered') {
-      throw new Error('Não é possível excluir itens de um caso entregue.');
-    }
-    const currentItem = await this.prisma.caseItem.findFirst({
-      where: this.itemOwnershipWhere(caseId, itemId, userId),
-    });
-
-    if (currentItem === null) {
-      return false;
-    }
-
-    if (currentCase.pricingMode !== 'services') {
-      await this.prisma.caseItem.delete({
-        where: {
-          id: currentItem.id,
-        },
-      });
-      return true;
-    }
-
-    await this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT 1 FROM cases WHERE id = ${caseId} FOR UPDATE`;
-      await tx.caseItem.delete({
-        where: {
-          id: currentItem.id,
-        },
+
+      const currentCase = await this.assertActiveCaseTx(tx, caseId, userId);
+      if (currentCase.status === 'delivered') {
+        throw new Error('Não é possível excluir itens de um caso entregue.');
+      }
+      
+      const currentItem = await tx.caseItem.findFirst({
+        where: this.itemOwnershipWhere(caseId, itemId, userId),
       });
-      await this.recalculateServiceCaseTotal(tx, caseId);
+
+      if (currentItem === null) {
+        return false;
+      }
+
+      await tx.caseItem.delete({
+        where: { id: currentItem.id },
+      });
+
+      if (currentCase.pricingMode === 'services') {
+        await this.recalculateServiceCaseTotal(tx, caseId);
+      }
+
+      return true;
     });
-    return true;
+  }
+
+  private async assertActiveCaseTx(tx: Prisma.TransactionClient, caseId: number, userId: number): Promise<ActiveCase> {
+    const currentCase = await tx.dentalCase.findFirst({
+      where: {
+        id: caseId,
+        deletedAt: null,
+        doctor: {
+          userId,
+        },
+      },
+      select: {
+        id: true,
+        pricingMode: true,
+        status: true,
+      },
+    });
+
+    if (currentCase === null) {
+      throw new CaseItemCaseNotFoundError();
+    }
+
+    return currentCase;
   }
 
   private async assertActiveCase(caseId: number, userId: number): Promise<ActiveCase> {

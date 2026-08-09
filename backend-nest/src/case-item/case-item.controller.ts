@@ -58,6 +58,20 @@ export class CaseItemController {
     }
   }
 
+  @Post('/bulk')
+  async createItemsBulk(
+    @Param('case_id', idPipe) caseId: number,
+    @Body() payload: { items: CaseItemCreateRequestDto[] },
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<CaseItemResponse[]> {
+    try {
+      return await this.caseItems.createCaseItemsBulk(caseId, payload.items, user.id);
+    } catch (error) {
+      this.throwNotFoundForMissingCase(error);
+      throw error;
+    }
+  }
+
   @Get('/:item_id')
   async readItem(
     @Param('case_id', idPipe) caseId: number,

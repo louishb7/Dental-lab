@@ -149,31 +149,29 @@ export class CaseHistoryService {
     caseId: number,
     userId: number,
   ): Promise<CaseHistoryDeleteResponse | null> {
-    const foundCase = await this.prisma.dentalCase.findFirst({
-      where: {
-        id: caseId,
-        doctor: {
-          userId,
-        },
-        deletedAt: {
-          not: null,
-        },
-      },
-      select: {
-        id: true,
-      },
+    return this.prisma.$transaction(async (tx) => {
+      const foundCase = await tx.dentalCase.findFirst({
+        where: { id: caseId },
+        select: { id: true, deletedAt: true, doctor: { select: { userId: true } } },
+      });
+
+      if (foundCase === null) {
+        return null;
+      }
+      
+      if (foundCase.doctor?.userId !== userId) {
+        throw new Error('Você não tem permissão para excluir este caso.');
+      }
+      
+      if (foundCase.deletedAt === null) {
+        throw new Error('Este caso não está marcado como excluído.');
+      }
+
+      await tx.caseHistoryEvent.deleteMany({ where: { caseId: foundCase.id } });
+      await tx.dentalCase.delete({ where: { id: foundCase.id } });
+
+      return { deleted_count: 1 };
     });
-
-    if (foundCase === null) {
-      return null;
-    }
-
-    await this.prisma.$transaction([
-      this.prisma.caseHistoryEvent.deleteMany({ where: { caseId: foundCase.id } }),
-      this.prisma.dentalCase.delete({ where: { id: foundCase.id } }),
-    ]);
-
-    return { deleted_count: 1 };
   }
 
   async permanentlyDeleteCases(
@@ -191,17 +189,27 @@ export class CaseHistoryService {
           id: {
             in: normalizedIds,
           },
-          doctor: {
-            userId,
-          },
-          deletedAt: {
-            not: null,
-          },
         },
         select: {
           id: true,
+          deletedAt: true,
+          doctor: { select: { userId: true } }
         },
       });
+
+      if (ownedCases.length !== normalizedIds.length) {
+        throw new Error('Um ou mais casos não foram encontrados.');
+      }
+
+      for (const foundCase of ownedCases) {
+        if (foundCase.doctor?.userId !== userId) {
+          throw new Error('Um ou mais casos não pertencem a você.');
+        }
+        if (foundCase.deletedAt === null) {
+          throw new Error('Um ou mais casos não estão marcados como excluídos.');
+        }
+      }
+
       const ownedIds = ownedCases.map((foundCase) => foundCase.id);
 
       if (ownedIds.length === 0) {

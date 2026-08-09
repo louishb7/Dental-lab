@@ -3,6 +3,7 @@ import { useAuth } from "./AuthContext.jsx";
 import {
   createCase,
   createCaseItem,
+  createCaseItemsBulk,
   createDoctor,
   bulkDeliverCases,
   deleteCase,
@@ -283,7 +284,7 @@ export function DataProvider({ children }) {
           setMessage({ type: "error", text: "Preencha o valor de cada dente selecionado antes de adicionar o serviço." });
           return false;
         }
-        await Promise.all(payloads.map((payload) => createCaseItem(selectedCaseId, payload)));
+        await createCaseItemsBulk(selectedCaseId, payloads);
       } else {
         const payload = buildItemPayload(
           itemForm,

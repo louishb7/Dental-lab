@@ -8,12 +8,15 @@ describe('case item rules', () => {
     expect(normalizeTooth(' 11 ')).toBe('11');
     expect(normalizeTooth('protocolo total')).toBe('protocolo total');
     expect(() => normalizeTooth('')).toThrow('O campo tooth não pode ser vazio');
-    expect(() => normalizeTooth('10')).toThrow(
-      'Número do dente inválido',
-    );
-    expect(() => normalizeTooth('49')).toThrow(
-      'Número do dente inválido',
-    );
+    expect(() => normalizeTooth('10')).toThrow('Número do dente inválido');
+    expect(() => normalizeTooth('19')).toThrow('Número do dente inválido');
+    expect(() => normalizeTooth('20')).toThrow('Número do dente inválido');
+    expect(() => normalizeTooth('29')).toThrow('Número do dente inválido');
+    expect(() => normalizeTooth('30')).toThrow('Número do dente inválido');
+    expect(() => normalizeTooth('39')).toThrow('Número do dente inválido');
+    expect(() => normalizeTooth('40')).toThrow('Número do dente inválido');
+    expect(() => normalizeTooth('49')).toThrow('Número do dente inválido');
+    expect(() => normalizeTooth('51')).toThrow('Número do dente inválido');
   });
 
   it('validates positive quantities', () => {
@@ -29,6 +32,9 @@ describe('case item rules', () => {
     expect(normalized).toBeInstanceOf(Prisma.Decimal);
     expect(normalized?.toString()).toBe('1234.56');
     expect(normalizeDecimalValue('', 'Valor unitário inválido')).toBeNull();
+    
+    // Using import for UnprocessableEntityException would be best, or just generic toThrow. 
+    // It's checked by string in the test below so let's adjust it to check the error message string which works for both.
     expect(() => normalizeDecimalValue('abc', 'Valor unitário inválido')).toThrow(
       'Valor unitário inválido',
     );

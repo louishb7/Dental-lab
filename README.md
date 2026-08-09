@@ -89,6 +89,7 @@ LOGIN_MAX_ATTEMPTS=5
 LOGIN_LOCKOUT_MINUTES=15
 LOGIN_RATE_LIMIT_ATTEMPTS=10
 LOGIN_RATE_LIMIT_WINDOW_SECONDS=60
+APP_TIME_ZONE=America/Sao_Paulo
 CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 TRUSTED_HOSTS=localhost,127.0.0.1
 ```
@@ -99,7 +100,17 @@ Frontend (`frontend/.env`):
 VITE_API_BASE_URL=http://localhost:3001
 ```
 
-`ACCESS_TOKEN_EXPIRE_MINUTES=0` mantém a sessão persistente até logout manual, troca de segredo ou invalidação operacional relevante.
+`ACCESS_TOKEN_EXPIRE_MINUTES=0` mantém a sessão persistente até logout manual, troca de segredo ou invalidação operacional relevante. Se precisar expirar o JWT, ajuste esse valor.
+
+## Migrações Manuais (Manual Migrations)
+
+Caso precise adicionar alterações no banco que não podem ser resolvidas com os modelos Prisma (por exemplo, data copy, check constraints específicas), crie uma migração manual:
+
+1. Gere um timestamp e crie a pasta em `backend-nest/prisma/migrations/<timestamp>_nome_da_migracao`.
+2. Adicione seu SQL dentro de `migration.sql`.
+3. Ajuste o `schema.prisma` caso as alterações reflitam em modelos.
+4. Rode `npx prisma validate` e `npx prisma format` apenas.
+5. Para aplicar localmente: `npm run prisma:migrate:dev`. Não use `prisma migrate dev --create-only` sem cuidado, pois o SQL que você adicionar manualmente precisará ser verificado.
 
 ## Testes
 

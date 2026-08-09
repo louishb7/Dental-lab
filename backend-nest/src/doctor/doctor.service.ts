@@ -8,6 +8,13 @@ import { normalizeBrazilianPhone } from './doctor-phone';
 import { OwnershipBase } from '../common/ownership.base';
 import type { DoctorResponse } from './doctor.types';
 
+export class DoctorHasActiveCasesError extends Error {
+  constructor() {
+    super('Não é possível excluir este doutor porque existem casos pendentes ou em andamento.');
+    this.name = 'DoctorHasActiveCasesError';
+  }
+}
+
 @Injectable()
 export class DoctorService extends OwnershipBase {
   constructor(private readonly prisma: PrismaService) {
@@ -75,38 +82,40 @@ export class DoctorService extends OwnershipBase {
   }
 
   async deleteDoctor(doctorId: number, userId: number): Promise<boolean> {
-    const doctor = await this.prisma.doctor.findFirst({
-      where: this.ownDoctor(doctorId, userId),
-    });
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT 1 FROM doctors WHERE id = ${doctorId} FOR UPDATE`;
+      
+      const doctor = await tx.doctor.findFirst({
+        where: this.ownDoctor(doctorId, userId),
+      });
 
-    if (doctor === null) {
-      return false;
-    }
+      if (doctor === null) {
+        return false;
+      }
 
-    const activeCase = await this.prisma.dentalCase.findFirst({
-      where: {
-        doctorId: doctor.id,
-        deletedAt: null,
-        status: {
-          in: ['pending', 'completed'],
+      const activeCase = await tx.dentalCase.findFirst({
+        where: {
+          doctorId: doctor.id,
+          deletedAt: null,
+          status: {
+            in: ['pending', 'completed'],
+          },
         },
-      },
+      });
+
+      if (activeCase !== null) {
+        throw new DoctorHasActiveCasesError();
+      }
+
+      await tx.doctor.update({
+        where: { id: doctor.id },
+        data: {
+          deletedAt: new Date(),
+        },
+      });
+
+      return true;
     });
-
-    if (activeCase !== null) {
-      throw new Error(
-        'Não é possível excluir este doutor porque existem casos pendentes ou em andamento.',
-      );
-    }
-
-    await this.prisma.doctor.update({
-      where: { id: doctor.id },
-      data: {
-        deletedAt: new Date(),
-      },
-    });
-
-    return true;
   }
 
   private buildUpdateData(input: DoctorUpdateRequestDto): Prisma.DoctorUpdateInput {

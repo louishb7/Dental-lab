@@ -1,29 +1,38 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import type { EnvironmentVariables } from '../config/app.config';
 
 @Injectable()
-export class LoginRateLimitService {
+export class LoginRateLimitService implements OnModuleDestroy {
   private readonly attemptsByClientId = new Map<string, number[]>();
   private nowMs: () => number = Date.now;
+  private readonly cleanupTimer: NodeJS.Timeout;
 
   constructor(private readonly config: ConfigService<EnvironmentVariables>) {
-    setInterval(() => {
-      const now = this.nowMs() / 1000;
-      // Use config value or default to 15 minutes (900 seconds)
-      const windowSeconds = this.config.get<number>('LOGIN_RATE_LIMIT_WINDOW_SECONDS') ?? 900;
-      const cutoff = now - windowSeconds;
-      
-      for (const [clientId, attempts] of this.attemptsByClientId.entries()) {
-        const currentAttempts = attempts.filter((attempt) => attempt >= cutoff);
-        if (currentAttempts.length === 0) {
-          this.attemptsByClientId.delete(clientId);
-        } else {
-          this.attemptsByClientId.set(clientId, currentAttempts);
-        }
+    this.cleanupTimer = setInterval(() => {
+      this.cleanup();
+    }, 15 * 60 * 1000);
+    this.cleanupTimer.unref();
+  }
+
+  onModuleDestroy(): void {
+    clearInterval(this.cleanupTimer);
+  }
+
+  cleanup(): void {
+    const now = this.nowMs() / 1000;
+    const windowSeconds = this.config.get<number>('LOGIN_RATE_LIMIT_WINDOW_SECONDS') ?? 900;
+    const cutoff = now - windowSeconds;
+    
+    for (const [clientId, attempts] of this.attemptsByClientId.entries()) {
+      const currentAttempts = attempts.filter((attempt) => attempt >= cutoff);
+      if (currentAttempts.length === 0) {
+        this.attemptsByClientId.delete(clientId);
+      } else {
+        this.attemptsByClientId.set(clientId, currentAttempts);
       }
-    }, 15 * 60 * 1000).unref();
+    }
   }
 
   setClockForTesting(nowMs: () => number): void {
@@ -43,11 +52,18 @@ export class LoginRateLimitService {
       if (oldestAttempt === undefined) {
         return 1;
       }
-
       return Math.max(1, Math.ceil(windowSeconds - (now - oldestAttempt)));
     }
 
     currentAttempts.push(now);
+
+    if (!this.attemptsByClientId.has(clientId) && this.attemptsByClientId.size >= 1000) {
+      const firstKey = this.attemptsByClientId.keys().next().value;
+      if (firstKey !== undefined) {
+        this.attemptsByClientId.delete(firstKey);
+      }
+    }
+
     this.attemptsByClientId.set(clientId, currentAttempts);
     return null;
   }
@@ -57,7 +73,6 @@ export class LoginRateLimitService {
       this.attemptsByClientId.clear();
       return;
     }
-
     this.attemptsByClientId.delete(clientId);
   }
 }

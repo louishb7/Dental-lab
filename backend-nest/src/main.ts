@@ -13,6 +13,11 @@ async function bootstrap(): Promise<void> {
 
   const config = app.get(ConfigService<EnvironmentVariables>);
   const port = config.get<number>('PORT');
+  const tz = config.get<string>('APP_TIME_ZONE');
+
+  if (tz) {
+    process.env.TZ = tz;
+  }
 
   if (typeof port !== 'number') {
     throw new Error('PORT must be available after environment validation.');

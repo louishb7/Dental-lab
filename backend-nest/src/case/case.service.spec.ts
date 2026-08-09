@@ -43,7 +43,7 @@ describe('CaseService', () => {
 
   describe('createCase', () => {
     it('should create a case successfully', async () => {
-      repo.getDoctorById.mockResolvedValue({ id: 1, userId: 1 });
+      repo.getDoctorById.mockResolvedValue({ id: 1, userId: 1, deletedAt: null });
       const createdCase = {
         id: 1,
         doctorId: 1,
@@ -161,7 +161,7 @@ describe('CaseService', () => {
         items: [],
       };
       repo.getCaseById.mockResolvedValue(currentCase);
-      repo.getDoctorById.mockResolvedValue({ id: currentCase.doctorId, userId: 1 });
+      repo.getDoctorById.mockResolvedValue({ id: currentCase.doctorId, userId: 1, deletedAt: null });
       repo.updateCase.mockResolvedValue({ ...currentCase, status: 'completed' });
 
       const result = await service.revertCaseStatus(1, 'Reason here', 1);

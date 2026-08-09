@@ -41,9 +41,10 @@ export function configureApp(app: INestApplication): void {
   const corsOrigins = config.get<string[]>('CORS_ORIGINS') ?? [];
   const corsOriginRegex = config.get<string | null>('CORS_ORIGIN_REGEX') ?? null;
   const trustedHosts = config.get<string[]>('TRUSTED_HOSTS') ?? [];
+  const trustProxy = config.get<string | number | boolean>('APP_TRUST_PROXY') ?? 1;
 
   const httpAdapter = app.getHttpAdapter();
-  httpAdapter.getInstance().set('trust proxy', 1);
+  httpAdapter.getInstance().set('trust proxy', trustProxy);
 
   app.use(createSecurityHeadersMiddleware());
   app.use(createTrustedHostMiddleware(trustedHosts));

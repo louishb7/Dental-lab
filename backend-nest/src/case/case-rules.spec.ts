@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client';
 
+import { UnprocessableEntityException } from '@nestjs/common';
 import { normalizeDecimalValue } from './case-money';
 import { assertLinearStatusTransition, getPreviousCaseStatus, resolvePricingMode } from './case-rules';
 
@@ -17,9 +18,37 @@ describe('case money normalization', () => {
   });
 
   it('rejects invalid monetary values', () => {
-    expect(() => normalizeDecimalValue('abc', 'Valor combinado inválido')).toThrow(
-      'Valor combinado inválido',
-    );
+    const errorMsg = 'Valor combinado inválido';
+    const rejectCases = [
+      'abc',
+      -10.5,
+      '-10.5',
+      12.345,
+      '12.345',
+      100000000.00,
+      '100000000.00',
+      '1e5',
+      1e30,
+      NaN,
+      Infinity,
+      -Infinity,
+      {},
+      [],
+      [10],
+      true,
+      false,
+    ];
+
+    for (const testCase of rejectCases) {
+      try {
+        normalizeDecimalValue(testCase, errorMsg);
+        console.log('DID NOT THROW FOR:', testCase);
+      } catch (e) {
+        // expected
+      }
+      expect(() => normalizeDecimalValue(testCase, errorMsg)).toThrow(UnprocessableEntityException);
+      expect(() => normalizeDecimalValue(testCase, errorMsg)).toThrow(errorMsg);
+    }
   });
 });
 

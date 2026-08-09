@@ -9,8 +9,8 @@ export function normalizeTooth(value: unknown): string {
   }
 
   if (/^\d+$/.test(normalized)) {
-    if (!/^(?:[1-4][1-8]|[5-8][1-5])$/.test(normalized)) {
-      throw new Error('Número do dente inválido. Deve estar no padrão FDI (ex: 11-18, 21-28, 31-38, 41-48, ou decíduos 51-55, 61-65, 71-75, 81-85).');
+    if (!/^(?:[1-4][1-8])$/.test(normalized)) {
+      throw new Error('Número do dente inválido. Deve estar no padrão FDI permanente (ex: 11-18, 21-28, 31-38, 41-48).');
     }
   }
 

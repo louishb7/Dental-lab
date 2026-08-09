@@ -46,7 +46,7 @@ describe('CaseItemService', () => {
   });
 
   describe('createCaseItem', () => {
-    it('should create item and not use transaction if case pricingMode is fixed', async () => {
+    it('should create item and use transaction even if case pricingMode is fixed', async () => {
       prisma.dentalCase.findFirst.mockResolvedValue({ id: 1, pricingMode: 'fixed' });
       prisma.caseItem.create.mockResolvedValue({ id: 1, caseId: 1 });
 
@@ -63,7 +63,8 @@ describe('CaseItemService', () => {
 
       expect(prisma.dentalCase.findFirst).toHaveBeenCalled();
       expect(prisma.caseItem.create).toHaveBeenCalled();
-      expect(prisma.$transaction).not.toHaveBeenCalled();
+      expect(prisma.$transaction).toHaveBeenCalled();
+      expect(prisma.$executeRaw).toHaveBeenCalled();
       expect(result.id).toBe(1);
     });
 
@@ -100,6 +101,7 @@ describe('CaseItemService', () => {
       const result = await service.deleteCaseItem(1, 1, 1);
       
       expect(result).toBe(true);
+      expect(prisma.$transaction).toHaveBeenCalled();
       expect(prisma.caseItem.delete).toHaveBeenCalled();
     });
   });
@@ -114,6 +116,7 @@ describe('CaseItemService', () => {
 
       expect(result).toBeDefined();
       expect(result?.tooth).toBe('12');
+      expect(prisma.$transaction).toHaveBeenCalled();
       expect(prisma.caseItem.update).toHaveBeenCalled();
     });
   });

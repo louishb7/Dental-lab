@@ -1,4 +1,4 @@
-# Cadisk Migration Checklist
+﻿# Cadisk Migration Checklist
 
 Documento vivo para acompanhar a migracao fiel do Cadista de Python/FastAPI para TypeScript/NestJS + Prisma + PostgreSQL.
 
@@ -354,48 +354,48 @@ Esta migracao e de paridade. O backend FastAPI em `backend/` e seus testes Pytho
 - [ ] Validacao objetiva executada e registrada.
 - [ ] Mensagem de commit sugerida entregue ao usuario no fechamento da alteracao.
 
-## Princípios de UI e Simplificação de Fluxo
+## PrincÃ­pios de UI e SimplificaÃ§Ã£o de Fluxo
 
-PRINCÍPIO NORTEADOR:
-O sistema não deve competir pela atenção do usuário — ele é um instrumento de apoio ao trabalho real (produção de próteses), não um produto de engajamento. A interface deve ser organizada em duas camadas claramente separadas:
+PRINCÃPIO NORTEADOR:
+O sistema nÃ£o deve competir pela atenÃ§Ã£o do usuÃ¡rio â€” ele Ã© um instrumento de apoio ao trabalho real (produÃ§Ã£o de prÃ³teses), nÃ£o um produto de engajamento. A interface deve ser organizada em duas camadas claramente separadas:
 
-1. CAMADA INSTRUMENTO (Bancada, Casos, Dentistas): deve responder rapidamente três perguntas — o que fazer hoje, o que está pronto pra entrega, o que está atrasado. Elementos aqui devem ser mínimos, glanceable (reconhecíveis em segundos), sem exigir leitura ou análise.
+1. CAMADA INSTRUMENTO (Bancada, Casos, Dentistas): deve responder rapidamente trÃªs perguntas â€” o que fazer hoje, o que estÃ¡ pronto pra entrega, o que estÃ¡ atrasado. Elementos aqui devem ser mÃ­nimos, glanceable (reconhecÃ­veis em segundos), sem exigir leitura ou anÃ¡lise.
 
-2. CAMADA ANÁLISE (Financeiro): pode ser tão informativa e rica quanto necessário, pois é acessada por escolha deliberada do usuário, não como efeito colateral de outra tarefa.
+2. CAMADA ANÃLISE (Financeiro): pode ser tÃ£o informativa e rica quanto necessÃ¡rio, pois Ã© acessada por escolha deliberada do usuÃ¡rio, nÃ£o como efeito colateral de outra tarefa.
 
-Qualquer elemento de UI que não ajude a decisão imediata de "o que fazer agora" não pertence à camada instrumento.
+Qualquer elemento de UI que nÃ£o ajude a decisÃ£o imediata de "o que fazer agora" nÃ£o pertence Ã  camada instrumento.
 
-CHECKLIST DE SIMPLIFICAÇÃO:
+CHECKLIST DE SIMPLIFICAÃ‡ÃƒO:
 
-- [x] Remover o subtítulo repetido ("Controle simples de casos, serviços, prazos e entregas.") de todas as páginas internas — manter no máximo em uma tela de onboarding, se existir
-- [x] Colapsar o bloco "Semana de produção" quando não houver casos agendados na semana, substituindo os 7 cards "DIA OFF" por uma mensagem única e compacta
-- [x] Investigar a causa raiz do botão manual "Atualizar": os dados deveriam revalidar automaticamente após mutações (criar/editar/entregar caso, cadastrar dentista). Corrigir a causa antes de remover o botão — não esconder o sintoma
-- [x] Consolidar os elementos persistentes da barra superior (data, nome do usuário, tema, atualizar, sair) em um número menor de elementos — avaliar agrupar tema e sair num menu único de usuário
-- [x] Completar ou remover o item "USO DIÁRIO" no rodapé da sidebar, que atualmente aparece sem conteúdo
-- [x] No formulário de "Novo caso", adicionar defaults inteligentes: último dentista usado pré-selecionado, prazo de entrega com valor padrão sugerido — reduzir o tempo entre abrir o formulário e salvar o caso
-- [x] No bloco "Semana de produção" da Bancada, permitir adicionar um caso diretamente a partir de um dia específico da semana (clique no dia abre o formulário de novo caso já com aquele prazo/data pré-preenchido), em vez de o bloco ser só um espelho passivo de leitura dos casos já cadastrados
-- [x] Auditar a tela Bancada e mover para o Financeiro qualquer elemento que seja informativo/analítico em vez de acionável no dia a dia
-- [x] Introduzir Tailwind CSS + shadcn/ui no frontend como piloto pelo componente "Semana de produção"; decisão antecipada em relação ao plano original porque resolve diretamente a inconsistência visual desse bloco, mantendo as demais telas no CSS existente até validação específica.
-- [x] Habilitar Preflight do Tailwind CSS v4 para a migração completa do frontend, assumindo a substituição do CSS puro legado tela por tela.
-- [x] Migrar header/topbar e branding global para Tailwind/shadcn, renomeando o produto visível para Cadisk e simplificando a barra superior.
-- [x] Migrar a tela Bancada para Tailwind/shadcn, completando cards de métrica, "Casos de hoje", "Prontos para entrega" e estados da "Semana de produção".
-- [x] Migrar a tela Casos para Tailwind/shadcn, incluindo filtros, tabelas, badges, ações e modal de entrega.
-- [x] Migrar o modal "Novo caso" para Tailwind/shadcn, preservando a lógica do odontograma e alterando apenas o styling ao redor.
+- [x] Remover o subtÃ­tulo repetido ("Controle simples de casos, serviÃ§os, prazos e entregas.") de todas as pÃ¡ginas internas â€” manter no mÃ¡ximo em uma tela de onboarding, se existir
+- [x] Colapsar o bloco "Semana de produÃ§Ã£o" quando nÃ£o houver casos agendados na semana, substituindo os 7 cards "DIA OFF" por uma mensagem Ãºnica e compacta
+- [x] Investigar a causa raiz do botÃ£o manual "Atualizar": os dados deveriam revalidar automaticamente apÃ³s mutaÃ§Ãµes (criar/editar/entregar caso, cadastrar dentista). Corrigir a causa antes de remover o botÃ£o â€” nÃ£o esconder o sintoma
+- [x] Consolidar os elementos persistentes da barra superior (data, nome do usuÃ¡rio, tema, atualizar, sair) em um nÃºmero menor de elementos â€” avaliar agrupar tema e sair num menu Ãºnico de usuÃ¡rio
+- [x] Completar ou remover o item "USO DIÃRIO" no rodapÃ© da sidebar, que atualmente aparece sem conteÃºdo
+- [x] No formulÃ¡rio de "Novo caso", adicionar defaults inteligentes: Ãºltimo dentista usado prÃ©-selecionado, prazo de entrega com valor padrÃ£o sugerido â€” reduzir o tempo entre abrir o formulÃ¡rio e salvar o caso
+- [x] No bloco "Semana de produÃ§Ã£o" da Bancada, permitir adicionar um caso diretamente a partir de um dia especÃ­fico da semana (clique no dia abre o formulÃ¡rio de novo caso jÃ¡ com aquele prazo/data prÃ©-preenchido), em vez de o bloco ser sÃ³ um espelho passivo de leitura dos casos jÃ¡ cadastrados
+- [x] Auditar a tela Bancada e mover para o Financeiro qualquer elemento que seja informativo/analÃ­tico em vez de acionÃ¡vel no dia a dia
+- [x] Introduzir Tailwind CSS + shadcn/ui no frontend como piloto pelo componente "Semana de produÃ§Ã£o"; decisÃ£o antecipada em relaÃ§Ã£o ao plano original porque resolve diretamente a inconsistÃªncia visual desse bloco, mantendo as demais telas no CSS existente atÃ© validaÃ§Ã£o especÃ­fica.
+- [x] Habilitar Preflight do Tailwind CSS v4 para a migraÃ§Ã£o completa do frontend, assumindo a substituiÃ§Ã£o do CSS puro legado tela por tela.
+- [x] Migrar header/topbar e branding global para Tailwind/shadcn, renomeando o produto visÃ­vel para Cadisk e simplificando a barra superior.
+- [x] Migrar a tela Bancada para Tailwind/shadcn, completando cards de mÃ©trica, "Casos de hoje", "Prontos para entrega" e estados da "Semana de produÃ§Ã£o".
+- [x] Migrar a tela Casos para Tailwind/shadcn, incluindo filtros, tabelas, badges, aÃ§Ãµes e modal de entrega.
+- [x] Migrar o modal "Novo caso" para Tailwind/shadcn, preservando a lÃ³gica do odontograma e alterando apenas o styling ao redor.
 - [x] Migrar a tela Dentistas e o modal "Novo dentista" para Tailwind/shadcn.
-- [x] Migrar a tela Financeiro para Tailwind/shadcn, preservando a camada analítica com ranking e entregas do mês.
+- [x] Migrar a tela Financeiro para Tailwind/shadcn, preservando a camada analÃ­tica com ranking e entregas do mÃªs.
 - [x] Remover CSS puro legado em `frontend/src/styles/`, mantendo apenas `tailwind.css` como entrada de estilos do frontend.
-- [x] Passo 1 refinamento visual: reduzir padding, altura e escala dos cards de métrica "Hoje", "Pendentes" e "Prontos para entrega" no topo da Bancada.
-- [x] Passo 2 refinamento visual: repaginar a paleta de cores, trocar a cor primária laranja por tom clínico/confiável, reservar âmbar/laranja para atenção e documentar tokens semânticos.
-- [x] Passo 3 refinamento visual: implementar sistema de temas com CSS custom properties no padrão shadcn/ui, mantendo apenas tema escuro e tema claro corrigido.
-- [x] Passo 4 refinamento visual: compactar os cards de dia da "Semana de produção" em formato de tira de calendário, preservando estados de hoje, selecionado e dia off.
-- [x] Passo 5 refinamento de fluxo: reposicionar o botão "+ Novo Caso" próximo ao bloco "Semana de produção", mantendo distinção entre criação geral e criação por dia.
-- [x] Passo 6 refinamento de navegação: após criar caso ou abrir caso pela Bancada, navegar automaticamente para "Casos" e exibir/abrir o caso correspondente.
-- [x] Passo 7 refinamento de interação: adicionar ação "Pronto" ao painel "Casos de hoje" da Bancada reutilizando o mesmo padrão de painel lateral da tela "Casos".
-- [x] Passo 8 refinamento de produto: remover o filtro "Prioridade" da tela "Casos" e eliminar a lógica de filtragem correspondente se ficar sem uso.
-- [x] Refinamento de Histórico: limitar o arquivo de casos a 10 registros por página, simplificar colunas, corrigir filtros de período por entrega e permitir exclusão permanente individual ou da página selecionada.
-- [x] Refinamento de Bancada: remover data redundante dos cards da "Semana de produção" e centralizar dia da semana + quantidade de casos.
-- [x] Refinamento de Financeiro: consolidar valor entregue e quantidade de casos em um único card, remover "Itens de serviço lançados", adicionar gráfico de tendência de receita dos últimos 6 meses e limitar entregas recentes a 5 linhas com link para Histórico.
-- [x] Refinamento final de Financeiro: consolidar o resumo mensal e o gráfico de tendência em um único card hero, omitir comparação sem receita no mês anterior e rebalancear Ranking/Entregas para priorizar a tabela.
+- [x] Passo 1 refinamento visual: reduzir padding, altura e escala dos cards de mÃ©trica "Hoje", "Pendentes" e "Prontos para entrega" no topo da Bancada.
+- [x] Passo 2 refinamento visual: repaginar a paleta de cores, trocar a cor primÃ¡ria laranja por tom clÃ­nico/confiÃ¡vel, reservar Ã¢mbar/laranja para atenÃ§Ã£o e documentar tokens semÃ¢nticos.
+- [x] Passo 3 refinamento visual: implementar sistema de temas com CSS custom properties no padrÃ£o shadcn/ui, mantendo apenas tema escuro e tema claro corrigido.
+- [x] Passo 4 refinamento visual: compactar os cards de dia da "Semana de produÃ§Ã£o" em formato de tira de calendÃ¡rio, preservando estados de hoje, selecionado e dia off.
+- [x] Passo 5 refinamento de fluxo: reposicionar o botÃ£o "+ Novo Caso" prÃ³ximo ao bloco "Semana de produÃ§Ã£o", mantendo distinÃ§Ã£o entre criaÃ§Ã£o geral e criaÃ§Ã£o por dia.
+- [x] Passo 6 refinamento de navegaÃ§Ã£o: apÃ³s criar caso ou abrir caso pela Bancada, navegar automaticamente para "Casos" e exibir/abrir o caso correspondente.
+- [x] Passo 7 refinamento de interaÃ§Ã£o: adicionar aÃ§Ã£o "Pronto" ao painel "Casos de hoje" da Bancada reutilizando o mesmo padrÃ£o de painel lateral da tela "Casos".
+- [x] Passo 8 refinamento de produto: remover o filtro "Prioridade" da tela "Casos" e eliminar a lÃ³gica de filtragem correspondente se ficar sem uso.
+- [x] Refinamento de HistÃ³rico: limitar o arquivo de casos a 10 registros por pÃ¡gina, simplificar colunas, corrigir filtros de perÃ­odo por entrega e permitir exclusÃ£o permanente individual ou da pÃ¡gina selecionada.
+- [x] Refinamento de Bancada: remover data redundante dos cards da "Semana de produÃ§Ã£o" e centralizar dia da semana + quantidade de casos.
+- [x] Refinamento de Financeiro: consolidar valor entregue e quantidade de casos em um Ãºnico card, remover "Itens de serviÃ§o lanÃ§ados", adicionar grÃ¡fico de tendÃªncia de receita dos Ãºltimos 6 meses e limitar entregas recentes a 5 linhas com link para HistÃ³rico.
+- [x] Refinamento final de Financeiro: consolidar o resumo mensal e o grÃ¡fico de tendÃªncia em um Ãºnico card hero, omitir comparaÃ§Ã£o sem receita no mÃªs anterior e rebalancear Ranking/Entregas para priorizar a tabela.
 
 ## Decisoes e Notas
 
@@ -405,13 +405,13 @@ CHECKLIST DE SIMPLIFICAÇÃO:
 - Revisao final pre-commit 2026-08-04: referencias antigas a FastAPI, Pytest, Alembic, `backend/`, `cadista_nest` e comandos de validacao legados abaixo desta linha permanecem apenas como historico integral da migracao. Elas nao representam instrucao operacional atual. O backend atual e exclusivamente `backend-nest/`.
 - Revisao final seguranca 2026-08-04: `npm audit` encontrou vulnerabilidades transitivas no backend via NestJS 10 (`@nestjs/common`, `@nestjs/core`, `@nestjs/platform-express`, `@nestjs/testing`) e `@nestjs/config` 3. A correcao segura foi atualizar para NestJS `11.1.28` e `@nestjs/config` `4.0.4`, eliminando as vulnerabilidades sem usar `npm audit fix --force`.
 - Revisao final ambiente 2026-08-04: exemplos, scripts fallback e Docker Compose foram alinhados para `cadisk_nest`/`cadisk_nest_test` em PostgreSQL local na porta `5433`, com credenciais ficticias de desenvolvimento `cadisk_dev`/`cadisk_dev_password`.
-- Refinamento de Histórico: a listagem principal agora usa `limit = 10` por padrão e no frontend, evitando lista vertical longa antes de paginação. As colunas `Criado em` e `Retorno` foram removidas da listagem por ruído visual; a data relevante para consulta financeira/arquivo é `Entregue`.
-- Refinamento de Histórico exclusão: por decisão explícita de produto, a página Histórico ganhou exclusão permanente individual e em lote dos registros selecionados na página atual. Essa regra é intencionalmente diferente do soft delete operacional da página Casos: em Histórico, a exclusão remove `case_history_events` e o `case` do banco em transação, sempre com ownership pelo usuário autenticado.
-- Refinamento de Histórico filtros: os períodos de entrega são enviados como janelas fechadas-abertas (`delivered_from >=` e `delivered_to <`) para evitar perda de registros por horário no último dia do período.
-- Refinamento de Bancada: os cards da "Semana de produção" deixaram de repetir a data `dd/mm`, pois o intervalo da semana já aparece acima; cada dia agora prioriza `SEG/TER/...` e a quantidade de casos, centralizados.
-- Refinamento de Financeiro endpoint: o endpoint existente `GET /dashboard/overview` foi estendido em vez de criar uma rota nova. Ele agora retorna `items_count` nos casos entregues do mês e `revenue_trend` com 6 meses, incluindo meses sem entrega com valor zero. Essa decisão evita duplicar consultas financeiras no frontend e mantém a tela Financeiro baseada em agregações do backend.
-- Refinamento de Financeiro UI: os cards "Valor entregue no mês" e "Casos entregues" foram consolidados porque respondem à mesma pergunta; "Itens de serviço lançados" foi removido por não ser uma métrica financeira principal. O gráfico usa `shadcn/ui chart` com Recharts e tokens CSS existentes.
-- Refinamento final de Financeiro UI: o resumo "Receita entregue no mês" e o gráfico "Tendência de receita" foram unidos em um único card hero de largura total para evitar altura forçada e espaço vazio no card menor. A comparação "vs mês passado" agora só aparece quando o mês anterior tem receita maior que zero; sem base real de comparação, o badge é omitido. A grade inferior foi rebalanceada para deixar "Entregas do mês" mais larga que "Ranking de receita".
+- Refinamento de HistÃ³rico: a listagem principal agora usa `limit = 10` por padrÃ£o e no frontend, evitando lista vertical longa antes de paginaÃ§Ã£o. As colunas `Criado em` e `Retorno` foram removidas da listagem por ruÃ­do visual; a data relevante para consulta financeira/arquivo Ã© `Entregue`.
+- Refinamento de HistÃ³rico exclusÃ£o: por decisÃ£o explÃ­cita de produto, a pÃ¡gina HistÃ³rico ganhou exclusÃ£o permanente individual e em lote dos registros selecionados na pÃ¡gina atual. Essa regra Ã© intencionalmente diferente do soft delete operacional da pÃ¡gina Casos: em HistÃ³rico, a exclusÃ£o remove `case_history_events` e o `case` do banco em transaÃ§Ã£o, sempre com ownership pelo usuÃ¡rio autenticado.
+- Refinamento de HistÃ³rico filtros: os perÃ­odos de entrega sÃ£o enviados como janelas fechadas-abertas (`delivered_from >=` e `delivered_to <`) para evitar perda de registros por horÃ¡rio no Ãºltimo dia do perÃ­odo.
+- Refinamento de Bancada: os cards da "Semana de produÃ§Ã£o" deixaram de repetir a data `dd/mm`, pois o intervalo da semana jÃ¡ aparece acima; cada dia agora prioriza `SEG/TER/...` e a quantidade de casos, centralizados.
+- Refinamento de Financeiro endpoint: o endpoint existente `GET /dashboard/overview` foi estendido em vez de criar uma rota nova. Ele agora retorna `items_count` nos casos entregues do mÃªs e `revenue_trend` com 6 meses, incluindo meses sem entrega com valor zero. Essa decisÃ£o evita duplicar consultas financeiras no frontend e mantÃ©m a tela Financeiro baseada em agregaÃ§Ãµes do backend.
+- Refinamento de Financeiro UI: os cards "Valor entregue no mÃªs" e "Casos entregues" foram consolidados porque respondem Ã  mesma pergunta; "Itens de serviÃ§o lanÃ§ados" foi removido por nÃ£o ser uma mÃ©trica financeira principal. O grÃ¡fico usa `shadcn/ui chart` com Recharts e tokens CSS existentes.
+- Refinamento final de Financeiro UI: o resumo "Receita entregue no mÃªs" e o grÃ¡fico "TendÃªncia de receita" foram unidos em um Ãºnico card hero de largura total para evitar altura forÃ§ada e espaÃ§o vazio no card menor. A comparaÃ§Ã£o "vs mÃªs passado" agora sÃ³ aparece quando o mÃªs anterior tem receita maior que zero; sem base real de comparaÃ§Ã£o, o badge Ã© omitido. A grade inferior foi rebalanceada para deixar "Entregas do mÃªs" mais larga que "Ranking de receita".
 - Refinamento visual Passo 2: a cor primaria do frontend foi consolidada em teal clinico proprio (`#0E7C7B`, com derivados `#096766`/`#095f60`), mantendo ambar/laranja reservado para estados de atencao como `warning` e `pending`. O contraste de `#0E7C7B` com texto claro foi validado em WCAG AA.
 - Refinamento visual Passo 3: o frontend agora alterna apenas entre os temas `dark` e `light`, persistidos em `localStorage` por `app-ui-theme` e aplicados em `document.documentElement.dataset.theme`. Valores legados de um terceiro tema removido voltam automaticamente para `dark`.
 - Refinamento visual Passos 4 e 5: a "Semana de producao" foi compactada em uma tira de calendario com cards menores, preservando os estados `Hoje`, selecionado e dia livre/off. A criacao geral de caso saiu do cabecalho da Bancada e foi reposicionada no proprio bloco da semana; a criacao por dia permanece como acao discreta dentro de cada card de data.
@@ -420,36 +420,36 @@ CHECKLIST DE SIMPLIFICAÇÃO:
 - Fase 9 concluida: o frontend React/Vite foi mantido sem mudancas funcionais de UI e o fallback local de API foi repontado de `http://localhost:8000` para `http://localhost:3001`, preservando `VITE_API_BASE_URL` como override por ambiente. Esta e a mudanca esperada da Fase 9; o FastAPI continua no repositorio como implementacao de referencia ate o cutover.
 - Fase 9 contrato frontend/API: `frontend/src/services/api.js` continua centralizando login, cadastro, sessao, dashboard, doctors, cases, bulk-deliver e case-items. A validacao de contrato foi feita pelos testes e2e do backend Nest para os endpoints consumidos e pelo build Vite do frontend.
 - Fase 9 tratamento de estados: nenhum fluxo de UI foi reescrito; foram preservados os caminhos existentes de carregamento, sucesso, erro, lista vazia, falha de rede e mensagens `detail`/validacao tratados pelo cliente HTTP atual.
-- Fase 9 validacoes: `npm run build` executado com sucesso em `frontend/`; em `backend-nest/`, `npm run lint`, `npm run build`, `npm run test`, `npm run prisma:migrate:test`, `npm run test:integration` e `npm run test:e2e` executados com sucesso. `git diff --check` executado sem erros.
+- Fase 9 validacoes: `n`npm run build` executado com sucesso em `frontend/`; em `backend-nest/`, `n`npm run lint`, `n`npm run build`, `n`npm run test`, `n`npm run prisma:migrate:test`, `n`npm run test:integration` e `n`npm run test:e2e` executados com sucesso. `git diff --check` executado sem erros.
 - Fase 9 decisao operacional de testes: `test:integration` e `test:e2e` nao devem ser executados simultaneamente apontando para o mesmo `cadista_nest_test`, porque as suites limpam tabelas com `TRUNCATE ... RESTART IDENTITY` e podem interferir entre si. Executar sequencialmente ou configurar bancos isolados por processo.
 - Fase 8 concluida: `configureApp` agora aplica headers globais equivalentes ao FastAPI (`Cache-Control`, `Pragma`, `Expires`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy`), com reforco de `Cache-Control: no-store` em `/auth/*`.
 - Fase 8 CORS/hosts: configurado CORS com origens locais padrao, metodos `GET, POST, PUT, DELETE, OPTIONS`, headers `Authorization, Content-Type, Accept, Origin`, sem credentials e `optionsSuccessStatus = 200`; ambientes nao producao usam regex local para portas dinamicas do Vite, preservando o comportamento dos Pytests que rodam com ambiente FastAPI de desenvolvimento. Trusted Hosts rejeita wildcard e hosts nao autorizados.
 - Fase 8 producao: `validateEnvironment` exige `CORS_ORIGINS` e `TRUSTED_HOSTS` explicitos em `NODE_ENV=production`, rejeita `CORS_ORIGIN_REGEX`, origens `http://`, origens locais e hosts locais/teste. O Nest nao configura Swagger/OpenAPI, portanto rotas `/docs` e `/openapi.json` permanecem inexistentes.
 - Fase 8 rate limit global: nao foi implementado um rate limit global novo, porque o FastAPI legado possui rate limit especifico de login por janela deslizante e adicionar limite global mudaria o comportamento de endpoints de dominio. A decisao preserva o login rate limit ja migrado e testado na Fase 3.
-- Fase 8 validacoes: `npm run format`, `npm run lint`, `npm run build`, `npm run test`, `npm run test:integration` e `npm run test:e2e` executados com sucesso em `backend-nest/`.
+- Fase 8 validacoes: `n`npm run format`, `n`npm run lint`, `n`npm run build`, `n`npm run test`, `n`npm run test:integration` e `n`npm run test:e2e` executados com sucesso em `backend-nest/`.
 - Fase 7 concluida: criado `DashboardModule` no NestJS com `GET /dashboard/overview` protegido por JWT. Todas as agregacoes filtram por ownership via `cases -> doctors.user_id` e excluem `cases.deleted_at IS NOT NULL`, preservando o comportamento multiusuario do FastAPI.
 - Fase 7 regras traduzidas: `status_counts` sempre retorna `pending`, `completed` e `delivered` com zero default; atrasados usam status diferente de `delivered`, prazo nao nulo e deadline anterior ao inicio do dia UTC; urgentes em aberto usam `priority = urgent`, status diferente de `delivered`, ordenacao por deadline ASC com nulos por ultimo e id DESC; entregues do mes usam janela mensal UTC, `status = delivered`, `delivered_at` preenchido e `total_value` nao nulo.
 - Fase 7 financeiro: `delivered_total_month` soma `cases.total_value` com `Decimal` do Prisma e volta `0` quando nao ha casos entregues somaveis; `delivered_count_month` e a quantidade de casos retornados em `delivered_cases_month`.
 - Fase 7 decisao tecnica: `status_counts` usa SQL parametrizado com Prisma `$queryRaw` para manter a agregacao dentro da transacao e evitar ambiguidade de tipagem do `groupBy`; a consulta preserva ownership e soft delete.
-- Fase 7 validacoes: `npm run format`, `npm run lint`, `npm run build`, `npm run test`, `npm run test:integration` e `npm run test:e2e` executados com sucesso em `backend-nest/`.
+- Fase 7 validacoes: `n`npm run format`, `n`npm run lint`, `n`npm run build`, `n`npm run test`, `n`npm run test:integration` e `n`npm run test:e2e` executados com sucesso em `backend-nest/`.
 - Fase 6 concluida: criado `CaseItemModule` no NestJS com rotas aninhadas `GET/POST /cases/{case_id}/items/`, `GET/PUT/DELETE /cases/{case_id}/items/{item_id}`, todas protegidas por JWT. Ownership e aplicado pelo case pai (`cases -> doctors.user_id`); case de outro usuario ou soft-deletado se comporta como "Caso nao encontrado".
 - Fase 6 regras traduzidas: `tooth` e trimado, nao pode ser vazio e, quando numerico, deve ficar entre 11 e 48; `quantity` deve ser maior ou igual a 1 e defaulta para 1; `unit_value` usa a mesma normalizacao monetaria de `total_value`; cases `services` exigem `unit_value`, cases `fixed` aceitam `unit_value = null` e preservam `total_value` fixo.
 - Fase 6 recalc: create/update/delete de item em case `services` recalcula `cases.total_value` com `SUM(quantity * unit_value)` em transacao; quando nao ha valores somaveis, o total volta para `null`. Em case `fixed`, alteracoes de item nao alteram o valor fixo do case.
 - Fase 6 contrato legado: a rota FastAPI de `case-item` converte apenas `LookupError` em `404`; o `ValueError` de `unit_value` obrigatorio em case `services` e regra comprovada no service Python, mas nao tem status HTTP dedicado no contrato atual. O Nest preserva a regra no service e nao inventa um novo status HTTP para ela nesta fase.
-- Fase 6 validacoes: `npm run format`, `npm run lint`, `npm run build`, `npm run test`, `npm run test:integration` e `npm run test:e2e` executados com sucesso em `backend-nest/`.
+- Fase 6 validacoes: `n`npm run format`, `n`npm run lint`, `n`npm run build`, `n`npm run test`, `n`npm run test:integration` e `n`npm run test:e2e` executados com sucesso em `backend-nest/`.
 - Fase 5 concluida: criado `CaseModule` no NestJS com endpoints `POST/GET/GET by id/POST bulk-deliver/PUT/DELETE /cases`, todos protegidos por JWT. Ownership e aplicado via `doctor.user_id` em todas as consultas e mutacoes; doctors de outro usuario ou soft-deletados retornam o mesmo erro de "Doutor/Caso nao encontrado" usado para recurso inexistente.
 - Fase 5 regras traduzidas: criacao sempre salva `status = "pending"`; `pricing_mode` e inferido como `fixed` quando `total_value` vem preenchido e como `services` caso contrario; modo `fixed` exige valor; modo `services` recusa valor combinado explicito e recalcula `total_value` a partir de `case_items`; `CaseUpdate` nao aceita troca publica de `pricing_mode`; `status_revert_reason` permanece aceito no DTO de update e ignorado pelo service, sem habilitar reversao.
 - Fase 5 bulk-deliver: sem IDs ou com lista vazia entrega apenas casos `completed`, respeitando filtro opcional por doctor; com IDs remove duplicados, valida todos dentro do ownership, entrega `pending` e `completed`, preserva `delivered_at` existente, retorna em `id ASC` e evita atualizacao parcial quando ha ID inexistente/de outro usuario.
 - Fase 5 testes: `case_items` foram criados diretamente via Prisma nos testes de Case apenas para validar `items`, `items_count` e recalc de total de casos `services`, sem implementar endpoints de CaseItem antes da Fase 6.
-- Fase 5 validacoes: `npm run format`, `npm run lint`, `npm run build`, `npm run test`, `npm run test:integration` e `npm run test:e2e` executados com sucesso em `backend-nest/`.
+- Fase 5 validacoes: `n`npm run format`, `n`npm run lint`, `n`npm run build`, `n`npm run test`, `n`npm run test:integration` e `n`npm run test:e2e` executados com sucesso em `backend-nest/`.
 - Fase 4 concluida: criado `DoctorModule` no NestJS com endpoints `POST/GET/GET by id/PUT/DELETE /doctors/`, todos protegidos por JWT. A criacao sempre usa `user.id` do token para `doctors.user_id`, sem aceitar `user_id` publico; consultas, updates e deletes filtram por `id`, `user_id` e `deleted_at IS NULL`, fazendo recursos de outro usuario retornarem como nao encontrados.
 - Fase 4 regras traduzidas: telefone BR preserva regex/formato legado e fallback para 10/11 digitos; string vazia vira `null`; `cases_count` conta apenas casos com `deleted_at IS NULL`; delete aplica soft delete em `deleted_at`; delete e bloqueado com `409` e detail legado quando existe caso ativo `pending` ou `completed`; casos `delivered` nao bloqueiam.
 - Fase 4 testes: casos de `cases_count` e bloqueio de delete criam registros em `cases` diretamente via Prisma nos testes, sem implementar controller/service de Case antes da Fase 5.
-- Fase 4 validacoes: `npm run format`, `npm run lint`, `npm run build`, `npm run test`, `npm run test:integration` e `npm run test:e2e` executados com sucesso em `backend-nest/`.
+- Fase 4 validacoes: `n`npm run format`, `n`npm run lint`, `n`npm run build`, `n`npm run test`, `n`npm run test:integration` e `n`npm run test:e2e` executados com sucesso em `backend-nest/`.
 - Fase 3/auth: algoritmo legado de rate limit de login documentado antes da traducao. O FastAPI usa um `dict[str, deque[float]]` em memoria protegido por `Lock`; a chave e `request.client.host` com fallback `"unknown"`; em cada `POST /auth/login`, a tentativa e registrada antes da autenticacao; timestamps mais antigos que `LOGIN_RATE_LIMIT_WINDOW_SECONDS` sao removidos; se a fila ainda tiver `LOGIN_RATE_LIMIT_ATTEMPTS` ou mais entradas, a requisicao falha com `429`, detail `"Muitas tentativas. Tente novamente mais tarde."` e header `Retry-After = max(1, ceil(window - (now - primeira_tentativa)))`; login bem-sucedido nao limpa a janela. Esse mecanismo e separado do lockout persistido em `users`.
 - Fase 3 concluida: criados `AuthModule` e `UserModule` no NestJS preservando cadastro com token imediato, normalizacao case-insensitive de email/username, login por `identifier` e aliases `username`/`email`, JWT com `sub=username`, bcrypt configuravel, lockout persistido em `users`, rate limit manual por janela deslizante em memoria e `GET /auth/me` protegido por bearer token.
 - Fase 3 decisao de teste: scripts `test:integration` e `test:e2e` fixam valores de seguranca (`BCRYPT_ROUNDS=4`, `LOGIN_MAX_ATTEMPTS=3`, janela de rate limit) para reproduzir os cenarios de lockout/rate limit de forma deterministica, sem depender de variaveis externas do shell.
-- Fase 3 validacoes: `npm run format`, `npm run lint`, `npm run build`, `npm run test`, `npm run test:integration`, `npm run test:e2e`, `pg_isready -h localhost -p 5433 -U cadista`, `psql ... -c "SELECT 1 AS ok"`, start do NestJS em `PORT=3002` fora do sandbox e `curl -i http://127.0.0.1:3002/health`, `curl -i http://127.0.0.1:3002/health/database` executados com sucesso.
+- Fase 3 validacoes: `n`npm run format`, `n`npm run lint`, `n`npm run build`, `n`npm run test`, `n`npm run test:integration`, `n`npm run test:e2e`, `pg_isready -h localhost -p 5433 -U cadista`, `psql ... -c "SELECT 1 AS ok"`, start do NestJS em `PORT=3002` fora do sandbox e `curl -i http://127.0.0.1:3002/health`, `curl -i http://127.0.0.1:3002/health/database` executados com sucesso.
 - Fase 3 observacao de ambiente: tentativas de iniciar/curl o NestJS dentro do sandbox falharam ao acessar `localhost`; a validacao real de runtime foi repetida fora do sandbox com permissao aprovada e passou.
 - Processo: ao final de cada alteracao, o agente deve fornecer uma mensagem de commit sugerida para facilitar a revisao e o registro das etapas da migracao.
 - `status_revert_reason` e campo legado: existe no modelo/schema de resposta FastAPI, mas o service atual ignora o valor recebido em update e nao permite reversao de status. A migracao deve preservar o fluxo linear sem criar regra nova baseada nesse campo.
@@ -457,51 +457,59 @@ CHECKLIST DE SIMPLIFICAÇÃO:
 - Fase 1 criou `backend-nest/` com NestJS, ConfigModule, PrismaService, healthchecks, Docker Compose PostgreSQL, lint/format, Jest unitario, teste de integracao Prisma/PostgreSQL e e2e Supertest. Nao foram criados modulos de dominio.
 - Prisma foi fixado em `6.19.3`. A tentativa com Prisma `7.9.1` exigiu o novo fluxo de `prisma.config.ts` e mudaria mais infraestrutura do que o necessario nesta fase.
 - `prisma/schema.prisma` contem `PrismaClientBootstrap`, um model tecnico temporario para permitir `prisma generate` antes da Fase 2. Ele nao possui migration nesta fase, nao e usado pelo runtime, e deve ser removido/substituido antes da migration inicial real de dominio.
-- Validacoes comprovadas em Fase 1: `npm install`, `npm run prisma:generate`, `npx prisma validate --schema=prisma/schema.prisma`, `npm run format`, `npm run lint`, `npm run build`, `npm run test`, `env -u DATABASE_URL NODE_ENV=development PORT=3001 npm run start:dev`.
-- Validacoes antes bloqueadas foram concluidas com PostgreSQL 16 local iniciado por binarios do sistema: `initdb -D /tmp/cadista-nest-postgres -U cadista --auth=trust`, `pg_ctl -D /tmp/cadista-nest-postgres -l /tmp/cadista-nest-postgres.log -o "-p 5433 -h localhost -k /tmp" start`, criacao dos bancos `cadista_nest` e `cadista_nest_test`, `npm run test:integration`, `npm run test:e2e`, start do NestJS na porta `3001`, `curl -i http://localhost:3001/health` e `curl -i http://localhost:3001/health/database`.
+- Validacoes comprovadas em Fase 1: `npm install`, `n`npm run prisma:generate`, `npx prisma validate --schema=prisma/schema.prisma`, `n`npm run format`, `n`npm run lint`, `n`npm run build`, `n`npm run test`, `env -u DATABASE_URL NODE_ENV=development PORT=3001 n`npm run start:dev`.
+- Validacoes antes bloqueadas foram concluidas com PostgreSQL 16 local iniciado por binarios do sistema: `initdb -D /tmp/cadista-nest-postgres -U cadista --auth=trust`, `pg_ctl -D /tmp/cadista-nest-postgres -l /tmp/cadista-nest-postgres.log -o "-p 5433 -h localhost -k /tmp" start`, criacao dos bancos `cadista_nest` e `cadista_nest_test`, `n`npm run test:integration`, `n`npm run test:e2e`, start do NestJS na porta `3001`, `curl -i http://localhost:3001/health` e `curl -i http://localhost:3001/health/database`.
 - Docker Compose permanece configurado, mas nao foi validado neste ambiente porque `docker` e `podman` nao estao instalados. A validacao local usou PostgreSQL real, nao SQLite.
 - Auditoria FastAPI antes da Fase 2: checklist atualizado com detalhes reais de rate limit/lockout, defaults, criacao de case com status sempre `pending`, comportamento de `bulk-deliver` com casos ja `delivered`, constraints unicas legadas de `users`, divergencia de indice `cases.pricing_mode` entre modelo e Alembic, e gap de contrato HTTP nas rotas `case-item` para `ValueError` de `unit_value`.
-- Validacao da auditoria FastAPI antes da Fase 2: `npm run lint`, `npm run build`, `npm run test`, `npm run test:integration` e `npm run test:e2e` passaram no `backend-nest/`. `pytest` legado foi executado com `DATABASE_URL=sqlite:////tmp/cadista_test.db`; a suite completa nao retornou resumo final neste ambiente, e a selecao `tests/test_authorization.py tests/test_doctor.py tests/test_case_item.py tests/test_database_health.py tests/test_security_headers.py tests/test_production_settings.py` atingiu `timeout 180s` apos exibir oito testes passados, sem falha de assertion registrada.
+- Validacao da auditoria FastAPI antes da Fase 2: `n`npm run lint`, `n`npm run build`, `n`npm run test`, `n`npm run test:integration` e `n`npm run test:e2e` passaram no `backend-nest/`. `pytest` legado foi executado com `DATABASE_URL=sqlite:////tmp/cadista_test.db`; a suite completa nao retornou resumo final neste ambiente, e a selecao `tests/test_authorization.py tests/test_doctor.py tests/test_case_item.py tests/test_database_health.py tests/test_security_headers.py tests/test_production_settings.py` atingiu `timeout 180s` apos exibir oito testes passados, sem falha de assertion registrada.
 - Fase 2 decisao de schema: `pricing_mode`, `priority` e `status` permanecem como `String`/`varchar` com check constraints SQL customizadas, em vez de enums PostgreSQL, para preservar a forma fisica do banco legado.
 - Fase 2 decisao de ownership: `doctors.user_id` permanece nullable no banco para compatibilidade/migracao de dados legados, mas deve ser obrigatorio nas operacoes novas da aplicacao Nest.
 - Fase 2 decisao de indice: nao criar indice em `cases.pricing_mode` na migration inicial Prisma, porque a migration Alembic real nao cria esse indice e nenhum endpoint atual filtra por esse campo. A anotacao `index=True` no modelo SQLAlchemy fica registrada como divergencia auditada.
 - Fase 2 concluida: `PrismaClientBootstrap` foi removido e substituido pelos models `User`, `Doctor`, `DentalCase` e `CaseItem`, preservando nomes fisicos das tabelas legadas, mapeamento snake_case, `Decimal(10, 2)`, timestamps com timezone, defaults, soft delete, FKs e indices auditados.
 - Fase 2 migration: `20260730152630_initial_domain_schema` foi gerada pelo Prisma e ajustada com SQL customizado para constraints unicas legadas, indices `uq_users_email_lower`/`uq_users_username_lower`, checks de `cases` e checks de `case_items`.
-- Fase 2 validacoes: `npx prisma format`, `npx prisma validate`, `npx prisma migrate dev`, `npm run prisma:migrate:test`, `npx prisma migrate status`, introspeccao SQL de tabelas/constraints/indices, `SELECT 1`, `npm run format`, `npm run lint`, `npm run build`, `npm run test`, `npm run test:integration`, `npm run test:e2e` e selecao Pytest curta (`tests/test_database_health.py`, `tests/test_doctor.py`, `test_case_item_quantity_must_be_positive`) executados com sucesso.
+- Fase 2 validacoes: `npx prisma format`, `npx prisma validate`, `npx prisma migrate dev`, `n`npm run prisma:migrate:test`, `npx prisma migrate status`, introspeccao SQL de tabelas/constraints/indices, `SELECT 1`, `n`npm run format`, `n`npm run lint`, `n`npm run build`, `n`npm run test`, `n`npm run test:integration`, `n`npm run test:e2e` e selecao Pytest curta (`tests/test_database_health.py`, `tests/test_doctor.py`, `test_case_item_quantity_must_be_positive`) executados com sucesso.
 
-## Revisão Staff Engineer
+## RevisÃ£o Staff Engineer
 
 - Data: 2026-08-06.
-- Escopo revisado: arquitetura React/Vite + NestJS + Prisma/PostgreSQL, autenticação/JWT, ownership, regras de casos/itens/histórico/financeiro, testes, performance, UX, acessibilidade, documentação pública e higiene de repositório.
+- Escopo revisado: arquitetura React/Vite + NestJS + Prisma/PostgreSQL, autenticaÃ§Ã£o/JWT, ownership, regras de casos/itens/histÃ³rico/financeiro, testes, performance, UX, acessibilidade, documentaÃ§Ã£o pÃºblica e higiene de repositÃ³rio.
 - Problemas de Alta prioridade encontrados:
-  - A página Histórico executava exclusão permanente individual e em lote no primeiro clique, sem confirmação, apesar de remover caso e eventos do banco de forma definitiva.
-  - As listagens ativas de casos e dentistas aceitavam `skip` negativo e `limit` sem teto explícito, permitindo requisições inválidas ou excessivas chegarem à camada Prisma.
-- Correções aplicadas:
+  - A pÃ¡gina HistÃ³rico executava exclusÃ£o permanente individual e em lote no primeiro clique, sem confirmaÃ§Ã£o, apesar de remover caso e eventos do banco de forma definitiva.
+  - As listagens ativas de casos e dentistas aceitavam `skip` negativo e `limit` sem teto explÃ­cito, permitindo requisiÃ§Ãµes invÃ¡lidas ou excessivas chegarem Ã  camada Prisma.
+- CorreÃ§Ãµes aplicadas:
   - `frontend/src/pages/HistoryPage.jsx` passou a exigir `ConfirmModal` antes de apagar registros permanentes, tanto individualmente quanto em lote.
   - `backend-nest/src/case/dto/case-list-query.dto.ts` e `backend-nest/src/doctor/dto/doctor-list-query.dto.ts` agora validam `skip >= 0`, `limit` entre `1` e `100`, e `doctor_id >= 1` em casos.
-  - Acessibilidade dos modais corrigida em `frontend/src/components/ui/Modal.jsx` e `frontend/src/components/ui/ConfirmModal.jsx`: foco inicial ao abrir, fechamento por Escape, ciclo de Tab/Shift+Tab dentro do modal, retorno de foco ao elemento que abriu, `aria-labelledby` no título e `aria-describedby` na descrição quando disponível.
-- Problemas de Média prioridade:
-  - `POST /cases/` ainda converte erros de regra de cobrança em `404` por compatibilidade histórica, o que prejudica clareza de contrato; correção sugerida: introduzir erros de domínio tipados e mapear validação/regra para `409` ou `422` em mudança de contrato controlada.
-  - Dashboard/Financeiro ainda retorna coleções completas de atrasados, urgentes e entregues do mês; correção sugerida: limitar listas ou paginar detalhes mantendo agregações no backend.
-  - Tela Casos e Dentistas ainda dependem de lista ativa carregada inteira no frontend; correção sugerida: paginação e busca server-side quando o volume real passar de uma bancada pequena.
-  - Frontend não possui scripts de lint/teste automatizado; correção sugerida: adicionar lint/testes quando houver estabilização do fluxo visual.
+  - Acessibilidade dos modais corrigida em `frontend/src/components/ui/Modal.jsx` e `frontend/src/components/ui/ConfirmModal.jsx`: foco inicial ao abrir, fechamento por Escape, ciclo de Tab/Shift+Tab dentro do modal, retorno de foco ao elemento que abriu, `aria-labelledby` no tÃ­tulo e `aria-describedby` na descriÃ§Ã£o quando disponÃ­vel.
+- Problemas de MÃ©dia prioridade:
+  - `POST /cases/` ainda converte erros de regra de cobranÃ§a em `404` por compatibilidade histÃ³rica, o que prejudica clareza de contrato; correÃ§Ã£o sugerida: introduzir erros de domÃ­nio tipados e mapear validaÃ§Ã£o/regra para `409` ou `422` em mudanÃ§a de contrato controlada.
+  - Dashboard/Financeiro ainda retorna coleÃ§Ãµes completas de atrasados, urgentes e entregues do mÃªs; correÃ§Ã£o sugerida: limitar listas ou paginar detalhes mantendo agregaÃ§Ãµes no backend.
+  - Tela Casos e Dentistas ainda dependem de lista ativa carregada inteira no frontend; correÃ§Ã£o sugerida: paginaÃ§Ã£o e busca server-side quando o volume real passar de uma bancada pequena.
+  - Frontend nÃ£o possui scripts de lint/teste automatizado; correÃ§Ã£o sugerida: adicionar lint/testes quando houver estabilizaÃ§Ã£o do fluxo visual.
 - Problemas de Baixa prioridade:
-  - Build frontend emite aviso de chunk acima de 500 kB; correção sugerida: code-splitting por páginas analíticas, especialmente Financeiro/Recharts.
-  - `MIGRATION_CHECKLIST.md` mantém referências antigas a FastAPI/Alembic/Pytest como histórico integral; não é código executável, mas pode ser resumido futuramente se o documento deixar de ser histórico de migração.
-  - Arquivos `.env` locais ignorados ainda usam valores antigos `cadista_*`; não estão versionados, mas devem permanecer fora de documentação pública.
+  - Build frontend emite aviso de chunk acima de 500 kB; correÃ§Ã£o sugerida: code-splitting por pÃ¡ginas analÃ­ticas, especialmente Financeiro/Recharts.
+  - `MIGRATION_CHECKLIST.md` mantÃ©m referÃªncias antigas a FastAPI/Alembic/Pytest como histÃ³rico integral; nÃ£o Ã© cÃ³digo executÃ¡vel, mas pode ser resumido futuramente se o documento deixar de ser histÃ³rico de migraÃ§Ã£o.
+  - Arquivos `.env` locais ignorados ainda usam valores antigos `cadista_*`; nÃ£o estÃ£o versionados, mas devem permanecer fora de documentaÃ§Ã£o pÃºblica.
 - Testes adicionados:
-  - E2E para rejeitar paginação insegura em `GET /cases/`.
-  - E2E para rejeitar paginação insegura em `GET /doctors/`.
-- Validações executadas:
-  - Frontend: `npm install`, `npm audit`, `npm run build`.
-  - Acessibilidade de modais: validação técnica por build após implementação; validação manual assistida por browser automation não executada neste ambiente porque não há Playwright/Puppeteer/jsdom/geckodriver instalados e a tarefa não permite introduzir nova stack de testes.
-  - Backend: `npm install`, `npm audit`, `npm run lint`, `npx tsc --noEmit`, `npm run build`, `npm run test`, `npm run test:integration`, `npm run test:e2e`, `npm run prisma:generate`, `npx prisma validate --schema=prisma/schema.prisma`, `npm run prisma:migrate:test`.
-  - Repositório: `git diff --check`, `git status --short`, `git diff --stat`, `git ls-files .agents .codex`, buscas finais por legado Python/FastAPI, artefatos gerados, caches, segredos e nomenclatura.
+  - E2E para rejeitar paginaÃ§Ã£o insegura em `GET /cases/`.
+  - E2E para rejeitar paginaÃ§Ã£o insegura em `GET /doctors/`.
+- ValidaÃ§Ãµes executadas:
+  - Frontend: `npm install`, `npm audit`, `n`npm run build`.
+  - Acessibilidade de modais: validaÃ§Ã£o tÃ©cnica por build apÃ³s implementaÃ§Ã£o; validaÃ§Ã£o manual assistida por browser automation nÃ£o executada neste ambiente porque nÃ£o hÃ¡ Playwright/Puppeteer/jsdom/geckodriver instalados e a tarefa nÃ£o permite introduzir nova stack de testes.
+  - Backend: `npm install`, `npm audit`, `n`npm run lint`, `npx tsc --noEmit`, `n`npm run build`, `n`npm run test`, `n`npm run test:integration`, `n`npm run test:e2e`, `n`npm run prisma:generate`, `npx prisma validate --schema=prisma/schema.prisma`, `n`npm run prisma:migrate:test`.
+  - RepositÃ³rio: `git diff --check`, `git status --short`, `git diff --stat`, `git ls-files .agents .codex`, buscas finais por legado Python/FastAPI, artefatos gerados, caches, segredos e nomenclatura.
 - Vulnerabilidades encontradas: nenhuma vulnerabilidade reportada por `npm audit` em frontend ou backend.
-- Vulnerabilidades corrigidas: nenhuma vulnerabilidade de dependência; foram corrigidos riscos localizados de perda acidental de dados e validação insuficiente de paginação.
-- Pendências reais:
-  - Deploy público final continua pendente de produto.
-  - Melhorar contrato HTTP de erros de regra em criação de caso.
-  - Planejar paginação/busca server-side para listas ativas e limites nos blocos detalhados do dashboard quando houver volume real.
-  - Adicionar lint/testes frontend em etapa própria.
-- Conclusão da revisão: revisão concluída; nenhuma pendência de Alta prioridade permanece; projeto validado no estado atual para portfólio e manutenção contínua local, com pendências médias documentadas para evolução controlada.
+- Vulnerabilidades corrigidas: nenhuma vulnerabilidade de dependÃªncia; foram corrigidos riscos localizados de perda acidental de dados e validaÃ§Ã£o insuficiente de paginaÃ§Ã£o.
+- PendÃªncias reais:
+  - Deploy pÃºblico final continua pendente de produto.
+  - Melhorar contrato HTTP de erros de regra em criaÃ§Ã£o de caso.
+  - Planejar paginaÃ§Ã£o/busca server-side para listas ativas e limites nos blocos detalhados do dashboard quando houver volume real.
+  - Adicionar lint/testes frontend em etapa prÃ³pria.
+- ConclusÃ£o da revisÃ£o: revisÃ£o concluÃ­da; nenhuma pendÃªncia de Alta prioridade permanece; projeto validado no estado atual para portfÃ³lio e manutenÃ§Ã£o contÃ­nua local, com pendÃªncias mÃ©dias documentadas para evoluÃ§Ã£o controlada.
+## Post-Review Updates (2026-08-09)
+- Updated frontend to use POST /cases/:case_id/items/bulk for adding multiple items.
+- Ran npm audit fix for frontend and backend. Both passed with 0 vulnerabilities.
+- Created manual migration 20260809191202_add_delivered_total_value to add delivered_total_value constraint and data copy.
+- To run at home: docker compose up -d db, 
+`npm run prisma:migrate:dev, 
+`npm run test:e2e.
+- Do NOT push if: build fails, lint fails, or e2e tests fail after migration.

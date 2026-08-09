@@ -15,6 +15,8 @@ export interface EnvironmentVariables {
   CORS_ORIGINS: string[];
   CORS_ORIGIN_REGEX: string | null;
   TRUSTED_HOSTS: string[];
+  APP_TRUST_PROXY: string | number | boolean;
+  APP_TIME_ZONE: string;
 }
 
 export type JwtAlgorithm = 'HS256' | 'HS384' | 'HS512';
@@ -107,15 +109,27 @@ function parseIntegerInRange(
 }
 
 function parseAccessTokenExpireMinutes(value: string | undefined): number {
-  const parsed = Number(value || '0');
+  if (value === undefined || value.trim() === '') {
+    throw new Error('ACCESS_TOKEN_EXPIRE_MINUTES is required.');
+  }
+  const parsed = Number(value);
 
-  if (!Number.isInteger(parsed) || (parsed !== 0 && (parsed < 5 || parsed > 1440))) {
+  if (!Number.isInteger(parsed) || parsed < 1) {
     throw new Error(
-      'ACCESS_TOKEN_EXPIRE_MINUTES must be 0 for persistent sessions or an integer between 5 and 1440.',
+      'ACCESS_TOKEN_EXPIRE_MINUTES must be a positive integer.',
     );
   }
 
   return parsed;
+}
+
+function parseTrustProxy(value: string | undefined): string | number | boolean {
+  if (value === undefined) return 1;
+  if (value.toLowerCase() === 'true') return true;
+  if (value.toLowerCase() === 'false') return false;
+  const num = Number(value);
+  if (!Number.isNaN(num)) return num;
+  return value;
 }
 
 function parseBcryptRounds(value: string | undefined, nodeEnvironment: NodeEnvironment): number {
@@ -273,5 +287,7 @@ export function validateEnvironment(config: Record<string, unknown>): Environmen
     CORS_ORIGINS: corsOrigins,
     CORS_ORIGIN_REGEX: corsOriginRegex,
     TRUSTED_HOSTS: trustedHosts,
+    APP_TRUST_PROXY: parseTrustProxy(readString(config, 'APP_TRUST_PROXY')),
+    APP_TIME_ZONE: readString(config, 'APP_TIME_ZONE') || 'America/Recife',
   };
 }

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { Prisma, CaseItem } from '@prisma/client';
+import { Prisma, type CaseItem } from '@prisma/client';
 import { normalizeDecimalValue } from './case-money';
 import {
   assertLinearStatusTransition,
@@ -21,14 +21,37 @@ export class CaseService {
   async createCase(input: CaseCreateRequestDto, userId: number): Promise<CaseResponse> {
     await this.assertActiveDoctor(input.doctor_id, userId);
 
-    const totalValue = normalizeDecimalValue(input.total_value, 'Valor combinado inválido');
-    const pricingMode = resolvePricingMode(input.pricing_mode, totalValue);
-    if (pricingMode === 'fixed' && totalValue === null) {
-      throw new Error('Informe o valor fixo para este caso.');
+    const providedTotalValue = input.total_value !== undefined 
+      ? normalizeDecimalValue(input.total_value, 'Valor combinado inválido')
+      : null;
+
+    let computedTotalValue = providedTotalValue;
+
+    if (input.pricing_mode === 'services' || (!input.pricing_mode && providedTotalValue === null)) {
+      if (providedTotalValue !== null) {
+        throw new Error('Casos por serviços não usam valor combinado.');
+      }
+      
+      let sum = new Prisma.Decimal(0);
+      if (input.items && input.items.length > 0) {
+        for (const item of input.items) {
+          const unit = normalizeDecimalValue(item.unit_value, 'Valor unitário inválido');
+          if (unit === null) {
+             throw new Error('Informe o valor unitário do serviço para este caso.');
+          }
+          sum = sum.add(unit.mul(item.quantity ?? 1));
+        }
+        computedTotalValue = sum;
+      } else {
+        computedTotalValue = null;
+      }
+    } else {
+      if (providedTotalValue === null) {
+        throw new Error('Informe o valor fixo para este caso.');
+      }
     }
-    if (pricingMode === 'services' && input.pricing_mode === 'services' && totalValue !== null) {
-      throw new Error('Casos por serviços não usam valor combinado.');
-    }
+
+    const pricingMode = resolvePricingMode(input.pricing_mode, providedTotalValue);
 
     const createdCase = await this.caseRepository.runTransaction(async (repo) => {
       const foundCase = await repo.createCase({
@@ -38,7 +61,7 @@ export class CaseService {
         deadline: input.deadline ?? null,
         priority: input.priority,
         status: 'pending',
-        totalValue: pricingMode === 'fixed' ? totalValue : null,
+        totalValue: computedTotalValue,
         notes: input.notes ?? null,
         items: input.items ? {
           create: input.items.map(item => ({
@@ -65,7 +88,7 @@ export class CaseService {
       return foundCase;
     });
 
-    return this.toResponse(createdCase, 0);
+    return this.toResponse(createdCase, createdCase.items?.length ?? 0);
   }
 
   async getCaseById(caseId: number, userId: number): Promise<CaseResponse | null> {
@@ -99,18 +122,15 @@ export class CaseService {
     }
 
     const updatedCase = await this.caseRepository.runTransaction(async (repo) => {
+      await repo.lockCaseRow(caseId);
+      
       const currentCase = await repo.getCaseById(caseId, userId);
       if (currentCase === null) {
         return null;
       }
       
-      await repo.lockCaseRow(currentCase.id);
-      
       if (currentCase.status === 'delivered') {
-        const isEditingFinancials = input.total_value !== undefined;
-        if (isEditingFinancials) {
-          throw new Error('Não é possível alterar dados financeiros de um caso já entregue.');
-        }
+        throw new Error('Não é possível alterar um caso já entregue.');
       }
 
       const totalValueProvided = input.total_value !== undefined;
@@ -157,12 +177,16 @@ export class CaseService {
   }
 
   async deleteCase(caseId: number, userId: number): Promise<CaseResponse> {
-    const currentCase = await this.caseRepository.getCaseById(caseId, userId);
-    if (currentCase === null) {
-      throw new Error('Caso não encontrado');
-    }
+    const deletedCase = await this.caseRepository.runTransaction(async (repo) => {
+      await repo.lockCaseRow(caseId);
+      const currentCase = await repo.getCaseById(caseId, userId);
+      if (currentCase === null) {
+        throw new Error('Caso não encontrado');
+      }
 
-    const deletedCase = await this.caseRepository.deleteCase(currentCase.id);
+      return repo.deleteCase(currentCase.id);
+    });
+
     return this.toResponse(deletedCase, deletedCase.items.length);
   }
 
@@ -171,16 +195,25 @@ export class CaseService {
     userId: number,
   ): Promise<CaseResponse[]> {
     const normalizedIds = [...new Set(input.case_ids ?? [])];
+    const sortedIds = [...normalizedIds].sort((a, b) => a - b);
 
     const now = new Date();
     const cases = await this.caseRepository.runTransaction(async (repo) => {
-      const txCases = await repo.getCasesForBulkDeliver(userId, input.doctor_id ?? undefined, normalizedIds);
+      for (const id of sortedIds) {
+        await repo.lockCaseRow(id);
+      }
 
-      if (normalizedIds.length > 0) {
+      const txCases = await repo.getCasesForBulkDeliver(userId, input.doctor_id ?? undefined, sortedIds);
+
+      if (sortedIds.length > 0) {
         const foundIds = new Set(txCases.map((foundCase) => foundCase.id));
-        const missingIds = normalizedIds.filter((requestedId) => !foundIds.has(requestedId));
+        const missingIds = sortedIds.filter((requestedId) => !foundIds.has(requestedId));
         if (missingIds.length > 0) {
           throw new Error('Alguns pedidos selecionados não foram encontrados.');
+        }
+      } else {
+        for (const c of txCases) {
+          await repo.lockCaseRow(c.id);
         }
       }
 
@@ -237,19 +270,21 @@ export class CaseService {
     const now = new Date();
 
     const revertedCase = await this.caseRepository.runTransaction(async (repo) => {
+      await repo.lockCaseRow(caseId);
+
       const currentCase = await repo.getCaseById(caseId, userId);
       if (currentCase === null) {
         return null;
       }
       
       await this.assertActiveDoctor(currentCase.doctorId, userId);
-      await repo.lockCaseRow(currentCase.id);
 
       const previousStatus = getPreviousCaseStatus(currentCase.status);
 
       const foundCase = await repo.updateCase(currentCase.id, {
         status: previousStatus,
         deliveredAt: currentCase.status === 'delivered' ? null : currentCase.deliveredAt,
+        deliveredTotalValue: currentCase.status === 'delivered' ? null : currentCase.deliveredTotalValue,
         statusRevertReason: trimmedReason,
       });
 
@@ -277,6 +312,9 @@ export class CaseService {
     const doctor = await this.caseRepository.getDoctorById(doctorId, userId);
     if (doctor === null) {
       throw new Error('Doutor não encontrado');
+    }
+    if (doctor.deletedAt !== null) {
+      throw new Error('Doutor não encontrado ou foi excluído.');
     }
   }
 

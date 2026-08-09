@@ -449,6 +449,23 @@ export async function createCaseItem(caseId, data) {
 }
 
 /**
+ * Creates multiple items/services linked to a case.
+ *
+ * @param {number} caseId Unique case identifier.
+ * @param {object[]} data Array of item payloads compatible with the backend schema.
+ * @returns {Promise<object[]>} Created items.
+ */
+export async function createCaseItemsBulk(caseId, data) {
+  const response = await fetch(`${CASES_URL}/${caseId}/items/bulk`, {
+    method: "POST",
+    headers: buildHeaders(),
+    body: JSON.stringify(data),
+  });
+
+  return parseResponse(response);
+}
+
+/**
  * Updates an item/service linked to a case.
  *
  * @param {number} caseId Unique case identifier.

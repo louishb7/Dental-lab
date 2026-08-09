@@ -18,7 +18,7 @@ import {
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { DoctorService } from './doctor.service';
+import { DoctorHasActiveCasesError, DoctorService } from './doctor.service';
 import type { DoctorResponse } from './doctor.types';
 import { DoctorCreateRequestDto } from './dto/doctor-create-request.dto';
 import { DoctorListQueryDto } from './dto/doctor-list-query.dto';
@@ -98,7 +98,7 @@ export class DoctorController {
         throw error;
       }
 
-      if (error instanceof Error && error.message.includes('casos pendentes ou em andamento')) {
+      if (error instanceof DoctorHasActiveCasesError) {
         throw new ConflictException({
           detail: error.message,
         });

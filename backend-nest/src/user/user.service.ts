@@ -113,79 +113,70 @@ export class UserService {
       return null;
     }
 
-    const now = new Date();
-    const userAfterLockCleanup = await this.clearExpiredLock(user, now);
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT 1 FROM users WHERE id = ${user.id} FOR UPDATE`;
+      
+      const lockedUser = await tx.user.findUniqueOrThrow({ where: { id: user.id } });
+      const now = new Date();
+      let currentUser = lockedUser;
 
-    if (userAfterLockCleanup.lockedUntil !== null && userAfterLockCleanup.lockedUntil > now) {
-      throw new AccountLockedError(userAfterLockCleanup.lockedUntil);
-    }
-
-    if (!(await bcrypt.compare(password, userAfterLockCleanup.passwordHash))) {
-      const failedUser = await this.registerFailedLogin(userAfterLockCleanup, now);
-      if (failedUser.lockedUntil !== null) {
-        throw new AccountLockedError(failedUser.lockedUntil);
+      if (currentUser.lockedUntil !== null && currentUser.lockedUntil <= now) {
+        currentUser = await tx.user.update({
+          where: { id: currentUser.id },
+          data: {
+            lockedUntil: null,
+            failedLoginAttempts: 0,
+            lastFailedLoginAt: null,
+          },
+        });
       }
 
-      return null;
-    }
+      if (currentUser.lockedUntil !== null && currentUser.lockedUntil > now) {
+        throw new AccountLockedError(currentUser.lockedUntil);
+      }
 
-    return this.resetLoginSecurityState(userAfterLockCleanup.id, now);
+      if (!(await bcrypt.compare(password, currentUser.passwordHash))) {
+        const failedLoginAttempts = currentUser.failedLoginAttempts + 1;
+        const maxAttempts = this.config.getOrThrow<number>('LOGIN_MAX_ATTEMPTS');
+
+        if (failedLoginAttempts >= maxAttempts) {
+          const lockedUntil = new Date(
+            now.getTime() + this.config.getOrThrow<number>('LOGIN_LOCKOUT_MINUTES') * 60_000,
+          );
+          await tx.user.update({
+            where: { id: currentUser.id },
+            data: {
+              failedLoginAttempts: 0,
+              lastFailedLoginAt: now,
+              lockedUntil,
+            },
+          });
+          throw new AccountLockedError(lockedUntil);
+        }
+
+        await tx.user.update({
+          where: { id: currentUser.id },
+          data: {
+            failedLoginAttempts: { increment: 1 },
+            lastFailedLoginAt: now,
+          },
+        });
+        return null;
+      }
+
+      return tx.user.update({
+        where: { id: currentUser.id },
+        data: {
+          failedLoginAttempts: 0,
+          lockedUntil: null,
+          lastFailedLoginAt: null,
+          lastLoginAt: now,
+        },
+      });
+    });
   }
 
   private async hashPassword(password: string): Promise<string> {
     return bcrypt.hash(password, this.config.getOrThrow<number>('BCRYPT_ROUNDS'));
-  }
-
-  private async clearExpiredLock(user: User, now: Date): Promise<User> {
-    if (user.lockedUntil !== null && user.lockedUntil <= now) {
-      return this.prisma.user.update({
-        where: { id: user.id },
-        data: {
-          lockedUntil: null,
-          failedLoginAttempts: 0,
-          lastFailedLoginAt: null,
-        },
-      });
-    }
-
-    return user;
-  }
-
-  private async registerFailedLogin(user: User, now: Date): Promise<User> {
-    const failedLoginAttempts = user.failedLoginAttempts + 1;
-    const maxAttempts = this.config.getOrThrow<number>('LOGIN_MAX_ATTEMPTS');
-
-    if (failedLoginAttempts >= maxAttempts) {
-      return this.prisma.user.update({
-        where: { id: user.id },
-        data: {
-          failedLoginAttempts: 0,
-          lastFailedLoginAt: now,
-          lockedUntil: new Date(
-            now.getTime() + this.config.getOrThrow<number>('LOGIN_LOCKOUT_MINUTES') * 60_000,
-          ),
-        },
-      });
-    }
-
-    return this.prisma.user.update({
-      where: { id: user.id },
-      data: {
-        failedLoginAttempts: { increment: 1 },
-        lastFailedLoginAt: now,
-      },
-    });
-  }
-
-  private async resetLoginSecurityState(userId: number, now: Date): Promise<User> {
-    return this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        failedLoginAttempts: 0,
-        lockedUntil: null,
-        lastFailedLoginAt: null,
-        lastLoginAt: now,
-      },
-    });
   }
 }

@@ -1,15 +1,24 @@
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
+import { startOfMonth, addMonths, startOfDay } from 'date-fns';
+
 export interface MonthWindow {
   monthStart: Date;
   nextMonth: Date;
 }
 
-export function getUtcDayStart(now: Date): Date {
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+export function getAppDayStart(now: Date, timeZone: string): Date {
+  const zonedNow = toZonedTime(now, timeZone);
+  const startDay = startOfDay(zonedNow);
+  return fromZonedTime(startDay, timeZone);
 }
 
-export function getUtcMonthWindow(now: Date): MonthWindow {
-  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
-  const nextMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1, 0, 0, 0, 0));
+export function getAppMonthWindow(now: Date, timeZone: string): MonthWindow {
+  const zonedNow = toZonedTime(now, timeZone);
+  const monthStartZoned = startOfMonth(zonedNow);
+  const nextMonthZoned = startOfMonth(addMonths(zonedNow, 1));
 
-  return { monthStart, nextMonth };
+  return {
+    monthStart: fromZonedTime(monthStartZoned, timeZone),
+    nextMonth: fromZonedTime(nextMonthZoned, timeZone),
+  };
 }

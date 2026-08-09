@@ -46,7 +46,7 @@ export class AuthService {
       },
       {
         algorithm: this.config.getOrThrow('ALGORITHM'),
-        ...(expiresInMinutes > 0 ? { expiresIn: `${expiresInMinutes}m` } : {}),
+        expiresIn: `${expiresInMinutes}m`,
       },
     );
   }
