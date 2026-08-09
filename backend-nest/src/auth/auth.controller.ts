@@ -65,7 +65,7 @@ export class AuthController {
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ): Promise<AuthTokenResponse> {
-    const clientId = request.socket.remoteAddress ?? 'unknown';
+    const clientId = request.ip ?? 'unknown';
     const retryAfter = this.loginRateLimit.registerLoginAttempt(clientId);
     if (retryAfter !== null) {
       response.setHeader('Retry-After', String(retryAfter));

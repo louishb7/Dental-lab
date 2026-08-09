@@ -62,6 +62,7 @@ export class AuthRegisterRequestDto {
   username!: string;
 
   @IsString()
+  @MaxLength(72)
   @Validate(CadiskPasswordConstraint)
   password!: string;
 }

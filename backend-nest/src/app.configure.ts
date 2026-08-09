@@ -41,6 +41,9 @@ export function configureApp(app: INestApplication): void {
   const corsOriginRegex = config.get<string | null>('CORS_ORIGIN_REGEX') ?? null;
   const trustedHosts = config.get<string[]>('TRUSTED_HOSTS') ?? [];
 
+  const httpAdapter = app.getHttpAdapter();
+  httpAdapter.getInstance().set('trust proxy', 1);
+
   app.use(createSecurityHeadersMiddleware());
   app.use(createTrustedHostMiddleware(trustedHosts));
   app.enableCors({
@@ -57,7 +60,8 @@ export function configureApp(app: INestApplication): void {
         new UnprocessableEntityException({
           detail: flattenValidationErrors(errors),
         }),
-      forbidUnknownValues: false,
+      forbidNonWhitelisted: true,
+      forbidUnknownValues: true,
       transform: true,
       whitelist: true,
     }),

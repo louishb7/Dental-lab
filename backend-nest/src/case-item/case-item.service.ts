@@ -59,6 +59,7 @@ export class CaseItemService {
     }
 
     return this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT 1 FROM cases WHERE id = ${caseId} FOR UPDATE`;
       const createdItem = await tx.caseItem.create({ data });
       await this.recalculateServiceCaseTotal(tx, caseId);
       return this.toResponse(createdItem);
@@ -109,6 +110,7 @@ export class CaseItemService {
     }
 
     return this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT 1 FROM cases WHERE id = ${caseId} FOR UPDATE`;
       const updatedItem = await tx.caseItem.update({
         where: {
           id: currentItem.id,
@@ -140,6 +142,7 @@ export class CaseItemService {
     }
 
     await this.prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT 1 FROM cases WHERE id = ${caseId} FOR UPDATE`;
       await tx.caseItem.delete({
         where: {
           id: currentItem.id,

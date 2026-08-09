@@ -181,26 +181,26 @@ export class CaseHistoryService {
       return { deleted_count: 0 };
     }
 
-    const ownedCases = await this.prisma.dentalCase.findMany({
-      where: {
-        id: {
-          in: normalizedIds,
-        },
-        doctor: {
-          userId,
-        },
-      },
-      select: {
-        id: true,
-      },
-    });
-    const ownedIds = ownedCases.map((foundCase) => foundCase.id);
-
-    if (ownedIds.length === 0) {
-      return { deleted_count: 0 };
-    }
-
     const deletedCases = await this.prisma.$transaction(async (tx) => {
+      const ownedCases = await tx.dentalCase.findMany({
+        where: {
+          id: {
+            in: normalizedIds,
+          },
+          doctor: {
+            userId,
+          },
+        },
+        select: {
+          id: true,
+        },
+      });
+      const ownedIds = ownedCases.map((foundCase) => foundCase.id);
+
+      if (ownedIds.length === 0) {
+        return { count: 0 };
+      }
+
       await tx.caseHistoryEvent.deleteMany({
         where: {
           caseId: {

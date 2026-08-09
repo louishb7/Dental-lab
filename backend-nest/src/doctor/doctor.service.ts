@@ -5,11 +5,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import type { DoctorCreateRequestDto } from './dto/doctor-create-request.dto';
 import type { DoctorUpdateRequestDto } from './dto/doctor-update-request.dto';
 import { normalizeBrazilianPhone } from './doctor-phone';
+import { OwnershipBase } from '../common/ownership.base';
 import type { DoctorResponse } from './doctor.types';
 
 @Injectable()
-export class DoctorService {
-  constructor(private readonly prisma: PrismaService) {}
+export class DoctorService extends OwnershipBase {
+  constructor(private readonly prisma: PrismaService) {
+    super();
+  }
 
   async createDoctor(input: DoctorCreateRequestDto, userId: number): Promise<DoctorResponse> {
     const doctor = await this.prisma.doctor.create({
@@ -27,11 +30,7 @@ export class DoctorService {
 
   async getDoctorById(doctorId: number, userId: number): Promise<DoctorResponse | null> {
     const doctor = await this.prisma.doctor.findFirst({
-      where: {
-        id: doctorId,
-        userId,
-        deletedAt: null,
-      },
+      where: this.ownDoctor(doctorId, userId),
     });
 
     if (doctor === null) {
@@ -46,10 +45,7 @@ export class DoctorService {
     const doctors = await this.prisma.doctor.findMany({
       skip,
       take: limit,
-      where: {
-        userId,
-        deletedAt: null,
-      },
+      where: this.ownDoctors(userId),
     });
     const counts = await this.caseCountsByDoctorIds(doctors.map((doctor) => doctor.id));
 
@@ -62,11 +58,7 @@ export class DoctorService {
     userId: number,
   ): Promise<DoctorResponse | null> {
     const currentDoctor = await this.prisma.doctor.findFirst({
-      where: {
-        id: doctorId,
-        userId,
-        deletedAt: null,
-      },
+      where: this.ownDoctor(doctorId, userId),
     });
 
     if (currentDoctor === null) {
@@ -84,11 +76,7 @@ export class DoctorService {
 
   async deleteDoctor(doctorId: number, userId: number): Promise<boolean> {
     const doctor = await this.prisma.doctor.findFirst({
-      where: {
-        id: doctorId,
-        userId,
-        deletedAt: null,
-      },
+      where: this.ownDoctor(doctorId, userId),
     });
 
     if (doctor === null) {

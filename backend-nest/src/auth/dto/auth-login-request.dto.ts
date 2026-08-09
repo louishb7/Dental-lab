@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsOptional, IsString, MinLength } from 'class-validator';
+import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class AuthLoginRequestDto {
   @IsOptional()
@@ -21,6 +21,7 @@ export class AuthLoginRequestDto {
   email?: string;
 
   @IsString()
+  @MaxLength(72)
   password!: string;
 
   getIdentifier(): string | null {
