@@ -6,7 +6,7 @@ import {
 import { getLocalDateKey } from "../../utils/formatters.js";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Badge } from "../ui/badge.jsx";
-import { Button } from "../ui/button.jsx";
+import Button from "../ui/Button.jsx";
 import {
   Card,
   CardContent,
