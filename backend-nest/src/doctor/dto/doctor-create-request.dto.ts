@@ -1,4 +1,4 @@
-import { IsOptional, IsString, Validate } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, MinLength, Validate } from 'class-validator';
 import { type ValidatorConstraintInterface, ValidatorConstraint } from 'class-validator';
 
 import { isValidBrazilianPhone } from '../doctor-phone';
@@ -20,6 +20,8 @@ export class CadiskBrazilianPhoneConstraint implements ValidatorConstraintInterf
 
 export class DoctorCreateRequestDto {
   @IsString()
+  @IsNotEmpty()
+  @MinLength(1)
   name!: string;
 
   @IsOptional()

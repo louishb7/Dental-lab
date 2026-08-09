@@ -171,7 +171,7 @@ export class UserService {
     return this.prisma.user.update({
       where: { id: user.id },
       data: {
-        failedLoginAttempts,
+        failedLoginAttempts: { increment: 1 },
         lastFailedLoginAt: now,
       },
     });

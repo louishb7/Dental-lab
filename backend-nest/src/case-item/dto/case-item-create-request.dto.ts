@@ -1,5 +1,5 @@
 import { Transform, Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString, Validate } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString, Min, MinLength, Validate } from 'class-validator';
 
 import { CaseItemDecimalValueConstraint } from './case-item-decimal.validator';
 import { CaseItemQuantityConstraint } from './case-item-quantity.validator';
@@ -7,16 +7,21 @@ import { CaseItemToothConstraint } from './case-item-tooth.validator';
 
 export class CaseItemCreateRequestDto {
   @IsString()
+  @IsNotEmpty()
+  @MinLength(1)
   @Validate(CaseItemToothConstraint)
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   tooth!: string;
 
   @IsString()
+  @IsNotEmpty()
+  @MinLength(1)
   service_type!: string;
 
   @IsOptional()
   @Type(() => Number)
   @IsInt()
+  @Min(1)
   @Validate(CaseItemQuantityConstraint)
   quantity?: number;
 

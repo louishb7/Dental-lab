@@ -8,7 +8,23 @@ export class LoginRateLimitService {
   private readonly attemptsByClientId = new Map<string, number[]>();
   private nowMs: () => number = Date.now;
 
-  constructor(private readonly config: ConfigService<EnvironmentVariables>) {}
+  constructor(private readonly config: ConfigService<EnvironmentVariables>) {
+    setInterval(() => {
+      const now = this.nowMs() / 1000;
+      // Use config value or default to 15 minutes (900 seconds)
+      const windowSeconds = this.config.get<number>('LOGIN_RATE_LIMIT_WINDOW_SECONDS') ?? 900;
+      const cutoff = now - windowSeconds;
+      
+      for (const [clientId, attempts] of this.attemptsByClientId.entries()) {
+        const currentAttempts = attempts.filter((attempt) => attempt >= cutoff);
+        if (currentAttempts.length === 0) {
+          this.attemptsByClientId.delete(clientId);
+        } else {
+          this.attemptsByClientId.set(clientId, currentAttempts);
+        }
+      }
+    }, 15 * 60 * 1000).unref();
+  }
 
   setClockForTesting(nowMs: () => number): void {
     this.nowMs = nowMs;

@@ -231,24 +231,12 @@ export function DataProvider({ children }) {
     setBusy(true);
     setMessage(null);
     try {
-      const createdCase = await createCase(buildCasePayload(selectedDoctorId, caseForm));
-      window.localStorage.setItem(LAST_CASE_DOCTOR_STORAGE_KEY, String(selectedDoctorId));
-
+      const payload = buildCasePayload(selectedDoctorId, caseForm);
       if (automaticItems.length) {
-        try {
-          await Promise.all(automaticItems.map((item) => createCaseItem(createdCase.id, item)));
-        } catch (error) {
-          const refreshed = await revealCaseInCases(createdCase.id);
-          if (!refreshed) return;
-          setCaseForm(EMPTY_CASE);
-          setShowCaseModal(false);
-          setMessage({
-            type: "error",
-            text: `Caso criado, mas houve falha ao lançar os dentes automaticamente: ${error.message}`,
-          });
-          return;
-        }
+        payload.items = automaticItems;
       }
+      const createdCase = await createCase(payload);
+      window.localStorage.setItem(LAST_CASE_DOCTOR_STORAGE_KEY, String(selectedDoctorId));
 
       const refreshed = await revealCaseInCases(createdCase.id);
       if (!refreshed) return;

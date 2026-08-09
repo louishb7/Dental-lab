@@ -21,6 +21,7 @@ export interface CaseResponse {
   priority: string;
   status: string;
   total_value: Prisma.Decimal | null;
+  delivered_total_value: Prisma.Decimal | null;
   notes: string | null;
   created_at: Date;
   delivered_at: Date | null;

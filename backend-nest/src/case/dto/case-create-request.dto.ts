@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsDate, IsIn, IsInt, IsOptional, IsString, Validate } from 'class-validator';
+import { IsArray, IsDate, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Min, MinLength, Validate, ValidateNested } from 'class-validator';
 
 import {
   CASE_PRIORITIES,
@@ -10,12 +10,16 @@ import {
   type PricingMode,
 } from '../case-rules';
 import { CadiskDecimalValueConstraint } from './case-decimal.validator';
+import { CaseItemCreateRequestDto } from '../../case-item/dto/case-item-create-request.dto';
 
 export class CaseCreateRequestDto {
   @IsInt()
+  @Min(1)
   doctor_id!: number;
 
   @IsString()
+  @IsNotEmpty()
+  @MinLength(1)
   patient_ref!: string;
 
   @IsOptional()
@@ -42,4 +46,10 @@ export class CaseCreateRequestDto {
   @IsOptional()
   @IsString()
   notes?: string | null;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CaseItemCreateRequestDto)
+  items?: CaseItemCreateRequestDto[];
 }

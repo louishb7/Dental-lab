@@ -9,10 +9,10 @@ describe('case item rules', () => {
     expect(normalizeTooth('protocolo total')).toBe('protocolo total');
     expect(() => normalizeTooth('')).toThrow('O campo tooth não pode ser vazio');
     expect(() => normalizeTooth('10')).toThrow(
-      'Quando numérico, o campo tooth deve estar entre 11 e 48',
+      'Número do dente inválido',
     );
     expect(() => normalizeTooth('49')).toThrow(
-      'Quando numérico, o campo tooth deve estar entre 11 e 48',
+      'Número do dente inválido',
     );
   });
 

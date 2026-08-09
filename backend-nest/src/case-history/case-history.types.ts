@@ -18,6 +18,7 @@ export interface CaseHistoryListItem {
   pricing_mode: string;
   status: string;
   total_value: Prisma.Decimal | null;
+  delivered_total_value: Prisma.Decimal | null;
   created_at: Date;
   delivered_at: Date | null;
   deleted_at: Date | null;

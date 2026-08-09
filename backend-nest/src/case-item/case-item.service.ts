@@ -9,7 +9,7 @@ import type { CaseItemResponse } from './case-item.types';
 import type { CaseItemCreateRequestDto } from './dto/case-item-create-request.dto';
 import type { CaseItemUpdateRequestDto } from './dto/case-item-update-request.dto';
 
-type ActiveCase = Pick<DentalCase, 'id' | 'pricingMode'>;
+type ActiveCase = Pick<DentalCase, 'id' | 'pricingMode' | 'status'>;
 
 @Injectable()
 export class CaseItemService {
@@ -36,6 +36,9 @@ export class CaseItemService {
     userId: number,
   ): Promise<CaseItemResponse> {
     const currentCase = await this.assertActiveCase(caseId, userId);
+    if (currentCase.status === 'delivered') {
+      throw new Error('Não é possível adicionar itens a um caso entregue.');
+    }
     const unitValue = normalizeDecimalValue(input.unit_value, 'Valor unitário inválido');
 
     if (currentCase.pricingMode === 'services' && unitValue === null) {
@@ -89,6 +92,9 @@ export class CaseItemService {
     userId: number,
   ): Promise<CaseItemResponse | null> {
     const currentCase = await this.assertActiveCase(caseId, userId);
+    if (currentCase.status === 'delivered') {
+      throw new Error('Não é possível modificar itens de um caso entregue.');
+    }
     const currentItem = await this.prisma.caseItem.findFirst({
       where: this.itemOwnershipWhere(caseId, itemId, userId),
     });
@@ -124,6 +130,9 @@ export class CaseItemService {
 
   async deleteCaseItem(caseId: number, itemId: number, userId: number): Promise<boolean> {
     const currentCase = await this.assertActiveCase(caseId, userId);
+    if (currentCase.status === 'delivered') {
+      throw new Error('Não é possível excluir itens de um caso entregue.');
+    }
     const currentItem = await this.prisma.caseItem.findFirst({
       where: this.itemOwnershipWhere(caseId, itemId, userId),
     });
@@ -165,6 +174,7 @@ export class CaseItemService {
       select: {
         id: true,
         pricingMode: true,
+        status: true,
       },
     });
 

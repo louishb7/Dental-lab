@@ -8,16 +8,16 @@ datasource db {
 }
 
 model User {
-  id                  Int       @id @default(autoincrement())
-  email               String    @db.VarChar(255)
-  username            String    @db.VarChar(80)
-  passwordHash        String    @map("password_hash") @db.VarChar(255)
-  failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
-  lockedUntil         DateTime? @map("locked_until") @db.Timestamptz(6)
-  lastFailedLoginAt   DateTime? @map("last_failed_login_at") @db.Timestamptz(6)
-  lastLoginAt         DateTime? @map("last_login_at") @db.Timestamptz(6)
-  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt           DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id                  Int                @id @default(autoincrement())
+  email               String             @db.VarChar(255)
+  username            String             @db.VarChar(80)
+  passwordHash        String             @map("password_hash") @db.VarChar(255)
+  failedLoginAttempts Int                @default(0) @map("failed_login_attempts")
+  lockedUntil         DateTime?          @map("locked_until") @db.Timestamptz(6)
+  lastFailedLoginAt   DateTime?          @map("last_failed_login_at") @db.Timestamptz(6)
+  lastLoginAt         DateTime?          @map("last_login_at") @db.Timestamptz(6)
+  createdAt           DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   doctors             Doctor[]
   caseHistoryEvents   CaseHistoryEvent[]
 
@@ -45,22 +45,23 @@ model Doctor {
 }
 
 model DentalCase {
-  id                 Int        @id @default(autoincrement())
-  doctorId           Int        @map("doctor_id")
-  patientRef         String     @map("patient_ref") @db.VarChar(150)
-  pricingMode        String     @default("services") @map("pricing_mode") @db.VarChar(20)
-  deadline           DateTime?  @db.Timestamptz(6)
-  priority           String     @default("normal") @db.VarChar(20)
-  status             String     @default("pending") @db.VarChar(20)
-  totalValue         Decimal?   @map("total_value") @db.Decimal(10, 2)
-  notes              String?    @db.Text
-  createdAt          DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
-  deliveredAt        DateTime?  @map("delivered_at") @db.Timestamptz(6)
-  deletedAt          DateTime?  @map("deleted_at") @db.Timestamptz(6)
-  statusRevertReason String?    @map("status_revert_reason") @db.Text
-  doctor             Doctor     @relation(fields: [doctorId], references: [id], onDelete: Restrict, map: "cases_doctor_id_fkey")
-  items              CaseItem[]
-  historyEvents      CaseHistoryEvent[]
+  id                  Int                @id @default(autoincrement())
+  doctorId            Int                @map("doctor_id")
+  patientRef          String             @map("patient_ref") @db.VarChar(150)
+  pricingMode         String             @default("services") @map("pricing_mode") @db.VarChar(20)
+  deadline            DateTime?          @db.Timestamptz(6)
+  priority            String             @default("normal") @db.VarChar(20)
+  status              String             @default("pending") @db.VarChar(20)
+  totalValue          Decimal?           @map("total_value") @db.Decimal(10, 2)
+  deliveredTotalValue Decimal?           @map("delivered_total_value") @db.Decimal(10, 2)
+  notes               String?            @db.Text
+  createdAt           DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  deliveredAt         DateTime?          @map("delivered_at") @db.Timestamptz(6)
+  deletedAt           DateTime?          @map("deleted_at") @db.Timestamptz(6)
+  statusRevertReason  String?            @map("status_revert_reason") @db.Text
+  doctor              Doctor             @relation(fields: [doctorId], references: [id], onDelete: Restrict, map: "cases_doctor_id_fkey")
+  items               CaseItem[]
+  historyEvents       CaseHistoryEvent[]
 
   @@index([doctorId], map: "ix_cases_doctor_id")
   @@index([patientRef], map: "ix_cases_patient_ref")

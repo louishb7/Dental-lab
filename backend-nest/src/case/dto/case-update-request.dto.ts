@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsDate, IsIn, IsInt, IsOptional, IsString, Validate } from 'class-validator';
+import { IsDate, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Min, MinLength, Validate } from 'class-validator';
 
 import { CASE_PRIORITIES, CASE_STATUSES, type CasePriority, type CaseStatus } from '../case-rules';
 import { CadiskDecimalValueConstraint } from './case-decimal.validator';
@@ -7,10 +7,13 @@ import { CadiskDecimalValueConstraint } from './case-decimal.validator';
 export class CaseUpdateRequestDto {
   @IsOptional()
   @IsInt()
+  @Min(1)
   doctor_id?: number | null;
 
   @IsOptional()
   @IsString()
+  @IsNotEmpty()
+  @MinLength(1)
   patient_ref?: string | null;
 
   @IsOptional()

@@ -89,6 +89,7 @@ export class CaseHistoryService {
       priority: foundCase.priority,
       status: foundCase.status,
       total_value: foundCase.totalValue,
+      delivered_total_value: foundCase.deliveredTotalValue,
       notes: foundCase.notes,
       created_at: foundCase.createdAt,
       delivered_at: foundCase.deliveredAt,
@@ -154,6 +155,9 @@ export class CaseHistoryService {
         doctor: {
           userId,
         },
+        deletedAt: {
+          not: null,
+        },
       },
       select: {
         id: true,
@@ -189,6 +193,9 @@ export class CaseHistoryService {
           },
           doctor: {
             userId,
+          },
+          deletedAt: {
+            not: null,
           },
         },
         select: {
@@ -294,6 +301,7 @@ export class CaseHistoryService {
       pricing_mode: foundCase.pricingMode,
       status: foundCase.status,
       total_value: foundCase.totalValue,
+      delivered_total_value: foundCase.deliveredTotalValue,
       created_at: foundCase.createdAt,
       delivered_at: foundCase.deliveredAt,
       deleted_at: foundCase.deletedAt,

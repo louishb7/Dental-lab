@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test, type TestingModule } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import { CaseService } from './case.service';
 import { CaseRepository } from './case.repository';
@@ -11,8 +11,9 @@ const mockCaseRepository = {
   updateCase: jest.fn(),
   deleteCase: jest.fn(),
   getCasesForBulkDeliver: jest.fn(),
-  sumCaseItemValues: jest.fn(),
+  lockCaseRow: jest.fn(),
   getDoctorById: jest.fn(),
+  sumCaseItemValues: jest.fn(),
   createHistoryEvent: jest.fn(),
 };
 
@@ -160,6 +161,7 @@ describe('CaseService', () => {
         items: [],
       };
       repo.getCaseById.mockResolvedValue(currentCase);
+      repo.getDoctorById.mockResolvedValue({ id: currentCase.doctorId, userId: 1 });
       repo.updateCase.mockResolvedValue({ ...currentCase, status: 'completed' });
 
       const result = await service.revertCaseStatus(1, 'Reason here', 1);

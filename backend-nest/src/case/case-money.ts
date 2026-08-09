@@ -25,13 +25,17 @@ export function normalizeDecimalValue(value: unknown, errorMessage: string): Pri
     }
 
     try {
-      return new Prisma.Decimal(normalized);
+      const parsed = new Prisma.Decimal(normalized);
+      if (parsed.greaterThan('99999999.99')) {
+        throw new Error('Valor excede o limite (99999999.99)');
+      }
+      return parsed;
     } catch (error) {
       throw new Error(errorMessage, { cause: error });
     }
   }
 
-  return value as Prisma.Decimal;
+  throw new Error(errorMessage);
 }
 
 export function isValidDecimalValue(value: unknown): boolean {

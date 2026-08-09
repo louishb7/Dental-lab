@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, type CaseItem, type DentalCase } from '@prisma/client';
+import { Prisma, type CaseItem, type DentalCase, type Doctor } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { OwnershipBase } from '../common/ownership.base';
 
@@ -7,15 +7,16 @@ export type CaseWithItems = DentalCase & { items: CaseItem[] };
 
 export interface ICaseRepository {
   runTransaction<T>(fn: (repo: ICaseRepository) => Promise<T>): Promise<T>;
-  createCase(data: any): Promise<CaseWithItems>;
-  createHistoryEvent(data: any): Promise<void>;
+  createCase(data: Prisma.DentalCaseUncheckedCreateInput): Promise<CaseWithItems>;
+  createHistoryEvent(data: Prisma.CaseHistoryEventUncheckedCreateInput): Promise<void>;
   getCaseById(caseId: number, userId: number): Promise<CaseWithItems | null>;
+  lockCaseRow(caseId: number): Promise<void>;
   getAllCases(skip: number | undefined, limit: number | undefined, userId: number, doctorId?: number, status?: string): Promise<CaseWithItems[]>;
-  updateCase(id: number, data: any): Promise<CaseWithItems>;
+  updateCase(id: number, data: Prisma.DentalCaseUpdateInput): Promise<CaseWithItems>;
   deleteCase(id: number): Promise<CaseWithItems>;
   getCasesForBulkDeliver(userId: number, doctorId?: number, caseIds?: number[]): Promise<CaseWithItems[]>;
   sumCaseItemValues(caseId: number): Promise<Prisma.Decimal | null>;
-  getDoctorById(doctorId: number, userId: number): Promise<any | null>;
+  getDoctorById(doctorId: number, userId: number): Promise<Doctor | null>;
 }
 
 @Injectable()
@@ -41,14 +42,14 @@ export class CaseRepository extends OwnershipBase implements ICaseRepository {
     });
   }
 
-  async createCase(data: any): Promise<CaseWithItems> {
+  async createCase(data: Prisma.DentalCaseUncheckedCreateInput): Promise<CaseWithItems> {
     return this.client.dentalCase.create({
       data,
       include: { items: true },
     });
   }
 
-  async createHistoryEvent(data: any): Promise<void> {
+  async createHistoryEvent(data: Prisma.CaseHistoryEventUncheckedCreateInput): Promise<void> {
     await this.client.caseHistoryEvent.create({ data });
   }
 
@@ -59,6 +60,10 @@ export class CaseRepository extends OwnershipBase implements ICaseRepository {
         items: { orderBy: { id: 'desc' } },
       },
     });
+  }
+
+  async lockCaseRow(caseId: number): Promise<void> {
+    await this.client.$executeRaw`SELECT 1 FROM cases WHERE id = ${caseId} FOR UPDATE`;
   }
 
   async getAllCases(skip: number | undefined, limit: number | undefined, userId: number, doctorId?: number, status?: string): Promise<CaseWithItems[]> {
@@ -77,7 +82,7 @@ export class CaseRepository extends OwnershipBase implements ICaseRepository {
     });
   }
 
-  async updateCase(id: number, data: any): Promise<CaseWithItems> {
+  async updateCase(id: number, data: Prisma.DentalCaseUpdateInput): Promise<CaseWithItems> {
     return this.client.dentalCase.update({
       where: { id },
       data,
@@ -120,7 +125,7 @@ export class CaseRepository extends OwnershipBase implements ICaseRepository {
     return rows[0]?.total ?? null;
   }
 
-  async getDoctorById(doctorId: number, userId: number): Promise<any | null> {
+  async getDoctorById(doctorId: number, userId: number): Promise<Doctor | null> {
     return this.client.doctor.findFirst({
       where: this.ownDoctor(doctorId, userId),
     });

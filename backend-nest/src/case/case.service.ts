@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import type { Prisma, CaseItem } from '@prisma/client';
 import { normalizeDecimalValue } from './case-money';
 import {
   assertLinearStatusTransition,
@@ -39,6 +40,17 @@ export class CaseService {
         status: 'pending',
         totalValue: pricingMode === 'fixed' ? totalValue : null,
         notes: input.notes ?? null,
+        items: input.items ? {
+          create: input.items.map(item => ({
+            tooth: item.tooth ?? null,
+            serviceType: item.service_type,
+            quantity: item.quantity ?? 1,
+            unitValue: normalizeDecimalValue(item.unit_value, 'Valor unitário inválido'),
+            material: item.material ?? null,
+            color: item.color ?? null,
+            notes: item.notes ?? null,
+          }))
+        } : undefined,
       });
 
       await repo.createHistoryEvent({
@@ -90,6 +102,15 @@ export class CaseService {
       const currentCase = await repo.getCaseById(caseId, userId);
       if (currentCase === null) {
         return null;
+      }
+      
+      await repo.lockCaseRow(currentCase.id);
+      
+      if (currentCase.status === 'delivered') {
+        const isEditingFinancials = input.total_value !== undefined;
+        if (isEditingFinancials) {
+          throw new Error('Não é possível alterar dados financeiros de um caso já entregue.');
+        }
       }
 
       const totalValueProvided = input.total_value !== undefined;
@@ -168,9 +189,14 @@ export class CaseService {
       }
 
       for (const foundCase of txCases) {
+        if (foundCase.status !== 'delivered') {
+          assertLinearStatusTransition(foundCase.status, 'delivered');
+        }
+
         const updatedCase = await repo.updateCase(foundCase.id, {
           status: 'delivered',
           deliveredAt: foundCase.deliveredAt ?? now,
+          deliveredTotalValue: foundCase.totalValue,
         });
 
         if (foundCase.status !== 'delivered') {
@@ -215,6 +241,9 @@ export class CaseService {
       if (currentCase === null) {
         return null;
       }
+      
+      await this.assertActiveDoctor(currentCase.doctorId, userId);
+      await repo.lockCaseRow(currentCase.id);
 
       const previousStatus = getPreviousCaseStatus(currentCase.status);
 
@@ -256,8 +285,8 @@ export class CaseService {
     input: CaseUpdateRequestDto,
     pricing: PricingOptions,
     repo: ICaseRepository,
-  ): Promise<any> {
-    const data: any = {};
+  ): Promise<Prisma.DentalCaseUpdateInput> {
+    const data: Prisma.DentalCaseUpdateInput = {};
 
     if (input.doctor_id !== undefined && input.doctor_id !== null) {
       data.doctor = { connect: { id: input.doctor_id } };
@@ -285,6 +314,7 @@ export class CaseService {
       data.status = input.status;
       if (input.status === 'delivered' && currentCase.deliveredAt === null) {
         data.deliveredAt = new Date();
+        data.deliveredTotalValue = data.totalValue ?? currentCase.totalValue;
       }
     } else if (
       currentCase.status !== 'pending' &&
@@ -307,17 +337,18 @@ export class CaseService {
       priority: foundCase.priority,
       status: foundCase.status,
       total_value: foundCase.totalValue,
+      delivered_total_value: foundCase.deliveredTotalValue,
       notes: foundCase.notes,
       created_at: foundCase.createdAt,
       delivered_at: foundCase.deliveredAt,
       deleted_at: foundCase.deletedAt,
       status_revert_reason: foundCase.statusRevertReason,
       items_count: itemsCount,
-      items: foundCase.items.map((item: any) => this.toItemResponse(item)),
+      items: foundCase.items.map((item: CaseItem) => this.toItemResponse(item)),
     };
   }
 
-  private toItemResponse(item: any): CaseItemResponse {
+  private toItemResponse(item: CaseItem): CaseItemResponse {
     return {
       id: item.id,
       case_id: item.caseId,

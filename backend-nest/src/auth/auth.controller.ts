@@ -12,7 +12,7 @@ import {
   UnprocessableEntityException,
   UseGuards,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+
 import type { Request, Response } from 'express';
 
 import { AccountLockedError } from '../user/account-locked.error';
@@ -43,15 +43,6 @@ export class AuthController {
         throw new ConflictException({
           detail: error.message,
         });
-      }
-
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        throw new HttpException(
-          {
-            detail: 'Banco de dados indisponível para cadastrar usuário',
-          },
-          503,
-        );
       }
 
       throw error;
@@ -117,15 +108,6 @@ export class AuthController {
 
       if (error instanceof UnauthorizedException) {
         throw error;
-      }
-
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        throw new HttpException(
-          {
-            detail: 'Banco de dados indisponível para autenticar usuário',
-          },
-          503,
-        );
       }
 
       throw error;

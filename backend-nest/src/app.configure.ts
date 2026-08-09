@@ -7,6 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import type { ValidationError } from 'class-validator';
 import type { NextFunction, Request, Response } from 'express';
 
+import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 import type { EnvironmentVariables } from './config/app.config';
 
 function flattenValidationErrors(errors: ValidationError[]): Array<{ msg: string; loc: string[] }> {
@@ -53,6 +54,8 @@ export function configureApp(app: INestApplication): void {
     optionsSuccessStatus: 200,
     origin: createCorsOriginValidator(corsOrigins, corsOriginRegex),
   });
+
+  app.useGlobalFilters(new PrismaExceptionFilter());
 
   app.useGlobalPipes(
     new ValidationPipe({
