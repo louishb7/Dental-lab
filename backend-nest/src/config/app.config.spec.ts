@@ -1,4 +1,4 @@
-import { validateEnvironment } from './app.config';
+import { DEFAULT_LOCAL_CORS_ORIGINS, validateEnvironment } from './app.config';
 import { assertSafeTestDatabaseUrl } from './test-database';
 
 const VALID_ENV = {
@@ -13,12 +13,13 @@ const VALID_ENV = {
 };
 
 describe('validateEnvironment', () => {
-  it('normalizes valid required environment variables', () => {
+  it('normalizes the minimal required environment variables', () => {
     expect(validateEnvironment(VALID_ENV)).toEqual({
       NODE_ENV: 'test',
       PORT: 3001,
       DATABASE_URL: VALID_ENV.DATABASE_URL,
       SECRET_KEY: VALID_ENV.SECRET_KEY,
+<<<<<<< HEAD
       ALGORITHM: 'HS256',
       ACCESS_TOKEN_EXPIRE_MINUTES: 1440,
       BCRYPT_ROUNDS: 12,
@@ -36,7 +37,36 @@ describe('validateEnvironment', () => {
       TRUSTED_HOSTS: ['localhost', '127.0.0.1', 'testserver'],
       APP_TIME_ZONE: 'America/Recife',
       APP_TRUST_PROXY: 1,
+=======
+      CORS_ORIGINS: DEFAULT_LOCAL_CORS_ORIGINS,
+>>>>>>> 3853a78 (refactor: streamline backend architecture and production deployment)
     });
+  });
+
+  it('accepts a minimal production environment', () => {
+    expect(
+      validateEnvironment({
+        NODE_ENV: 'production',
+        DATABASE_URL: VALID_ENV.DATABASE_URL,
+        SECRET_KEY: VALID_ENV.SECRET_KEY,
+        CORS_ORIGINS: 'https://example.vercel.app',
+      }),
+    ).toEqual({
+      NODE_ENV: 'production',
+      PORT: 3001,
+      DATABASE_URL: VALID_ENV.DATABASE_URL,
+      SECRET_KEY: VALID_ENV.SECRET_KEY,
+      CORS_ORIGINS: ['https://example.vercel.app'],
+    });
+  });
+
+  it('normalizes CORS origins to protocol, host and port only', () => {
+    expect(
+      validateEnvironment({
+        ...VALID_ENV,
+        CORS_ORIGINS: 'https://cadisk.vercel.app/,http://localhost:5173/',
+      }).CORS_ORIGINS,
+    ).toEqual(['https://cadisk.vercel.app', 'http://localhost:5173']);
   });
 
   it('fails early when DATABASE_URL is missing', () => {
@@ -69,6 +99,7 @@ describe('validateEnvironment', () => {
     );
   });
 
+<<<<<<< HEAD
   it('allows lower bcrypt rounds only in test', () => {
     expect(validateEnvironment({ ...VALID_ENV, BCRYPT_ROUNDS: '4' }).BCRYPT_ROUNDS).toBe(4);
 
@@ -105,58 +136,48 @@ describe('validateEnvironment', () => {
   });
 
   it('rejects wildcard CORS origins and trusted hosts', () => {
+=======
+  it('rejects wildcard CORS origins', () => {
+>>>>>>> 3853a78 (refactor: streamline backend architecture and production deployment)
     expect(() => validateEnvironment({ ...VALID_ENV, CORS_ORIGINS: '*' })).toThrow(
       'CORS_ORIGINS cannot contain wildcard origins.',
     );
-    expect(() => validateEnvironment({ ...VALID_ENV, TRUSTED_HOSTS: '*.example.com' })).toThrow(
-      'TRUSTED_HOSTS cannot contain wildcards.',
-    );
   });
 
-  it('requires explicit secure production CORS origins and trusted hosts', () => {
+  it('rejects CORS origins with paths, query strings or fragments', () => {
+    expect(() =>
+      validateEnvironment({ ...VALID_ENV, CORS_ORIGINS: 'https://example.com/api' }),
+    ).toThrow('Invalid CORS origin: https://example.com/api');
+    expect(() =>
+      validateEnvironment({ ...VALID_ENV, CORS_ORIGINS: 'https://example.com?from=vercel' }),
+    ).toThrow('Invalid CORS origin: https://example.com?from=vercel');
+    expect(() =>
+      validateEnvironment({ ...VALID_ENV, CORS_ORIGINS: 'https://example.com#app' }),
+    ).toThrow('Invalid CORS origin: https://example.com#app');
+  });
+
+  it('requires explicit secure production CORS origins', () => {
     const productionEnv = {
       ...VALID_ENV,
       NODE_ENV: 'production',
-      BCRYPT_ROUNDS: '12',
       CORS_ORIGINS: 'https://app.example.com',
-      TRUSTED_HOSTS: 'api.example.com',
     };
 
-    expect(validateEnvironment(productionEnv)).toMatchObject({
-      NODE_ENV: 'production',
-      CORS_ORIGINS: ['https://app.example.com'],
-      CORS_ORIGIN_REGEX: null,
-      TRUSTED_HOSTS: ['api.example.com'],
-    });
+    expect(validateEnvironment(productionEnv).CORS_ORIGINS).toEqual(['https://app.example.com']);
     expect(() =>
       validateEnvironment({
         NODE_ENV: productionEnv.NODE_ENV,
         PORT: productionEnv.PORT,
         DATABASE_URL: productionEnv.DATABASE_URL,
         SECRET_KEY: productionEnv.SECRET_KEY,
-        BCRYPT_ROUNDS: productionEnv.BCRYPT_ROUNDS,
-        TRUSTED_HOSTS: productionEnv.TRUSTED_HOSTS,
       }),
     ).toThrow('CORS_ORIGINS must be explicitly defined in production.');
     expect(() =>
-      validateEnvironment({
-        NODE_ENV: productionEnv.NODE_ENV,
-        PORT: productionEnv.PORT,
-        DATABASE_URL: productionEnv.DATABASE_URL,
-        SECRET_KEY: productionEnv.SECRET_KEY,
-        BCRYPT_ROUNDS: productionEnv.BCRYPT_ROUNDS,
-        CORS_ORIGINS: productionEnv.CORS_ORIGINS,
-      }),
-    ).toThrow('TRUSTED_HOSTS must be explicitly defined in production.');
-    expect(() =>
       validateEnvironment({ ...productionEnv, CORS_ORIGINS: 'http://localhost:5173' }),
     ).toThrow('Production CORS_ORIGINS must use https origins.');
-    expect(() => validateEnvironment({ ...productionEnv, TRUSTED_HOSTS: 'localhost' })).toThrow(
-      'Production TRUSTED_HOSTS must not contain local/test hosts.',
-    );
     expect(() =>
-      validateEnvironment({ ...productionEnv, CORS_ORIGIN_REGEX: String.raw`^https://.*$` }),
-    ).toThrow('CORS_ORIGIN_REGEX must not be used in production.');
+      validateEnvironment({ ...productionEnv, CORS_ORIGINS: 'https://localhost:5173' }),
+    ).toThrow('Production CORS_ORIGINS must not contain local origins.');
   });
 });
 

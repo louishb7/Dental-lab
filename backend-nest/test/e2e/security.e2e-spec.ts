@@ -1,4 +1,5 @@
 import type { INestApplication } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 
@@ -74,14 +75,67 @@ describe('security e2e', () => {
       });
   });
 
-  it('rejects untrusted hosts', async () => {
+  it('accepts ordinary requests regardless of Host header', async () => {
     await request(app.getHttpServer())
       .get('/health')
       .set('Host', 'evil.example')
-      .expect(400)
+      .expect(200)
       .expect((response) => {
-        expect(response.text).toBe('Invalid host header');
+        expect(response.body).toEqual({
+          status: 'ok',
+          service: 'cadisk-nest',
+        });
       });
+  });
+
+  it('starts with minimal production configuration and keeps CORS explicit', async () => {
+    const databaseUrl = assertSafeTestDatabaseUrl(process.env.DATABASE_URL);
+    const configValues = {
+      CORS_ORIGINS: ['https://example.vercel.app'],
+      DATABASE_URL: databaseUrl,
+      NODE_ENV: 'production',
+      PORT: 3001,
+      SECRET_KEY: 'test-secret-key-for-cadisk-nest-auth',
+    };
+    const configService = {
+      get: <T>(key: keyof typeof configValues): T | undefined => configValues[key] as T,
+      getOrThrow: <T>(key: keyof typeof configValues): T => configValues[key] as T,
+    };
+
+    let productionApp: INestApplication | null = null;
+
+    try {
+      const moduleRef = await Test.createTestingModule({
+        imports: [AppModule],
+      })
+        .overrideProvider(ConfigService)
+        .useValue(configService)
+        .compile();
+
+      productionApp = moduleRef.createNestApplication();
+      configureApp(productionApp);
+      await productionApp.init();
+
+      await request(productionApp.getHttpServer())
+        .get('/health')
+        .set('Origin', 'https://example.vercel.app')
+        .expect(200)
+        .expect((response) => {
+          expect(response.headers['access-control-allow-origin']).toBe(
+            'https://example.vercel.app',
+          );
+        });
+
+      await request(productionApp.getHttpServer())
+        .get('/health')
+        .set('Origin', 'http://localhost:5173')
+        .expect(200)
+        .expect((response) => {
+          expect(response.headers['access-control-allow-origin']).toBeUndefined();
+        });
+    } finally {
+      await productionApp?.close();
+    }
   });
 
   it('does not expose generated API docs routes', async () => {

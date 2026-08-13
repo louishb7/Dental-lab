@@ -5,6 +5,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 
 import type { EnvironmentVariables } from '../../config/app.config';
 import { AuthService } from '../auth.service';
+import { JWT_ALGORITHM } from '../security.constants';
 import type { AuthenticatedUser, JwtPayload } from '../auth.types';
 
 @Injectable()
@@ -14,7 +15,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly auth: AuthService,
   ) {
     super({
-      algorithms: [config.getOrThrow('ALGORITHM')],
+      algorithms: [JWT_ALGORITHM],
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: config.getOrThrow('SECRET_KEY'),
     });

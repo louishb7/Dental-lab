@@ -113,7 +113,9 @@ describe('CaseHistory integration', () => {
       userId,
     );
 
-    await expect(prisma.caseHistoryEvent.findMany({ where: { caseId: created.id } })).resolves.toMatchObject([
+    await expect(
+      prisma.caseHistoryEvent.findMany({ where: { caseId: created.id } }),
+    ).resolves.toMatchObject([
       {
         eventType: 'case_created',
         fromStatus: null,
@@ -261,9 +263,9 @@ describe('CaseHistory integration', () => {
       createHistoryEvent: (...args: unknown[]) => Promise<void>;
     };
     const originalCreateHistoryEvent = mutableCases.createHistoryEvent;
-    mutableCases.createHistoryEvent = jest.fn<Promise<void>, unknown[]>().mockRejectedValue(
-      new Error('Falha no evento'),
-    );
+    mutableCases.createHistoryEvent = jest
+      .fn<Promise<void>, unknown[]>()
+      .mockRejectedValue(new Error('Falha no evento'));
 
     await expect(cases.updateCase(created.id, { status: 'completed' }, userId)).rejects.toThrow(
       'Falha no evento',
@@ -371,10 +373,12 @@ describe('CaseHistory integration', () => {
       items: [{ id: reverted.id, has_reverted: true }],
     });
     await expect(history.getCaseDetail(oldDelivered.id, secondUserId)).resolves.toBeNull();
-    await expect(history.listCaseEvents(oldDelivered.id, { page: 1, limit: 20 }, secondUserId))
-      .resolves
-      .toBeNull();
-    await expect(cases.revertCaseStatus(oldDelivered.id, 'Tentativa', secondUserId)).resolves.toBeNull();
+    await expect(
+      history.listCaseEvents(oldDelivered.id, { page: 1, limit: 20 }, secondUserId),
+    ).resolves.toBeNull();
+    await expect(
+      cases.revertCaseStatus(oldDelivered.id, 'Tentativa', secondUserId),
+    ).resolves.toBeNull();
   });
 
   it('permanently deletes owned history records without deleting another user data', async () => {
@@ -415,15 +419,21 @@ describe('CaseHistory integration', () => {
       deleted_count: 1,
     });
     await expect(prisma.dentalCase.findUnique({ where: { id: firstCase.id } })).resolves.toBeNull();
-    await expect(prisma.caseHistoryEvent.count({ where: { caseId: firstCase.id } })).resolves.toBe(0);
+    await expect(prisma.caseHistoryEvent.count({ where: { caseId: firstCase.id } })).resolves.toBe(
+      0,
+    );
 
     await expect(history.permanentlyDeleteCase(foreignCase.id, firstUserId)).resolves.toBeNull();
 
     await expect(
       history.permanentlyDeleteCases([secondCase.id, secondCase.id, foreignCase.id], firstUserId),
     ).resolves.toEqual({ deleted_count: 1 });
-    await expect(prisma.dentalCase.findUnique({ where: { id: secondCase.id } })).resolves.toBeNull();
-    await expect(prisma.dentalCase.findUnique({ where: { id: foreignCase.id } })).resolves.toMatchObject({
+    await expect(
+      prisma.dentalCase.findUnique({ where: { id: secondCase.id } }),
+    ).resolves.toBeNull();
+    await expect(
+      prisma.dentalCase.findUnique({ where: { id: foreignCase.id } }),
+    ).resolves.toMatchObject({
       id: foreignCase.id,
     });
   });

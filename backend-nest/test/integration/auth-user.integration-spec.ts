@@ -1,6 +1,7 @@
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 
+import { ACCOUNT_LOCK_MAX_ATTEMPTS } from '../../src/auth/security.constants';
 import { validateEnvironment } from '../../src/config/app.config';
 import { assertSafeTestDatabaseUrl } from '../../src/config/test-database';
 import { PrismaModule } from '../../src/prisma/prisma.module';
@@ -106,8 +107,10 @@ describe('UserService integration', () => {
       password: 'StrongPass123!',
     });
 
-    await expect(users.authenticateUser('admin1', 'wrong-password')).resolves.toBeNull();
-    await expect(users.authenticateUser('admin1', 'wrong-password')).resolves.toBeNull();
+    for (let index = 0; index < ACCOUNT_LOCK_MAX_ATTEMPTS - 1; index += 1) {
+      await expect(users.authenticateUser('admin1', 'wrong-password')).resolves.toBeNull();
+    }
+
     await expect(users.authenticateUser('admin1', 'wrong-password')).rejects.toBeInstanceOf(
       AccountLockedError,
     );

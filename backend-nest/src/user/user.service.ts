@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Prisma, type User } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
-import type { EnvironmentVariables } from '../config/app.config';
+import {
+  ACCOUNT_LOCK_MAX_ATTEMPTS,
+  ACCOUNT_LOCK_MINUTES,
+  PASSWORD_HASH_ROUNDS,
+} from '../auth/security.constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { AccountLockedError } from './account-locked.error';
 
@@ -15,10 +18,7 @@ export interface CreateUserInput {
 
 @Injectable()
 export class UserService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly config: ConfigService<EnvironmentVariables>,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async getUserByUsername(username: string): Promise<User | null> {
     const normalizedUsername = username.trim();
@@ -177,6 +177,59 @@ export class UserService {
   }
 
   private async hashPassword(password: string): Promise<string> {
-    return bcrypt.hash(password, this.config.getOrThrow<number>('BCRYPT_ROUNDS'));
+    return bcrypt.hash(password, PASSWORD_HASH_ROUNDS);
   }
+<<<<<<< HEAD
+=======
+
+  private async clearExpiredLock(user: User, now: Date): Promise<User> {
+    if (user.lockedUntil !== null && user.lockedUntil <= now) {
+      return this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          lockedUntil: null,
+          failedLoginAttempts: 0,
+          lastFailedLoginAt: null,
+        },
+      });
+    }
+
+    return user;
+  }
+
+  private async registerFailedLogin(user: User, now: Date): Promise<User> {
+    const failedLoginAttempts = user.failedLoginAttempts + 1;
+
+    if (failedLoginAttempts >= ACCOUNT_LOCK_MAX_ATTEMPTS) {
+      return this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          failedLoginAttempts: 0,
+          lastFailedLoginAt: now,
+          lockedUntil: new Date(now.getTime() + ACCOUNT_LOCK_MINUTES * 60_000),
+        },
+      });
+    }
+
+    return this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        failedLoginAttempts,
+        lastFailedLoginAt: now,
+      },
+    });
+  }
+
+  private async resetLoginSecurityState(userId: number, now: Date): Promise<User> {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        failedLoginAttempts: 0,
+        lockedUntil: null,
+        lastFailedLoginAt: null,
+        lastLoginAt: now,
+      },
+    });
+  }
+>>>>>>> 3853a78 (refactor: streamline backend architecture and production deployment)
 }

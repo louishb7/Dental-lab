@@ -5,21 +5,22 @@ export interface EnvironmentVariables {
   PORT: number;
   DATABASE_URL: string;
   SECRET_KEY: string;
-  ALGORITHM: JwtAlgorithm;
-  ACCESS_TOKEN_EXPIRE_MINUTES: number;
-  BCRYPT_ROUNDS: number;
-  LOGIN_MAX_ATTEMPTS: number;
-  LOGIN_LOCKOUT_MINUTES: number;
-  LOGIN_RATE_LIMIT_ATTEMPTS: number;
-  LOGIN_RATE_LIMIT_WINDOW_SECONDS: number;
   CORS_ORIGINS: string[];
+<<<<<<< HEAD
   CORS_ORIGIN_REGEX: string | null;
   TRUSTED_HOSTS: string[];
   APP_TRUST_PROXY: string | number | boolean;
   APP_TIME_ZONE: string;
+=======
+>>>>>>> 3853a78 (refactor: streamline backend architecture and production deployment)
 }
 
-export type JwtAlgorithm = 'HS256' | 'HS384' | 'HS512';
+export const DEFAULT_LOCAL_CORS_ORIGINS = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+];
 
 function readString(config: Record<string, unknown>, key: string): string | undefined {
   const value = config[key];
@@ -83,28 +84,20 @@ function parseSecretKey(value: string | undefined): string {
   return value;
 }
 
-function parseAlgorithm(value: string | undefined): JwtAlgorithm {
-  const algorithm = value || 'HS256';
-  if (algorithm === 'HS256' || algorithm === 'HS384' || algorithm === 'HS512') {
-    return algorithm;
+function parseCorsOrigins(value: string | undefined, nodeEnvironment: NodeEnvironment): string[] {
+  if (nodeEnvironment === 'production' && value === undefined) {
+    throw new Error('CORS_ORIGINS must be explicitly defined in production.');
   }
 
-  throw new Error('ALGORITHM must be one of: HS256, HS384, HS512.');
-}
+  const rawOrigins =
+    value === undefined ? DEFAULT_LOCAL_CORS_ORIGINS : value.split(',').map((item) => item.trim());
+  const origins = rawOrigins.filter((item) => item.length > 0).map(validateCorsOrigin);
 
-function parseIntegerInRange(
-  value: string | undefined,
-  key: string,
-  defaultValue: number,
-  min: number,
-  max: number,
-): number {
-  const parsed = Number(value || String(defaultValue));
-
-  if (!Number.isInteger(parsed) || parsed < min || parsed > max) {
-    throw new Error(`${key} must be an integer between ${min} and ${max}.`);
+  if (origins.length === 0) {
+    throw new Error('CORS_ORIGINS must contain at least one value.');
   }
 
+<<<<<<< HEAD
   return parsed;
 }
 
@@ -155,6 +148,18 @@ function parseCsv(value: string | undefined, defaultValues: string[], key: strin
   }
 
   return values;
+=======
+  if (nodeEnvironment === 'production') {
+    if (origins.some((origin) => origin.startsWith('http://'))) {
+      throw new Error('Production CORS_ORIGINS must use https origins.');
+    }
+    if (origins.some(isLocalCorsOrigin)) {
+      throw new Error('Production CORS_ORIGINS must not contain local origins.');
+    }
+  }
+
+  return origins;
+>>>>>>> 3853a78 (refactor: streamline backend architecture and production deployment)
 }
 
 function validateCorsOrigin(origin: string): string {
@@ -172,24 +177,14 @@ function validateCorsOrigin(origin: string): string {
   if (
     (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') ||
     parsed.host.length === 0 ||
-    (parsed.pathname !== '' && parsed.pathname !== '/')
+    (parsed.pathname !== '' && parsed.pathname !== '/') ||
+    parsed.search.length > 0 ||
+    parsed.hash.length > 0
   ) {
     throw new Error(`Invalid CORS origin: ${origin}`);
   }
 
-  return origin;
-}
-
-function validateTrustedHost(host: string): string {
-  if (host === '*' || host.includes('*')) {
-    throw new Error('TRUSTED_HOSTS cannot contain wildcards.');
-  }
-
-  if (host.includes('://') || host.includes('/') || host.includes('?') || host.includes('#')) {
-    throw new Error(`Invalid trusted host: ${host}`);
-  }
-
-  return host;
+  return parsed.origin;
 }
 
 function isLocalCorsOrigin(origin: string): boolean {
@@ -201,56 +196,15 @@ function isLocalCorsOrigin(origin: string): boolean {
   );
 }
 
-function isLocalTrustedHost(host: string): boolean {
-  const hostname = host.split(':', 1)[0];
-  return (
-    hostname === 'localhost' ||
-    hostname === '127.0.0.1' ||
-    hostname === '0.0.0.0' ||
-    hostname === 'testserver'
-  );
-}
-
 export function validateEnvironment(config: Record<string, unknown>): EnvironmentVariables {
   const nodeEnvironment = parseNodeEnvironment(readString(config, 'NODE_ENV'));
-  const corsOriginsRaw = readString(config, 'CORS_ORIGINS');
-  const trustedHostsRaw = readString(config, 'TRUSTED_HOSTS');
-  const corsOrigins = parseCsv(corsOriginsRaw, DEFAULT_CORS_ORIGINS, 'CORS_ORIGINS').map(
-    validateCorsOrigin,
-  );
-  const trustedHosts = parseCsv(trustedHostsRaw, DEFAULT_TRUSTED_HOSTS, 'TRUSTED_HOSTS').map(
-    validateTrustedHost,
-  );
-  const corsOriginRegex =
-    readString(config, 'CORS_ORIGIN_REGEX') ??
-    (nodeEnvironment === 'production' ? null : DEV_CORS_ORIGIN_REGEX);
-
-  if (nodeEnvironment === 'production') {
-    if (corsOriginsRaw === undefined) {
-      throw new Error('CORS_ORIGINS must be explicitly defined in production.');
-    }
-    if (trustedHostsRaw === undefined) {
-      throw new Error('TRUSTED_HOSTS must be explicitly defined in production.');
-    }
-    if (corsOriginRegex) {
-      throw new Error('CORS_ORIGIN_REGEX must not be used in production.');
-    }
-    if (corsOrigins.some((origin) => origin.startsWith('http://'))) {
-      throw new Error('Production CORS_ORIGINS must use https origins.');
-    }
-    if (corsOrigins.some(isLocalCorsOrigin)) {
-      throw new Error('Production CORS_ORIGINS must not contain local origins.');
-    }
-    if (trustedHosts.some(isLocalTrustedHost)) {
-      throw new Error('Production TRUSTED_HOSTS must not contain local/test hosts.');
-    }
-  }
 
   return {
     NODE_ENV: nodeEnvironment,
     PORT: parsePort(readString(config, 'PORT')),
     DATABASE_URL: parseDatabaseUrl(readString(config, 'DATABASE_URL')),
     SECRET_KEY: parseSecretKey(readString(config, 'SECRET_KEY')),
+<<<<<<< HEAD
     ALGORITHM: parseAlgorithm(readString(config, 'ALGORITHM')),
     ACCESS_TOKEN_EXPIRE_MINUTES: parseAccessTokenExpireMinutes(
       readString(config, 'ACCESS_TOKEN_EXPIRE_MINUTES'),
@@ -289,5 +243,8 @@ export function validateEnvironment(config: Record<string, unknown>): Environmen
     TRUSTED_HOSTS: trustedHosts,
     APP_TRUST_PROXY: parseTrustProxy(readString(config, 'APP_TRUST_PROXY')),
     APP_TIME_ZONE: readString(config, 'APP_TIME_ZONE') || 'America/Recife',
+=======
+    CORS_ORIGINS: parseCorsOrigins(readString(config, 'CORS_ORIGINS'), nodeEnvironment),
+>>>>>>> 3853a78 (refactor: streamline backend architecture and production deployment)
   };
 }

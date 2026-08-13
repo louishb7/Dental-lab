@@ -77,11 +77,9 @@ Por padrão o frontend usa `VITE_API_BASE_URL=http://localhost:3001`.
 Backend (`backend-nest/.env`):
 
 ```env
-NODE_ENV=development
-PORT=3001
 DATABASE_URL=postgresql://cadisk_dev:cadisk_dev_password@localhost:5433/cadisk_nest?schema=public
-TEST_DATABASE_URL=postgresql://cadisk_dev:cadisk_dev_password@localhost:5433/cadisk_nest_test?schema=public
 SECRET_KEY=replace-with-at-least-32-characters
+<<<<<<< HEAD
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=0
 BCRYPT_ROUNDS=12
@@ -90,8 +88,15 @@ LOGIN_LOCKOUT_MINUTES=15
 LOGIN_RATE_LIMIT_ATTEMPTS=10
 LOGIN_RATE_LIMIT_WINDOW_SECONDS=60
 APP_TIME_ZONE=America/Sao_Paulo
+=======
+>>>>>>> 3853a78 (refactor: streamline backend architecture and production deployment)
 CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
-TRUSTED_HOSTS=localhost,127.0.0.1
+
+# Opcional localmente. Render injeta PORT automaticamente.
+PORT=3001
+
+# Usada pelos comandos de teste.
+TEST_DATABASE_URL=postgresql://cadisk_dev:cadisk_dev_password@localhost:5433/cadisk_nest_test?schema=public
 ```
 
 Frontend (`frontend/.env`):
@@ -100,6 +105,7 @@ Frontend (`frontend/.env`):
 VITE_API_BASE_URL=http://localhost:3001
 ```
 
+<<<<<<< HEAD
 `ACCESS_TOKEN_EXPIRE_MINUTES=0` mantém a sessão persistente até logout manual, troca de segredo ou invalidação operacional relevante. Se precisar expirar o JWT, ajuste esse valor.
 
 ## Migrações Manuais (Manual Migrations)
@@ -111,6 +117,53 @@ Caso precise adicionar alterações no banco que não podem ser resolvidas com o
 3. Ajuste o `schema.prisma` caso as alterações reflitam em modelos.
 4. Rode `npx prisma validate` e `npx prisma format` apenas.
 5. Para aplicar localmente: `npm run prisma:migrate:dev`. Não use `prisma migrate dev --create-only` sem cuidado, pois o SQL que você adicionar manualmente precisará ser verificado.
+=======
+Em produção, o backend precisa essencialmente de `DATABASE_URL`, `SECRET_KEY` e
+`CORS_ORIGINS`. `PORT` possui fallback local e normalmente é injetada pela
+plataforma. Algoritmo JWT, bcrypt, lockout e rate limit são regras internas do
+Cadisk, não variáveis de deploy.
+
+## Deploy
+
+Backend no Render:
+
+```text
+Root Directory: backend-nest
+Environment: Docker
+Dockerfile Path: Dockerfile
+Docker Context Directory: .
+Health Check Path: /health
+```
+
+Variáveis no Render:
+
+```env
+DATABASE_URL=<NEON_DATABASE_URL>
+SECRET_KEY=<SECRET_KEY_COM_PELO_MENOS_32_CARACTERES>
+CORS_ORIGINS=https://<VERCEL_APP_URL>
+```
+
+O container executa `prisma migrate deploy` automaticamente antes de iniciar a
+API. Se uma migration falhar, a aplicação não inicia.
+
+Frontend na Vercel:
+
+```text
+Root Directory: frontend
+Framework Preset: Vite
+Build Command: npm run build
+Output Directory: dist
+```
+
+Variável na Vercel:
+
+```env
+VITE_API_BASE_URL=https://<RENDER_SERVICE_URL>
+```
+
+Não adicione sufixo de path em `VITE_API_BASE_URL`; a SPA monta os paths da API
+internamente.
+>>>>>>> 3853a78 (refactor: streamline backend architecture and production deployment)
 
 ## Testes
 
@@ -141,8 +194,6 @@ npm run prisma:migrate:test
 ## Estrutura
 
 ```text
-AGENTS.md                 Governança de agentes
-MIGRATION_CHECKLIST.md    Histórico completo da migração encerrada
 README.md                 Apresentação pública do projeto
 backend-nest/             Backend atual
 frontend/                 Interface web atual

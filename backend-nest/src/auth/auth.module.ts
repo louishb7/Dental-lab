@@ -9,6 +9,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LoginRateLimitService } from './login-rate-limit.service';
+import { ACCESS_TOKEN_EXPIRE_MINUTES, JWT_ALGORITHM } from './security.constants';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
@@ -19,13 +20,18 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService<EnvironmentVariables>) => {
-        const expiresInMinutes = config.getOrThrow<number>('ACCESS_TOKEN_EXPIRE_MINUTES');
-
         return {
           secret: config.getOrThrow('SECRET_KEY'),
           signOptions: {
+<<<<<<< HEAD
             expiresIn: `${expiresInMinutes}m`,
             algorithm: config.getOrThrow('ALGORITHM'),
+=======
+            ...(ACCESS_TOKEN_EXPIRE_MINUTES > 0
+              ? { expiresIn: `${ACCESS_TOKEN_EXPIRE_MINUTES}m` }
+              : {}),
+            algorithm: JWT_ALGORITHM,
+>>>>>>> 3853a78 (refactor: streamline backend architecture and production deployment)
           },
         };
       },

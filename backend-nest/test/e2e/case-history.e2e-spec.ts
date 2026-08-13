@@ -236,8 +236,12 @@ describe('case history e2e', () => {
       .expect(200)
       .expect({ deleted_count: 1 });
 
-    await expect(prisma.dentalCase.findUnique({ where: { id: firstCase.body.id } })).resolves.toBeNull();
-    await expect(prisma.caseHistoryEvent.count({ where: { caseId: firstCase.body.id } })).resolves.toBe(0);
+    await expect(
+      prisma.dentalCase.findUnique({ where: { id: firstCase.body.id } }),
+    ).resolves.toBeNull();
+    await expect(
+      prisma.caseHistoryEvent.count({ where: { caseId: firstCase.body.id } }),
+    ).resolves.toBe(0);
 
     await request(app.getHttpServer())
       .delete(`/case-history/${foreignCase.body.id}`)
@@ -252,8 +256,12 @@ describe('case history e2e', () => {
       .expect(200)
       .expect({ deleted_count: 1 });
 
-    await expect(prisma.dentalCase.findUnique({ where: { id: secondCase.body.id } })).resolves.toBeNull();
-    await expect(prisma.dentalCase.findUnique({ where: { id: foreignCase.body.id } })).resolves.toMatchObject({
+    await expect(
+      prisma.dentalCase.findUnique({ where: { id: secondCase.body.id } }),
+    ).resolves.toBeNull();
+    await expect(
+      prisma.dentalCase.findUnique({ where: { id: foreignCase.body.id } }),
+    ).resolves.toMatchObject({
       id: foreignCase.body.id,
     });
   });

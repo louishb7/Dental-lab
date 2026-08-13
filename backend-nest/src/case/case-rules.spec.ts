@@ -2,7 +2,11 @@ import { Prisma } from '@prisma/client';
 
 import { UnprocessableEntityException } from '@nestjs/common';
 import { normalizeDecimalValue } from './case-money';
-import { assertLinearStatusTransition, getPreviousCaseStatus, resolvePricingMode } from './case-rules';
+import {
+  assertLinearStatusTransition,
+  getPreviousCaseStatus,
+  resolvePricingMode,
+} from './case-rules';
 
 describe('case money normalization', () => {
   it('normalizes legacy currency inputs', () => {
@@ -75,6 +79,8 @@ describe('case business rules', () => {
   it('resolves only the immediate previous status for explicit reverts', () => {
     expect(getPreviousCaseStatus('delivered')).toBe('completed');
     expect(getPreviousCaseStatus('completed')).toBe('pending');
-    expect(() => getPreviousCaseStatus('pending')).toThrow('Caso pendente não possui status anterior');
+    expect(() => getPreviousCaseStatus('pending')).toThrow(
+      'Caso pendente não possui status anterior',
+    );
   });
 });

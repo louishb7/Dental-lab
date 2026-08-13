@@ -61,10 +61,7 @@ export class CaseHistoryService {
     };
   }
 
-  async getCaseDetail(
-    caseId: number,
-    userId: number,
-  ): Promise<CaseHistoryDetailResponse | null> {
+  async getCaseDetail(caseId: number, userId: number): Promise<CaseHistoryDetailResponse | null> {
     const foundCase = await this.prisma.dentalCase.findFirst({
       where: {
         id: caseId,
@@ -329,7 +326,8 @@ export class CaseHistoryService {
       const tooth = item.tooth ? `Dente ${item.tooth}` : 'Sem dente';
       return `${quantity}${tooth}`;
     });
-    const extra = items.length > visibleItems.length ? ` +${items.length - visibleItems.length}` : '';
+    const extra =
+      items.length > visibleItems.length ? ` +${items.length - visibleItems.length}` : '';
 
     return `${visibleItems.join(', ')}${extra}`;
   }

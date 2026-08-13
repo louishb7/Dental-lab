@@ -5,6 +5,10 @@ import request from 'supertest';
 import { configureApp } from '../../src/app.configure';
 import { AppModule } from '../../src/app.module';
 import { LoginRateLimitService } from '../../src/auth/login-rate-limit.service';
+import {
+  ACCOUNT_LOCK_MAX_ATTEMPTS,
+  LOGIN_RATE_LIMIT_ATTEMPTS,
+} from '../../src/auth/security.constants';
 import { assertSafeTestDatabaseUrl } from '../../src/config/test-database';
 import { PrismaService } from '../../src/prisma/prisma.service';
 
@@ -226,14 +230,13 @@ describe('auth e2e', () => {
   it('locks after repeated failures and allows login after the lock expires', async () => {
     await registerUser();
 
-    await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({ identifier: 'admin1', password: 'wrong-password' })
-      .expect(401);
-    await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({ identifier: 'admin1', password: 'wrong-password' })
-      .expect(401);
+    for (let index = 0; index < ACCOUNT_LOCK_MAX_ATTEMPTS - 1; index += 1) {
+      await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ identifier: 'admin1', password: 'wrong-password' })
+        .expect(401);
+    }
+
     const lockedResponse = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ identifier: 'admin1', password: 'wrong-password' })
@@ -261,7 +264,7 @@ describe('auth e2e', () => {
   });
 
   it('rate limits login by sliding window before authentication', async () => {
-    for (let index = 0; index < 3; index += 1) {
+    for (let index = 0; index < LOGIN_RATE_LIMIT_ATTEMPTS; index += 1) {
       await request(app.getHttpServer())
         .post('/auth/login')
         .send({ identifier: `missing${index}`, password: 'wrong-password' })
@@ -270,7 +273,7 @@ describe('auth e2e', () => {
 
     const response = await request(app.getHttpServer())
       .post('/auth/login')
-      .send({ identifier: 'missing4', password: 'wrong-password' })
+      .send({ identifier: 'missing-after-limit', password: 'wrong-password' })
       .expect(429);
 
     expect(Number(response.headers['retry-after'])).toBeGreaterThanOrEqual(1);

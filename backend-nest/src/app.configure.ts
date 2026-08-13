@@ -38,22 +38,25 @@ function flattenValidationErrors(errors: ValidationError[]): Array<{ msg: string
 
 export function configureApp(app: INestApplication): void {
   const config = app.get(ConfigService<EnvironmentVariables>);
+  const nodeEnvironment = config.get<EnvironmentVariables['NODE_ENV']>('NODE_ENV') ?? 'development';
   const corsOrigins = config.get<string[]>('CORS_ORIGINS') ?? [];
+<<<<<<< HEAD
   const corsOriginRegex = config.get<string | null>('CORS_ORIGIN_REGEX') ?? null;
   const trustedHosts = config.get<string[]>('TRUSTED_HOSTS') ?? [];
   const trustProxy = config.get<string | number | boolean>('APP_TRUST_PROXY') ?? 1;
 
   const httpAdapter = app.getHttpAdapter();
   httpAdapter.getInstance().set('trust proxy', trustProxy);
+=======
+>>>>>>> 3853a78 (refactor: streamline backend architecture and production deployment)
 
   app.use(createSecurityHeadersMiddleware());
-  app.use(createTrustedHostMiddleware(trustedHosts));
   app.enableCors({
     allowedHeaders: ['Authorization', 'Content-Type', 'Accept', 'Origin'],
     credentials: false,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     optionsSuccessStatus: 200,
-    origin: createCorsOriginValidator(corsOrigins, corsOriginRegex),
+    origin: createCorsOriginValidator(corsOrigins, nodeEnvironment),
   });
 
   app.useGlobalFilters(new PrismaExceptionFilter());
@@ -100,10 +103,9 @@ function setHeaderIfMissing(response: Response, header: string, value: string): 
 
 function createCorsOriginValidator(
   allowedOrigins: string[],
-  originRegex: string | null,
+  nodeEnvironment: EnvironmentVariables['NODE_ENV'],
 ): (origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) => void {
   const allowedOriginSet = new Set(allowedOrigins);
-  const allowedOriginRegex = originRegex ? new RegExp(originRegex) : null;
 
   return (origin, callback): void => {
     if (origin === undefined) {
@@ -111,26 +113,31 @@ function createCorsOriginValidator(
       return;
     }
 
-    callback(null, allowedOriginSet.has(origin) || allowedOriginRegex?.test(origin) === true);
+    callback(
+      null,
+      allowedOriginSet.has(origin) || isAllowedLocalDevelopmentOrigin(origin, nodeEnvironment),
+    );
   };
 }
 
-function createTrustedHostMiddleware(allowedHosts: string[]) {
-  const normalizedHosts = new Set(allowedHosts);
+function isAllowedLocalDevelopmentOrigin(
+  origin: string,
+  nodeEnvironment: EnvironmentVariables['NODE_ENV'],
+): boolean {
+  if (nodeEnvironment === 'production') {
+    return false;
+  }
 
-  return (request: Request, response: Response, next: NextFunction): void => {
-    const host = request.headers.host;
-    if (host === undefined) {
-      response.status(400).send('Invalid host header');
-      return;
-    }
+  let parsed: URL;
+  try {
+    parsed = new URL(origin);
+  } catch {
+    return false;
+  }
 
-    const hostname = host.split(':', 1)[0] ?? '';
-    if (normalizedHosts.has(host) || normalizedHosts.has(hostname)) {
-      next();
-      return;
-    }
-
-    response.status(400).send('Invalid host header');
-  };
+  return (
+    parsed.protocol === 'http:' &&
+    (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') &&
+    parsed.port.length > 0
+  );
 }

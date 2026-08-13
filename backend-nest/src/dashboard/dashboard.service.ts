@@ -141,11 +141,22 @@ export class DashboardService {
     const tz = this.timeZone;
     const windows = Array.from({ length: 6 }, (_, index) => {
       const monthOffset = index - 5;
+<<<<<<< HEAD
       const zonedNow = toZonedTime(now, tz);
       const zonedStart = addMonths(startOfMonth(zonedNow), monthOffset);
       const start = fromZonedTime(zonedStart, tz);
       const end = fromZonedTime(addMonths(zonedStart, 1), tz);
       return { start, end, zonedStart };
+=======
+      const start = new Date(
+        Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + monthOffset, 1, 0, 0, 0, 0),
+      );
+      const end = new Date(
+        Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 1, 0, 0, 0, 0),
+      );
+
+      return { start, end };
+>>>>>>> 3853a78 (refactor: streamline backend architecture and production deployment)
     });
 
     const rows = await this.prisma.$transaction(

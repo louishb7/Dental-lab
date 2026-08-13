@@ -1,17 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import type { User } from '@prisma/client';
 
-import type { EnvironmentVariables } from '../config/app.config';
 import { UserService } from '../user/user.service';
 import type { AuthTokenResponse, AuthenticatedUser } from './auth.types';
+import { ACCESS_TOKEN_EXPIRE_MINUTES, JWT_ALGORITHM } from './security.constants';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwt: JwtService,
-    private readonly config: ConfigService<EnvironmentVariables>,
     private readonly users: UserService,
   ) {}
 
@@ -38,15 +36,20 @@ export class AuthService {
   }
 
   private createAccessToken(username: string): string {
-    const expiresInMinutes = this.config.getOrThrow<number>('ACCESS_TOKEN_EXPIRE_MINUTES');
-
     return this.jwt.sign(
       {
         sub: username,
       },
       {
+<<<<<<< HEAD
         algorithm: this.config.getOrThrow('ALGORITHM'),
         expiresIn: `${expiresInMinutes}m`,
+=======
+        algorithm: JWT_ALGORITHM,
+        ...(ACCESS_TOKEN_EXPIRE_MINUTES > 0
+          ? { expiresIn: `${ACCESS_TOKEN_EXPIRE_MINUTES}m` }
+          : {}),
+>>>>>>> 3853a78 (refactor: streamline backend architecture and production deployment)
       },
     );
   }
