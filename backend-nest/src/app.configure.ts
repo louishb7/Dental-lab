@@ -8,6 +8,7 @@ import type { ValidationError } from 'class-validator';
 import type { NextFunction, Request, Response } from 'express';
 
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
+import { TRUST_PROXY_HOPS } from './config/app.constants';
 import type { EnvironmentVariables } from './config/app.config';
 
 function flattenValidationErrors(errors: ValidationError[]): Array<{ msg: string; loc: string[] }> {
@@ -40,15 +41,9 @@ export function configureApp(app: INestApplication): void {
   const config = app.get(ConfigService<EnvironmentVariables>);
   const nodeEnvironment = config.get<EnvironmentVariables['NODE_ENV']>('NODE_ENV') ?? 'development';
   const corsOrigins = config.get<string[]>('CORS_ORIGINS') ?? [];
-<<<<<<< HEAD
-  const corsOriginRegex = config.get<string | null>('CORS_ORIGIN_REGEX') ?? null;
-  const trustedHosts = config.get<string[]>('TRUSTED_HOSTS') ?? [];
-  const trustProxy = config.get<string | number | boolean>('APP_TRUST_PROXY') ?? 1;
 
   const httpAdapter = app.getHttpAdapter();
-  httpAdapter.getInstance().set('trust proxy', trustProxy);
-=======
->>>>>>> 3853a78 (refactor: streamline backend architecture and production deployment)
+  httpAdapter.getInstance().set('trust proxy', TRUST_PROXY_HOPS);
 
   app.use(createSecurityHeadersMiddleware());
   app.enableCors({

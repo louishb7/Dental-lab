@@ -97,15 +97,15 @@ describe('CaseItemService', () => {
     it('should delete item successfully', async () => {
       prisma.dentalCase.findFirst.mockResolvedValue({ id: 1, pricingMode: 'fixed' });
       prisma.caseItem.findFirst.mockResolvedValue({ id: 1, caseId: 1 });
-      
+
       const result = await service.deleteCaseItem(1, 1, 1);
-      
+
       expect(result).toBe(true);
       expect(prisma.$transaction).toHaveBeenCalled();
       expect(prisma.caseItem.delete).toHaveBeenCalled();
     });
   });
-  
+
   describe('updateCaseItem', () => {
     it('should update item successfully', async () => {
       prisma.dentalCase.findFirst.mockResolvedValue({ id: 1, pricingMode: 'fixed' });

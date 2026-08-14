@@ -23,15 +23,10 @@ import { JwtStrategy } from './strategies/jwt.strategy';
         return {
           secret: config.getOrThrow('SECRET_KEY'),
           signOptions: {
-<<<<<<< HEAD
-            expiresIn: `${expiresInMinutes}m`,
-            algorithm: config.getOrThrow('ALGORITHM'),
-=======
             ...(ACCESS_TOKEN_EXPIRE_MINUTES > 0
               ? { expiresIn: `${ACCESS_TOKEN_EXPIRE_MINUTES}m` }
               : {}),
             algorithm: JWT_ALGORITHM,
->>>>>>> 3853a78 (refactor: streamline backend architecture and production deployment)
           },
         };
       },

@@ -188,9 +188,7 @@ describe('case item e2e', () => {
       .send({ tooth: '10', service_type: 'coroa', unit_value: '100,00' })
       .expect(422)
       .expect((response) => {
-        expect(JSON.stringify(response.body.detail)).toContain(
-          'Quando numérico, o campo tooth deve estar entre 11 e 48',
-        );
+        expect(JSON.stringify(response.body.detail)).toContain('Número do dente inválido');
       });
 
     await request(app.getHttpServer())

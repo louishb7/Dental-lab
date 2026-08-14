@@ -14,7 +14,10 @@ describe('dashboard date rules', () => {
     expect(julyWindow.monthStart.toISOString()).toBe('2026-07-01T03:00:00.000Z');
     expect(julyWindow.nextMonth.toISOString()).toBe('2026-08-01T03:00:00.000Z');
 
-    const decemberWindow = getAppMonthWindow(new Date('2026-12-31T23:59:59.000Z'), 'America/Recife');
+    const decemberWindow = getAppMonthWindow(
+      new Date('2026-12-31T23:59:59.000Z'),
+      'America/Recife',
+    );
     expect(decemberWindow.monthStart.toISOString()).toBe('2026-12-01T03:00:00.000Z');
     expect(decemberWindow.nextMonth.toISOString()).toBe('2027-01-01T03:00:00.000Z');
   });

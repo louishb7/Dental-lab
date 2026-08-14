@@ -1,9 +1,4 @@
-<<<<<<< HEAD
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-=======
-import { Injectable } from '@nestjs/common';
->>>>>>> 3853a78 (refactor: streamline backend architecture and production deployment)
 
 import { LOGIN_RATE_LIMIT_ATTEMPTS, LOGIN_RATE_LIMIT_WINDOW_SECONDS } from './security.constants';
 
@@ -13,11 +8,13 @@ export class LoginRateLimitService implements OnModuleDestroy {
   private nowMs: () => number = Date.now;
   private readonly cleanupTimer: NodeJS.Timeout;
 
-<<<<<<< HEAD
-  constructor(private readonly config: ConfigService<EnvironmentVariables>) {
-    this.cleanupTimer = setInterval(() => {
-      this.cleanup();
-    }, 15 * 60 * 1000);
+  constructor() {
+    this.cleanupTimer = setInterval(
+      () => {
+        this.cleanup();
+      },
+      15 * 60 * 1000,
+    );
     this.cleanupTimer.unref();
   }
 
@@ -27,9 +24,8 @@ export class LoginRateLimitService implements OnModuleDestroy {
 
   cleanup(): void {
     const now = this.nowMs() / 1000;
-    const windowSeconds = this.config.get<number>('LOGIN_RATE_LIMIT_WINDOW_SECONDS') ?? 900;
-    const cutoff = now - windowSeconds;
-    
+    const cutoff = now - LOGIN_RATE_LIMIT_WINDOW_SECONDS;
+
     for (const [clientId, attempts] of this.attemptsByClientId.entries()) {
       const currentAttempts = attempts.filter((attempt) => attempt >= cutoff);
       if (currentAttempts.length === 0) {
@@ -40,8 +36,6 @@ export class LoginRateLimitService implements OnModuleDestroy {
     }
   }
 
-=======
->>>>>>> 3853a78 (refactor: streamline backend architecture and production deployment)
   setClockForTesting(nowMs: () => number): void {
     this.nowMs = nowMs;
   }
@@ -57,12 +51,8 @@ export class LoginRateLimitService implements OnModuleDestroy {
       if (oldestAttempt === undefined) {
         return 1;
       }
-<<<<<<< HEAD
-      return Math.max(1, Math.ceil(windowSeconds - (now - oldestAttempt)));
-=======
 
       return Math.max(1, Math.ceil(LOGIN_RATE_LIMIT_WINDOW_SECONDS - (now - oldestAttempt)));
->>>>>>> 3853a78 (refactor: streamline backend architecture and production deployment)
     }
 
     currentAttempts.push(now);
@@ -83,6 +73,7 @@ export class LoginRateLimitService implements OnModuleDestroy {
       this.attemptsByClientId.clear();
       return;
     }
+
     this.attemptsByClientId.delete(clientId);
   }
 }

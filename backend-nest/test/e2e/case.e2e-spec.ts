@@ -389,6 +389,22 @@ describe('case e2e', () => {
       .post('/cases/bulk-deliver')
       .set('Authorization', `Bearer ${user.access_token}`)
       .send({
+        case_ids: [pending.body.id],
+        doctor_id: doctorId,
+      })
+      .expect(409)
+      .expect({ detail: 'Fluxo de status inválido. Use pending -> completed -> delivered.' });
+
+    await request(app.getHttpServer())
+      .put(`/cases/${pending.body.id}`)
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .send({ status: 'completed' })
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .post('/cases/bulk-deliver')
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .send({
         case_ids: [pending.body.id, pending.body.id, completed.body.id],
         doctor_id: doctorId,
       })

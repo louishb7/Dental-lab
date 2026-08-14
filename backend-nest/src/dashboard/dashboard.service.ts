@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Prisma, type DentalCase, type Doctor } from '@prisma/client';
-import { toZonedTime, fromZonedTime } from 'date-fns-tz';
-import { startOfMonth, addMonths } from 'date-fns';
+import { addMonths, startOfMonth } from 'date-fns';
+import { fromZonedTime, toZonedTime } from 'date-fns-tz';
 
-import { EnvironmentVariables } from '../config/app.config';
+import { APP_TIME_ZONE } from '../config/app.constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { getAppDayStart, getAppMonthWindow } from './dashboard-date';
 import type {
@@ -22,19 +21,11 @@ type DashboardCaseWithDoctor = DentalCase & {
 
 @Injectable()
 export class DashboardService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly configService: ConfigService<EnvironmentVariables>,
-  ) {}
-
-  private get timeZone(): string {
-    return this.configService.get('APP_TIME_ZONE', { infer: true }) || 'America/Recife';
-  }
+  constructor(private readonly prisma: PrismaService) {}
 
   async getDashboardSummary(userId: number, now = new Date()): Promise<DashboardSummaryResponse> {
-    const tz = this.timeZone;
-    const todayStart = getAppDayStart(now, tz);
-    const { monthStart, nextMonth } = getAppMonthWindow(now, tz);
+    const todayStart = getAppDayStart(now, APP_TIME_ZONE);
+    const { monthStart, nextMonth } = getAppMonthWindow(now, APP_TIME_ZONE);
 
     const [statusRows, overdueCases, urgentOpenCases, deliveredCasesMonth, deliveredTotal] =
       await this.prisma.$transaction([
@@ -138,25 +129,13 @@ export class DashboardService {
   }
 
   private async getRevenueTrend(userId: number, now: Date): Promise<DashboardRevenueTrendItem[]> {
-    const tz = this.timeZone;
     const windows = Array.from({ length: 6 }, (_, index) => {
       const monthOffset = index - 5;
-<<<<<<< HEAD
-      const zonedNow = toZonedTime(now, tz);
+      const zonedNow = toZonedTime(now, APP_TIME_ZONE);
       const zonedStart = addMonths(startOfMonth(zonedNow), monthOffset);
-      const start = fromZonedTime(zonedStart, tz);
-      const end = fromZonedTime(addMonths(zonedStart, 1), tz);
+      const start = fromZonedTime(zonedStart, APP_TIME_ZONE);
+      const end = fromZonedTime(addMonths(zonedStart, 1), APP_TIME_ZONE);
       return { start, end, zonedStart };
-=======
-      const start = new Date(
-        Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + monthOffset, 1, 0, 0, 0, 0),
-      );
-      const end = new Date(
-        Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 1, 0, 0, 0, 0),
-      );
-
-      return { start, end };
->>>>>>> 3853a78 (refactor: streamline backend architecture and production deployment)
     });
 
     const rows = await this.prisma.$transaction(

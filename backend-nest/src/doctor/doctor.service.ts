@@ -84,7 +84,7 @@ export class DoctorService extends OwnershipBase {
   async deleteDoctor(doctorId: number, userId: number): Promise<boolean> {
     return this.prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT 1 FROM doctors WHERE id = ${doctorId} FOR UPDATE`;
-      
+
       const doctor = await tx.doctor.findFirst({
         where: this.ownDoctor(doctorId, userId),
       });

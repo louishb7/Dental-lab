@@ -133,6 +133,7 @@ describe('dashboard e2e', () => {
           patientRef: 'Paciente entregue',
           status: 'delivered',
           totalValue: new Prisma.Decimal('250.00'),
+          deliveredTotalValue: new Prisma.Decimal('250.00'),
           deliveredAt: now,
         },
       ],
@@ -213,6 +214,7 @@ describe('dashboard e2e', () => {
         patientRef: 'Segundo',
         status: 'delivered',
         totalValue: new Prisma.Decimal('100.00'),
+        deliveredTotalValue: new Prisma.Decimal('100.00'),
         deliveredAt: new Date(),
       },
     });
@@ -246,12 +248,12 @@ describe('dashboard e2e', () => {
       });
   });
 
-  it('excludes delivered cases outside the current UTC month from monthly finance', async () => {
+  it('excludes delivered cases outside the current app month from monthly finance', async () => {
     const user = await registerUser('month@cadisk.local', 'month1');
     const doctorId = await createDoctor(user.access_token, 'Dr. Mês');
     const now = new Date();
     const currentMonthDeliveredAt = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0),
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 2, 12, 0, 0, 0),
     );
     const previousMonthDeliveredAt = new Date(currentMonthDeliveredAt);
     previousMonthDeliveredAt.setUTCMonth(previousMonthDeliveredAt.getUTCMonth() - 1);
@@ -263,6 +265,7 @@ describe('dashboard e2e', () => {
           patientRef: 'Mês atual',
           status: 'delivered',
           totalValue: new Prisma.Decimal('100.00'),
+          deliveredTotalValue: new Prisma.Decimal('100.00'),
           deliveredAt: currentMonthDeliveredAt,
         },
         {
@@ -270,6 +273,7 @@ describe('dashboard e2e', () => {
           patientRef: 'Mês anterior',
           status: 'delivered',
           totalValue: new Prisma.Decimal('200.00'),
+          deliveredTotalValue: new Prisma.Decimal('200.00'),
           deliveredAt: previousMonthDeliveredAt,
         },
       ],

@@ -9,6 +9,8 @@ import { assertSafeTestDatabaseUrl } from '../../src/config/test-database';
 import { PrismaService } from '../../src/prisma/prisma.service';
 
 const STRONG_PASSWORD = 'StrongPass123!';
+const BULK_DELETE_INELIGIBLE_DETAIL =
+  'Um ou mais casos não foram encontrados ou não podem ser excluídos.';
 
 interface RegisteredUser {
   access_token: string;
@@ -231,6 +233,15 @@ describe('case history e2e', () => {
       .expect(201);
 
     await request(app.getHttpServer())
+      .delete(`/cases/${firstCase.body.id}`)
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .expect(200);
+    await request(app.getHttpServer())
+      .delete(`/cases/${secondCase.body.id}`)
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .expect(200);
+
+    await request(app.getHttpServer())
       .delete(`/case-history/${firstCase.body.id}`)
       .set('Authorization', `Bearer ${user.access_token}`)
       .expect(200)
@@ -252,13 +263,85 @@ describe('case history e2e', () => {
     await request(app.getHttpServer())
       .delete('/case-history')
       .set('Authorization', `Bearer ${user.access_token}`)
-      .send({ case_ids: [secondCase.body.id, foreignCase.body.id] })
+      .send({ case_ids: [secondCase.body.id, secondCase.body.id] })
       .expect(200)
       .expect({ deleted_count: 1 });
 
     await expect(
       prisma.dentalCase.findUnique({ where: { id: secondCase.body.id } }),
     ).resolves.toBeNull();
+
+    const activeCase = await request(app.getHttpServer())
+      .post('/cases/')
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .send({ doctor_id: doctorId, patient_ref: 'Ativo HTTP' })
+      .expect(201);
+    const validWithActive = await request(app.getHttpServer())
+      .post('/cases/')
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .send({ doctor_id: doctorId, patient_ref: 'Valido com ativo HTTP' })
+      .expect(201);
+    await request(app.getHttpServer())
+      .delete(`/cases/${validWithActive.body.id}`)
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .delete('/case-history')
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .send({ case_ids: [validWithActive.body.id, activeCase.body.id] })
+      .expect(409)
+      .expect({ detail: BULK_DELETE_INELIGIBLE_DETAIL });
+    await expect(
+      prisma.dentalCase.findUnique({ where: { id: validWithActive.body.id } }),
+    ).resolves.toMatchObject({ id: validWithActive.body.id });
+    await expect(
+      prisma.dentalCase.findUnique({ where: { id: activeCase.body.id } }),
+    ).resolves.toMatchObject({ id: activeCase.body.id });
+
+    const validWithMissing = await request(app.getHttpServer())
+      .post('/cases/')
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .send({ doctor_id: doctorId, patient_ref: 'Valido com inexistente HTTP' })
+      .expect(201);
+    await request(app.getHttpServer())
+      .delete(`/cases/${validWithMissing.body.id}`)
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .delete('/case-history')
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .send({ case_ids: [validWithMissing.body.id, 99999] })
+      .expect(409)
+      .expect({ detail: BULK_DELETE_INELIGIBLE_DETAIL });
+    await expect(
+      prisma.dentalCase.findUnique({ where: { id: validWithMissing.body.id } }),
+    ).resolves.toMatchObject({ id: validWithMissing.body.id });
+
+    const validWithForeign = await request(app.getHttpServer())
+      .post('/cases/')
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .send({ doctor_id: doctorId, patient_ref: 'Valido com estrangeiro HTTP' })
+      .expect(201);
+    await request(app.getHttpServer())
+      .delete(`/cases/${validWithForeign.body.id}`)
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .expect(200);
+    await request(app.getHttpServer())
+      .delete(`/cases/${foreignCase.body.id}`)
+      .set('Authorization', `Bearer ${otherUser.access_token}`)
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .delete('/case-history')
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .send({ case_ids: [validWithForeign.body.id, foreignCase.body.id] })
+      .expect(409)
+      .expect({ detail: BULK_DELETE_INELIGIBLE_DETAIL });
+    await expect(
+      prisma.dentalCase.findUnique({ where: { id: validWithForeign.body.id } }),
+    ).resolves.toMatchObject({ id: validWithForeign.body.id });
     await expect(
       prisma.dentalCase.findUnique({ where: { id: foreignCase.body.id } }),
     ).resolves.toMatchObject({

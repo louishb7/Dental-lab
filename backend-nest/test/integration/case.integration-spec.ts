@@ -248,7 +248,7 @@ describe('CaseService integration', () => {
     const deliveredAt = delivered?.delivered_at;
 
     await expect(cases.updateCase(created.id, { status: 'completed' }, userId)).rejects.toThrow(
-      'Fluxo de status inválido',
+      'Não é possível alterar um caso já entregue.',
     );
     await expect(
       cases.updateCase(created.id, { status: 'delivered' }, userId),
@@ -464,6 +464,12 @@ describe('CaseService integration', () => {
       userId,
     );
     await cases.updateCase(completed.id, { status: 'completed' }, userId);
+
+    await expect(
+      cases.bulkDeliverCases({ case_ids: [pending.id], doctor_id: doctorId }, userId),
+    ).rejects.toThrow('Fluxo de status inválido');
+
+    await cases.updateCase(pending.id, { status: 'completed' }, userId);
 
     const delivered = await cases.bulkDeliverCases(
       { case_ids: [pending.id, pending.id, completed.id], doctor_id: doctorId },

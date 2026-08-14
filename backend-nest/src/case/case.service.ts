@@ -21,9 +21,10 @@ export class CaseService {
   async createCase(input: CaseCreateRequestDto, userId: number): Promise<CaseResponse> {
     await this.assertActiveDoctor(input.doctor_id, userId);
 
-    const providedTotalValue = input.total_value !== undefined 
-      ? normalizeDecimalValue(input.total_value, 'Valor combinado inválido')
-      : null;
+    const providedTotalValue =
+      input.total_value !== undefined
+        ? normalizeDecimalValue(input.total_value, 'Valor combinado inválido')
+        : null;
 
     let computedTotalValue = providedTotalValue;
 
@@ -31,13 +32,13 @@ export class CaseService {
       if (providedTotalValue !== null) {
         throw new Error('Casos por serviços não usam valor combinado.');
       }
-      
+
       let sum = new Prisma.Decimal(0);
       if (input.items && input.items.length > 0) {
         for (const item of input.items) {
           const unit = normalizeDecimalValue(item.unit_value, 'Valor unitário inválido');
           if (unit === null) {
-             throw new Error('Informe o valor unitário do serviço para este caso.');
+            throw new Error('Informe o valor unitário do serviço para este caso.');
           }
           sum = sum.add(unit.mul(item.quantity ?? 1));
         }
@@ -63,17 +64,19 @@ export class CaseService {
         status: 'pending',
         totalValue: computedTotalValue,
         notes: input.notes ?? null,
-        items: input.items ? {
-          create: input.items.map(item => ({
-            tooth: item.tooth ?? null,
-            serviceType: item.service_type,
-            quantity: item.quantity ?? 1,
-            unitValue: normalizeDecimalValue(item.unit_value, 'Valor unitário inválido'),
-            material: item.material ?? null,
-            color: item.color ?? null,
-            notes: item.notes ?? null,
-          }))
-        } : undefined,
+        items: input.items
+          ? {
+              create: input.items.map((item) => ({
+                tooth: item.tooth ?? null,
+                serviceType: item.service_type,
+                quantity: item.quantity ?? 1,
+                unitValue: normalizeDecimalValue(item.unit_value, 'Valor unitário inválido'),
+                material: item.material ?? null,
+                color: item.color ?? null,
+                notes: item.notes ?? null,
+              })),
+            }
+          : undefined,
       });
 
       await repo.createHistoryEvent({
@@ -106,7 +109,7 @@ export class CaseService {
       query.limit,
       userId,
       query.doctor_id,
-      query.status
+      query.status,
     );
 
     return cases.map((foundCase) => this.toResponse(foundCase, foundCase.items.length));
@@ -123,13 +126,13 @@ export class CaseService {
 
     const updatedCase = await this.caseRepository.runTransaction(async (repo) => {
       await repo.lockCaseRow(caseId);
-      
+
       const currentCase = await repo.getCaseById(caseId, userId);
       if (currentCase === null) {
         return null;
       }
-      
-      if (currentCase.status === 'delivered') {
+
+      if (currentCase.status === 'delivered' && !this.isDeliveredStatusNoop(input)) {
         throw new Error('Não é possível alterar um caso já entregue.');
       }
 
@@ -142,7 +145,7 @@ export class CaseService {
         totalValueProvided ? newTotalValue : null,
         currentCase.pricingMode,
       );
-      
+
       const pricingOptions: PricingOptions = {
         newTotalValue,
         targetPricingMode,
@@ -203,7 +206,11 @@ export class CaseService {
         await repo.lockCaseRow(id);
       }
 
-      const txCases = await repo.getCasesForBulkDeliver(userId, input.doctor_id ?? undefined, sortedIds);
+      const txCases = await repo.getCasesForBulkDeliver(
+        userId,
+        input.doctor_id ?? undefined,
+        sortedIds,
+      );
 
       if (sortedIds.length > 0) {
         const foundIds = new Set(txCases.map((foundCase) => foundCase.id));
@@ -249,9 +256,9 @@ export class CaseService {
     if (cases.length === 0) return [];
 
     const deliveredCases = await this.caseRepository.getCasesForBulkDeliver(
-      userId, 
-      undefined, 
-      cases.map((foundCase) => foundCase.id)
+      userId,
+      undefined,
+      cases.map((foundCase) => foundCase.id),
     );
 
     return deliveredCases.map((foundCase) => this.toResponse(foundCase, foundCase.items.length));
@@ -276,7 +283,7 @@ export class CaseService {
       if (currentCase === null) {
         return null;
       }
-      
+
       await this.assertActiveDoctor(currentCase.doctorId, userId);
 
       const previousStatus = getPreviousCaseStatus(currentCase.status);
@@ -284,7 +291,8 @@ export class CaseService {
       const foundCase = await repo.updateCase(currentCase.id, {
         status: previousStatus,
         deliveredAt: currentCase.status === 'delivered' ? null : currentCase.deliveredAt,
-        deliveredTotalValue: currentCase.status === 'delivered' ? null : currentCase.deliveredTotalValue,
+        deliveredTotalValue:
+          currentCase.status === 'delivered' ? null : currentCase.deliveredTotalValue,
         statusRevertReason: trimmedReason,
       });
 
@@ -316,6 +324,18 @@ export class CaseService {
     if (doctor.deletedAt !== null) {
       throw new Error('Doutor não encontrado ou foi excluído.');
     }
+  }
+
+  private isDeliveredStatusNoop(input: CaseUpdateRequestDto): boolean {
+    return (
+      input.status === 'delivered' &&
+      input.doctor_id === undefined &&
+      input.patient_ref === undefined &&
+      input.deadline === undefined &&
+      input.priority === undefined &&
+      input.total_value === undefined &&
+      input.notes === undefined
+    );
   }
 
   private async buildUpdateData(

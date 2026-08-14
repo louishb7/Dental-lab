@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { Prisma, type CaseItem, type DentalCase, type Doctor } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { OwnershipBase } from '../common/ownership.base';
@@ -11,10 +11,20 @@ export interface ICaseRepository {
   createHistoryEvent(data: Prisma.CaseHistoryEventUncheckedCreateInput): Promise<void>;
   getCaseById(caseId: number, userId: number): Promise<CaseWithItems | null>;
   lockCaseRow(caseId: number): Promise<void>;
-  getAllCases(skip: number | undefined, limit: number | undefined, userId: number, doctorId?: number, status?: string): Promise<CaseWithItems[]>;
+  getAllCases(
+    skip: number | undefined,
+    limit: number | undefined,
+    userId: number,
+    doctorId?: number,
+    status?: string,
+  ): Promise<CaseWithItems[]>;
   updateCase(id: number, data: Prisma.DentalCaseUpdateInput): Promise<CaseWithItems>;
   deleteCase(id: number): Promise<CaseWithItems>;
-  getCasesForBulkDeliver(userId: number, doctorId?: number, caseIds?: number[]): Promise<CaseWithItems[]>;
+  getCasesForBulkDeliver(
+    userId: number,
+    doctorId?: number,
+    caseIds?: number[],
+  ): Promise<CaseWithItems[]>;
   sumCaseItemValues(caseId: number): Promise<Prisma.Decimal | null>;
   getDoctorById(doctorId: number, userId: number): Promise<Doctor | null>;
 }
@@ -23,6 +33,7 @@ export interface ICaseRepository {
 export class CaseRepository extends OwnershipBase implements ICaseRepository {
   constructor(
     private readonly prisma: PrismaService,
+    @Optional()
     private readonly tx?: Prisma.TransactionClient,
   ) {
     super();
@@ -66,7 +77,13 @@ export class CaseRepository extends OwnershipBase implements ICaseRepository {
     await this.client.$executeRaw`SELECT 1 FROM cases WHERE id = ${caseId} FOR UPDATE`;
   }
 
-  async getAllCases(skip: number | undefined, limit: number | undefined, userId: number, doctorId?: number, status?: string): Promise<CaseWithItems[]> {
+  async getAllCases(
+    skip: number | undefined,
+    limit: number | undefined,
+    userId: number,
+    doctorId?: number,
+    status?: string,
+  ): Promise<CaseWithItems[]> {
     return this.client.dentalCase.findMany({
       skip,
       take: limit,
@@ -102,12 +119,16 @@ export class CaseRepository extends OwnershipBase implements ICaseRepository {
     });
   }
 
-  async getCasesForBulkDeliver(userId: number, doctorId?: number, caseIds?: number[]): Promise<CaseWithItems[]> {
+  async getCasesForBulkDeliver(
+    userId: number,
+    doctorId?: number,
+    caseIds?: number[],
+  ): Promise<CaseWithItems[]> {
     return this.client.dentalCase.findMany({
       where: {
         ...this.ownCases(userId),
         ...(doctorId !== undefined && doctorId !== null ? { doctorId } : {}),
-        ...((caseIds && caseIds.length > 0) ? { id: { in: caseIds } } : { status: 'completed' }),
+        ...(caseIds && caseIds.length > 0 ? { id: { in: caseIds } } : { status: 'completed' }),
       },
       orderBy: { id: 'asc' },
       include: {

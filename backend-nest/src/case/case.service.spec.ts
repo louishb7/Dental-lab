@@ -122,13 +122,15 @@ describe('CaseService', () => {
         { id: 1, status: 'completed', items: [] },
         { id: 2, status: 'completed', items: [] },
       ];
-      
+
       repo.getCasesForBulkDeliver.mockResolvedValueOnce(mockCases); // for txCases
       repo.updateCase.mockResolvedValue({ id: 1, status: 'delivered' });
-      repo.getCasesForBulkDeliver.mockResolvedValueOnce(mockCases.map(c => ({...c, status: 'delivered'}))); // for return
+      repo.getCasesForBulkDeliver.mockResolvedValueOnce(
+        mockCases.map((c) => ({ ...c, status: 'delivered' })),
+      ); // for return
 
       const result = await service.bulkDeliverCases({ case_ids: [1, 2] }, 1);
-      
+
       expect(repo.updateCase).toHaveBeenCalledTimes(2);
       expect(repo.createHistoryEvent).toHaveBeenCalledTimes(2);
       expect(result.length).toBe(2);
@@ -161,7 +163,11 @@ describe('CaseService', () => {
         items: [],
       };
       repo.getCaseById.mockResolvedValue(currentCase);
-      repo.getDoctorById.mockResolvedValue({ id: currentCase.doctorId, userId: 1, deletedAt: null });
+      repo.getDoctorById.mockResolvedValue({
+        id: currentCase.doctorId,
+        userId: 1,
+        deletedAt: null,
+      });
       repo.updateCase.mockResolvedValue({ ...currentCase, status: 'completed' });
 
       const result = await service.revertCaseStatus(1, 'Reason here', 1);

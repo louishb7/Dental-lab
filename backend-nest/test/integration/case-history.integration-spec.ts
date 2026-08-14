@@ -21,6 +21,8 @@ describe('CaseHistory integration', () => {
   let history: CaseHistoryService;
   let dashboard: DashboardService;
   let prisma: PrismaService;
+  const bulkDeleteIneligibleMessage =
+    'Um ou mais casos não foram encontrados ou não podem ser excluídos.';
 
   async function resetDatabase(): Promise<void> {
     await prisma.$executeRawUnsafe(
@@ -259,19 +261,32 @@ describe('CaseHistory integration', () => {
       userId,
     );
 
-    const mutableCases = cases as unknown as {
-      createHistoryEvent: (...args: unknown[]) => Promise<void>;
-    };
-    const originalCreateHistoryEvent = mutableCases.createHistoryEvent;
-    mutableCases.createHistoryEvent = jest
-      .fn<Promise<void>, unknown[]>()
-      .mockRejectedValue(new Error('Falha no evento'));
+    await prisma.$executeRawUnsafe(`
+      CREATE OR REPLACE FUNCTION fail_status_history_event()
+      RETURNS trigger AS $$
+      BEGIN
+        RAISE EXCEPTION 'Falha no evento';
+      END;
+      $$ LANGUAGE plpgsql;
+    `);
+    await prisma.$executeRawUnsafe(`
+      CREATE TRIGGER fail_status_history_event_trigger
+      BEFORE INSERT ON case_history_events
+      FOR EACH ROW
+      WHEN (NEW.event_type = 'status_advanced')
+      EXECUTE FUNCTION fail_status_history_event();
+    `);
 
-    await expect(cases.updateCase(created.id, { status: 'completed' }, userId)).rejects.toThrow(
-      'Falha no evento',
-    );
-
-    mutableCases.createHistoryEvent = originalCreateHistoryEvent;
+    try {
+      await expect(cases.updateCase(created.id, { status: 'completed' }, userId)).rejects.toThrow(
+        'Falha no evento',
+      );
+    } finally {
+      await prisma.$executeRawUnsafe(
+        'DROP TRIGGER IF EXISTS fail_status_history_event_trigger ON case_history_events',
+      );
+      await prisma.$executeRawUnsafe('DROP FUNCTION IF EXISTS fail_status_history_event()');
+    }
 
     await expect(cases.getCaseById(created.id, userId)).resolves.toMatchObject({
       status: 'pending',
@@ -415,6 +430,9 @@ describe('CaseHistory integration', () => {
       secondUserId,
     );
 
+    await cases.deleteCase(firstCase.id, firstUserId);
+    await cases.deleteCase(secondCase.id, firstUserId);
+
     await expect(history.permanentlyDeleteCase(firstCase.id, firstUserId)).resolves.toEqual({
       deleted_count: 1,
     });
@@ -426,11 +444,78 @@ describe('CaseHistory integration', () => {
     await expect(history.permanentlyDeleteCase(foreignCase.id, firstUserId)).resolves.toBeNull();
 
     await expect(
-      history.permanentlyDeleteCases([secondCase.id, secondCase.id, foreignCase.id], firstUserId),
+      history.permanentlyDeleteCases([secondCase.id, secondCase.id], firstUserId),
     ).resolves.toEqual({ deleted_count: 1 });
     await expect(
       prisma.dentalCase.findUnique({ where: { id: secondCase.id } }),
     ).resolves.toBeNull();
+
+    const activeCase = await cases.createCase(
+      {
+        doctor_id: firstDoctorId,
+        patient_ref: 'Ativo nao deve apagar',
+        priority: 'normal',
+        status: 'pending',
+      },
+      firstUserId,
+    );
+    const validWithActive = await cases.createCase(
+      {
+        doctor_id: firstDoctorId,
+        patient_ref: 'Valido com ativo',
+        priority: 'normal',
+        status: 'pending',
+      },
+      firstUserId,
+    );
+    await cases.deleteCase(validWithActive.id, firstUserId);
+
+    await expect(
+      history.permanentlyDeleteCases([validWithActive.id, activeCase.id], firstUserId),
+    ).rejects.toThrow(bulkDeleteIneligibleMessage);
+    await expect(
+      prisma.dentalCase.findUnique({ where: { id: validWithActive.id } }),
+    ).resolves.toMatchObject({ id: validWithActive.id });
+    await expect(
+      prisma.dentalCase.findUnique({ where: { id: activeCase.id } }),
+    ).resolves.toMatchObject({ id: activeCase.id });
+
+    const validWithMissing = await cases.createCase(
+      {
+        doctor_id: firstDoctorId,
+        patient_ref: 'Valido com inexistente',
+        priority: 'normal',
+        status: 'pending',
+      },
+      firstUserId,
+    );
+    await cases.deleteCase(validWithMissing.id, firstUserId);
+
+    await expect(
+      history.permanentlyDeleteCases([validWithMissing.id, 99999], firstUserId),
+    ).rejects.toThrow(bulkDeleteIneligibleMessage);
+    await expect(
+      prisma.dentalCase.findUnique({ where: { id: validWithMissing.id } }),
+    ).resolves.toMatchObject({ id: validWithMissing.id });
+
+    const validWithForeign = await cases.createCase(
+      {
+        doctor_id: firstDoctorId,
+        patient_ref: 'Valido com estrangeiro',
+        priority: 'normal',
+        status: 'pending',
+      },
+      firstUserId,
+    );
+    await cases.deleteCase(validWithForeign.id, firstUserId);
+    await cases.deleteCase(foreignCase.id, secondUserId);
+
+    await expect(
+      history.permanentlyDeleteCases([validWithForeign.id, foreignCase.id], firstUserId),
+    ).rejects.toThrow(bulkDeleteIneligibleMessage);
+    await expect(
+      prisma.dentalCase.findUnique({ where: { id: validWithForeign.id } }),
+    ).resolves.toMatchObject({ id: validWithForeign.id });
     await expect(
       prisma.dentalCase.findUnique({ where: { id: foreignCase.id } }),
     ).resolves.toMatchObject({

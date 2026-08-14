@@ -1,5 +1,6 @@
 import {
   Body,
+  ConflictException,
   Controller,
   Delete,
   Get,
@@ -60,7 +61,15 @@ export class CaseHistoryController {
     @Body() input: CaseHistoryDeleteRequestDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<CaseHistoryDeleteResponse> {
-    return this.history.permanentlyDeleteCases(input.case_ids, user.id);
+    try {
+      return await this.history.permanentlyDeleteCases(input.case_ids, user.id);
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new ConflictException({ detail: error.message });
+      }
+
+      throw error;
+    }
   }
 
   @Delete('/case-history/:case_id')
@@ -68,12 +77,24 @@ export class CaseHistoryController {
     @Param('case_id', caseIdPipe) caseId: number,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<CaseHistoryDeleteResponse> {
-    const deleted = await this.history.permanentlyDeleteCase(caseId, user.id);
-    if (deleted === null) {
-      throw new NotFoundException({ detail: 'Caso não encontrado' });
-    }
+    try {
+      const deleted = await this.history.permanentlyDeleteCase(caseId, user.id);
+      if (deleted === null) {
+        throw new NotFoundException({ detail: 'Caso não encontrado' });
+      }
 
-    return deleted;
+      return deleted;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+
+      if (error instanceof Error) {
+        throw new ConflictException({ detail: error.message });
+      }
+
+      throw error;
+    }
   }
 
   @Get('/cases/:case_id/history')

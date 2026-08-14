@@ -41,15 +41,10 @@ export class AuthService {
         sub: username,
       },
       {
-<<<<<<< HEAD
-        algorithm: this.config.getOrThrow('ALGORITHM'),
-        expiresIn: `${expiresInMinutes}m`,
-=======
         algorithm: JWT_ALGORITHM,
         ...(ACCESS_TOKEN_EXPIRE_MINUTES > 0
           ? { expiresIn: `${ACCESS_TOKEN_EXPIRE_MINUTES}m` }
           : {}),
->>>>>>> 3853a78 (refactor: streamline backend architecture and production deployment)
       },
     );
   }

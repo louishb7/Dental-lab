@@ -13,7 +13,7 @@ export abstract class PricingStrategy {
   abstract calculateValue(
     currentCase: CaseWithItems,
     input: CaseUpdateRequestDto,
-    repo: ICaseRepository
+    repo: ICaseRepository,
   ): Promise<Prisma.Decimal | null>;
 }
 
@@ -33,7 +33,7 @@ export class FixedPricingStrategy extends PricingStrategy {
 export class ServicesPricingStrategy extends PricingStrategy {
   constructor(
     private readonly newTotalValue: Prisma.Decimal | null,
-    private readonly totalValueProvided: boolean
+    private readonly totalValueProvided: boolean,
   ) {
     super();
   }
@@ -41,7 +41,7 @@ export class ServicesPricingStrategy extends PricingStrategy {
   async calculateValue(
     currentCase: CaseWithItems,
     input: CaseUpdateRequestDto,
-    repo: ICaseRepository
+    repo: ICaseRepository,
   ): Promise<Prisma.Decimal | null> {
     if (this.totalValueProvided) {
       if (this.newTotalValue !== null) {
@@ -49,11 +49,11 @@ export class ServicesPricingStrategy extends PricingStrategy {
       }
       return repo.sumCaseItemValues(currentCase.id);
     }
-    
+
     if (this.hasNonStatusCaseUpdate(input)) {
       return repo.sumCaseItemValues(currentCase.id);
     }
-    
+
     // Fallback: keep existing value if no relevant updates
     return currentCase.totalValue;
   }
@@ -69,16 +69,14 @@ export class ServicesPricingStrategy extends PricingStrategy {
   }
 }
 
-export function createPricingStrategy(
-  pricing: PricingOptions
-): PricingStrategy | null {
+export function createPricingStrategy(pricing: PricingOptions): PricingStrategy | null {
   if (pricing.targetPricingMode === 'fixed' && pricing.totalValueProvided) {
     return new FixedPricingStrategy(pricing.newTotalValue);
   }
-  
+
   if (pricing.targetPricingMode === 'services') {
     return new ServicesPricingStrategy(pricing.newTotalValue, pricing.totalValueProvided);
   }
-  
+
   return null;
 }

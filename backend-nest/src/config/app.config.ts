@@ -6,13 +6,6 @@ export interface EnvironmentVariables {
   DATABASE_URL: string;
   SECRET_KEY: string;
   CORS_ORIGINS: string[];
-<<<<<<< HEAD
-  CORS_ORIGIN_REGEX: string | null;
-  TRUSTED_HOSTS: string[];
-  APP_TRUST_PROXY: string | number | boolean;
-  APP_TIME_ZONE: string;
-=======
->>>>>>> 3853a78 (refactor: streamline backend architecture and production deployment)
 }
 
 export const DEFAULT_LOCAL_CORS_ORIGINS = [
@@ -97,58 +90,6 @@ function parseCorsOrigins(value: string | undefined, nodeEnvironment: NodeEnviro
     throw new Error('CORS_ORIGINS must contain at least one value.');
   }
 
-<<<<<<< HEAD
-  return parsed;
-}
-
-function parseAccessTokenExpireMinutes(value: string | undefined): number {
-  if (value === undefined || value.trim() === '') {
-    throw new Error('ACCESS_TOKEN_EXPIRE_MINUTES is required.');
-  }
-  const parsed = Number(value);
-
-  if (!Number.isInteger(parsed) || parsed < 1) {
-    throw new Error(
-      'ACCESS_TOKEN_EXPIRE_MINUTES must be a positive integer.',
-    );
-  }
-
-  return parsed;
-}
-
-function parseTrustProxy(value: string | undefined): string | number | boolean {
-  if (value === undefined) return 1;
-  if (value.toLowerCase() === 'true') return true;
-  if (value.toLowerCase() === 'false') return false;
-  const num = Number(value);
-  if (!Number.isNaN(num)) return num;
-  return value;
-}
-
-function parseBcryptRounds(value: string | undefined, nodeEnvironment: NodeEnvironment): number {
-  const minRounds = nodeEnvironment === 'test' ? 4 : 12;
-  return parseIntegerInRange(value, 'BCRYPT_ROUNDS', 12, minRounds, 16);
-}
-
-const DEFAULT_CORS_ORIGINS = [
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-];
-const DEFAULT_TRUSTED_HOSTS = ['localhost', '127.0.0.1', 'testserver'];
-const DEV_CORS_ORIGIN_REGEX = String.raw`^http://(localhost|127\.0\.0\.1):[0-9]+$`;
-
-function parseCsv(value: string | undefined, defaultValues: string[], key: string): string[] {
-  const rawValues =
-    value === undefined ? defaultValues : value.split(',').map((item) => item.trim());
-  const values = rawValues.filter((item) => item.length > 0);
-  if (values.length === 0) {
-    throw new Error(`${key} must contain at least one value.`);
-  }
-
-  return values;
-=======
   if (nodeEnvironment === 'production') {
     if (origins.some((origin) => origin.startsWith('http://'))) {
       throw new Error('Production CORS_ORIGINS must use https origins.');
@@ -159,7 +100,6 @@ function parseCsv(value: string | undefined, defaultValues: string[], key: strin
   }
 
   return origins;
->>>>>>> 3853a78 (refactor: streamline backend architecture and production deployment)
 }
 
 function validateCorsOrigin(origin: string): string {
@@ -204,47 +144,6 @@ export function validateEnvironment(config: Record<string, unknown>): Environmen
     PORT: parsePort(readString(config, 'PORT')),
     DATABASE_URL: parseDatabaseUrl(readString(config, 'DATABASE_URL')),
     SECRET_KEY: parseSecretKey(readString(config, 'SECRET_KEY')),
-<<<<<<< HEAD
-    ALGORITHM: parseAlgorithm(readString(config, 'ALGORITHM')),
-    ACCESS_TOKEN_EXPIRE_MINUTES: parseAccessTokenExpireMinutes(
-      readString(config, 'ACCESS_TOKEN_EXPIRE_MINUTES'),
-    ),
-    BCRYPT_ROUNDS: parseBcryptRounds(readString(config, 'BCRYPT_ROUNDS'), nodeEnvironment),
-    LOGIN_MAX_ATTEMPTS: parseIntegerInRange(
-      readString(config, 'LOGIN_MAX_ATTEMPTS'),
-      'LOGIN_MAX_ATTEMPTS',
-      5,
-      3,
-      1_000,
-    ),
-    LOGIN_LOCKOUT_MINUTES: parseIntegerInRange(
-      readString(config, 'LOGIN_LOCKOUT_MINUTES'),
-      'LOGIN_LOCKOUT_MINUTES',
-      15,
-      1,
-      1440,
-    ),
-    LOGIN_RATE_LIMIT_ATTEMPTS: parseIntegerInRange(
-      readString(config, 'LOGIN_RATE_LIMIT_ATTEMPTS'),
-      'LOGIN_RATE_LIMIT_ATTEMPTS',
-      10,
-      1,
-      1_000,
-    ),
-    LOGIN_RATE_LIMIT_WINDOW_SECONDS: parseIntegerInRange(
-      readString(config, 'LOGIN_RATE_LIMIT_WINDOW_SECONDS'),
-      'LOGIN_RATE_LIMIT_WINDOW_SECONDS',
-      60,
-      10,
-      86_400,
-    ),
-    CORS_ORIGINS: corsOrigins,
-    CORS_ORIGIN_REGEX: corsOriginRegex,
-    TRUSTED_HOSTS: trustedHosts,
-    APP_TRUST_PROXY: parseTrustProxy(readString(config, 'APP_TRUST_PROXY')),
-    APP_TIME_ZONE: readString(config, 'APP_TIME_ZONE') || 'America/Recife',
-=======
     CORS_ORIGINS: parseCorsOrigins(readString(config, 'CORS_ORIGINS'), nodeEnvironment),
->>>>>>> 3853a78 (refactor: streamline backend architecture and production deployment)
   };
 }

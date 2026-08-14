@@ -37,12 +37,12 @@ export class CaseItemService {
   ): Promise<CaseItemResponse> {
     return this.prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT 1 FROM cases WHERE id = ${caseId} FOR UPDATE`;
-      
+
       const currentCase = await this.assertActiveCaseTx(tx, caseId, userId);
       if (currentCase.status === 'delivered') {
         throw new Error('Não é possível adicionar itens a um caso entregue.');
       }
-      
+
       const unitValue = normalizeDecimalValue(input.unit_value, 'Valor unitário inválido');
       if (currentCase.pricingMode === 'services' && unitValue === null) {
         throw new Error('Informe o valor unitário do serviço para este caso.');
@@ -75,16 +75,16 @@ export class CaseItemService {
     if (!inputs || inputs.length === 0) {
       return [];
     }
-    
+
     return this.prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT 1 FROM cases WHERE id = ${caseId} FOR UPDATE`;
-      
+
       const currentCase = await this.assertActiveCaseTx(tx, caseId, userId);
       if (currentCase.status === 'delivered') {
         throw new Error('Não é possível adicionar itens a um caso entregue.');
       }
-      
-      const data = inputs.map(input => {
+
+      const data = inputs.map((input) => {
         const unitValue = normalizeDecimalValue(input.unit_value, 'Valor unitário inválido');
         if (currentCase.pricingMode === 'services' && unitValue === null) {
           throw new Error('Informe o valor unitário do serviço para este caso.');
@@ -102,14 +102,14 @@ export class CaseItemService {
       });
 
       const createdItems = await Promise.all(
-        data.map(itemData => tx.caseItem.create({ data: itemData }))
+        data.map((itemData) => tx.caseItem.create({ data: itemData })),
       );
 
       if (currentCase.pricingMode === 'services') {
         await this.recalculateServiceCaseTotal(tx, caseId);
       }
 
-      return createdItems.map(item => this.toResponse(item));
+      return createdItems.map((item) => this.toResponse(item));
     });
   }
 
@@ -142,7 +142,7 @@ export class CaseItemService {
       if (currentCase.status === 'delivered') {
         throw new Error('Não é possível modificar itens de um caso entregue.');
       }
-      
+
       const currentItem = await tx.caseItem.findFirst({
         where: this.itemOwnershipWhere(caseId, itemId, userId),
       });
@@ -174,7 +174,7 @@ export class CaseItemService {
       if (currentCase.status === 'delivered') {
         throw new Error('Não é possível excluir itens de um caso entregue.');
       }
-      
+
       const currentItem = await tx.caseItem.findFirst({
         where: this.itemOwnershipWhere(caseId, itemId, userId),
       });
@@ -195,7 +195,11 @@ export class CaseItemService {
     });
   }
 
-  private async assertActiveCaseTx(tx: Prisma.TransactionClient, caseId: number, userId: number): Promise<ActiveCase> {
+  private async assertActiveCaseTx(
+    tx: Prisma.TransactionClient,
+    caseId: number,
+    userId: number,
+  ): Promise<ActiveCase> {
     const currentCase = await tx.dentalCase.findFirst({
       where: {
         id: caseId,

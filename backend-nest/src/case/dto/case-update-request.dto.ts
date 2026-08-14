@@ -1,5 +1,15 @@
 import { Type } from 'class-transformer';
-import { IsDate, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Min, MinLength, Validate } from 'class-validator';
+import {
+  IsDate,
+  IsIn,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Min,
+  MinLength,
+  Validate,
+} from 'class-validator';
 
 import { CASE_PRIORITIES, CASE_STATUSES, type CasePriority, type CaseStatus } from '../case-rules';
 import { CadiskDecimalValueConstraint } from './case-decimal.validator';

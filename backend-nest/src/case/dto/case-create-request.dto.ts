@@ -1,5 +1,17 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsDate, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Min, MinLength, Validate, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsDate,
+  IsIn,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Min,
+  MinLength,
+  Validate,
+  ValidateNested,
+} from 'class-validator';
 
 import {
   CASE_PRIORITIES,

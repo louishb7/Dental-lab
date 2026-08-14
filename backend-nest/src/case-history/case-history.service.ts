@@ -31,6 +31,9 @@ type HistoryCase = DentalCase & {
 export class CaseHistoryService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private static readonly BULK_DELETE_INELIGIBLE_ERROR =
+    'Um ou mais casos não foram encontrados ou não podem ser excluídos.';
+
   async listCases(
     query: CaseHistoryListQueryDto,
     userId: number,
@@ -148,18 +151,19 @@ export class CaseHistoryService {
   ): Promise<CaseHistoryDeleteResponse | null> {
     return this.prisma.$transaction(async (tx) => {
       const foundCase = await tx.dentalCase.findFirst({
-        where: { id: caseId },
-        select: { id: true, deletedAt: true, doctor: { select: { userId: true } } },
+        where: {
+          id: caseId,
+          doctor: {
+            userId,
+          },
+        },
+        select: { id: true, deletedAt: true },
       });
 
       if (foundCase === null) {
         return null;
       }
-      
-      if (foundCase.doctor?.userId !== userId) {
-        throw new Error('Você não tem permissão para excluir este caso.');
-      }
-      
+
       if (foundCase.deletedAt === null) {
         throw new Error('Este caso não está marcado como excluído.');
       }
@@ -186,32 +190,24 @@ export class CaseHistoryService {
           id: {
             in: normalizedIds,
           },
+          doctor: {
+            userId,
+          },
         },
         select: {
           id: true,
           deletedAt: true,
-          doctor: { select: { userId: true } }
         },
       });
 
-      if (ownedCases.length !== normalizedIds.length) {
-        throw new Error('Um ou mais casos não foram encontrados.');
-      }
-
-      for (const foundCase of ownedCases) {
-        if (foundCase.doctor?.userId !== userId) {
-          throw new Error('Um ou mais casos não pertencem a você.');
-        }
-        if (foundCase.deletedAt === null) {
-          throw new Error('Um ou mais casos não estão marcados como excluídos.');
-        }
+      if (
+        ownedCases.length !== normalizedIds.length ||
+        ownedCases.some((foundCase) => foundCase.deletedAt === null)
+      ) {
+        throw new Error(CaseHistoryService.BULK_DELETE_INELIGIBLE_ERROR);
       }
 
       const ownedIds = ownedCases.map((foundCase) => foundCase.id);
-
-      if (ownedIds.length === 0) {
-        return { count: 0 };
-      }
 
       await tx.caseHistoryEvent.deleteMany({
         where: {

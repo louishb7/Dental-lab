@@ -32,8 +32,8 @@ describe('case item rules', () => {
     expect(normalized).toBeInstanceOf(Prisma.Decimal);
     expect(normalized?.toString()).toBe('1234.56');
     expect(normalizeDecimalValue('', 'Valor unitário inválido')).toBeNull();
-    
-    // Using import for UnprocessableEntityException would be best, or just generic toThrow. 
+
+    // Using import for UnprocessableEntityException would be best, or just generic toThrow.
     // It's checked by string in the test below so let's adjust it to check the error message string which works for both.
     expect(() => normalizeDecimalValue('abc', 'Valor unitário inválido')).toThrow(
       'Valor unitário inválido',

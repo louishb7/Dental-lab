@@ -113,12 +113,12 @@ export class UserService {
       return null;
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    let lockedUntilAfterTransaction: Date | null = null;
+    const authenticatedUser = await this.prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT 1 FROM users WHERE id = ${user.id} FOR UPDATE`;
-      
-      const lockedUser = await tx.user.findUniqueOrThrow({ where: { id: user.id } });
+
+      let currentUser = await tx.user.findUniqueOrThrow({ where: { id: user.id } });
       const now = new Date();
-      let currentUser = lockedUser;
 
       if (currentUser.lockedUntil !== null && currentUser.lockedUntil <= now) {
         currentUser = await tx.user.update({
@@ -137,12 +137,10 @@ export class UserService {
 
       if (!(await bcrypt.compare(password, currentUser.passwordHash))) {
         const failedLoginAttempts = currentUser.failedLoginAttempts + 1;
-        const maxAttempts = this.config.getOrThrow<number>('LOGIN_MAX_ATTEMPTS');
 
-        if (failedLoginAttempts >= maxAttempts) {
-          const lockedUntil = new Date(
-            now.getTime() + this.config.getOrThrow<number>('LOGIN_LOCKOUT_MINUTES') * 60_000,
-          );
+        if (failedLoginAttempts >= ACCOUNT_LOCK_MAX_ATTEMPTS) {
+          const lockedUntil = new Date(now.getTime() + ACCOUNT_LOCK_MINUTES * 60_000);
+          lockedUntilAfterTransaction = lockedUntil;
           await tx.user.update({
             where: { id: currentUser.id },
             data: {
@@ -151,13 +149,13 @@ export class UserService {
               lockedUntil,
             },
           });
-          throw new AccountLockedError(lockedUntil);
+          return null;
         }
 
         await tx.user.update({
           where: { id: currentUser.id },
           data: {
-            failedLoginAttempts: { increment: 1 },
+            failedLoginAttempts,
             lastFailedLoginAt: now,
           },
         });
@@ -174,62 +172,15 @@ export class UserService {
         },
       });
     });
+
+    if (lockedUntilAfterTransaction !== null) {
+      throw new AccountLockedError(lockedUntilAfterTransaction);
+    }
+
+    return authenticatedUser;
   }
 
   private async hashPassword(password: string): Promise<string> {
     return bcrypt.hash(password, PASSWORD_HASH_ROUNDS);
   }
-<<<<<<< HEAD
-=======
-
-  private async clearExpiredLock(user: User, now: Date): Promise<User> {
-    if (user.lockedUntil !== null && user.lockedUntil <= now) {
-      return this.prisma.user.update({
-        where: { id: user.id },
-        data: {
-          lockedUntil: null,
-          failedLoginAttempts: 0,
-          lastFailedLoginAt: null,
-        },
-      });
-    }
-
-    return user;
-  }
-
-  private async registerFailedLogin(user: User, now: Date): Promise<User> {
-    const failedLoginAttempts = user.failedLoginAttempts + 1;
-
-    if (failedLoginAttempts >= ACCOUNT_LOCK_MAX_ATTEMPTS) {
-      return this.prisma.user.update({
-        where: { id: user.id },
-        data: {
-          failedLoginAttempts: 0,
-          lastFailedLoginAt: now,
-          lockedUntil: new Date(now.getTime() + ACCOUNT_LOCK_MINUTES * 60_000),
-        },
-      });
-    }
-
-    return this.prisma.user.update({
-      where: { id: user.id },
-      data: {
-        failedLoginAttempts,
-        lastFailedLoginAt: now,
-      },
-    });
-  }
-
-  private async resetLoginSecurityState(userId: number, now: Date): Promise<User> {
-    return this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        failedLoginAttempts: 0,
-        lockedUntil: null,
-        lastFailedLoginAt: null,
-        lastLoginAt: now,
-      },
-    });
-  }
->>>>>>> 3853a78 (refactor: streamline backend architecture and production deployment)
 }

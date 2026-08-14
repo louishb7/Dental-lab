@@ -54,6 +54,7 @@ describe('DashboardService integration', () => {
     priority?: 'normal' | 'urgent';
     status?: 'pending' | 'completed' | 'delivered';
     totalValue?: Prisma.Decimal | null;
+    deliveredTotalValue?: Prisma.Decimal | null;
     deliveredAt?: Date | null;
     deletedAt?: Date | null;
   }): Promise<number> {
@@ -65,6 +66,7 @@ describe('DashboardService integration', () => {
         priority: input.priority ?? 'normal',
         status: input.status ?? 'pending',
         totalValue: input.totalValue ?? null,
+        deliveredTotalValue: input.deliveredTotalValue ?? null,
         deliveredAt: input.deliveredAt ?? null,
         deletedAt: input.deletedAt ?? null,
       },
@@ -118,7 +120,7 @@ describe('DashboardService integration', () => {
     await createCase({
       doctorId: doctorA,
       patientRef: 'Paciente hoje',
-      deadline: new Date('2026-07-30T00:00:00.000Z'),
+      deadline: new Date('2026-07-30T03:00:00.000Z'),
     });
     await createCase({
       doctorId: doctorA,
@@ -137,6 +139,7 @@ describe('DashboardService integration', () => {
       patientRef: 'Paciente entregue',
       status: 'delivered',
       totalValue: new Prisma.Decimal('250.00'),
+      deliveredTotalValue: new Prisma.Decimal('250.00'),
       deliveredAt: new Date('2026-07-20T10:00:00.000Z'),
     });
     await prisma.caseItem.createMany({
@@ -211,46 +214,49 @@ describe('DashboardService integration', () => {
     });
   });
 
-  it('preserves UTC deadline and month boundaries', async () => {
+  it('preserves app timezone deadline and month boundaries', async () => {
     const userId = await createUser('dates@cadisk.local', 'dates1');
     const doctorId = await createDoctor(userId, 'Dr. Datas');
 
     await createCase({
       doctorId,
-      patientRef: 'Vence ontem UTC',
-      deadline: new Date('2026-07-29T23:59:59.000Z'),
+      patientRef: 'Vence ontem local',
+      deadline: new Date('2026-07-30T02:59:59.000Z'),
     });
     await createCase({
       doctorId,
-      patientRef: 'Vence hoje UTC',
-      deadline: new Date('2026-07-30T00:00:00.000Z'),
+      patientRef: 'Vence hoje local',
+      deadline: new Date('2026-07-30T03:00:00.000Z'),
     });
     await createCase({
       doctorId,
       patientRef: 'Entregue começo do mês',
       status: 'delivered',
-      deliveredAt: new Date('2026-07-01T00:00:00.000Z'),
+      deliveredAt: new Date('2026-07-01T03:00:00.000Z'),
       totalValue: new Prisma.Decimal('100.00'),
+      deliveredTotalValue: new Prisma.Decimal('100.00'),
     });
     await createCase({
       doctorId,
       patientRef: 'Entregue fim do mês',
       status: 'delivered',
-      deliveredAt: new Date('2026-07-31T23:59:59.999Z'),
+      deliveredAt: new Date('2026-08-01T02:59:59.999Z'),
       totalValue: new Prisma.Decimal('200.00'),
+      deliveredTotalValue: new Prisma.Decimal('200.00'),
     });
     await createCase({
       doctorId,
       patientRef: 'Entregue próximo mês',
       status: 'delivered',
-      deliveredAt: new Date('2026-08-01T00:00:00.000Z'),
+      deliveredAt: new Date('2026-08-01T03:00:00.000Z'),
       totalValue: new Prisma.Decimal('300.00'),
+      deliveredTotalValue: new Prisma.Decimal('300.00'),
     });
 
     const summary = await dashboard.getDashboardSummary(userId, now);
 
     expect(summary.overdue_cases.map((foundCase) => foundCase.patient_ref)).toEqual([
-      'Vence ontem UTC',
+      'Vence ontem local',
     ]);
     expect(summary.delivered_cases_month.map((foundCase) => foundCase.patient_ref)).toEqual([
       'Entregue fim do mês',
