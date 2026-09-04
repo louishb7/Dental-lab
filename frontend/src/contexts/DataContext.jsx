@@ -68,6 +68,8 @@ export function DataProvider({ children }) {
   const sessionUsername = session?.username;
   
   const [dashboard, setDashboard] = useState(null);
+  const [dashboardLoading, setDashboardLoading] = useState(Boolean(session));
+  const [dashboardError, setDashboardError] = useState(null);
   const [doctors, setDoctors] = useState([]);
   const [cases, setCases] = useState([]);
   const [items, setItems] = useState([]);
@@ -104,18 +106,17 @@ export function DataProvider({ children }) {
 
     setLoading(true);
     setMessage(null);
+    void loadDashboard();
     try {
-      const [doctorData, caseData, dashboardData] = await Promise.all([
+      const [doctorData, caseData] = await Promise.all([
         getDoctors(),
         getCases(),
-        getDashboardOverview(),
       ]);
       const doctorList = Array.isArray(doctorData) ? doctorData : [];
       const caseList = Array.isArray(caseData) ? caseData : [];
 
       setDoctors(doctorList);
       setCases(caseList);
-      setDashboard(dashboardData);
 
       if (selectedCaseIdSnapshot && caseList.some((caseItem) => caseItem.id === selectedCaseIdSnapshot)) {
         try {
@@ -134,6 +135,25 @@ export function DataProvider({ children }) {
       return false;
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadDashboard() {
+    setDashboardLoading(true);
+    setDashboardError(null);
+    try {
+      const dashboardData = await getDashboardOverview();
+      setDashboard(dashboardData);
+      return true;
+    } catch (error) {
+      if (error.status === 401) {
+        handleAuthExpired();
+      } else {
+        setDashboardError(error.message);
+      }
+      return false;
+    } finally {
+      setDashboardLoading(false);
     }
   }
 
@@ -506,6 +526,8 @@ export function DataProvider({ children }) {
 
   const value = {
     dashboard,
+    dashboardLoading,
+    dashboardError,
     doctors,
     cases,
     items,
@@ -533,6 +555,7 @@ export function DataProvider({ children }) {
     setConfirmPending,
     selectedCase,
     loadAppData,
+    loadDashboard,
     requestConfirm,
     handleDoctorChange,
     handleCaseChange,

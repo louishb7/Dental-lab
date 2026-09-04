@@ -183,7 +183,9 @@ function AppContent() {
         <Route path="/finance" element={
           <FinancePage
             dashboard={data.dashboard}
-            loading={data.loading}
+            loading={data.dashboardLoading}
+            error={data.dashboardError}
+            onRetry={data.loadDashboard}
             onOpenHistory={() => handleNavigate("history")}
           />
         } />

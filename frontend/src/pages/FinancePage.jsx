@@ -14,6 +14,7 @@ import {
 } from "../components/ui/chart.jsx";
 import DataTable from "../components/ui/DataTable.jsx";
 import EmptyState from "../components/ui/EmptyState.jsx";
+import ErrorState from "../components/ui/ErrorState.jsx";
 import LoadingState from "../components/ui/LoadingState.jsx";
 import { formatServiceItemCount } from "../utils/cases.js";
 import { formatCurrency, formatDate, parseCurrencyToNumber } from "../utils/formatters.js";
@@ -79,9 +80,13 @@ function buildFallbackRevenueTrend(totalMes, countMes) {
   });
 }
 
-export default function FinancePage({ dashboard, loading, onOpenHistory }) {
+export default function FinancePage({ dashboard, loading, error, onRetry, onOpenHistory }) {
   if (loading) {
     return <LoadingState message="Carregando financeiro..." />;
+  }
+
+  if (error) {
+    return <ErrorState message={error} onRetry={onRetry} />;
   }
 
   const totalMes = parseCurrencyToNumber(dashboard?.delivered_total_month) ?? 0;
