@@ -65,6 +65,7 @@ function createDefaultCaseForm(overrides = {}) {
 export function DataProvider({ children }) {
   const { session, handleAuthExpired } = useAuth();
   const navigate = useNavigate();
+  const sessionUsername = session?.username;
   
   const [dashboard, setDashboard] = useState(null);
   const [doctors, setDoctors] = useState([]);
@@ -91,10 +92,10 @@ export function DataProvider({ children }) {
   );
 
   useEffect(() => {
-    if (session) {
+    if (sessionUsername) {
       loadAppData();
     }
-  }, [session]);
+  }, [sessionUsername]);
 
   async function loadAppData(options = {}) {
     const selectedCaseIdSnapshot = Object.prototype.hasOwnProperty.call(options, "selectedCaseId")
