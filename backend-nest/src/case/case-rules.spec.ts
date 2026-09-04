@@ -44,12 +44,6 @@ describe('case money normalization', () => {
     ];
 
     for (const testCase of rejectCases) {
-      try {
-        normalizeDecimalValue(testCase, errorMsg);
-        console.log('DID NOT THROW FOR:', testCase);
-      } catch (e) {
-        // expected
-      }
       expect(() => normalizeDecimalValue(testCase, errorMsg)).toThrow(UnprocessableEntityException);
       expect(() => normalizeDecimalValue(testCase, errorMsg)).toThrow(errorMsg);
     }

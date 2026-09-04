@@ -2,6 +2,8 @@
 
 Cadisk é uma aplicação web para cadistas controlarem trabalhos recebidos de dentistas. O sistema organiza casos por prazo, acompanha o fluxo de produção, preserva histórico operacional e apresenta uma visão financeira baseada nas entregas recebidas.
 
+Aplicação publicada: https://cadisk.vercel.app/
+
 ## Funcionalidades
 
 - Autenticação com isolamento de dados por usuário.
@@ -35,7 +37,7 @@ O contrato entre frontend e backend é HTTP + JSON. O frontend consome a API pel
 
 Requisitos:
 
-- Node.js 20 ou superior.
+- Node.js 20.19+ ou 22.12+.
 - npm.
 - PostgreSQL acessível localmente ou via Docker Compose.
 
@@ -160,15 +162,15 @@ Backend:
 ```bash
 cd backend-nest
 npm install
+npm run prisma:generate
+npx prisma validate --schema=prisma/schema.prisma
+npm run prisma:migrate:test
 npm run lint
 npx tsc --noEmit
 npm run build
 npm run test
 npm run test:integration
 npm run test:e2e
-npm run prisma:generate
-npx prisma validate --schema=prisma/schema.prisma
-npm run prisma:migrate:test
 ```
 
 ## Estrutura
