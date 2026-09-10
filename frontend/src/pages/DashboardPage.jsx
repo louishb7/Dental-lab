@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
-import { PackageCheck } from "lucide-react";
-import AttentionPanel from "../components/dashboard/AttentionPanel.jsx";
+import ReadyQueue from "../components/dashboard/ReadyQueue.jsx";
 import DayBoard from "../components/dashboard/DayBoard.jsx";
 import WeekSchedule from "../components/dashboard/WeekSchedule.jsx";
 import PageContainer from "../components/layout/PageContainer.jsx";
@@ -39,20 +38,6 @@ function getDayBoardTitle(date) {
   return `Casos de ${formatDayMonth(date)}`;
 }
 
-function getDayBoardDescription(date, count) {
-  if (isToday(date)) {
-    return count ? "Casos com prazo para hoje." : "Nenhum caso com prazo para hoje.";
-  }
-
-  if (isTomorrow(date)) {
-    return count ? "Casos que entram amanhã." : "Nenhum caso programado para amanhã.";
-  }
-
-  return count
-    ? `Casos planejados para ${formatDayMonth(date)}.`
-    : `Nenhum caso planejado para ${formatDayMonth(date)}.`;
-}
-
 export default function DashboardPage({
   cases = [],
   doctors = [],
@@ -75,7 +60,9 @@ export default function DashboardPage({
   const [weekStart, setWeekStart] = useState(() => getStartOfWeek(today));
   const [selectedDate, setSelectedDate] = useState(() => today);
 
-  if (loading) {
+  // Keep the working surface (including the open delivery queue) mounted while
+  // existing records refresh after an action. Initial bootstrap still shows loading.
+  if (loading && !cases.length) {
     return (
       <PageContainer title="Bancada" description="Carregando visão semanal dos casos.">
         <section className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
@@ -129,7 +116,13 @@ export default function DashboardPage({
           onOpenNewCaseForDate={onOpenNewCaseForDate}
         />
 
-        <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(300px,1fr)]">
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_250px] lg:gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
+          <ReadyQueue
+            cases={readyCases}
+            busy={busy}
+            onOpenCase={onOpenCase}
+            onDeliverCase={onDeliverCase}
+          />
           <DayBoard
             title={
               isToday(selectedDate) && selectedDayHasPending ? (
@@ -145,24 +138,10 @@ export default function DashboardPage({
                 selectedDayTitle
               )
             }
-            description={getDayBoardDescription(selectedDate, selectedDayCases.length)}
             cases={selectedDayCases}
             onOpenCase={onOpenCase}
             onAdvanceCase={onAdvanceCase}
             showReadyAction
-          />
-
-          <AttentionPanel
-            title="Prontos para entrega"
-            description="Saída pendente."
-            cases={readyCases}
-            emptyTitle="Nenhum caso pronto."
-            emptyIcon={PackageCheck}
-            onOpenCase={onOpenCase}
-            onDeliverCase={onDeliverCase}
-            showActions
-            showRemoveAction={false}
-            discreetActions
           />
         </div>
       </div>

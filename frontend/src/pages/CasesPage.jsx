@@ -1,4 +1,5 @@
-import { AlertTriangle, Eye, Layers3, PackageCheck, Plus, Search, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Eye, Layers3, PackageCheck, Plus, Search, Trash2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
 import CaseIntakeForm from "../components/cases/CaseIntakeForm.jsx";
 import AttentionPanel from "../components/dashboard/AttentionPanel.jsx";
@@ -224,19 +225,21 @@ export default function CasesPage({
 
   return (
     <PageContainer
-      kicker="Casos"
-      title="Casos"
+      title="Todos os casos"
       description="Consulte, filtre e acompanhe todos os casos da bancada."
     >
       <div className="grid min-w-0 gap-5">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold">Trabalhos em aberto</h2>
-            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-              {productionCaseCount} em produção · {readyCases.length} prontos
-            </p>
+            <Link
+              to="/"
+              className="inline-flex min-h-11 items-center gap-2 rounded-sm text-sm text-[var(--color-text-muted)] hover:text-primary lg:min-h-8"
+            >
+              <ArrowLeft size={15} /> Voltar à Bancada
+            </Link>
+            <h2 className="mt-1 hidden text-lg font-semibold lg:block">Todos os casos</h2>
           </div>
-          <Button variant="primary" onClick={onNewCase}>
+          <Button variant="outline" onClick={onNewCase}>
             <Plus size={16} />
             Novo caso
           </Button>
@@ -286,18 +289,18 @@ export default function CasesPage({
             Limpar filtros
           </Button>
         </FilterToolbar>
-        {readyCases.length > 0 && (
-          <div className="flex flex-wrap items-center justify-between gap-2 border-l-2 border-[var(--color-success)] pl-3 text-sm">
-            <span className="text-[var(--color-text-soft)]">
-              {readyCases.length}{" "}
-              {readyCases.length === 1 ? "caso pronto para sair" : "casos prontos para sair"}
-            </span>
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--color-text-muted)]">
+          <p aria-live="polite">
+            {openCases.length} {openCases.length === 1 ? "resultado" : "resultados"} · {productionCaseCount}{" "}
+            em produção · {readyCases.length} prontos
+          </p>
+          {readyCases.length > 0 && (
             <Button variant="secondary" size="sm" onClick={openDeliverModal}>
               <PackageCheck size={16} />
               Registrar entrega
             </Button>
-          </div>
-        )}
+          )}
+        </div>
         <section className="min-w-0 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
           <DataTable
             columns={openColumns}
@@ -332,17 +335,22 @@ export default function CasesPage({
         </section>
 
         {overdueCases.length > 0 && (
-          <AttentionPanel
-            title="Atrasados"
-            description="Casos fora do prazo."
-            cases={overdueCases}
-            emptyTitle="Nenhum caso atrasado."
-            emptyIcon={AlertTriangle}
-            onOpenCase={onOpenCaseItems}
-            onDeliverCase={(caseId) => onBulkDeliverCases([caseId])}
-            onRemoveCase={onRemoveCase}
-            showActions
-          />
+          <details className="text-sm">
+            <summary className="min-h-11 cursor-pointer py-3 text-[var(--color-text-muted)]">
+              {overdueCases.length} {overdueCases.length === 1 ? "atrasado nesta consulta" : "atrasados nesta consulta"}
+            </summary>
+            <AttentionPanel
+              title="Atrasados"
+              description="Casos fora do prazo."
+              cases={overdueCases}
+              emptyTitle="Nenhum caso atrasado."
+              emptyIcon={AlertTriangle}
+              onOpenCase={onOpenCaseItems}
+              onDeliverCase={(caseId) => onBulkDeliverCases([caseId])}
+              onRemoveCase={onRemoveCase}
+              showActions
+            />
+          </details>
         )}
       </div>
 

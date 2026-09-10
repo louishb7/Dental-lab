@@ -11,7 +11,7 @@ const PAGE_META = {
     subtitle: null,
   },
   cases: {
-    title: "Casos",
+    title: "Todos os casos",
     subtitle: null,
   },
   history: {
@@ -41,6 +41,7 @@ export default function AppLayout({
 }) {
   const meta = PAGE_META[activePage] || PAGE_META.dashboard;
   const [navigationOpen, setNavigationOpen] = useState(false);
+  const accountProps = { user: session, theme, onToggleTheme, onLogout };
 
   useEffect(() => {
     const desktop = window.matchMedia("(min-width: 1024px)");
@@ -61,17 +62,12 @@ export default function AppLayout({
           Ir para o conteúdo
         </a>
         <div className="hidden lg:block">
-          <AppSidebar activePage={activePage} onNavigate={onNavigate} />
+          <AppSidebar activePage={activePage} onNavigate={onNavigate} {...accountProps} />
         </div>
         <Toast message={message} onDismiss={onDismiss} />
         <main className="flex min-w-0 flex-col bg-transparent">
-          <AppHeader
-            title={meta.title}
-            user={session}
-            theme={theme}
-            onToggleTheme={onToggleTheme}
-            onLogout={onLogout}
-          />
+          <AppHeader title={meta.title} />
+          <h1 className="sr-only hidden lg:block">{meta.title}</h1>
           <div id="page-content" tabIndex={-1} className="min-w-0 flex-1 outline-none">
             {children}
           </div>
@@ -86,6 +82,7 @@ export default function AppLayout({
           <Dialog.Title className="sr-only">Navegação Cadisk</Dialog.Title>
           <AppSidebar
             activePage={activePage}
+            {...accountProps}
             onNavigate={(page) => {
               onNavigate(page);
               setNavigationOpen(false);

@@ -1,4 +1,5 @@
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { Link } from "react-router-dom";
 import { formatWeekRange, isToday } from "../../utils/productionWeek.js";
 import { getLocalDateKey } from "../../utils/formatters.js";
 import Button from "../ui/Button.jsx";
@@ -95,9 +96,12 @@ export default function WeekSchedule({
         })}
       </div>
       <div className="flex items-center justify-between gap-2 border-t border-[var(--color-border)] px-4 py-2 text-xs text-[var(--color-text-muted)]">
-        <span>
-          {weekCount ? "Selecione um dia para ver os trabalhos." : "Semana livre para novos trabalhos."}
-        </span>
+        <Link
+          to="/cases"
+          className="inline-flex min-h-11 items-center gap-2 rounded-sm font-medium text-[var(--color-text-soft)] underline-offset-4 hover:text-primary hover:underline sm:min-h-9"
+        >
+          Todos os casos <ArrowRight size={14} />
+        </Link>
         <Button
           variant="ghost"
           size="sm"

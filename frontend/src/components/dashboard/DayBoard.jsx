@@ -3,7 +3,6 @@ import CaseBoardCard from "./CaseBoardCard.jsx";
 
 export default function DayBoard({
   title,
-  description,
   cases,
   onOpenCase,
   onAdvanceCase,
@@ -12,9 +11,14 @@ export default function DayBoard({
   return (
     <section className="min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)]">
       <div className="border-b border-[var(--color-border)] px-5 py-4">
-        <div className="grid gap-1">
+        <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold leading-tight">{title}</h2>
-          <p className="text-sm leading-snug text-[var(--color-text-muted)]">{description}</p>
+          <span
+            className="text-sm tabular-nums text-[var(--color-text-muted)]"
+            aria-label={`${cases.length} casos neste dia`}
+          >
+            {cases.length}
+          </span>
         </div>
       </div>
       <div className="px-4 py-1">
