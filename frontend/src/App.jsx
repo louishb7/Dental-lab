@@ -17,7 +17,7 @@ const THEME_SEQUENCE = ["dark", "light"];
 
 function getStoredTheme() {
   const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-  return THEME_SEQUENCE.includes(storedTheme) ? storedTheme : "dark";
+  return THEME_SEQUENCE.includes(storedTheme) ? storedTheme : "light";
 }
 
 function getNextTheme(currentTheme) {

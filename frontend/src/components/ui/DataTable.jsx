@@ -1,14 +1,7 @@
 import EmptyState from "./EmptyState.jsx";
 import ErrorState from "./ErrorState.jsx";
 import LoadingState from "./LoadingState.jsx";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "./table.jsx";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./table.jsx";
 
 export default function DataTable({
   columns,
@@ -19,50 +12,56 @@ export default function DataTable({
   emptyTitle = "Nenhum registro encontrado.",
   emptyDescription,
   onRetry,
-  tableClassName = "min-w-[780px]",
+  tableClassName = "w-full table-fixed",
+  renderMobile,
+  mobileHeader,
 }) {
   if (loading) return <LoadingState message="Carregando dados..." />;
   if (error) return <ErrorState message={error} onRetry={onRetry} />;
   if (!data?.length) {
-    return (
-      <EmptyState
-        icon={emptyIcon}
-        title={emptyTitle}
-        description={emptyDescription}
-      />
-    );
+    return <EmptyState icon={emptyIcon} title={emptyTitle} description={emptyDescription} />;
   }
 
   return (
-    <div className="overflow-x-auto rounded-md border border-[var(--color-border)] bg-[var(--color-subtle)]">
-      <Table className={tableClassName}>
-        <TableHeader>
-          <TableRow className="border-[var(--color-border)] hover:bg-transparent">
-            {columns.map((column) => (
-              <TableHead
-                key={column.key}
-                className="h-10 px-3 text-xs font-extrabold uppercase tracking-[0.04em] text-[var(--color-text-muted)]"
-              >
-                {column.header}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+    <>
+      {renderMobile && (
+        <div className="divide-y divide-[var(--color-border)] xl:hidden">
+          {mobileHeader}
           {data.map((row) => (
-            <TableRow
-              key={row.id}
-              className="border-[var(--color-border)] hover:bg-primary/5"
-            >
+            <div key={row.id}>{renderMobile(row)}</div>
+          ))}
+        </div>
+      )}
+      <div className={`min-w-0 ${renderMobile ? "hidden xl:block" : ""}`}>
+        <Table className={tableClassName}>
+          <TableHeader>
+            <TableRow className="border-[var(--color-border)] bg-[var(--color-table-head)] hover:bg-[var(--color-table-head)]">
               {columns.map((column) => (
-                <TableCell key={column.key} className="px-3 py-3 text-sm text-[var(--color-text-soft)]">
-                  {column.render ? column.render(row) : row[column.key]}
-                </TableCell>
+                <TableHead
+                  key={column.key}
+                  className={`h-10 px-4 text-xs font-medium text-[var(--color-text-muted)] ${column.className || ""}`}
+                >
+                  {column.header}
+                </TableHead>
               ))}
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {data.map((row) => (
+              <TableRow key={row.id} className="border-[var(--color-border)] hover:bg-primary/5">
+                {columns.map((column) => (
+                  <TableCell
+                    key={column.key}
+                    className={`whitespace-normal break-words px-4 py-4 text-sm text-[var(--color-text-soft)] ${column.className || ""}`}
+                  >
+                    {column.render ? column.render(row) : row[column.key]}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </>
   );
 }

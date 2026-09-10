@@ -1,71 +1,7 @@
-import {
-  formatWeekRange,
-  formatWeekdayLabel,
-  isToday,
-} from "../../utils/productionWeek.js";
-import { getLocalDateKey } from "../../utils/formatters.js";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import { Badge } from "../ui/badge.jsx";
+import { formatWeekRange, isToday } from "../../utils/productionWeek.js";
+import { getLocalDateKey } from "../../utils/formatters.js";
 import Button from "../ui/Button.jsx";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../ui/card.jsx";
-
-function DayCard({ day, cases, selected, onSelect, onOpenNewCaseForDate }) {
-  const urgentCount = cases.filter((caseItem) => caseItem.priority === "urgent").length;
-  const isCurrentDay = isToday(day);
-
-  return (
-    <div
-      className={[
-        "grid min-h-[88px] min-w-0 grid-rows-[1fr_auto] gap-1.5 rounded-md border p-2.5 text-[var(--color-text)] transition-colors",
-        selected
-          ? "border-primary/40 bg-primary/10 shadow-[inset_0_0_0_1px_var(--color-primary)]"
-          : "border-[var(--color-border)] bg-[var(--color-elevated-bg)] hover:border-primary/30 hover:bg-primary/5",
-      ].join(" ")}
-    >
-      <button
-        className="grid min-w-0 place-items-center gap-1 text-center"
-        type="button"
-        aria-pressed={selected}
-        onClick={() => onSelect(day)}
-      >
-        <div className="inline-flex min-h-4 items-center justify-center gap-1.5">
-          <strong className="text-sm font-extrabold uppercase tracking-[0.08em] text-[var(--color-text)]">
-            {formatWeekdayLabel(day)}
-          </strong>
-          {isCurrentDay && !selected && (
-            <span className="size-1.5 rounded-full bg-primary" aria-label="Hoje" />
-          )}
-        </div>
-        <strong className="text-2xl font-extrabold leading-none text-[var(--color-text)]">{cases.length}</strong>
-        <span className="text-[0.68rem] font-bold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">
-          {cases.length === 1 ? "caso" : "casos"}
-        </span>
-        {urgentCount > 0 && (
-          <Badge variant="outline" className="h-5 w-fit border-[color-mix(in_srgb,var(--color-danger)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-danger)_10%,transparent)] px-1.5 py-0 text-[0.62rem] font-bold text-[var(--color-danger-soft)]">
-            {urgentCount} urg.
-          </Badge>
-        )}
-      </button>
-      <Button
-        className="h-5 w-fit justify-self-end px-1.5 text-[var(--color-text-muted)] hover:text-primary"
-        variant="ghost"
-        size="icon-xs"
-        type="button"
-        aria-label={`Criar caso em ${formatWeekdayLabel(day)}`}
-        onClick={() => onOpenNewCaseForDate(day)}
-      >
-        <Plus className="size-3" />
-        <span className="sr-only">Criar caso</span>
-      </Button>
-    </div>
-  );
-}
 
 export default function WeekSchedule({
   groupedCases,
@@ -78,72 +14,101 @@ export default function WeekSchedule({
   onOpenNewCase,
   onOpenNewCaseForDate,
 }) {
-  const weekHasCases = weekDays.some((day) => {
-    const dayKey = getLocalDateKey(day);
-    return (groupedCases.get(dayKey) || []).length > 0;
-  });
-
+  const selectedKey = getLocalDateKey(selectedDate);
+  const weekCount = weekDays.reduce(
+    (count, day) => count + (groupedCases.get(getLocalDateKey(day)) || []).length,
+    0,
+  );
   return (
-    <Card className="gap-2 rounded-md border-[var(--color-border)] bg-[var(--color-surface)] py-0 text-[var(--color-text)] shadow-sm">
-      <CardHeader className="grid gap-2 px-4 pt-4 pb-0">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="grid gap-1">
-            <CardTitle className="text-xs font-extrabold uppercase tracking-[0.08em] text-[var(--color-text)]">
-              Semana de produção
-            </CardTitle>
-            <CardDescription className="text-[var(--color-text-muted)]">Selecione um dia ou crie um caso direto no prazo.</CardDescription>
-          </div>
-          <Button variant="default" size="sm" type="button" onClick={onOpenNewCase}>
-            <Plus className="size-3.5" />
-            Novo caso
-          </Button>
+    <section
+      className="min-w-0 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]"
+      aria-label="Semana de produção"
+    >
+      <div className="flex items-center justify-between gap-3 px-4 py-4 sm:px-5">
+        <div>
+          <h2 className="text-base font-semibold">Semana de produção</h2>
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+            {weekCount} {weekCount === 1 ? "trabalho agendado" : "trabalhos agendados"}
+          </p>
         </div>
-        <div className="grid grid-cols-[32px_minmax(120px,1fr)_32px] items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-subtle)] p-1">
-          <Button variant="outline" size="icon-xs" type="button" aria-label="Semana anterior" onClick={onPreviousWeek}>
-            <ChevronLeft className="size-3.5" />
-          </Button>
-          <strong className="truncate text-center text-sm font-extrabold text-[var(--color-text)]">
-            {formatWeekRange(weekStart)}
-          </strong>
-          <Button variant="outline" size="icon-xs" type="button" aria-label="Próxima semana" onClick={onNextWeek}>
-            <ChevronRight className="size-3.5" />
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="grid gap-2 px-4 pb-4">
-        {weekHasCases ? (
-          <div className="grid grid-cols-7 gap-1.5 max-[1120px]:grid-flow-col max-[1120px]:auto-cols-[minmax(104px,1fr)] max-[1120px]:overflow-x-auto max-[1120px]:pb-1" aria-label="Dias da semana">
-            {weekDays.map((day) => {
-              const dayKey = getLocalDateKey(day);
-              const dayCases = groupedCases.get(dayKey) || [];
-
-              return (
-                <DayCard
-                  key={dayKey}
-                  day={day}
-                  cases={dayCases}
-                  selected={getLocalDateKey(selectedDate) === dayKey}
-                  onSelect={onSelectDate}
-                  onOpenNewCaseForDate={onOpenNewCaseForDate}
+        <Button variant="primary" onClick={onOpenNewCase}>
+          <Plus size={16} />
+          Novo caso
+        </Button>
+      </div>
+      <div className="flex items-center justify-between gap-2 border-y border-[var(--color-border)] bg-[var(--color-surface-soft)] px-3 py-1">
+        <Button variant="ghost" iconOnly aria-label="Semana anterior" onClick={onPreviousWeek}>
+          <ChevronLeft size={16} />
+        </Button>
+        <span className="text-xs font-medium tabular-nums">{formatWeekRange(weekStart)}</span>
+        <Button variant="ghost" iconOnly aria-label="Próxima semana" onClick={onNextWeek}>
+          <ChevronRight size={16} />
+        </Button>
+      </div>
+      <div className="grid grid-cols-7 divide-x divide-[var(--color-border)]" aria-label="Dias da semana">
+        {weekDays.map((day) => {
+          const key = getLocalDateKey(day);
+          const dayCases = groupedCases.get(key) || [];
+          const urgentCount = dayCases.filter((item) => item.priority === "urgent").length;
+          const selected = selectedKey === key;
+          const label = new Intl.DateTimeFormat("pt-BR", { weekday: "short" }).format(day).replace(".", "");
+          return (
+            <div key={key} className={`relative min-w-0 ${selected ? "bg-primary/8" : ""}`}>
+              <button
+                type="button"
+                aria-pressed={selected}
+                aria-label={`${new Intl.DateTimeFormat("pt-BR", { dateStyle: "full" }).format(day)}, ${dayCases.length} casos${urgentCount ? `, ${urgentCount} urgentes` : ""}`}
+                onClick={() => onSelectDate(day)}
+                className={`grid min-h-24 w-full justify-items-center gap-1 border-t-2 px-1 py-2 transition-colors hover:bg-primary/5 ${selected ? "border-primary" : "border-transparent"}`}
+              >
+                <span
+                  className={`text-[11px] capitalize ${selected ? "font-semibold text-primary" : "text-[var(--color-text-muted)]"}`}
+                >
+                  {label}
+                </span>
+                <span
+                  className={`grid size-7 place-items-center rounded-full text-base font-semibold tabular-nums ${isToday(day) ? "bg-primary text-primary-foreground" : ""}`}
+                >
+                  {day.getDate()}
+                </span>
+                <span className="text-[11px] text-[var(--color-text-muted)]">
+                  <strong className="font-semibold text-[var(--color-text)]">{dayCases.length}</strong>
+                  <span className="hidden sm:inline"> {dayCases.length === 1 ? "caso" : "casos"}</span>
+                </span>
+                <span
+                  className={`size-1.5 rounded-full ${urgentCount ? "bg-[var(--color-danger)]" : "bg-transparent"}`}
+                  aria-hidden="true"
                 />
-              );
-            })}
-          </div>
-        ) : (
-          <div className="flex min-h-14 flex-wrap items-center justify-center gap-3 rounded-md border border-dashed border-[var(--color-border)] bg-[var(--color-subtle)] p-3 text-sm font-semibold text-[var(--color-text-muted)]">
-            <span>Nenhum caso agendado nesta semana.</span>
-            <Button
-              variant="outline"
-              size="xs"
-              type="button"
-              onClick={() => onOpenNewCaseForDate(selectedDate)}
-            >
-              <Plus className="size-3.5" />
-              Criar caso em {formatWeekdayLabel(selectedDate)}
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              </button>
+              <div className="hidden justify-center pb-2 sm:flex">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`Criar caso em ${day.toLocaleDateString("pt-BR")}`}
+                  onClick={() => onOpenNewCaseForDate(day)}
+                >
+                  <Plus size={14} />
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex items-center justify-between gap-2 border-t border-[var(--color-border)] px-4 py-2 text-xs text-[var(--color-text-muted)]">
+        <span>
+          {weekCount ? "Selecione um dia para ver os trabalhos." : "Semana livre para novos trabalhos."}
+        </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-primary sm:hidden"
+          onClick={() => onOpenNewCaseForDate(selectedDate)}
+          aria-label="Criar caso no dia selecionado"
+        >
+          <Plus size={14} />
+          Neste dia
+        </Button>
+      </div>
+    </section>
   );
 }

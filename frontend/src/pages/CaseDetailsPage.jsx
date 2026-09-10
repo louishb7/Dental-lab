@@ -2,6 +2,8 @@ import { Edit3, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import OdontogramSelector from "../components/cases/OdontogramSelector.jsx";
 import Button from "../components/ui/Button.jsx";
+import ActionsMenu from "../components/ui/ActionsMenu.jsx";
+import EmptyState from "../components/ui/EmptyState.jsx";
 import DeadlineBadge from "../components/ui/DeadlineBadge.jsx";
 import FormField from "../components/ui/FormField.jsx";
 import Modal from "../components/ui/Modal.jsx";
@@ -175,127 +177,137 @@ export default function CaseDetailsPage({
   return (
     <>
       <Modal
-        title="Detalhes do caso"
+        title={caseItem.patient_ref}
+        description={doctor?.name || `Dentista #${caseItem.doctor_id}`}
         onClose={onClose}
-        className="max-w-[760px]"
+        className="max-w-[720px]"
       >
-        <div className="grid gap-3">
-          <section className="grid gap-4 rounded-md border border-primary/30 bg-[var(--color-surface)] p-4">
-            <div className="grid grid-cols-4 gap-3 max-[640px]:grid-cols-2">
-              <div className="grid min-w-0 gap-1">
-                <small className="text-xs font-bold text-[var(--color-text-muted)]">Paciente</small>
-                <strong className="truncate text-sm font-bold text-[var(--color-text)]">{caseItem.patient_ref}</strong>
-              </div>
-              <div className="grid min-w-0 gap-1">
-                <small className="text-xs font-bold text-[var(--color-text-muted)]">Dentista</small>
-                <strong className="truncate text-sm font-bold text-[var(--color-text)]">{doctor?.name || `#${caseItem.doctor_id}`}</strong>
-              </div>
-              <div className="grid min-w-0 gap-1">
-                <small className="text-xs font-bold text-[var(--color-text-muted)]">Prazo</small>
-                <DeadlineBadge deadline={caseItem.deadline} status={caseItem.status} />
-              </div>
-              <div className="grid min-w-0 gap-1">
-                <small className="text-xs font-bold text-[var(--color-text-muted)]">Total</small>
-                <strong className="text-sm font-bold text-[var(--color-text)]">{formatCurrency(caseItem.total_value)}</strong>
-                <Button variant="primary" size="sm" className="mt-2 justify-self-start" onClick={() => openItemForm()}>
-                  <Plus size={16} />
-                  Adicionar serviço
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <StatusBadge status={caseItem.status} />
-              {hasUrgentPriority && (
-                <span className="rounded-full border border-[color-mix(in_srgb,var(--color-danger)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-danger)_12%,transparent)] px-2 py-0.5 text-xs font-medium text-[var(--color-danger-soft)]">
-                  Urgente
-                </span>
-              )}
-            </div>
-
-            {(caseNotes.notes || caseNotes.teeth) && (
-              <div className="grid gap-2">
-                {caseNotes.notes && (
-                  <div className="grid gap-1 border-t border-[var(--color-border)] pt-2">
-                    <small className="text-xs font-bold text-[var(--color-text-muted)]">Observações</small>
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--color-text-soft)]">{caseNotes.notes}</p>
-                  </div>
-                )}
-                {caseNotes.teeth && (
-                  <div className="grid gap-1 border-t border-[var(--color-border)] pt-2">
-                    <small className="text-xs font-bold text-[var(--color-text-muted)]">Dentes selecionados</small>
-                    <p className="text-sm leading-relaxed text-[var(--color-text-soft)]">{caseNotes.teeth}</p>
-                  </div>
+        <div className="grid gap-5">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--color-border)] pb-5">
+            <div className="grid gap-2">
+              <div className="flex flex-wrap gap-2">
+                <StatusBadge status={caseItem.status} />
+                {hasUrgentPriority && (
+                  <span className="rounded-full border border-destructive/25 bg-destructive/5 px-2 py-0.5 text-xs text-[var(--color-danger)]">
+                    Urgente
+                  </span>
                 )}
               </div>
-            )}
-          </section>
-
-          {items.length > 0 && (
-            <section className="grid gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-subtle)] p-4">
-              <h3 className="text-base font-bold text-[var(--color-text)]">Serviços extras</h3>
-              <div className="grid gap-2">
+              <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
+                Prazo <DeadlineBadge deadline={caseItem.deadline} status={caseItem.status} />
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="text-xs text-[var(--color-text-muted)]">Valor do caso</span>
+              <strong className="mt-1 block text-xl font-semibold tabular-nums">
+                {formatCurrency(caseItem.total_value)}
+              </strong>
+            </div>
+          </div>
+          <section>
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold">
+                Serviços do caso{" "}
+                <span className="ml-1 font-normal text-[var(--color-text-muted)]">{items.length}</span>
+              </h3>
+              <Button variant="primary" size="sm" onClick={() => openItemForm()}>
+                <Plus size={16} />
+                Adicionar serviço
+              </Button>
+            </div>
+            {items.length ? (
+              <div className="divide-y divide-[var(--color-border)]">
                 {pagedItems.map((item) => {
                   const view = getItemView(item);
-
                   return (
-                    <article key={item.id} className="flex items-start justify-between gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-3 max-[640px]:flex-col">
-                      <div className="grid min-w-0 gap-1">
-                        <strong className="text-sm font-bold text-[var(--color-text)]">{item.tooth ? `Dente ${item.tooth}` : "Serviço extra"}</strong>
-                        {view.notes && <small className="text-xs leading-snug text-[var(--color-text-muted)]">{view.notes}</small>}
-                      </div>
-                      <div className="grid shrink-0 justify-items-end gap-2 max-[640px]:justify-items-start">
-                        {item.unit_value !== null && item.unit_value !== undefined && (
-                          <>
-                            <strong className="text-sm font-bold text-[var(--color-text)]">{formatCurrency(view.totalValue ?? item.unit_value)}</strong>
-                            {view.quantity > 1 && (
-                              <small className="text-xs text-[var(--color-text-muted)]">{`${view.quantity} x ${formatCurrency(item.unit_value)}`}</small>
-                            )}
-                          </>
-                        )}
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <Button variant="secondary" size="sm" onClick={() => openItemForm(item)}>
-                            <Edit3 size={15} />
-                            Editar
-                          </Button>
-                          <Button
-                            variant="danger"
-                            iconOnly
-                            aria-label="Excluir serviço"
-                            onClick={() => onRemoveItem(item.id)}
-                          >
-                            <Trash2 size={15} />
-                          </Button>
+                    <article key={item.id} className="grid gap-3 py-4 sm:grid-cols-[minmax(0,1fr)_auto]">
+                      <div className="flex min-w-0 items-start gap-3">
+                        <span
+                          className="min-w-10 rounded-md border border-[var(--color-border)] bg-[var(--color-surface-soft)] px-2 py-2 text-center text-sm font-semibold tabular-nums"
+                          aria-label={item.tooth ? `Dente ${item.tooth}` : "Sem dente"}
+                        >
+                          {item.tooth || "—"}
+                        </span>
+                        <div className="min-w-0">
+                          <strong className="break-words text-sm font-medium">
+                            {item.service_type || "Serviço odontológico"}
+                          </strong>
+                          {view.notes && (
+                            <p className="mt-1 whitespace-pre-wrap break-words text-xs leading-relaxed text-[var(--color-text-muted)]">
+                              {view.notes}
+                            </p>
+                          )}
                         </div>
+                      </div>
+                      <div className="flex items-center justify-end gap-2">
+                        {item.unit_value !== null && item.unit_value !== undefined && (
+                          <div className="mr-auto text-sm sm:mr-1">
+                            <strong className="block text-right font-semibold tabular-nums">
+                              {formatCurrency(view.totalValue ?? item.unit_value)}
+                            </strong>
+                            {view.quantity > 1 && (
+                              <small className="text-xs text-[var(--color-text-muted)]">
+                                {view.quantity} x {formatCurrency(item.unit_value)}
+                              </small>
+                            )}
+                          </div>
+                        )}
+                        <Button variant="ghost" size="sm" onClick={() => openItemForm(item)}>
+                          <Edit3 size={15} />
+                          Editar
+                        </Button>
+                        <ActionsMenu
+                          label={`Ações do serviço ${item.tooth || item.id}`}
+                          items={[
+                            {
+                              label: "Excluir serviço",
+                              icon: Trash2,
+                              danger: true,
+                              onSelect: () => onRemoveItem(item.id),
+                            },
+                          ]}
+                        />
                       </div>
                     </article>
                   );
                 })}
               </div>
-              {totalServicePages > 1 && (
-                <nav className="flex justify-end gap-1.5" aria-label="Páginas de serviços extras">
-                  {Array.from({ length: totalServicePages }, (_, index) => {
-                    const page = index + 1;
-
-                    return (
-                      <button
-                        key={page}
-                        className={[
-                          "grid size-8 place-items-center rounded-md border text-xs font-bold",
-                          page === currentServicesPage
-                            ? "border-primary/30 bg-primary/10 text-primary"
-                            : "border-[var(--color-border)] bg-[var(--color-subtle)] text-[var(--color-text-soft)]",
-                        ].join(" ")}
-                        type="button"
-                        aria-current={page === currentServicesPage ? "page" : undefined}
-                        onClick={() => setServicesPage(page)}
-                      >
-                        {page}
-                      </button>
-                    );
-                  })}
-                </nav>
-              )}
+            ) : (
+              <EmptyState
+                title="Nenhum serviço registrado."
+                description="Adicione os serviços e dentes deste trabalho."
+              />
+            )}
+            {totalServicePages > 1 && (
+              <nav className="mt-3 flex flex-wrap justify-end gap-2" aria-label="Páginas de serviços">
+                {Array.from({ length: totalServicePages }, (_, index) => index + 1).map((page) => (
+                  <Button
+                    key={page}
+                    variant={page === currentServicesPage ? "primary" : "secondary"}
+                    size="sm"
+                    aria-current={page === currentServicesPage ? "page" : undefined}
+                    onClick={() => setServicesPage(page)}
+                  >
+                    {page}
+                  </Button>
+                ))}
+              </nav>
+            )}
+          </section>
+          {caseNotes.teeth && (
+            <section className="border-t border-[var(--color-border)] pt-4">
+              <h3 className="text-xs font-semibold text-[var(--color-text-muted)]">Dentes selecionados</h3>
+              <p className="mt-2 break-words text-sm tabular-nums">{caseNotes.teeth}</p>
+            </section>
+          )}
+          {caseNotes.notes && (
+            <section className="border-t border-[var(--color-border)] pt-4">
+              <h3 className="text-xs font-semibold text-[var(--color-text-muted)]">
+                Observações do trabalho
+              </h3>
+              <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-[var(--color-text-soft)]">
+                {caseNotes.notes}
+              </p>
             </section>
           )}
         </div>
@@ -305,9 +317,12 @@ export default function CaseDetailsPage({
         <Modal
           title={editingItemId ? "Editar serviço extra" : "Serviço extra"}
           onClose={closeItemForm}
-          className="max-w-[620px]"
+          className={editingItemId ? "max-w-[520px]" : "max-w-[940px]"}
         >
-          <form className="grid gap-3" onSubmit={handleSubmit}>
+          <form
+            className={`grid gap-5 ${editingItemId ? "" : "lg:grid-cols-[minmax(0,1.15fr)_minmax(260px,0.85fr)]"}`}
+            onSubmit={handleSubmit}
+          >
             {editingItemId ? (
               <FormField label="Dentes selecionados">
                 <input
@@ -319,90 +334,95 @@ export default function CaseDetailsPage({
                 />
               </FormField>
             ) : (
-              <div className="grid gap-2">
+              <div className="mx-auto grid w-full max-w-[460px] content-start gap-5 py-4 [&_g[role=button]:focus-visible]:drop-shadow-[0_0_3px_var(--color-primary)] [&>div]:gap-5">
                 <span className="text-xs font-bold text-[var(--color-text-muted)]">Dentes selecionados</span>
                 <OdontogramSelector selectedTeeth={selectedTeeth} onChange={handleTeethChange} />
               </div>
             )}
 
-            <div className="grid gap-1.5 text-xs font-bold text-[var(--color-text-muted)]">
-              <span>Cobrança deste item de serviço</span>
-              <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Cobrança deste item de serviço">
-                <button
-                  type="button"
-                  className={[
-                    "flex min-h-10 items-center justify-center rounded-md border px-3 text-sm font-bold text-[var(--color-text)]",
-                    itemForm.pricing_mode === "fixed"
-                      ? "border-primary/30 bg-primary/10"
-                      : "border-[var(--color-border)] bg-[var(--color-subtle)]",
-                  ].join(" ")}
-                  aria-pressed={itemForm.pricing_mode === "fixed"}
-                  onClick={() => setServicePricingMode("fixed")}
+            <div className="grid content-start gap-4">
+              <div className="grid gap-1.5 text-xs font-bold text-[var(--color-text-muted)]">
+                <span>Cobrança deste item de serviço</span>
+                <div
+                  className="grid grid-cols-2 gap-2"
+                  role="group"
+                  aria-label="Cobrança deste item de serviço"
                 >
-                  <strong>Manter preço fixado</strong>
-                </button>
-                <button
-                  type="button"
-                  className={[
-                    "flex min-h-10 items-center justify-center rounded-md border px-3 text-sm font-bold text-[var(--color-text)]",
-                    itemForm.pricing_mode === "services"
-                      ? "border-primary/30 bg-primary/10"
-                      : "border-[var(--color-border)] bg-[var(--color-subtle)]",
-                  ].join(" ")}
-                  aria-pressed={itemForm.pricing_mode === "services"}
-                  onClick={() => setServicePricingMode("services")}
-                >
-                  <strong>Valor adicional</strong>
-                </button>
-              </div>
-            </div>
-
-            {itemForm.pricing_mode === "services" && (
-              editingItemId ? (
-                <FormField label="Valor adicional">
-                  <input
-                    name="unit_value"
-                    value={itemForm.unit_value}
-                    onChange={onItemChange}
-                    placeholder="R$ 0,00"
-                    required
-                  />
-                </FormField>
-              ) : selectedTeeth.length > 0 && (
-                <div className="grid max-h-40 grid-cols-2 gap-2 overflow-auto pr-1 max-[640px]:grid-cols-1">
-                  {selectedTeeth.map((tooth) => (
-                    <label key={tooth} className="grid gap-1 text-xs font-bold text-[var(--color-text-muted)]">
-                      <span>Dente {tooth}</span>
-                      <input
-                        className={CONTROL_CLASS}
-                        value={unitValues[tooth] || ""}
-                        onChange={(event) => handleUnitValueChange(tooth, event.target.value)}
-                        placeholder="R$ 0,00"
-                        required
-                      />
-                    </label>
-                  ))}
+                  <button
+                    type="button"
+                    className={[
+                      "flex min-h-10 items-center justify-center rounded-md border px-3 text-sm font-bold text-[var(--color-text)]",
+                      itemForm.pricing_mode === "fixed"
+                        ? "border-primary/30 bg-primary/10"
+                        : "border-[var(--color-border)] bg-[var(--color-subtle)]",
+                    ].join(" ")}
+                    aria-pressed={itemForm.pricing_mode === "fixed"}
+                    onClick={() => setServicePricingMode("fixed")}
+                  >
+                    <strong>Manter preço fixado</strong>
+                  </button>
+                  <button
+                    type="button"
+                    className={[
+                      "flex min-h-10 items-center justify-center rounded-md border px-3 text-sm font-bold text-[var(--color-text)]",
+                      itemForm.pricing_mode === "services"
+                        ? "border-primary/30 bg-primary/10"
+                        : "border-[var(--color-border)] bg-[var(--color-subtle)]",
+                    ].join(" ")}
+                    aria-pressed={itemForm.pricing_mode === "services"}
+                    onClick={() => setServicePricingMode("services")}
+                  >
+                    <strong>Valor adicional</strong>
+                  </button>
                 </div>
-              )
-            )}
+              </div>
 
-            <FormField label="Observações">
-              <textarea
-                name="notes"
-                rows="3"
-                value={itemForm.notes}
-                onChange={onItemChange}
-              />
-            </FormField>
+              {itemForm.pricing_mode === "services" &&
+                (editingItemId ? (
+                  <FormField label="Valor adicional">
+                    <input
+                      name="unit_value"
+                      value={itemForm.unit_value}
+                      onChange={onItemChange}
+                      placeholder="R$ 0,00"
+                      required
+                    />
+                  </FormField>
+                ) : (
+                  selectedTeeth.length > 0 && (
+                    <div className="grid grid-cols-2 gap-3">
+                      {selectedTeeth.map((tooth) => (
+                        <label
+                          key={tooth}
+                          className="grid gap-1 text-xs font-bold text-[var(--color-text-muted)]"
+                        >
+                          <span>Dente {tooth}</span>
+                          <input
+                            className={CONTROL_CLASS}
+                            value={unitValues[tooth] || ""}
+                            onChange={(event) => handleUnitValueChange(tooth, event.target.value)}
+                            placeholder="R$ 0,00"
+                            required
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  )
+                ))}
 
-            <div className="flex flex-wrap justify-end gap-2">
-              <Button variant="ghost" onClick={closeItemForm}>
-                Cancelar
-              </Button>
-              <Button variant="primary" disabled={busy} type="submit">
-                <Plus size={16} />
-                {editingItemId ? "Salvar serviço" : "Adicionar serviço"}
-              </Button>
+              <FormField label="Observações">
+                <textarea name="notes" rows="3" value={itemForm.notes} onChange={onItemChange} />
+              </FormField>
+
+              <div className="flex flex-wrap justify-end gap-2">
+                <Button variant="ghost" onClick={closeItemForm}>
+                  Cancelar
+                </Button>
+                <Button variant="primary" disabled={busy} type="submit">
+                  <Plus size={16} />
+                  {editingItemId ? "Salvar serviço" : "Adicionar serviço"}
+                </Button>
+              </div>
             </div>
           </form>
         </Modal>

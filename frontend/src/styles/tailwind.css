@@ -1,181 +1,137 @@
 @layer theme, base, components, utilities;
-
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/preflight.css" layer(base);
 @import "tailwindcss/utilities.css" layer(utilities);
-
 @import "tw-animate-css";
 
-/* Semantic color roles: primary is for creation and navigation; success is for completion actions (mark ready, register delivery); warning, danger, and info are state-only colors for badges. Never use success, warning, danger, or info as a generic accent. */
+/* Teal: identity/actions. Green: completion. Amber: attention. Red: urgency/errors.
+   Routine metadata is neutral. Light is the default. */
 :root,
-[data-theme="dark"] {
-  --color-bg: #141820;
-  --color-sidebar: rgba(18, 22, 29, 0.96);
-  --color-surface: rgba(25, 30, 38, 0.96);
-  --color-surface-soft: rgba(31, 37, 46, 0.96);
-  --color-surface-muted: rgba(52, 57, 64, 0.96);
-  --color-border: rgba(229, 235, 241, 0.13);
-  --color-border-strong: rgba(56, 189, 248, 0.3);
-  --color-text: #f3f4f6;
-  --color-text-muted: #b7bdc4;
-  --color-text-soft: #e0e3e6;
-  --color-primary: #0e7c7b;
-  --color-primary-strong: #096766;
-  --color-danger: #ff6767;
-  --color-warning: #f2b949;
-  --color-success: #22c55e;
-  --color-info: #8ab4ff;
-  --color-header: rgba(19, 23, 30, 0.88);
-  --color-input-bg: rgba(23, 28, 36, 0.98);
-  --color-table-head: rgba(56, 189, 248, 0.08);
-  --color-table-hover: rgba(56, 189, 248, 0.06);
-  --color-subtle: rgba(237, 237, 237, 0.034);
-  --color-overlay: rgba(7, 10, 14, 0.72);
-  --color-body-gradient: linear-gradient(115deg, rgba(18, 23, 30, 0.9), rgba(28, 31, 36, 0.82) 54%, rgba(17, 20, 27, 0.88));
-  --color-body-accent-top: color-mix(in srgb, var(--color-primary) 12%, transparent);
-  --color-body-accent-grid: color-mix(in srgb, var(--color-primary) 14%, transparent);
-  --color-body-accent-depth: color-mix(in srgb, var(--color-primary) 6%, transparent);
-  --color-body-grid-x: rgba(237, 237, 237, 0.03);
-  --color-body-grid-y: rgba(237, 237, 237, 0.022);
-  --color-body-depth: linear-gradient(180deg, transparent, rgba(9, 12, 17, 0.28));
-  --color-control-bg: rgba(21, 26, 34, 0.9);
-  --color-elevated-bg: rgba(32, 38, 47, 0.96);
-  --color-primary-contrast: #f5fdff;
-  --color-danger-soft: #ffd3d3;
-  --color-warning-soft: #ffe5a9;
-  --color-success-soft: #86efac;
-  --color-success-contrast: #052e16;
-  --color-info-soft: #d6e5ff;
-  --space-page-x: 30px;
+[data-theme="light"] {
+  color-scheme: light;
+  --color-bg: #f2f4f4;
+  --color-sidebar: #fafbfb;
+  --color-surface: #ffffff;
+  --color-surface-soft: #f7f9f8;
+  --color-surface-muted: #e9eeec;
+  --color-border: #dce3e0;
+  --color-border-strong: #8fb8b0;
+  --color-text: #243631;
+  --color-text-muted: #5f7069;
+  --color-text-soft: #465b53;
+  --color-primary: #0e7770;
+  --color-primary-strong: #095e58;
+  --color-primary-contrast: #ffffff;
+  --color-danger: #b63e3b;
+  --color-danger-soft: #a33230;
+  --color-warning: #a16b13;
+  --color-warning-soft: #80530b;
+  --color-success: #287747;
+  --color-success-soft: #24693f;
+  --color-success-contrast: #ffffff;
+  --color-info: #64756e;
+  --color-info-soft: #465b53;
+  --color-header: #f2f4f4;
+  --color-input-bg: #ffffff;
+  --color-control-bg: #ffffff;
+  --color-elevated-bg: #ffffff;
+  --color-table-head: #f7f9f8;
+  --color-table-hover: #f3f8f6;
+  --color-subtle: #f7f9f8;
+  --color-overlay: #142c2666;
+  --space-page-x: clamp(16px, 3vw, 40px);
   --space-page-y: 24px;
   --space-card: 20px;
   --space-card-sm: 16px;
-  --space-grid: 16px;
+  --space-grid: 20px;
   --radius-sm: 4px;
   --radius-md: 8px;
-  --radius-lg: 14px;
-  --shadow-soft: 0 24px 80px rgba(0, 0, 0, 0.28);
+  --radius-lg: 12px;
+  --shadow-soft: 0 16px 48px #183b241a, 0 2px 8px #183b240a;
 }
-
-[data-theme="light"] {
-  --color-bg: #f5f8fb;
-  --color-sidebar: rgba(255, 255, 255, 0.96);
-  --color-surface: rgba(255, 255, 255, 0.98);
-  --color-surface-soft: #f7fafc;
-  --color-surface-muted: #eef0ef;
-  --color-border: rgba(23, 39, 54, 0.14);
-  --color-border-strong: rgba(15, 111, 143, 0.32);
-  --color-text: #202833;
-  --color-text-muted: #68727a;
-  --color-text-soft: #3a434d;
-  --color-primary: #0e7c7b;
-  --color-primary-strong: #095f60;
-  --color-danger: #c44848;
-  --color-warning: #a66f10;
-  --color-success: #15803d;
-  --color-info: #335fa7;
-  --color-header: rgba(255, 255, 255, 0.88);
-  --color-input-bg: #ffffff;
-  --color-table-head: rgba(15, 111, 143, 0.08);
-  --color-table-hover: rgba(15, 111, 143, 0.05);
-  --color-subtle: rgba(40, 58, 76, 0.045);
-  --color-overlay: rgba(19, 27, 37, 0.34);
-  --color-body-gradient: linear-gradient(140deg, rgba(245, 248, 251, 0.98), rgba(237, 244, 249, 0.94));
-  --color-body-accent-top: color-mix(in srgb, var(--color-primary) 10%, transparent);
-  --color-body-accent-grid: color-mix(in srgb, var(--color-primary) 9%, transparent);
-  --color-body-accent-depth: color-mix(in srgb, var(--color-primary) 4%, transparent);
-  --color-body-grid-x: rgba(23, 39, 54, 0.045);
-  --color-body-grid-y: rgba(23, 39, 54, 0.04);
-  --color-body-depth: linear-gradient(180deg, transparent, rgba(216, 226, 236, 0.28));
-  --color-control-bg: #ffffff;
-  --color-elevated-bg: #ffffff;
-  --color-primary-contrast: #f5fdff;
-  --color-danger-soft: #8a2b2b;
-  --color-warning-soft: #6f4d10;
-  --color-success-soft: #166534;
-  --color-success-contrast: #f7fff8;
-  --color-info-soft: #20457d;
-  --shadow-soft: 0 24px 60px rgba(28, 49, 68, 0.12);
+[data-theme="dark"] {
+  color-scheme: dark;
+  --color-bg: #17211e;
+  --color-sidebar: #1b2823;
+  --color-surface: #21302a;
+  --color-surface-soft: #26372f;
+  --color-surface-muted: #31443b;
+  --color-border: #394c42;
+  --color-border-strong: #66998b;
+  --color-text: #edf3ef;
+  --color-text-muted: #a7bbb0;
+  --color-text-soft: #c6d6cc;
+  --color-primary: #64c6b5;
+  --color-primary-strong: #8bdcca;
+  --color-primary-contrast: #102e27;
+  --color-danger: #f08e87;
+  --color-danger-soft: #f5a49e;
+  --color-warning: #e2b361;
+  --color-warning-soft: #ebc583;
+  --color-success: #81c996;
+  --color-success-soft: #9fdbaf;
+  --color-success-contrast: #14301c;
+  --color-info: #a7bbb0;
+  --color-info-soft: #c6d6cc;
+  --color-header: #17211e;
+  --color-input-bg: #1b2823;
+  --color-control-bg: #21302a;
+  --color-elevated-bg: #26372f;
+  --color-table-head: #26372f;
+  --color-table-hover: #2a3d33;
+  --color-subtle: #26372f;
+  --color-overlay: #08140fcc;
+  --shadow-soft: 0 16px 48px #00000040;
 }
-
 @layer base {
   html {
     background: var(--color-bg);
   }
-
   body {
     min-width: 320px;
     min-height: 100vh;
     color: var(--color-text);
-    background:
-      var(--color-body-gradient),
-      radial-gradient(circle at top, var(--color-body-accent-top), transparent 28%),
-      var(--color-bg);
-    font-family: "IBM Plex Sans", "Aptos", "Segoe UI", sans-serif;
+    background: var(--color-bg);
+    font-family: "Segoe UI", "Aptos", system-ui, sans-serif;
     font-size: 14px;
-    line-height: 1.45;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
   }
-
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: -2;
-    background:
-      linear-gradient(90deg, var(--color-body-grid-x) 0 1px, transparent 1px 88px),
-      linear-gradient(180deg, var(--color-body-grid-y) 0 1px, transparent 1px 88px),
-      radial-gradient(circle at top, var(--color-body-accent-grid), transparent 34%);
-    opacity: 0.5;
-    pointer-events: none;
-  }
-
-  body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    background:
-      radial-gradient(circle at 50% 0%, var(--color-body-accent-depth), transparent 18%),
-      var(--color-body-depth);
-    pointer-events: none;
-  }
-
   #root {
     min-height: 100vh;
   }
-
   button,
   input,
   textarea,
   select {
     font: inherit;
   }
-
-  button {
+  button,
+  summary {
     cursor: pointer;
   }
-
-  button:focus-visible,
-  input:focus-visible,
-  textarea:focus-visible,
-  select:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--color-primary) 82%, transparent);
-    outline-offset: 2px;
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
   }
-
   ::placeholder {
     color: var(--color-text-muted);
-    opacity: 0.82;
+    opacity: 0.85;
   }
-
   h1,
   h2,
   h3 {
-    font-family: "IBM Plex Sans Condensed", "Aptos Narrow", "Arial Narrow", sans-serif;
-    letter-spacing: 0;
+    letter-spacing: -0.025em;
+  }
+  input,
+  select,
+  textarea {
+    min-width: 0;
+  }
+  input[type="checkbox"] {
+    accent-color: var(--color-primary);
   }
 }
-
 @theme inline {
   --color-background: var(--shadcn-background);
   --color-foreground: var(--shadcn-foreground);
@@ -196,7 +152,6 @@
   --color-input: var(--shadcn-input);
   --color-ring: var(--shadcn-ring);
 }
-
 :root,
 [data-theme="dark"],
 [data-theme="light"] {

@@ -1,8 +1,10 @@
-import { AlertTriangle, Layers3, PackageCheck, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, Eye, Layers3, PackageCheck, Plus, Search, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import CaseIntakeForm from "../components/cases/CaseIntakeForm.jsx";
 import AttentionPanel from "../components/dashboard/AttentionPanel.jsx";
 import Button from "../components/ui/Button.jsx";
+import ActionsMenu from "../components/ui/ActionsMenu.jsx";
+import FilterToolbar from "../components/ui/FilterToolbar.jsx";
 import DataTable from "../components/ui/DataTable.jsx";
 import DeadlineBadge from "../components/ui/DeadlineBadge.jsx";
 import EmptyState from "../components/ui/EmptyState.jsx";
@@ -16,12 +18,7 @@ import { isOverdue } from "../utils/productionWeek.js";
 import CaseDetailsPage from "./CaseDetailsPage.jsx";
 
 const FILTER_CONTROL_CLASS =
-  "min-h-9 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-muted)]/75 focus:border-primary focus:ring-2 focus:ring-primary/25";
-const VERTICAL_READY_CLASS =
-  "!h-auto !min-h-[118px] !w-12 !min-w-0 !rounded-2xl !px-1.5 !py-2.5 !text-[0.68rem] !font-black uppercase !tracking-[0.18em] [text-orientation:mixed] [writing-mode:vertical-rl]";
-const VERTICAL_READY_LABEL_CLASS =
-  "inline-flex min-h-[118px] w-12 items-center justify-center rounded-2xl border border-[color-mix(in_srgb,var(--color-success-soft)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-success-soft)_10%,transparent)] px-1.5 py-2.5 text-[0.68rem] font-black uppercase tracking-[0.18em] text-[var(--color-success-soft)] [text-orientation:mixed] [writing-mode:vertical-rl]";
-
+  "min-h-11 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-muted)]/75 focus:border-primary focus:ring-2 focus:ring-primary/25";
 function sortByPriorityAndDeadline(a, b) {
   if (a.priority !== b.priority) {
     return a.priority === "urgent" ? -1 : 1;
@@ -82,20 +79,18 @@ export default function CasesPage({
     setFilters({ search: "", status: "", doctorId: "" });
   }, [filterResetSignal]);
 
-  const doctorById = useMemo(
-    () => new Map(doctors.map((doctor) => [doctor.id, doctor])),
-    [doctors],
-  );
+  const doctorById = useMemo(() => new Map(doctors.map((doctor) => [doctor.id, doctor])), [doctors]);
 
   const filteredCases = useMemo(() => {
     const search = filters.search.trim().toLowerCase();
 
     return cases.filter((caseItem) => {
       const doctor = doctorById.get(caseItem.doctor_id);
-      const matchesSearch = !search
-        || caseItem.patient_ref?.toLowerCase().includes(search)
-        || String(caseItem.id).includes(search)
-        || doctor?.name?.toLowerCase().includes(search);
+      const matchesSearch =
+        !search ||
+        caseItem.patient_ref?.toLowerCase().includes(search) ||
+        String(caseItem.id).includes(search) ||
+        doctor?.name?.toLowerCase().includes(search);
       const matchesStatus = !filters.status || caseItem.status === filters.status;
       const matchesDoctor = !filters.doctorId || caseItem.doctor_id === Number(filters.doctorId);
 
@@ -143,9 +138,7 @@ export default function CasesPage({
 
   function toggleDeliverySelection(caseId) {
     setSelectedDeliveryIds((current) =>
-      current.includes(caseId)
-        ? current.filter((itemId) => itemId !== caseId)
-        : [...current, caseId],
+      current.includes(caseId) ? current.filter((itemId) => itemId !== caseId) : [...current, caseId],
     );
   }
 
@@ -158,92 +151,74 @@ export default function CasesPage({
     }
   }
 
-  const openColumns = [
-    {
-      key: "patient_ref",
-      header: "Caso / Referência",
-      render: (caseItem) => (
-        <span className="grid min-w-0 gap-1">
-          <strong className="truncate text-sm font-bold text-[var(--color-text)]">{caseItem.patient_ref}</strong>
-          <small className="truncate text-xs text-[var(--color-text-muted)]">{doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`}</small>
-        </span>
-      ),
-    },
-    {
-      key: "services",
-      header: "Resumo",
-      render: (caseItem) => (
-        <span className="block min-w-0">
-          <strong className="text-sm font-bold text-[var(--color-text)]">{formatServiceItemCount(caseItem)}</strong>
-        </span>
-      ),
-    },
-    {
-      key: "deadline",
-      header: "Prazo",
-      render: (caseItem) => (
-        <span className="grid min-w-0 gap-1">
-          <DeadlineBadge deadline={caseItem.deadline} status={caseItem.status} />
-        </span>
-      ),
-    },
-    { key: "status", header: "Status", render: (caseItem) => <StatusBadge status={caseItem.status} /> },
-    { key: "priority", header: "Prioridade", render: (caseItem) => <PriorityBadge priority={caseItem.priority} /> },
-    { key: "total_value", header: "Valor", render: (caseItem) => formatCurrency(caseItem.total_value) },
-    {
-      key: "actions",
-      header: "Ações",
-      render: (caseItem) => (
-        <div className="flex flex-wrap items-center gap-1.5">
+  function caseActions(caseItem) {
+    return (
+      <div className="flex items-center justify-end gap-1">
+        {caseItem.status === "pending" && (
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => onOpenCaseItems(caseItem.id)}
+            aria-label={`Marcar ${caseItem.patient_ref} como pronto`}
+            onClick={() => onAdvanceCase(caseItem)}
           >
-            Exibir detalhes
+            <PackageCheck size={15} />
+            Pronto
           </Button>
-          <Button variant="danger" iconOnly aria-label="Excluir caso" onClick={() => onRemoveCase(caseItem.id)}>
-            <Trash2 size={16} />
-          </Button>
-        </div>
-      ),
+        )}
+        <ActionsMenu
+          label={`Ações de ${caseItem.patient_ref}`}
+          items={[
+            { label: "Exibir detalhes", icon: Eye, onSelect: () => onOpenCaseItems(caseItem.id) },
+            { label: "Excluir caso", icon: Trash2, danger: true, onSelect: () => onRemoveCase(caseItem.id) },
+          ]}
+        />
+      </div>
+    );
+  }
+
+  function caseIdentity(caseItem) {
+    return (
+      <div className="grid min-w-0 gap-1">
+        <button
+          className="break-words text-left font-semibold text-[var(--color-text)] underline-offset-4 hover:text-primary hover:underline"
+          onClick={() => onOpenCaseItems(caseItem.id)}
+        >
+          {caseItem.patient_ref}
+        </button>
+        <span className="text-xs text-[var(--color-text-muted)]">
+          {doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`}
+        </span>
+        <PriorityBadge priority={caseItem.priority} />
+      </div>
+    );
+  }
+
+  const openColumns = [
+    { key: "patient_ref", header: "Paciente / Dentista", className: "w-[29%]", render: caseIdentity },
+    { key: "services", header: "Serviços", className: "w-[16%]", render: formatServiceItemCount },
+    {
+      key: "deadline",
+      header: "Prazo",
+      className: "w-[13%]",
+      render: (item) => <DeadlineBadge deadline={item.deadline} status={item.status} />,
     },
     {
-      key: "ready",
-      header: "Pronto",
-      render: (caseItem) => {
-        if (caseItem.status === "pending") {
-          return (
-            <div className="flex justify-end">
-              <Button
-                variant="success"
-                className={VERTICAL_READY_CLASS}
-                aria-label="Marcar como pronto"
-                title="Marcar como pronto"
-                onClick={() => onAdvanceCase(caseItem)}
-              >
-                PRONTO
-              </Button>
-            </div>
-          );
-        }
-
-        if (caseItem.status === "completed") {
-          return (
-            <div className="flex justify-end">
-              <span className={VERTICAL_READY_LABEL_CLASS} aria-label="Pedido pronto para entrega">
-                PRONTO
-              </span>
-            </div>
-          );
-        }
-
-        return (
-          <div className="flex justify-end">
-            <span className="text-sm text-[var(--color-text-muted)]">—</span>
-          </div>
-        );
-      },
+      key: "status",
+      header: "Estado",
+      className: "w-[12%]",
+      render: (item) => <StatusBadge status={item.status} />,
+    },
+    {
+      key: "total_value",
+      header: "Valor",
+      className: "w-[13%] tabular-nums",
+      render: (item) => formatCurrency(item.total_value),
+    },
+    {
+      key: "actions",
+      header: <span className="sr-only">Ações</span>,
+      className: "w-[17%]",
+      render: caseActions,
     },
   ];
 
@@ -253,74 +228,107 @@ export default function CasesPage({
       title="Casos"
       description="Consulte, filtre e acompanhe todos os casos da bancada."
     >
-      <div className="grid gap-4">
-        <div className="grid gap-2">
-          <div className="grid grid-cols-[minmax(220px,1.8fr)_repeat(2,minmax(132px,1fr))_max-content] gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-3 max-[1120px]:grid-cols-2 max-[640px]:grid-cols-1">
-            <input
-              className={FILTER_CONTROL_CLASS}
-              value={filters.search}
-              onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))}
-              placeholder="Buscar por caso, paciente ou dentista"
-              aria-label="Buscar casos"
-            />
-            <select
-              className={FILTER_CONTROL_CLASS}
-              value={filters.status}
-              onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))}
-              aria-label="Filtrar por status"
-            >
-              <option value="">Todos os status</option>
-              <option value="pending">Pendente</option>
-              <option value="completed">Pronto</option>
-            </select>
-            <select
-              className={FILTER_CONTROL_CLASS}
-              value={filters.doctorId}
-              onChange={(event) => setFilters((current) => ({ ...current, doctorId: event.target.value }))}
-              aria-label="Filtrar por dentista"
-            >
-              <option value="">Todos dentistas</option>
-              {doctors.map((doctor) => (
-                <option key={doctor.id} value={doctor.id}>
-                  {doctor.name}
-                </option>
-              ))}
-            </select>
-            <Button variant="ghost" size="sm" onClick={clearFilters}>
-              Limpar filtros
+      <div className="grid min-w-0 gap-5">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">Trabalhos em aberto</h2>
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+              {productionCaseCount} em produção · {readyCases.length} prontos
+            </p>
+          </div>
+          <Button variant="primary" onClick={onNewCase}>
+            <Plus size={16} />
+            Novo caso
+          </Button>
+        </div>
+        <FilterToolbar
+          activeCount={Number(Boolean(filters.status)) + Number(Boolean(filters.doctorId))}
+          search={
+            <label className="relative block">
+              <Search
+                size={16}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]"
+              />
+              <input
+                className={`${FILTER_CONTROL_CLASS} pl-9`}
+                value={filters.search}
+                onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))}
+                placeholder="Buscar paciente, caso ou dentista"
+                aria-label="Buscar casos"
+              />
+            </label>
+          }
+        >
+          <select
+            className={FILTER_CONTROL_CLASS}
+            value={filters.status}
+            onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))}
+            aria-label="Filtrar por status"
+          >
+            <option value="">Todos os estados</option>
+            <option value="pending">Pendente</option>
+            <option value="completed">Pronto</option>
+          </select>
+          <select
+            className={FILTER_CONTROL_CLASS}
+            value={filters.doctorId}
+            onChange={(event) => setFilters((current) => ({ ...current, doctorId: event.target.value }))}
+            aria-label="Filtrar por dentista"
+          >
+            <option value="">Todos dentistas</option>
+            {doctors.map((doctor) => (
+              <option key={doctor.id} value={doctor.id}>
+                {doctor.name}
+              </option>
+            ))}
+          </select>
+          <Button variant="ghost" size="sm" onClick={clearFilters}>
+            Limpar filtros
+          </Button>
+        </FilterToolbar>
+        {readyCases.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-2 border-l-2 border-[var(--color-success)] pl-3 text-sm">
+            <span className="text-[var(--color-text-soft)]">
+              {readyCases.length}{" "}
+              {readyCases.length === 1 ? "caso pronto para sair" : "casos prontos para sair"}
+            </span>
+            <Button variant="secondary" size="sm" onClick={openDeliverModal}>
+              <PackageCheck size={16} />
+              Registrar entrega
             </Button>
           </div>
-        </div>
-
-        <section className="rounded-md border border-primary/30 bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm">
-          <div className="flex items-start justify-between gap-3 border-b border-[var(--color-border)] px-4 py-3 max-[640px]:flex-col">
-            <div className="grid gap-1">
-              <h3 className="text-base font-bold leading-tight">Casos em aberto</h3>
-              <p className="text-sm leading-snug text-[var(--color-text-muted)]">
-                {productionCaseCount} em produção, {readyCases.length} prontos para entrega.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button variant="primary" onClick={onNewCase}>
-                <Plus size={18} />
-                Novo caso
-              </Button>
-              <Button variant="success" onClick={openDeliverModal}>
-                <PackageCheck size={18} />
-                Registrar entrega
-              </Button>
-            </div>
-          </div>
-          <div className="p-4">
-            <DataTable
-              columns={openColumns}
-              data={openCases}
-              loading={loading}
-              emptyIcon={Layers3}
-              emptyTitle="Nenhum caso em aberto."
-              emptyDescription="Os casos pendentes e prontos aparecem aqui antes da entrega."
-            />
-          </div>
+        )}
+        <section className="min-w-0 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+          <DataTable
+            columns={openColumns}
+            data={openCases}
+            loading={loading}
+            emptyIcon={Layers3}
+            emptyTitle="Nenhum caso em aberto."
+            emptyDescription="Os casos pendentes e prontos aparecem aqui antes da entrega."
+            renderMobile={(caseItem) => (
+              <article className="grid gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto]">
+                <div>{caseIdentity(caseItem)}</div>
+                <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                  <StatusBadge status={caseItem.status} />
+                  <DeadlineBadge deadline={caseItem.deadline} status={caseItem.status} />
+                </div>
+                <div className="flex items-center justify-between gap-3 text-xs text-[var(--color-text-muted)]">
+                  <span>{formatServiceItemCount(caseItem)}</span>
+                  <strong className="tabular-nums text-[var(--color-text-soft)]">
+                    {formatCurrency(caseItem.total_value)}
+                  </strong>
+                </div>
+                <div className="flex justify-end gap-1">
+                  <Button variant="ghost" size="sm" onClick={() => onOpenCaseItems(caseItem.id)}>
+                    <Eye size={15} />
+                    Detalhes
+                  </Button>
+                  {caseActions(caseItem)}
+                </div>
+              </article>
+            )}
+          />
         </section>
 
         {overdueCases.length > 0 && (
@@ -336,15 +344,14 @@ export default function CasesPage({
             showActions
           />
         )}
-
       </div>
 
       {showCaseModal && (
         <Modal
           title="Novo caso"
-          description="Ficha rápida de entrada."
+          description="Identifique o trabalho, selecione os dentes e confira os valores."
           onClose={() => setShowCaseModal(false)}
-          className="max-w-[1200px]"
+          className="max-w-[1060px]"
         >
           <CaseIntakeForm
             doctors={doctors}
@@ -356,7 +363,6 @@ export default function CasesPage({
             onDoctorChange={setSelectedDoctorId}
             onCaseChange={onCaseChange}
             onSubmit={onCaseSubmit}
-            layout="compact"
           />
         </Modal>
       )}
@@ -371,7 +377,10 @@ export default function CasesPage({
             <div className="grid gap-2">
               {readyCases.length ? (
                 readyCases.map((caseItem) => (
-                  <label key={caseItem.id} className="grid cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-subtle)] p-3">
+                  <label
+                    key={caseItem.id}
+                    className="grid cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-subtle)] p-3"
+                  >
                     <input
                       className="size-4 accent-[var(--color-primary)]"
                       type="checkbox"
@@ -379,13 +388,17 @@ export default function CasesPage({
                       onChange={() => toggleDeliverySelection(caseItem.id)}
                     />
                     <span className="grid min-w-0 gap-1">
-                      <strong className="truncate text-sm font-bold text-[var(--color-text)]">{caseItem.patient_ref}</strong>
+                      <strong className="truncate text-sm font-bold text-[var(--color-text)]">
+                        {caseItem.patient_ref}
+                      </strong>
                       <small className="truncate text-xs text-[var(--color-text-muted)]">
                         {doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`} ·{" "}
                         {formatServiceItemCount(caseItem)}
                       </small>
                     </span>
-                    <strong className="text-sm font-bold text-[var(--color-text)]">{formatCurrency(caseItem.total_value)}</strong>
+                    <strong className="text-sm font-bold text-[var(--color-text)]">
+                      {formatCurrency(caseItem.total_value)}
+                    </strong>
                   </label>
                 ))
               ) : (

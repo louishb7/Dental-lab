@@ -1,6 +1,8 @@
-import { Edit3, Eye, Plus, Stethoscope, Trash2 } from "lucide-react";
+import { ArrowUpRight, Edit3, Phone, Plus, Stethoscope, Trash2 } from "lucide-react";
 import Button from "../components/ui/Button.jsx";
-import DataTable from "../components/ui/DataTable.jsx";
+import ActionsMenu from "../components/ui/ActionsMenu.jsx";
+import EmptyState from "../components/ui/EmptyState.jsx";
+import LoadingState from "../components/ui/LoadingState.jsx";
 import FormField from "../components/ui/FormField.jsx";
 import Modal from "../components/ui/Modal.jsx";
 import PageContainer from "../components/layout/PageContainer.jsx";
@@ -20,59 +22,12 @@ export default function DoctorsPage({
   onOpenDoctorCases,
   onRemoveDoctor,
 }) {
-  const columns = [
-    {
-      key: "name",
-      header: "Nome",
-      render: (doctor) => (
-        <span className="grid min-w-0 gap-1">
-          <strong className="truncate text-sm font-bold text-[var(--color-text)]">{doctor.name}</strong>
-          {doctor.notes && <small className="truncate text-xs text-[var(--color-text-muted)]">{doctor.notes}</small>}
-        </span>
-      ),
-    },
-    { key: "clinic_name", header: "Clínica", render: (doctor) => doctor.clinic_name || "-" },
-    { key: "phone", header: "Telefone", render: (doctor) => doctor.phone || "-" },
-    { key: "cases_count", header: "Casos ativos", render: (doctor) => doctor.cases_count ?? 0 },
-    {
-      key: "actions",
-      header: "Ações",
-      render: (doctor) => (
-        <div className="flex flex-wrap items-center gap-1.5">
-          <Button
-            variant="secondary"
-            iconOnly
-            aria-label="Ver casos"
-            onClick={() => onOpenDoctorCases(doctor.id)}
-          >
-            <Eye size={16} />
-          </Button>
-          <Button
-            variant="ghost"
-            iconOnly
-            aria-label="Editar dentista"
-            onClick={() => onEditDoctor(doctor)}
-          >
-            <Edit3 size={16} />
-          </Button>
-          <Button
-            variant="danger"
-            iconOnly
-            aria-label="Excluir dentista"
-            onClick={() => onRemoveDoctor(doctor.id)}
-          >
-            <Trash2 size={16} />
-          </Button>
-        </div>
-      ),
-    },
-  ];
-
   return (
     <PageContainer
+      width="medium"
       kicker="Dentistas"
-      title="Dentistas"
-      description="Cadastre e consulte os dentistas vinculados aos casos."
+      title="Seus dentistas"
+      description={`${doctors.length} ${doctors.length === 1 ? "profissional cadastrado" : "profissionais cadastrados"}`}
       action={
         <Button variant="primary" onClick={onNewDoctor}>
           <Plus size={18} />
@@ -80,23 +35,75 @@ export default function DoctorsPage({
         </Button>
       }
     >
-      <div className="grid gap-4">
-        <section className="rounded-md border border-primary/30 bg-[var(--color-surface)] p-4 text-[var(--color-text)] shadow-sm">
-            <DataTable
-              columns={columns}
-              data={doctors}
-              loading={loading}
-              emptyIcon={Stethoscope}
-              emptyTitle="Nenhum dentista cadastrado."
-              emptyDescription="Cadastre um dentista para vincular casos."
-            />
-        </section>
-      </div>
+      <section className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+        {loading ? (
+          <LoadingState message="Carregando dentistas..." />
+        ) : !doctors.length ? (
+          <EmptyState
+            icon={Stethoscope}
+            title="Nenhum dentista cadastrado."
+            description="Cadastre um dentista para vincular casos."
+          />
+        ) : (
+          <div className="divide-y divide-[var(--color-border)]">
+            {doctors.map((doctor) => (
+              <article
+                key={doctor.id}
+                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:p-5"
+              >
+                <div className="min-w-0">
+                  <h2 className="break-words text-sm font-semibold">{doctor.name}</h2>
+                  <p className="mt-1 break-words text-sm text-[var(--color-text-muted)]">
+                    {doctor.clinic_name || "Clínica não informada"}
+                  </p>
+                  {doctor.phone && (
+                    <p className="mt-2 flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
+                      <Phone size={13} />
+                      {doctor.phone}
+                    </p>
+                  )}
+                  {doctor.notes && (
+                    <details className="mt-1 text-xs text-[var(--color-text-muted)]">
+                      <summary className="w-fit py-2 underline-offset-4 hover:underline">Observações</summary>
+                      <p className="max-w-prose whitespace-pre-wrap break-words py-2">{doctor.notes}</p>
+                    </details>
+                  )}
+                </div>
+                <div className="col-span-2 row-start-2 justify-self-end sm:col-span-1 sm:col-start-2 sm:row-start-1">
+                  <Button variant="secondary" size="sm" onClick={() => onOpenDoctorCases(doctor.id)}>
+                    {doctor.cases_count ?? 0} casos ativos
+                    <ArrowUpRight size={15} />
+                  </Button>
+                </div>
+                <div className="col-start-2 row-start-1 self-start sm:col-start-3 sm:self-center">
+                  <ActionsMenu
+                    label={`Ações de ${doctor.name}`}
+                    items={[
+                      { label: "Editar dentista", icon: Edit3, onSelect: () => onEditDoctor(doctor) },
+                      {
+                        label: "Excluir dentista",
+                        icon: Trash2,
+                        danger: true,
+                        onSelect: () => onRemoveDoctor(doctor.id),
+                      },
+                    ]}
+                  />
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
 
       {showDoctorModal && (
         <Modal
+          className="max-w-[480px]"
           title={editingDoctorId ? "Editar dentista" : "Novo dentista"}
-          description={editingDoctorId ? "Atualize os dados do dentista." : "Cadastre o dentista para vincular novos casos."}
+          description={
+            editingDoctorId
+              ? "Atualize os dados do dentista."
+              : "Cadastre o dentista para vincular novos casos."
+          }
           onClose={() => setShowDoctorModal(false)}
         >
           <form className="grid gap-3" onSubmit={onDoctorSubmit}>

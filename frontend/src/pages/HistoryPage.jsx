@@ -2,6 +2,8 @@ import { History, RotateCcw, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import PageContainer from "../components/layout/PageContainer.jsx";
 import Button from "../components/ui/Button.jsx";
+import ActionsMenu from "../components/ui/ActionsMenu.jsx";
+import FilterToolbar from "../components/ui/FilterToolbar.jsx";
 import ConfirmModal from "../components/ui/ConfirmModal.jsx";
 import DataTable from "../components/ui/DataTable.jsx";
 import EmptyState from "../components/ui/EmptyState.jsx";
@@ -21,7 +23,7 @@ import { formatServiceItemCount } from "../utils/cases.js";
 import { formatCurrency, formatDate } from "../utils/formatters.js";
 
 const FILTER_CONTROL_CLASS =
-  "min-h-9 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-muted)]/75 focus:border-primary focus:ring-2 focus:ring-primary/25";
+  "min-h-11 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-muted)]/75 focus:border-primary focus:ring-2 focus:ring-primary/25";
 const EVENT_PAGE_SIZE = 8;
 const HISTORY_PAGE_SIZE = 10;
 
@@ -170,6 +172,7 @@ export default function HistoryPage({
   const columns = [
     {
       key: "select",
+      className: "w-12",
       header: (
         <input
           type="checkbox"
@@ -193,44 +196,60 @@ export default function HistoryPage({
     },
     {
       key: "patient_ref",
+      className: "w-[25%]",
       header: "Caso / Referência",
       render: (caseItem) => (
         <span className="grid min-w-0 gap-1">
-          <strong className="truncate text-sm font-bold text-[var(--color-text)]">{caseItem.patient_ref}</strong>
-          <small className="truncate text-xs text-[var(--color-text-muted)]">{caseItem.doctor_name}</small>
+          <strong className="break-words text-sm font-semibold text-[var(--color-text)]">
+            {caseItem.patient_ref}
+          </strong>
+          <small className="break-words text-xs text-[var(--color-text-muted)]">{caseItem.doctor_name}</small>
         </span>
       ),
     },
     {
       key: "items_summary",
+      className: "w-[20%]",
       header: "Dentes / Itens",
       render: (caseItem) => (
         <span className="grid min-w-0 gap-1">
-          <strong className="truncate text-sm font-bold text-[var(--color-text)]">{caseItem.items_summary}</strong>
-          <small className="text-xs text-[var(--color-text-muted)]">{caseItem.items_count} itens de serviço</small>
+          <strong className="break-words text-sm font-semibold text-[var(--color-text)]">
+            {caseItem.items_summary}
+          </strong>
+          <small className="text-xs text-[var(--color-text-muted)]">
+            {caseItem.items_count} itens de serviço
+          </small>
         </span>
       ),
     },
     { key: "total_value", header: "Valor", render: (caseItem) => formatCurrency(caseItem.total_value) },
     { key: "status", header: "Status", render: (caseItem) => <StatusBadge status={caseItem.status} /> },
-    { key: "delivered_at", header: "Entregue", render: (caseItem) => formatDate(caseItem.delivered_at) },
+    {
+      key: "delivered_at",
+      header: "Entregue",
+      render: (caseItem) => (caseItem.delivered_at ? formatDate(caseItem.delivered_at) : "—"),
+    },
     {
       key: "actions",
+      className: "w-[19%]",
       header: "Ações",
       render: (caseItem) => (
         <span className="flex flex-wrap gap-2">
           <Button variant="secondary" size="sm" onClick={() => openDetails(caseItem.id)}>
             Ver histórico
           </Button>
-          <Button
-            variant="danger"
-            size="sm"
-            disabled={deleteLoading}
-            onClick={() => requestDeleteOne(caseItem.id)}
-          >
-            <Trash2 size={14} />
-            Apagar
-          </Button>
+          <ActionsMenu
+            label={`Ações de ${caseItem.patient_ref}`}
+            items={[
+              {
+                label: "Apagar registro",
+                icon: Trash2,
+                danger: true,
+                disabled: deleteLoading,
+                onSelect: () => requestDeleteOne(caseItem.id),
+              },
+            ]}
+          />
         </span>
       ),
     },
@@ -470,10 +489,14 @@ export default function HistoryPage({
       description="Arquivo pesquisável de trabalhos criados, entregues e retornados."
     >
       <div className="grid gap-4">
-        <section className="grid gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
-          <div className="grid grid-cols-[minmax(280px,2fr)_minmax(160px,0.8fr)_minmax(160px,0.8fr)_auto] gap-2 max-[980px]:grid-cols-2 max-[640px]:grid-cols-1">
-            <label className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" size={15} />
+        <FilterToolbar
+          activeCount={Number(Boolean(filters.doctorId)) + Number(Boolean(filters.period))}
+          search={
+            <label className="relative block">
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]"
+                size={16}
+              />
               <input
                 className={`${FILTER_CONTROL_CLASS} pl-9`}
                 value={filters.search}
@@ -482,45 +505,48 @@ export default function HistoryPage({
                 aria-label="Buscar histórico"
               />
             </label>
-            <select
-              className={FILTER_CONTROL_CLASS}
-              value={filters.doctorId}
-              onChange={(event) => updateFilter("doctorId", event.target.value)}
-              aria-label="Filtrar por dentista"
-            >
-              <option value="">Todos dentistas</option>
-              {doctors.map((doctor) => (
-                <option key={doctor.id} value={doctor.id}>
-                  {doctor.name}
-                </option>
-              ))}
-            </select>
-            <select
-              className={FILTER_CONTROL_CLASS}
-              value={filters.period}
-              onChange={(event) => updateFilter("period", event.target.value)}
-              aria-label="Filtrar por período de entrega"
-            >
-              <option value="">Todos os períodos</option>
-              <option value="month">Este mês</option>
-              <option value="last_3_months">Últimos 3 meses</option>
-              <option value="last_6_months">Últimos 6 meses</option>
-              <option value="year">Este ano</option>
-            </select>
-            {hasActiveFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters}>
-                Limpar
-              </Button>
-            )}
-          </div>
-        </section>
+          }
+        >
+          <select
+            className={FILTER_CONTROL_CLASS}
+            value={filters.doctorId}
+            onChange={(event) => updateFilter("doctorId", event.target.value)}
+            aria-label="Filtrar por dentista"
+          >
+            <option value="">Todos dentistas</option>
+            {doctors.map((doctor) => (
+              <option key={doctor.id} value={doctor.id}>
+                {doctor.name}
+              </option>
+            ))}
+          </select>
+          <select
+            className={FILTER_CONTROL_CLASS}
+            value={filters.period}
+            onChange={(event) => updateFilter("period", event.target.value)}
+            aria-label="Filtrar por período de entrega"
+          >
+            <option value="">Todos os períodos</option>
+            <option value="month">Este mês</option>
+            <option value="last_3_months">Últimos 3 meses</option>
+            <option value="last_6_months">Últimos 6 meses</option>
+            <option value="year">Este ano</option>
+          </select>
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" onClick={clearFilters}>
+              Limpar
+            </Button>
+          )}
+        </FilterToolbar>
 
-        <section className="rounded-md border border-primary/30 bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm">
+        <section className="min-w-0 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)]">
           <div className="flex items-start justify-between gap-3 border-b border-[var(--color-border)] px-4 py-3 max-[640px]:flex-col">
             <div className="grid gap-1">
               <h3 className="text-base font-bold leading-tight">Arquivo de casos</h3>
               <p className="text-sm leading-snug text-[var(--color-text-muted)]">
-                {pagination ? `${pagination.total} registros encontrados.` : "Busque trabalhos antigos por caso, dentista ou entrega."}
+                {pagination
+                  ? `${pagination.total} registros encontrados.`
+                  : "Busque trabalhos antigos por caso, dentista ou entrega."}
               </p>
             </div>
             {selectedIds.size > 0 && (
@@ -530,14 +556,84 @@ export default function HistoryPage({
               </Button>
             )}
           </div>
-          <div className="grid gap-3 p-4">
+          <div className="grid min-w-0 gap-3">
             <DataTable
+              mobileHeader={
+                <label className="flex min-h-11 items-center gap-3 px-4 text-xs text-[var(--color-text-muted)]">
+                  <input
+                    className="size-4"
+                    type="checkbox"
+                    checked={allPageSelected}
+                    disabled={!hasPageItems || deleteLoading}
+                    onChange={(event) => togglePageSelection(event.target.checked)}
+                  />
+                  Selecionar esta página
+                </label>
+              }
+              renderMobile={(caseItem) => (
+                <article className="grid grid-cols-[auto_minmax(0,1fr)] gap-3 p-4">
+                  <label className="flex min-h-11 w-6 items-start pt-1">
+                    <input
+                      type="checkbox"
+                      className="size-4"
+                      checked={selectedIds.has(caseItem.id)}
+                      disabled={deleteLoading}
+                      onChange={(event) => toggleCaseSelection(caseItem.id, event.target.checked)}
+                      aria-label={`Selecionar ${caseItem.patient_ref}`}
+                    />
+                  </label>
+                  <div className="grid gap-3">
+                    <div>
+                      <button
+                        className="break-words text-left text-sm font-semibold hover:text-primary"
+                        onClick={() => openDetails(caseItem.id)}
+                      >
+                        {caseItem.patient_ref}
+                      </button>
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">{caseItem.doctor_name}</p>
+                    </div>
+                    <p className="break-words text-xs text-[var(--color-text-muted)]">
+                      {caseItem.items_summary} · {caseItem.items_count} itens de serviço
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusBadge status={caseItem.status} />
+                      <span className="text-xs text-[var(--color-text-muted)]">
+                        {caseItem.delivered_at
+                          ? `Entregue em ${formatDate(caseItem.delivered_at)}`
+                          : "Ainda não entregue"}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <strong className="text-sm tabular-nums">{formatCurrency(caseItem.total_value)}</strong>
+                      <div className="flex items-center gap-1">
+                        <Button variant="secondary" size="sm" onClick={() => openDetails(caseItem.id)}>
+                          Ver histórico
+                        </Button>
+                        <ActionsMenu
+                          label={`Ações de ${caseItem.patient_ref}`}
+                          items={[
+                            {
+                              label: "Apagar registro",
+                              icon: Trash2,
+                              danger: true,
+                              disabled: deleteLoading,
+                              onSelect: () => requestDeleteOne(caseItem.id),
+                            },
+                          ]}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              )}
               columns={columns}
               data={historyData.items}
               loading={listLoading}
               error={listError}
               emptyIcon={History}
-              emptyTitle={hasActiveFilters ? "Nenhum caso encontrado com esses filtros." : "Nenhum caso no histórico."}
+              emptyTitle={
+                hasActiveFilters ? "Nenhum caso encontrado com esses filtros." : "Nenhum caso no histórico."
+              }
               emptyDescription={
                 hasActiveFilters
                   ? "Ajuste a busca, o dentista ou o período para ampliar a consulta."
@@ -546,8 +642,13 @@ export default function HistoryPage({
               onRetry={loadHistoryList}
             />
             {pagination && pagination.total_pages > 1 && (
-              <div className="flex flex-wrap items-center justify-end gap-2">
-                <Button variant="secondary" size="sm" disabled={page <= 1 || listLoading} onClick={() => setPage((current) => current - 1)}>
+              <div className="flex flex-wrap items-center justify-end gap-2 px-4 pb-4">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={page <= 1 || listLoading}
+                  onClick={() => setPage((current) => current - 1)}
+                >
                   Anterior
                 </Button>
                 <span className="text-sm font-bold text-[var(--color-text-muted)]">
@@ -568,23 +669,30 @@ export default function HistoryPage({
       </div>
 
       {selectedCaseId && (
-        <Modal title="Histórico do caso" description="Resumo e movimentações persistentes." onClose={closeDetails} className="max-w-[860px]">
+        <Modal
+          title="Histórico do caso"
+          description="Do recebimento à última entrega."
+          onClose={closeDetails}
+          className="max-w-[720px]"
+        >
           {detailLoading && !detail ? (
             <LoadingState message="Carregando histórico..." />
           ) : detailError ? (
             <ErrorState message={detailError} onRetry={() => openDetails(selectedCaseId)} />
           ) : detail ? (
             <div className="grid gap-4">
-              <section className="grid gap-3 rounded-md border border-primary/30 bg-[var(--color-subtle)] p-4">
+              <section className="grid gap-3 border-b border-[var(--color-border)] pb-5">
                 <div className="flex items-start justify-between gap-3 max-[640px]:flex-col">
                   <div className="grid min-w-0 gap-1">
-                    <strong className="truncate text-base font-bold text-[var(--color-text)]">{detail.patient_ref}</strong>
+                    <strong className="break-words text-base font-bold text-[var(--color-text)]">
+                      {detail.patient_ref}
+                    </strong>
                     <span className="text-sm text-[var(--color-text-muted)]">{detail.doctor_name}</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <StatusBadge status={detail.status} />
                     {detail.has_reverted && (
-                      <span className="rounded-full border border-[color-mix(in_srgb,var(--color-warning-soft)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-warning-soft)_10%,transparent)] px-2 py-0.5 text-xs font-bold text-[var(--color-warning-soft)]">
+                      <span className="rounded-full border border-[var(--color-border)] px-2 py-0.5 text-xs text-[var(--color-text-muted)]">
                         Teve retorno
                       </span>
                     )}
@@ -593,25 +701,38 @@ export default function HistoryPage({
 
                 <div className="grid grid-cols-3 gap-3 max-[760px]:grid-cols-2">
                   <div className="grid gap-1">
-                    <small className="text-xs font-bold text-[var(--color-text-muted)]">Entrega recente</small>
-                    <strong className="text-sm text-[var(--color-text)]">{formatDate(detail.delivered_at)}</strong>
+                    <small className="text-xs font-bold text-[var(--color-text-muted)]">
+                      Entrega recente
+                    </small>
+                    <strong className="text-sm text-[var(--color-text)]">
+                      {formatDate(detail.delivered_at)}
+                    </strong>
                   </div>
                   <div className="grid gap-1">
                     <small className="text-xs font-bold text-[var(--color-text-muted)]">Valor</small>
-                    <strong className="text-sm text-[var(--color-text)]">{formatCurrency(detail.total_value)}</strong>
+                    <strong className="text-sm text-[var(--color-text)]">
+                      {formatCurrency(detail.total_value)}
+                    </strong>
                   </div>
                   <div className="grid gap-1">
                     <small className="text-xs font-bold text-[var(--color-text-muted)]">Itens</small>
-                    <strong className="text-sm text-[var(--color-text)]">{formatServiceItemCount(detail)}</strong>
+                    <strong className="text-sm text-[var(--color-text)]">
+                      {formatServiceItemCount(detail)}
+                    </strong>
                   </div>
                 </div>
 
                 {detail.items.length > 0 && (
                   <div className="grid gap-2 border-t border-[var(--color-border)] pt-3">
-                    <small className="text-xs font-bold text-[var(--color-text-muted)]">Dentes e serviços</small>
+                    <small className="text-xs font-bold text-[var(--color-text-muted)]">
+                      Dentes e serviços
+                    </small>
                     <div className="flex flex-wrap gap-2">
                       {detail.items.map((item) => (
-                        <span key={item.id} className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1 text-xs font-semibold text-[var(--color-text-soft)]">
+                        <span
+                          key={item.id}
+                          className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1 text-xs font-semibold text-[var(--color-text-soft)]"
+                        >
                           {item.quantity > 1 ? `${item.quantity}x ` : ""}
                           {item.tooth ? `Dente ${item.tooth}` : "Sem dente"} · {item.service_type}
                         </span>
@@ -630,17 +751,28 @@ export default function HistoryPage({
                 )}
               </section>
 
-              <section className="grid gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-                <h3 className="text-base font-bold text-[var(--color-text)]">Timeline</h3>
+              <section className="grid gap-3">
+                <h3 className="text-base font-bold text-[var(--color-text)]">Movimentações</h3>
                 {events.length ? (
                   <div className="grid gap-2">
                     {events.map((event) => (
-                      <article key={event.id} className="grid gap-1 rounded-md border border-[var(--color-border)] bg-[var(--color-subtle)] p-3">
-                        <div className="flex items-center justify-between gap-3">
-                          <strong className="text-sm font-bold text-[var(--color-text)]">{formatEvent(event)}</strong>
-                          <span className="text-xs font-semibold text-[var(--color-text-muted)]">{formatDateTime(event.created_at)}</span>
+                      <article
+                        key={event.id}
+                        className="relative ml-1 grid gap-2 border-l-2 border-[var(--color-border)] py-3 pl-4 before:absolute before:-left-[5px] before:top-5 before:size-2 before:rounded-full before:bg-[var(--color-text-muted)]"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <strong className="text-sm font-bold text-[var(--color-text)]">
+                            {formatEvent(event)}
+                          </strong>
+                          <span className="text-xs font-semibold text-[var(--color-text-muted)]">
+                            {formatDateTime(event.created_at)}
+                          </span>
                         </div>
-                        {event.reason && <p className="text-sm leading-snug text-[var(--color-text-soft)]">Motivo: {event.reason}</p>}
+                        {event.reason && (
+                          <p className="text-sm leading-snug text-[var(--color-text-soft)]">
+                            Motivo: {event.reason}
+                          </p>
+                        )}
                       </article>
                     ))}
                   </div>
@@ -663,14 +795,14 @@ export default function HistoryPage({
       {showRevertModal && revertTarget && (
         <Modal
           title={`Retornar para ${revertTarget.label}`}
-          description="O backend calculará o status anterior permitido e registrará o motivo no histórico."
+          description="Informe o motivo para registrar este retorno no histórico."
           onClose={() => setShowRevertModal(false)}
           className="max-w-[560px]"
         >
           <form className="grid gap-3" onSubmit={submitRevert}>
             <p className="text-sm leading-relaxed text-[var(--color-text-soft)]">
               Este caso sairá de <strong>{formatStatus(detail?.status)}</strong> e voltará para{" "}
-              <strong>{revertTarget.label}</strong>. Informe o motivo para manter a auditoria do workflow.
+              <strong>{revertTarget.label}</strong>. Informe o motivo para documentar o retorno do trabalho.
             </p>
             <label className="grid gap-1.5 text-xs font-bold text-[var(--color-text-muted)]">
               Motivo do retorno
@@ -682,7 +814,9 @@ export default function HistoryPage({
                 required
               />
             </label>
-            {revertError && <p className="text-sm font-semibold text-[var(--color-danger-soft)]">{revertError}</p>}
+            {revertError && (
+              <p className="text-sm font-semibold text-[var(--color-danger-soft)]">{revertError}</p>
+            )}
             <div className="flex flex-wrap justify-end gap-2">
               <Button variant="ghost" onClick={() => setShowRevertModal(false)}>
                 Cancelar

@@ -1,17 +1,8 @@
-import {
-  CheckCircle2,
-  CircleDollarSign,
-  TrendingDown,
-  TrendingUp,
-} from "lucide-react";
+import { CheckCircle2, CircleDollarSign, TrendingDown, TrendingUp } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import PageContainer from "../components/layout/PageContainer.jsx";
 import Button from "../components/ui/Button.jsx";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "../components/ui/chart.jsx";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "../components/ui/chart.jsx";
 import DataTable from "../components/ui/DataTable.jsx";
 import EmptyState from "../components/ui/EmptyState.jsx";
 import ErrorState from "../components/ui/ErrorState.jsx";
@@ -22,7 +13,7 @@ import { formatCurrency, formatDate, parseCurrencyToNumber } from "../utils/form
 const chartConfig = {
   receita: {
     label: "Receita",
-    color: "var(--color-success)",
+    color: "var(--color-primary)",
   },
 };
 
@@ -32,7 +23,10 @@ function formatMonthLabel(monthKey) {
 
   return new Intl.DateTimeFormat("pt-BR", {
     month: "short",
-  }).format(new Date(Date.UTC(year, month - 1, 1))).replace(".", "");
+    timeZone: "UTC",
+  })
+    .format(new Date(Date.UTC(year, month - 1, 1)))
+    .replace(".", "");
 }
 
 function formatCompactCurrency(value) {
@@ -82,11 +76,19 @@ function buildFallbackRevenueTrend(totalMes, countMes) {
 
 export default function FinancePage({ dashboard, loading, error, onRetry, onOpenHistory }) {
   if (loading) {
-    return <LoadingState message="Carregando financeiro..." />;
+    return (
+      <PageContainer width="finance">
+        <LoadingState message="Carregando financeiro..." />
+      </PageContainer>
+    );
   }
 
   if (error) {
-    return <ErrorState message={error} onRetry={onRetry} />;
+    return (
+      <PageContainer width="finance">
+        <ErrorState message={error} onRetry={onRetry} />
+      </PageContainer>
+    );
   }
 
   const totalMes = parseCurrencyToNumber(dashboard?.delivered_total_month) ?? 0;
@@ -94,9 +96,10 @@ export default function FinancePage({ dashboard, loading, error, onRetry, onOpen
   const deliveredCases = dashboard?.delivered_cases_month ?? [];
   const recentDeliveredCases = deliveredCases.slice(0, 5);
   const averageTicket = countMes > 0 ? totalMes / countMes : 0;
-  const revenueTrend = Array.isArray(dashboard?.revenue_trend) && dashboard.revenue_trend.length
-    ? dashboard.revenue_trend
-    : buildFallbackRevenueTrend(totalMes, countMes);
+  const revenueTrend =
+    Array.isArray(dashboard?.revenue_trend) && dashboard.revenue_trend.length
+      ? dashboard.revenue_trend
+      : buildFallbackRevenueTrend(totalMes, countMes);
   const chartData = revenueTrend.map((item) => ({
     month: item.month,
     monthLabel: formatMonthLabel(item.month),
@@ -122,8 +125,10 @@ export default function FinancePage({ dashboard, loading, error, onRetry, onOpen
       header: "Caso",
       render: (caseItem) => (
         <span className="grid min-w-0 gap-1">
-          <strong className="truncate text-sm font-bold text-[var(--color-text)]">{caseItem.patient_ref}</strong>
-          <small className="truncate text-xs text-[var(--color-text-muted)]">{caseItem.doctor_name}</small>
+          <strong className="break-words text-sm font-bold text-[var(--color-text)]">
+            {caseItem.patient_ref}
+          </strong>
+          <small className="break-words text-xs text-[var(--color-text-muted)]">{caseItem.doctor_name}</small>
         </span>
       ),
     },
@@ -137,136 +142,148 @@ export default function FinancePage({ dashboard, loading, error, onRetry, onOpen
   ];
 
   return (
-    <PageContainer
-      kicker="Financeiro"
-      title="Resumo do mês"
-      description="Acompanhe o valor entregue e os casos concluídos no período."
-    >
-      <div className="grid gap-4">
-        <section className="rounded-md border border-primary/30 bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm">
-          <div className="grid gap-4 p-4">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="grid gap-3">
-                <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">
-                  <CircleDollarSign className="size-4 text-[var(--color-success)]" />
-                  Receita entregue no mês
-                </div>
-                <strong className="text-3xl font-extrabold leading-none text-[var(--color-text)]">
-                  {formatCurrency(totalMes)}
-                </strong>
-                <p className="text-sm font-semibold text-[var(--color-text-muted)]">
-                  {countMes} {countMes === 1 ? "caso entregue" : "casos entregues"} • média {formatCurrency(averageTicket)}
-                </p>
-              </div>
-              {monthComparison && (
-                <span
-                  className={[
-                    "inline-flex w-fit items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-bold",
-                    monthComparison.direction === "up"
-                      ? "border-[color-mix(in_srgb,var(--color-success)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-success)_10%,transparent)] text-[var(--color-success-soft)]"
-                      : "border-[color-mix(in_srgb,var(--color-warning-soft)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-warning-soft)_10%,transparent)] text-[var(--color-warning-soft)]",
-                  ].join(" ")}
-                >
-                  {monthComparison.direction === "up" ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
-                  {monthComparison.label}
-                </span>
-              )}
-            </div>
-            <div className="grid gap-2 border-t border-[var(--color-border)] pt-4">
-              <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">
-                Tendência de receita
-              </div>
-              <ChartContainer config={chartConfig} className="h-[220px] w-full aspect-auto">
-                <BarChart accessibilityLayer data={chartData} margin={{ left: 0, right: 8, top: 8 }}>
-                  <CartesianGrid vertical={false} stroke="var(--color-border)" />
-                  <XAxis
-                    dataKey="monthLabel"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                  />
-                  <YAxis
-                    width={64}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={formatCompactCurrency}
-                  />
-                  <ChartTooltip
-                    cursor={false}
-                    content={
-                      <ChartTooltipContent
-                        formatter={(value) => (
-                          <span className="font-mono font-bold text-[var(--color-text)]">
-                            {formatCurrency(value)}
-                          </span>
-                        )}
-                      />
-                    }
-                  />
-                  <Bar dataKey="receita" fill="var(--color-receita)" radius={[6, 6, 2, 2]} />
-                </BarChart>
-              </ChartContainer>
-            </div>
+    <PageContainer width="finance">
+      <div className="grid min-w-0 gap-5">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold">Resultado do mês</h2>
+          <span className="text-xs capitalize text-[var(--color-text-muted)]">
+            {new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(new Date())}
+          </span>
+        </div>
+        <section
+          aria-label="Resumo financeiro do mês"
+          className="grid grid-cols-2 gap-y-5 border-b border-[var(--color-border)] pb-5 sm:grid-cols-[1.5fr_1fr_1fr]"
+        >
+          <div className="col-span-2 sm:col-span-1">
+            <p className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
+              <CircleDollarSign size={16} />
+              Receita entregue no mês
+            </p>
+            <strong className="mt-2 block text-3xl font-semibold tracking-tight tabular-nums">
+              {formatCurrency(totalMes)}
+            </strong>
+            {monthComparison && (
+              <span className="mt-2 inline-flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
+                {monthComparison.direction === "up" ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+                {monthComparison.label}
+              </span>
+            )}
+          </div>
+          <div className="sm:border-l sm:border-[var(--color-border)] sm:pl-6">
+            <p className="text-xs text-[var(--color-text-muted)]">Casos entregues</p>
+            <strong className="mt-2 block text-2xl font-semibold tabular-nums">{countMes}</strong>
+          </div>
+          <div className="border-l border-[var(--color-border)] pl-6">
+            <p className="text-xs text-[var(--color-text-muted)]">Média por caso</p>
+            <strong className="mt-2 block text-xl font-semibold tabular-nums">
+              {formatCurrency(averageTicket)}
+            </strong>
           </div>
         </section>
-
-        <div className="grid grid-cols-[minmax(280px,0.75fr)_minmax(0,1.35fr)] items-start gap-4 max-[1120px]:grid-cols-1">
-          <section className="rounded-md border border-primary/30 bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm">
-            <div className="border-b border-[var(--color-border)] px-4 py-3">
-              <div className="grid gap-1">
-                <h3 className="text-base font-bold leading-tight">Ranking de receita no mês atual.</h3>
-                <p className="text-sm leading-snug text-[var(--color-text-muted)]">Dentistas com maior valor entregue no período.</p>
-              </div>
+        <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(280px,1fr)]">
+          <section className="min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 sm:p-5">
+            <div className="mb-5">
+              <h2 className="text-sm font-semibold">Evolução da receita</h2>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                Valores entregues nos últimos seis meses
+              </p>
             </div>
-            <div className="p-4">
-              {topDoctors.length ? (
-                <div className="grid">
-                  {topDoctors.map((doctor, index) => (
-                    <div key={doctor.name} className="flex items-center gap-3 border-b border-[var(--color-border)] py-3 last:border-b-0">
-                      <span className="min-w-7 text-sm font-extrabold text-primary">#{index + 1}</span>
-                      <div className="grid min-w-0 gap-1">
-                        <strong className="truncate text-sm font-bold text-[var(--color-text)]">{doctor.name}</strong>
-                        <small className="text-xs text-[var(--color-text-muted)]">
-                          {doctor.count} {doctor.count === 1 ? "entrega" : "entregas"}
-                        </small>
-                      </div>
-                      <strong className="ml-auto whitespace-nowrap text-sm font-bold text-[var(--color-text)]">{formatCurrency(doctor.total)}</strong>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <EmptyState icon={CheckCircle2} title="Nenhuma entrega no mês." />
-              )}
-            </div>
-          </section>
-
-          <section className="rounded-md border border-primary/30 bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm">
-            <div className="border-b border-[var(--color-border)] px-4 py-3">
-              <div className="grid gap-1">
-                <h3 className="text-base font-bold leading-tight">Entregas do mês</h3>
-                <p className="text-sm leading-snug text-[var(--color-text-muted)]">Casos concluídos com valor registrado neste mês.</p>
-              </div>
-            </div>
-            <div className="p-4">
-              <div className="grid gap-3">
-                <DataTable
-                  columns={deliveredColumns}
-                  data={recentDeliveredCases}
-                  emptyIcon={CheckCircle2}
-                  emptyTitle="Nenhuma entrega registrada."
-                  tableClassName="w-full min-w-0"
+            <ChartContainer config={chartConfig} className="h-[180px] sm:h-[220px] w-full aspect-auto">
+              <BarChart accessibilityLayer data={chartData} margin={{ left: 0, right: 8, top: 8 }}>
+                <CartesianGrid vertical={false} stroke="var(--color-border)" />
+                <XAxis
+                  dataKey="monthLabel"
+                  tick={{ fill: "var(--color-text-muted)" }}
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
                 />
-                {deliveredCases.length > recentDeliveredCases.length && (
-                  <div className="flex justify-end">
-                    <Button variant="secondary" size="sm" onClick={onOpenHistory}>
-                      Ver todas no Histórico
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
+                <YAxis
+                  width={76}
+                  tick={{ fontSize: 11, fill: "var(--color-text-muted)" }}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={formatCompactCurrency}
+                />
+                <ChartTooltip
+                  cursor={false}
+                  content={
+                    <ChartTooltipContent
+                      formatter={(value) => (
+                        <span className="font-mono font-bold text-[var(--color-text)]">
+                          {formatCurrency(value)}
+                        </span>
+                      )}
+                    />
+                  }
+                />
+                <Bar dataKey="receita" fill="var(--color-receita)" maxBarSize={44} radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ChartContainer>
+          </section>
+          <section className="min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 sm:p-5">
+            <h2 className="text-sm font-semibold">Receita por dentista</h2>
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">Maiores valores entregues neste mês</p>
+            {topDoctors.length ? (
+              <ol className="mt-3 divide-y divide-[var(--color-border)]">
+                {topDoctors.map((doctor, index) => (
+                  <li key={doctor.name} className="flex items-start gap-3 py-3">
+                    <span className="pt-0.5 text-xs tabular-nums text-[var(--color-text-muted)]">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <strong className="block break-words text-sm font-medium">{doctor.name}</strong>
+                      <span className="mt-1 block text-xs text-[var(--color-text-muted)]">
+                        {doctor.count} {doctor.count === 1 ? "entrega" : "entregas"}
+                      </span>
+                    </div>
+                    <strong className="shrink-0 text-xs font-semibold tabular-nums">
+                      {formatCurrency(doctor.total)}
+                    </strong>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <EmptyState icon={CheckCircle2} title="Nenhuma entrega no mês." />
+            )}
           </section>
         </div>
+        <section className="min-w-0 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+          <div className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] px-4 py-4 sm:px-5">
+            <div>
+              <h2 className="text-sm font-semibold">Entregas do mês</h2>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">Últimos trabalhos concluídos</p>
+            </div>
+            {deliveredCases.length > recentDeliveredCases.length && (
+              <Button variant="ghost" size="sm" onClick={onOpenHistory}>
+                Ver histórico
+              </Button>
+            )}
+          </div>
+          <DataTable
+            columns={deliveredColumns}
+            data={recentDeliveredCases}
+            emptyIcon={CheckCircle2}
+            emptyTitle="Nenhuma entrega registrada."
+            renderMobile={(item) => (
+              <article className="grid gap-2 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <strong className="break-words text-sm font-semibold">{item.patient_ref}</strong>
+                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">{item.doctor_name}</p>
+                  </div>
+                  <strong className="shrink-0 text-sm tabular-nums">
+                    {formatCurrency(item.total_value)}
+                  </strong>
+                </div>
+                <div className="flex flex-wrap justify-between gap-2 text-xs text-[var(--color-text-muted)]">
+                  <span>{formatServiceItemCount(item)}</span>
+                  <span>Entregue em {formatDate(item.delivered_at)}</span>
+                </div>
+              </article>
+            )}
+          />
+        </section>
       </div>
     </PageContainer>
   );

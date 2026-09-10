@@ -10,16 +10,16 @@ export default function DayBoard({
   showReadyAction = false,
 }) {
   return (
-    <section className="rounded-md border border-primary/30 bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm">
-      <div className="border-b border-[var(--color-border)] px-4 py-3">
+    <section className="min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)]">
+      <div className="border-b border-[var(--color-border)] px-5 py-4">
         <div className="grid gap-1">
-          <h3 className="text-base font-bold leading-tight">{title}</h3>
+          <h2 className="text-lg font-semibold leading-tight">{title}</h2>
           <p className="text-sm leading-snug text-[var(--color-text-muted)]">{description}</p>
         </div>
       </div>
-      <div className="p-4">
+      <div className="px-4 py-1">
         {cases.length ? (
-          <div className="grid gap-2">
+          <div className="divide-y divide-[var(--color-border)]">
             {cases.map((caseItem) => (
               <CaseBoardCard
                 key={caseItem.id}
