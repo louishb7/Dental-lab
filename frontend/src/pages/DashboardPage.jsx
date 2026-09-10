@@ -51,6 +51,8 @@ export default function DashboardPage({
   onOpenCase,
   onAdvanceCase,
   onDeliverCase,
+  onBulkDeliverCases,
+  onRequestConfirm,
   onItemChange,
   onItemSubmit,
   onRemoveItem,
@@ -122,6 +124,8 @@ export default function DashboardPage({
             busy={busy}
             onOpenCase={onOpenCase}
             onDeliverCase={onDeliverCase}
+            onBulkDeliverCases={onBulkDeliverCases}
+            onRequestConfirm={onRequestConfirm}
           />
           <DayBoard
             title={

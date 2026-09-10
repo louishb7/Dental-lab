@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import AppLayout from "./components/layout/AppLayout.jsx";
 import ConfirmModal from "./components/ui/ConfirmModal.jsx";
+import Modal from "./components/ui/Modal.jsx";
+import CaseIntakeForm from "./components/cases/CaseIntakeForm.jsx";
+import { Plus } from "lucide-react";
 import AuthPage from "./pages/AuthPage.jsx";
 import CasesPage from "./pages/CasesPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
@@ -62,7 +65,7 @@ function HistoryPageWrapper({ data }) {
   );
 }
 
-function AppContent() {
+function AppContent({ theme, onToggleTheme }) {
   const { session, handleLogout } = useAuth();
   const data = useData();
   const {
@@ -71,7 +74,6 @@ function AppContent() {
     confirmPending,
     setConfirmPending
   } = data;
-  const [theme, setTheme] = useState(() => getStoredTheme());
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -81,15 +83,6 @@ function AppContent() {
   else if (location.pathname.startsWith("/history")) activePage = "history";
   else if (location.pathname.startsWith("/doctors")) activePage = "doctors";
   else if (location.pathname.startsWith("/finance")) activePage = "finance";
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
-  }, [theme]);
-
-  function toggleTheme() {
-    setTheme((current) => getNextTheme(current));
-  }
 
   function handleNavigate(page, options = {}) {
     const nextPage = page === "dashboard" ? "/" : `/${page}`;
@@ -106,7 +99,7 @@ function AppContent() {
       onNavigate={handleNavigate}
       session={session}
       theme={theme}
-      onToggleTheme={toggleTheme}
+      onToggleTheme={onToggleTheme}
       onLogout={handleLogout}
       message={message}
       onDismiss={() => setMessage(null)}
@@ -116,7 +109,7 @@ function AppContent() {
           <DashboardPage
             cases={data.cases}
             doctors={data.doctors}
-            loading={data.loading}
+            loading={data.loading && !data.showCaseModal}
             busy={data.busy}
             selectedCase={data.dashboardDetailOpen ? data.selectedCase : null}
             items={data.items}
@@ -126,6 +119,8 @@ function AppContent() {
             onOpenCase={data.openCaseFromDashboard}
             onAdvanceCase={data.advanceCase}
             onDeliverCase={(caseId) => data.handleBulkDeliverCases([caseId])}
+            onBulkDeliverCases={data.handleBulkDeliverCases}
+            onRequestConfirm={data.requestConfirm}
             onItemChange={data.handleItemChange}
             onItemSubmit={data.handleItemSubmit}
             onRemoveItem={data.removeItem}
@@ -139,17 +134,12 @@ function AppContent() {
             items={data.items}
             loading={data.loading}
             busy={data.busy}
-            caseForm={data.caseForm}
             itemForm={data.itemForm}
             selectedCase={data.selectedCase}
-            showCaseModal={data.showCaseModal}
-            setShowCaseModal={data.setShowCaseModal}
             selectedDoctorId={data.selectedDoctorId}
             setSelectedDoctorId={data.setSelectedDoctorId}
             filterResetSignal={data.casesFilterResetSignal}
             onNewCase={data.openNewCaseModal}
-            onCaseChange={data.handleCaseChange}
-            onCaseSubmit={data.handleCaseSubmit}
             onItemChange={data.handleItemChange}
             onItemSubmit={data.handleItemSubmit}
             onOpenCaseItems={data.openCaseItems}
@@ -191,6 +181,27 @@ function AppContent() {
         } />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+
+      {data.showCaseModal && (
+        <Modal
+          title="Novo caso"
+          description="Identifique o trabalho, selecione os dentes e confira os valores."
+          onClose={() => data.setShowCaseModal(false)}
+          className="max-w-[1060px]"
+        >
+          <CaseIntakeForm
+            doctors={data.doctors}
+            selectedDoctorId={data.selectedDoctorId}
+            caseForm={data.caseForm}
+            busy={data.busy}
+            submitLabel="Salvar caso"
+            submitIcon={Plus}
+            onDoctorChange={data.setSelectedDoctorId}
+            onCaseChange={data.handleCaseChange}
+            onSubmit={data.handleCaseSubmit}
+          />
+        </Modal>
+      )}
       
       {confirmPending && (
         <ConfirmModal
@@ -210,6 +221,18 @@ function AppContent() {
 
 function Root() {
   const { session } = useAuth();
+  const [theme, setTheme] = useState(() => getStoredTheme());
+
+  // Auth and the workspace share the same explicit preference; never use the OS theme.
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
+
+  function toggleTheme() {
+    const nextTheme = getNextTheme(theme);
+    window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    setTheme(nextTheme);
+  }
   
   if (!session) {
     return <AuthPageWrapper />;
@@ -217,7 +240,7 @@ function Root() {
 
   return (
     <DataProvider>
-      <AppContent />
+      <AppContent theme={theme} onToggleTheme={toggleTheme} />
     </DataProvider>
   );
 }

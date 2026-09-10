@@ -1,7 +1,6 @@
 import { AlertTriangle, ArrowLeft, Eye, Layers3, PackageCheck, Plus, Search, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
-import CaseIntakeForm from "../components/cases/CaseIntakeForm.jsx";
 import AttentionPanel from "../components/dashboard/AttentionPanel.jsx";
 import Button from "../components/ui/Button.jsx";
 import ActionsMenu from "../components/ui/ActionsMenu.jsx";
@@ -34,17 +33,12 @@ export default function CasesPage({
   items,
   loading,
   busy,
-  caseForm,
   itemForm,
   selectedCase,
-  showCaseModal,
-  setShowCaseModal,
   selectedDoctorId,
   setSelectedDoctorId,
   filterResetSignal,
   onNewCase,
-  onCaseChange,
-  onCaseSubmit,
   onItemChange,
   onItemSubmit,
   onOpenCaseItems,
@@ -353,27 +347,6 @@ export default function CasesPage({
           </details>
         )}
       </div>
-
-      {showCaseModal && (
-        <Modal
-          title="Novo caso"
-          description="Identifique o trabalho, selecione os dentes e confira os valores."
-          onClose={() => setShowCaseModal(false)}
-          className="max-w-[1060px]"
-        >
-          <CaseIntakeForm
-            doctors={doctors}
-            selectedDoctorId={selectedDoctorId}
-            caseForm={caseForm}
-            busy={busy}
-            submitLabel="Salvar caso"
-            submitIcon={Plus}
-            onDoctorChange={setSelectedDoctorId}
-            onCaseChange={onCaseChange}
-            onSubmit={onCaseSubmit}
-          />
-        </Modal>
-      )}
 
       {showDeliverModal && (
         <Modal

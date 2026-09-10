@@ -231,14 +231,6 @@ export function DataProvider({ children }) {
     setShowDoctorModal(true);
   }
 
-  async function revealCaseInCases(caseId) {
-    navigate("/cases");
-    setSelectedCaseId(caseId);
-    setSelectedDoctorId(null);
-    setCasesFilterResetSignal((current) => current + 1);
-    return loadAppData({ selectedCaseId: caseId });
-  }
-
   async function handleCaseSubmit(event) {
     event.preventDefault();
     if (!selectedDoctorId) return;
@@ -257,11 +249,14 @@ export function DataProvider({ children }) {
       if (automaticItems.length) {
         payload.items = automaticItems;
       }
-      const createdCase = await createCase(payload);
+      await createCase(payload);
       window.localStorage.setItem(LAST_CASE_DOCTOR_STORAGE_KEY, String(selectedDoctorId));
 
-      const refreshed = await revealCaseInCases(createdCase.id);
+      const refreshed = await loadAppData({ selectedCaseId: null });
       if (!refreshed) return;
+      setSelectedCaseId(null);
+      setSelectedDoctorId(null);
+      setCasesFilterResetSignal((current) => current + 1);
       setCaseForm(EMPTY_CASE);
       setShowCaseModal(false);
       setMessage({
@@ -396,12 +391,10 @@ export function DataProvider({ children }) {
   }
 
   function openNewCaseFromDashboard() {
-    navigate("/cases");
     openNewCaseModal();
   }
 
   function openNewCaseFromDashboardDate(date) {
-    navigate("/cases");
     openNewCaseModal({ deadline: getLocalDateKey(date) || getSuggestedCaseDeadline() });
   }
 

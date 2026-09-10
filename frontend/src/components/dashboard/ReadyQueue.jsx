@@ -4,9 +4,20 @@ import Button from "../ui/Button.jsx";
 import DeadlineBadge from "../ui/DeadlineBadge.jsx";
 import Modal from "../ui/Modal.jsx";
 
-export default function ReadyQueue({ cases, busy, onOpenCase, onDeliverCase }) {
+export default function ReadyQueue({ cases, busy, onOpenCase, onDeliverCase, onBulkDeliverCases, onRequestConfirm }) {
   const [open, setOpen] = useState(false);
   const count = cases.length;
+
+  function deliverAll() {
+    if (busy || !count) return;
+    const caseIds = cases.map((caseItem) => caseItem.id);
+    onRequestConfirm({
+      title: "Entregar todos",
+      description: `Marcar ${count} ${count === 1 ? "caso como entregue" : "casos como entregues"}?`,
+      confirmLabel: "Confirmar entrega",
+      action: () => onBulkDeliverCases(caseIds),
+    });
+  }
 
   function rows() {
     return (
@@ -83,6 +94,13 @@ export default function ReadyQueue({ cases, busy, onOpenCase, onDeliverCase }) {
           onClose={() => setOpen(false)}
           className="max-w-[520px]"
         >
+          {count > 0 && (
+            <div className="mb-4 flex justify-end">
+              <Button variant="secondary" disabled={busy} onClick={deliverAll}>
+                <PackageCheck size={16} /> Entregar todos
+              </Button>
+            </div>
+          )}
           {count ? rows() : <p className="py-3 text-sm text-[var(--color-text-muted)]">Nenhuma saída pendente.</p>}
         </Modal>
       )}
