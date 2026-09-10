@@ -1,5 +1,5 @@
 import { History, RotateCcw, Search, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import PageContainer from "../components/layout/PageContainer.jsx";
 import Button from "../components/ui/Button.jsx";
 import ActionsMenu from "../components/ui/ActionsMenu.jsx";
@@ -26,6 +26,49 @@ const FILTER_CONTROL_CLASS =
   "min-h-11 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-muted)]/75 focus:border-primary focus:ring-2 focus:ring-primary/25";
 const EVENT_PAGE_SIZE = 8;
 const HISTORY_PAGE_SIZE = 10;
+
+function createEmptyHistoryPage(page = 1) {
+  return {
+    items: [],
+    pagination: {
+      page,
+      limit: HISTORY_PAGE_SIZE,
+      total: 0,
+      total_pages: 1,
+      has_next_page: false,
+    },
+  };
+}
+
+function normalizeHistoryPage(data, fallbackPage) {
+  const items = Array.isArray(data)
+    ? data
+    : Array.isArray(data?.items)
+      ? data.items
+      : [];
+  const fallback = createEmptyHistoryPage(fallbackPage).pagination;
+  const pagination = data?.pagination;
+
+  if (!pagination) {
+    return {
+      items,
+      pagination: { ...fallback, total: items.length },
+    };
+  }
+
+  return {
+    items,
+    pagination: {
+      page: Number.isFinite(Number(pagination.page)) ? Number(pagination.page) : fallback.page,
+      limit: Number.isFinite(Number(pagination.limit)) ? Number(pagination.limit) : fallback.limit,
+      total: Number.isFinite(Number(pagination.total)) ? Number(pagination.total) : items.length,
+      total_pages: Number.isFinite(Number(pagination.total_pages))
+        ? Math.max(1, Number(pagination.total_pages))
+        : fallback.total_pages,
+      has_next_page: Boolean(pagination.has_next_page),
+    },
+  };
+}
 
 const STATUS_LABELS = {
   pending: "Em andamento",
@@ -147,6 +190,7 @@ export default function HistoryPage({
   const [page, setPage] = useState(1);
   const [historyData, setHistoryData] = useState({ items: [], pagination: null });
   const [listLoading, setListLoading] = useState(false);
+  const [listResolved, setListResolved] = useState(false);
   const [listError, setListError] = useState("");
   const [selectedIds, setSelectedIds] = useState(() => new Set());
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -161,6 +205,7 @@ export default function HistoryPage({
   const [revertLoading, setRevertLoading] = useState(false);
   const [revertError, setRevertError] = useState("");
   const [pendingDelete, setPendingDelete] = useState(null);
+  const handledFocusCaseIdRef = useRef(null);
 
   const pagination = historyData.pagination;
   const revertTarget = getRevertTarget(detail?.status);
@@ -260,25 +305,54 @@ export default function HistoryPage({
   }, [filters, page]);
 
   useEffect(() => {
-    if (!focusCaseId) return;
-    void openDetails(Number(focusCaseId));
-  }, [focusCaseId]);
+    if (!focusCaseId) {
+      handledFocusCaseIdRef.current = null;
+      return;
+    }
+
+    const numericCaseId = Number(focusCaseId);
+
+    if (
+      !listResolved ||
+      listLoading ||
+      listError ||
+      !Number.isSafeInteger(numericCaseId) ||
+      handledFocusCaseIdRef.current === numericCaseId
+    ) {
+      return;
+    }
+
+    handledFocusCaseIdRef.current = numericCaseId;
+
+    if (historyData.pagination?.total === 0) {
+      onClearFocusCase?.();
+      return;
+    }
+
+    void openDetails(numericCaseId);
+  }, [focusCaseId, listResolved, listLoading, listError, historyData.pagination?.total]);
 
   async function loadHistoryList() {
     setListLoading(true);
+    setListResolved(false);
     setListError("");
     try {
       const data = await getCaseHistory(buildHistoryQuery(filters, page));
-      setHistoryData({
-        items: Array.isArray(data?.items) ? data.items : [],
-        pagination: data?.pagination || null,
-      });
+      setHistoryData(normalizeHistoryPage(data, page));
       setSelectedIds(new Set());
     } catch (error) {
       if (handleUnauthorizedError(error)) return;
+
+      if (error.status === 404) {
+        setHistoryData(createEmptyHistoryPage(page));
+        setSelectedIds(new Set());
+        return;
+      }
+
       setListError(error.message);
     } finally {
       setListLoading(false);
+      setListResolved(true);
     }
   }
 
@@ -298,11 +372,30 @@ export default function HistoryPage({
         getCaseHistoryDetail(caseId),
         getCaseHistoryEvents(caseId, { page: 1, limit: EVENT_PAGE_SIZE }),
       ]);
-      setDetail(caseDetail);
+
+      if (!caseDetail) {
+        throw Object.assign(new Error("Caso não encontrado."), { status: 404 });
+      }
+
+      setDetail({
+        ...caseDetail,
+        items: Array.isArray(caseDetail.items) ? caseDetail.items : [],
+      });
       setEvents(Array.isArray(timeline?.items) ? timeline.items : []);
       setEventsPagination(timeline?.pagination || null);
     } catch (error) {
       if (handleUnauthorizedError(error)) return;
+
+      if (error.status === 404) {
+        closeDetails();
+        onMessage?.({
+          type: "error",
+          text: "Este caso não está mais disponível no histórico.",
+        });
+        void loadHistoryList();
+        return;
+      }
+
       setDetailError(error.message);
     } finally {
       setDetailLoading(false);
