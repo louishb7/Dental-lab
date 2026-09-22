@@ -4,7 +4,14 @@ import { X } from "lucide-react";
 import Button from "./Button.jsx";
 import { cn } from "../../lib/utils.js";
 
-export default function Modal({ title, description, children, onClose, className = "", ariaDescribedBy }) {
+export default function Modal({
+  title,
+  description,
+  children,
+  onClose,
+  className = "",
+  ariaDescribedBy,
+}) {
   const opener = useRef(document.activeElement);
   const descriptionId = useId();
   return (
@@ -31,7 +38,9 @@ export default function Modal({ title, description, children, onClose, className
         >
           <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--color-border)] px-4 py-4 sm:px-6">
             <div className="min-w-0">
-              <Dialog.Title className="break-words text-lg font-semibold leading-snug">{title}</Dialog.Title>
+              <Dialog.Title className="break-words text-lg font-semibold leading-snug">
+                {title}
+              </Dialog.Title>
               {description && (
                 <Dialog.Description
                   id={descriptionId}

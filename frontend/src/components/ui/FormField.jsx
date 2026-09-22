@@ -24,7 +24,8 @@ export default function FormField({ label, helperText, errorText, children }) {
     ? cloneElement(children, {
         className: cn(CONTROL_CLASS, children.props.className),
         "aria-invalid": errorText ? true : undefined,
-        "aria-describedby": errorText || helperText ? descriptionId : children.props["aria-describedby"],
+        "aria-describedby":
+          errorText || helperText ? descriptionId : children.props["aria-describedby"],
       })
     : children;
 
@@ -33,12 +34,18 @@ export default function FormField({ label, helperText, errorText, children }) {
       <span>{label}</span>
       {child}
       {helperText && !errorText ? (
-        <small id={descriptionId} className="text-xs font-medium leading-snug text-[var(--color-text-muted)]">
+        <small
+          id={descriptionId}
+          className="text-xs font-medium leading-snug text-[var(--color-text-muted)]"
+        >
           {helperText}
         </small>
       ) : null}
       {errorText ? (
-        <small id={descriptionId} className="text-xs font-semibold leading-snug text-[var(--color-danger)]">
+        <small
+          id={descriptionId}
+          className="text-xs font-semibold leading-snug text-[var(--color-danger)]"
+        >
           {errorText}
         </small>
       ) : null}

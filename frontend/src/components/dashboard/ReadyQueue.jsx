@@ -4,7 +4,14 @@ import Button from "../ui/Button.jsx";
 import DeadlineBadge from "../ui/DeadlineBadge.jsx";
 import Modal from "../ui/Modal.jsx";
 
-export default function ReadyQueue({ cases, busy, onOpenCase, onDeliverCase, onBulkDeliverCases, onRequestConfirm }) {
+export default function ReadyQueue({
+  cases,
+  busy,
+  onOpenCase,
+  onDeliverCase,
+  onBulkDeliverCases,
+  onRequestConfirm,
+}) {
   const [open, setOpen] = useState(false);
   const count = cases.length;
 
@@ -30,7 +37,9 @@ export default function ReadyQueue({ cases, busy, onOpenCase, onDeliverCase, onB
               onClick={() => onOpenCase(caseItem.id)}
             >
               <strong className="break-words text-sm font-semibold">{caseItem.patient_ref}</strong>
-              <span className="break-words text-xs text-[var(--color-text-muted)]">{caseItem.doctor_name}</span>
+              <span className="break-words text-xs text-[var(--color-text-muted)]">
+                {caseItem.doctor_name}
+              </span>
             </button>
             <div className="flex items-center justify-between gap-2">
               <DeadlineBadge deadline={caseItem.deadline} status={caseItem.status} />
@@ -62,7 +71,9 @@ export default function ReadyQueue({ cases, busy, onOpenCase, onDeliverCase, onB
       >
         <PackageCheck size={18} className="shrink-0 text-[var(--color-text-muted)]" />
         <span className={count ? "text-sm font-medium" : "text-xs"}>
-          {count ? `${count} ${count === 1 ? "pronto" : "prontos"} para entrega` : "Nenhum caso pronto para entrega"}
+          {count
+            ? `${count} ${count === 1 ? "pronto" : "prontos"} para entrega`
+            : "Nenhum caso pronto para entrega"}
         </span>
         <ChevronRight size={16} className="ml-auto shrink-0 text-[var(--color-text-muted)]" />
       </button>
@@ -71,7 +82,9 @@ export default function ReadyQueue({ cases, busy, onOpenCase, onDeliverCase, onB
         <h2 className="mb-3 flex min-h-7 items-center gap-2 text-sm font-semibold">
           <PackageCheck size={16} className="text-[var(--color-text-muted)]" />
           Prontos para entrega
-          <span className="ml-auto text-xs font-normal tabular-nums text-[var(--color-text-muted)]">{count}</span>
+          <span className="ml-auto text-xs font-normal tabular-nums text-[var(--color-text-muted)]">
+            {count}
+          </span>
         </h2>
         {count ? (
           <div
@@ -101,7 +114,11 @@ export default function ReadyQueue({ cases, busy, onOpenCase, onDeliverCase, onB
               </Button>
             </div>
           )}
-          {count ? rows() : <p className="py-3 text-sm text-[var(--color-text-muted)]">Nenhuma saída pendente.</p>}
+          {count ? (
+            rows()
+          ) : (
+            <p className="py-3 text-sm text-[var(--color-text-muted)]">Nenhuma saída pendente.</p>
+          )}
         </Modal>
       )}
     </div>

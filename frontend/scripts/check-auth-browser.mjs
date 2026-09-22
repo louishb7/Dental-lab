@@ -1,5 +1,5 @@
 // Browser smoke checks using Node's built-in WebSocket and Chromium DevTools.
-// Start Vite and an isolated Chromium with --remote-debugging-port=9339 first.
+// Invoked by run-auth-browser.mjs, which owns Vite, Chromium and their cleanup.
 import assert from "node:assert/strict";
 import { setTimeout as delay } from "node:timers/promises";
 
@@ -7,13 +7,19 @@ const appUrl = process.env.AUTH_TEST_APP_URL || "http://127.0.0.1:5178";
 const browserUrl = process.env.AUTH_TEST_BROWSER_URL || "http://127.0.0.1:9339";
 for (const url of [appUrl, browserUrl]) {
   assert.ok(
-    ["localhost", "127.0.0.1"].includes(new URL(url).hostname),
+    ["localhost", "127.0.0.1"].includes(new URL(url).hostname) &&
+      new URL(url).protocol === "http:" &&
+      !new URL(url).username &&
+      !new URL(url).password,
     "Only local test servers are allowed",
   );
 }
 const target = await fetch(`${browserUrl}/json/new?${encodeURIComponent("about:blank")}`, {
   method: "PUT",
+  redirect: "error",
+  signal: AbortSignal.timeout(5000),
 }).then((response) => response.json());
+assert.ok(["localhost", "127.0.0.1"].includes(new URL(target.webSocketDebuggerUrl).hostname));
 const socket = new WebSocket(target.webSocketDebuggerUrl);
 await new Promise((resolve) => socket.addEventListener("open", resolve, { once: true }));
 let nextId = 0;
@@ -23,20 +29,38 @@ let lastLogin;
 let lastReset;
 let failRecovery = false;
 let checks = 0;
+const navigations = new Map();
+const interceptions = new Set();
+const canceledRequests = new Set();
+const expectedNetworkErrors = new Set();
+const failures = [];
 const generic =
   "Se existir uma conta com esse e-mail, enviaremos as instruções para redefinir a senha.";
 
 function command(method, params = {}) {
   const id = ++nextId;
   return new Promise((resolve, reject) => {
-    pending.set(id, { resolve, reject });
+    const timer = setTimeout(() => {
+      pending.delete(id);
+      reject(new Error(`DevTools command timed out: ${method}`));
+    }, 5000);
+    pending.set(id, { resolve, reject, timer });
     socket.send(JSON.stringify({ id, method, params }));
   });
 }
 async function intercepted(params) {
   const { requestId, request } = params;
   const path = new URL(request.url).pathname;
-  if (!path.startsWith("/auth/")) return command("Fetch.continueRequest", { requestId });
+  if (
+    !request.url.startsWith("data:") &&
+    !["localhost", "127.0.0.1"].includes(new URL(request.url).hostname)
+  ) {
+    await command("Fetch.failRequest", { requestId, errorReason: "BlockedByClient" });
+    throw new Error("Unexpected external request in local browser test");
+  }
+  if (!path.startsWith("/auth/")) {
+    return command("Fetch.continueRequest", { requestId });
+  }
   let body = {};
   let status = 200;
   const payload = JSON.parse(request.postData || "{}");
@@ -58,14 +82,17 @@ async function intercepted(params) {
   } else if (path === "/auth/forgot-password") {
     counts.forgot++;
     await delay(250);
-    if (failRecovery)
+    if (failRecovery) {
+      expectedNetworkErrors.add(params.networkId);
       return command("Fetch.failRequest", { requestId, errorReason: "ConnectionFailed" });
+    }
     body = { detail: generic };
   } else if (path === "/auth/reset-password") {
     counts.reset++;
     lastReset = payload;
     body = { detail: "Senha redefinida." };
   } else throw new Error("Unexpected auth endpoint");
+  if (status >= 400) expectedNetworkErrors.add(params.networkId);
   return command("Fetch.fulfillRequest", {
     requestId,
     responseCode: status,
@@ -82,17 +109,57 @@ socket.addEventListener("message", (event) => {
   const data = JSON.parse(event.data);
   if (data.id) {
     const waiter = pending.get(data.id);
+    if (!waiter) return;
     pending.delete(data.id);
+    clearTimeout(waiter.timer);
     if (data.error) waiter.reject(new Error(data.error.message));
     else waiter.resolve(data.result);
   } else if (data.method === "Fetch.requestPaused") {
-    intercepted(data.params).catch((error) => {
-      // Navigation can cancel an intercepted request before its mock response is delivered.
-      if (error.message === "Invalid InterceptionId.") return;
-      console.error(error.message);
-      process.exitCode = 1;
+    const startedAt = navigations.get(data.params.frameId) ?? 0;
+    const task = intercepted(data.params).catch(async (error) => {
+      // Correlate the actual network cancellation with a later page navigation.
+      if (error.message === "Invalid InterceptionId.") {
+        await delay(100);
+        if (
+          data.params.networkId &&
+          canceledRequests.has(data.params.networkId) &&
+          (navigations.get(data.params.frameId) ?? 0) > startedAt
+        )
+          return;
+      }
+      failures.push(error.message);
     });
+    interceptions.add(task);
+    void task.then(() => interceptions.delete(task));
+  } else if (data.method === "Page.frameStartedLoading") {
+    navigations.set(data.params.frameId, (navigations.get(data.params.frameId) ?? 0) + 1);
+  } else if (data.method === "Network.loadingFailed" && data.params.canceled) {
+    canceledRequests.add(data.params.requestId);
+  } else if (data.method === "Runtime.exceptionThrown") {
+    failures.push("Uncaught browser exception");
+  } else if (
+    data.method === "Runtime.consoleAPICalled" &&
+    ["error", "warning"].includes(data.params.type)
+  ) {
+    failures.push(
+      "Unexpected browser console warning/error: " +
+        data.params.args.map((arg) => arg.value ?? arg.description).join(" "),
+    );
+  } else if (
+    data.method === "Log.entryAdded" &&
+    ["error", "warning"].includes(data.params.entry.level)
+  ) {
+    const entry = data.params.entry;
+    if (!(entry.source === "network" && expectedNetworkErrors.has(entry.networkRequestId)))
+      failures.push(entry.text);
   }
+});
+socket.addEventListener("close", () => {
+  for (const waiter of pending.values()) {
+    clearTimeout(waiter.timer);
+    waiter.reject(new Error("DevTools connection closed"));
+  }
+  pending.clear();
 });
 async function evaluate(expression) {
   const result = await command("Runtime.evaluate", {
@@ -105,6 +172,7 @@ async function evaluate(expression) {
 }
 async function waitFor(expression) {
   for (let i = 0; i < 100; i++) {
+    assert.deepEqual(failures, [], "Unexpected browser/interception error");
     if (await evaluate(`Boolean(${expression})`)) return;
     await delay(50);
   }
@@ -135,6 +203,9 @@ async function navigate(path, title) {
 
 try {
   await command("Page.enable");
+  await command("Network.enable");
+  await command("Runtime.enable");
+  await command("Log.enable");
   await command("Fetch.enable", { patterns: [{ urlPattern: "*", requestStage: "Request" }] });
   await navigate("/", "Acesse sua bancada");
   await evaluate("localStorage.clear()");
@@ -275,8 +346,10 @@ try {
       "Missing/malformed/query token rejected",
     );
   }
+  await delay(200);
+  await Promise.all(interceptions);
+  assert.deepEqual(failures, [], "Unexpected browser/interception error");
   console.log(`PASS: ${checks} authentication browser checks (mock HTTP, real React UI).`);
 } finally {
-  await command("Page.close").catch(() => {});
   socket.close();
 }

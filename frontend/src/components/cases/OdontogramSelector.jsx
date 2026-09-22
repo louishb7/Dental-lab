@@ -54,12 +54,7 @@ function Tooth({ tooth, selected, onToggle }) {
         }
       }}
     >
-      <ToothShape
-        id={tooth.id}
-        selected={selected}
-        variant={tooth.variant}
-        size={tooth.size}
-      />
+      <ToothShape id={tooth.id} selected={selected} variant={tooth.variant} size={tooth.size} />
     </g>
   );
 }
@@ -67,10 +62,7 @@ function Tooth({ tooth, selected, onToggle }) {
 /**
  * Renderiza a arcada FDI em SVG e sincroniza a seleção com o formulário.
  */
-export default function OdontogramSelector({
-  selectedTeeth = [],
-  onChange,
-}) {
+export default function OdontogramSelector({ selectedTeeth = [], onChange }) {
   const [selectedById, setSelectedById] = useState({});
 
   useEffect(() => {
@@ -82,24 +74,30 @@ export default function OdontogramSelector({
     );
   }, [selectedTeeth]);
 
-  const syncSelectedTeeth = useCallback((nextSelected) => {
-    onChange(sortTeethByFdi(Object.keys(nextSelected).filter((tooth) => nextSelected[tooth])));
-  }, [onChange]);
+  const syncSelectedTeeth = useCallback(
+    (nextSelected) => {
+      onChange(sortTeethByFdi(Object.keys(nextSelected).filter((tooth) => nextSelected[tooth])));
+    },
+    [onChange],
+  );
 
-  const toggleTooth = useCallback((tooth) => {
-    setSelectedById((currentSelected) => {
-      const nextSelected = { ...currentSelected };
+  const toggleTooth = useCallback(
+    (tooth) => {
+      setSelectedById((currentSelected) => {
+        const nextSelected = { ...currentSelected };
 
-      if (nextSelected[tooth]) {
-        delete nextSelected[tooth];
-      } else {
-        nextSelected[tooth] = true;
-      }
+        if (nextSelected[tooth]) {
+          delete nextSelected[tooth];
+        } else {
+          nextSelected[tooth] = true;
+        }
 
-      syncSelectedTeeth(nextSelected);
-      return nextSelected;
-    });
-  }, [syncSelectedTeeth]);
+        syncSelectedTeeth(nextSelected);
+        return nextSelected;
+      });
+    },
+    [syncSelectedTeeth],
+  );
 
   const clearSelection = useCallback(() => {
     setSelectedById({});
@@ -112,7 +110,11 @@ export default function OdontogramSelector({
   );
 
   return (
-    <div className="grid w-full max-w-full justify-items-center gap-2" role="group" aria-label="Selecionar dentes do caso">
+    <div
+      className="grid w-full max-w-full justify-items-center gap-2"
+      role="group"
+      aria-label="Selecionar dentes do caso"
+    >
       <svg
         className="block w-full max-h-[500px] overflow-visible"
         viewBox="0 0 420 550"

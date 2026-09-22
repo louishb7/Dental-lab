@@ -64,13 +64,21 @@ export default function DoctorsPage({
                   )}
                   {doctor.notes && (
                     <details className="mt-1 text-xs text-[var(--color-text-muted)]">
-                      <summary className="w-fit py-2 underline-offset-4 hover:underline">Observações</summary>
-                      <p className="max-w-prose whitespace-pre-wrap break-words py-2">{doctor.notes}</p>
+                      <summary className="w-fit py-2 underline-offset-4 hover:underline">
+                        Observações
+                      </summary>
+                      <p className="max-w-prose whitespace-pre-wrap break-words py-2">
+                        {doctor.notes}
+                      </p>
                     </details>
                   )}
                 </div>
                 <div className="col-span-2 row-start-2 justify-self-end sm:col-span-1 sm:col-start-2 sm:row-start-1">
-                  <Button variant="secondary" size="sm" onClick={() => onOpenDoctorCases(doctor.id)}>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => onOpenDoctorCases(doctor.id)}
+                  >
                     {doctor.cases_count ?? 0} casos ativos
                     <ArrowUpRight size={15} />
                   </Button>
@@ -79,7 +87,11 @@ export default function DoctorsPage({
                   <ActionsMenu
                     label={`Ações de ${doctor.name}`}
                     items={[
-                      { label: "Editar dentista", icon: Edit3, onSelect: () => onEditDoctor(doctor) },
+                      {
+                        label: "Editar dentista",
+                        icon: Edit3,
+                        onSelect: () => onEditDoctor(doctor),
+                      },
                       {
                         label: "Excluir dentista",
                         icon: Trash2,

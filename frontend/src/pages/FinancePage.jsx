@@ -128,7 +128,9 @@ export default function FinancePage({ dashboard, loading, error, onRetry, onOpen
           <strong className="break-words text-sm font-bold text-[var(--color-text)]">
             {caseItem.patient_ref}
           </strong>
-          <small className="break-words text-xs text-[var(--color-text-muted)]">{caseItem.doctor_name}</small>
+          <small className="break-words text-xs text-[var(--color-text-muted)]">
+            {caseItem.doctor_name}
+          </small>
         </span>
       ),
     },
@@ -137,8 +139,16 @@ export default function FinancePage({ dashboard, loading, error, onRetry, onOpen
       header: "Itens de serviço",
       render: (caseItem) => formatServiceItemCount(caseItem),
     },
-    { key: "total_value", header: "Valor", render: (caseItem) => formatCurrency(caseItem.total_value) },
-    { key: "delivered_at", header: "Entregue em", render: (caseItem) => formatDate(caseItem.delivered_at) },
+    {
+      key: "total_value",
+      header: "Valor",
+      render: (caseItem) => formatCurrency(caseItem.total_value),
+    },
+    {
+      key: "delivered_at",
+      header: "Entregue em",
+      render: (caseItem) => formatDate(caseItem.delivered_at),
+    },
   ];
 
   return (
@@ -147,7 +157,9 @@ export default function FinancePage({ dashboard, loading, error, onRetry, onOpen
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold">Resultado do mês</h2>
           <span className="text-xs capitalize text-[var(--color-text-muted)]">
-            {new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(new Date())}
+            {new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(
+              new Date(),
+            )}
           </span>
         </div>
         <section
@@ -164,7 +176,11 @@ export default function FinancePage({ dashboard, loading, error, onRetry, onOpen
             </strong>
             {monthComparison && (
               <span className="mt-2 inline-flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
-                {monthComparison.direction === "up" ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+                {monthComparison.direction === "up" ? (
+                  <TrendingUp size={13} />
+                ) : (
+                  <TrendingDown size={13} />
+                )}
                 {monthComparison.label}
               </span>
             )}
@@ -188,7 +204,10 @@ export default function FinancePage({ dashboard, loading, error, onRetry, onOpen
                 Valores entregues nos últimos seis meses
               </p>
             </div>
-            <ChartContainer config={chartConfig} className="h-[180px] sm:h-[220px] w-full aspect-auto">
+            <ChartContainer
+              config={chartConfig}
+              className="h-[180px] sm:h-[220px] w-full aspect-auto"
+            >
               <BarChart accessibilityLayer data={chartData} margin={{ left: 0, right: 8, top: 8 }}>
                 <CartesianGrid vertical={false} stroke="var(--color-border)" />
                 <XAxis
@@ -217,13 +236,20 @@ export default function FinancePage({ dashboard, loading, error, onRetry, onOpen
                     />
                   }
                 />
-                <Bar dataKey="receita" fill="var(--color-receita)" maxBarSize={44} radius={[4, 4, 0, 0]} />
+                <Bar
+                  dataKey="receita"
+                  fill="var(--color-receita)"
+                  maxBarSize={44}
+                  radius={[4, 4, 0, 0]}
+                />
               </BarChart>
             </ChartContainer>
           </section>
           <section className="min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 sm:p-5">
             <h2 className="text-sm font-semibold">Receita por dentista</h2>
-            <p className="mt-1 text-xs text-[var(--color-text-muted)]">Maiores valores entregues neste mês</p>
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+              Maiores valores entregues neste mês
+            </p>
             {topDoctors.length ? (
               <ol className="mt-3 divide-y divide-[var(--color-border)]">
                 {topDoctors.map((doctor, index) => (
@@ -232,7 +258,9 @@ export default function FinancePage({ dashboard, loading, error, onRetry, onOpen
                       {String(index + 1).padStart(2, "0")}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <strong className="block break-words text-sm font-medium">{doctor.name}</strong>
+                      <strong className="block break-words text-sm font-medium">
+                        {doctor.name}
+                      </strong>
                       <span className="mt-1 block text-xs text-[var(--color-text-muted)]">
                         {doctor.count} {doctor.count === 1 ? "entrega" : "entregas"}
                       </span>
@@ -252,7 +280,9 @@ export default function FinancePage({ dashboard, loading, error, onRetry, onOpen
           <div className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] px-4 py-4 sm:px-5">
             <div>
               <h2 className="text-sm font-semibold">Entregas do mês</h2>
-              <p className="mt-1 text-xs text-[var(--color-text-muted)]">Últimos trabalhos concluídos</p>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                Últimos trabalhos concluídos
+              </p>
             </div>
             {deliveredCases.length > recentDeliveredCases.length && (
               <Button variant="ghost" size="sm" onClick={onOpenHistory}>
@@ -269,8 +299,12 @@ export default function FinancePage({ dashboard, loading, error, onRetry, onOpen
               <article className="grid gap-2 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <strong className="break-words text-sm font-semibold">{item.patient_ref}</strong>
-                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">{item.doctor_name}</p>
+                    <strong className="break-words text-sm font-semibold">
+                      {item.patient_ref}
+                    </strong>
+                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                      {item.doctor_name}
+                    </p>
                   </div>
                   <strong className="shrink-0 text-sm tabular-nums">
                     {formatCurrency(item.total_value)}

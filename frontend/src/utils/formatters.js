@@ -1,7 +1,5 @@
 function parseCurrencyString(value) {
-  const normalized = value
-    .replace(/[^\d,.-]/g, "")
-    .trim();
+  const normalized = value.replace(/[^\d,.-]/g, "").trim();
 
   if (!normalized) return null;
 
@@ -17,9 +15,7 @@ function parseCurrencyString(value) {
     const parts = normalized.split(".");
     const lastPart = parts[parts.length - 1];
     const decimalLike = parts.length === 2 && lastPart.length <= 2;
-    const amount = decimalLike
-      ? Number(normalized)
-      : Number(normalized.replace(/\./g, ""));
+    const amount = decimalLike ? Number(normalized) : Number(normalized.replace(/\./g, ""));
     return Number.isFinite(amount) ? amount : null;
   }
 
@@ -28,9 +24,7 @@ function parseCurrencyString(value) {
 }
 
 export function formatCurrency(value) {
-  const amount = typeof value === "number"
-    ? value
-    : parseCurrencyString(String(value ?? ""));
+  const amount = typeof value === "number" ? value : parseCurrencyString(String(value ?? ""));
 
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",

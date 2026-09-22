@@ -46,13 +46,18 @@ export default function WeekSchedule({
           <ChevronRight size={16} />
         </Button>
       </div>
-      <div className="grid grid-cols-7 divide-x divide-[var(--color-border)]" aria-label="Dias da semana">
+      <div
+        className="grid grid-cols-7 divide-x divide-[var(--color-border)]"
+        aria-label="Dias da semana"
+      >
         {weekDays.map((day) => {
           const key = getLocalDateKey(day);
           const dayCases = groupedCases.get(key) || [];
           const urgentCount = dayCases.filter((item) => item.priority === "urgent").length;
           const selected = selectedKey === key;
-          const label = new Intl.DateTimeFormat("pt-BR", { weekday: "short" }).format(day).replace(".", "");
+          const label = new Intl.DateTimeFormat("pt-BR", { weekday: "short" })
+            .format(day)
+            .replace(".", "");
           return (
             <div key={key} className={`relative min-w-0 ${selected ? "bg-primary/8" : ""}`}>
               <button
@@ -73,8 +78,13 @@ export default function WeekSchedule({
                   {day.getDate()}
                 </span>
                 <span className="text-[11px] text-[var(--color-text-muted)]">
-                  <strong className="font-semibold text-[var(--color-text)]">{dayCases.length}</strong>
-                  <span className="hidden sm:inline"> {dayCases.length === 1 ? "caso" : "casos"}</span>
+                  <strong className="font-semibold text-[var(--color-text)]">
+                    {dayCases.length}
+                  </strong>
+                  <span className="hidden sm:inline">
+                    {" "}
+                    {dayCases.length === 1 ? "caso" : "casos"}
+                  </span>
                 </span>
                 <span
                   className={`size-1.5 rounded-full ${urgentCount ? "bg-[var(--color-danger)]" : "bg-transparent"}`}

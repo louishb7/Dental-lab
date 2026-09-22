@@ -45,7 +45,9 @@ export default function AttentionPanel({
                   onClick={() => onOpenCase(caseItem.id)}
                 >
                   <span className="grid min-w-0 gap-1">
-                    <strong className="break-words text-sm font-semibold">{caseItem.patient_ref}</strong>
+                    <strong className="break-words text-sm font-semibold">
+                      {caseItem.patient_ref}
+                    </strong>
                     <small className="break-words text-xs text-[var(--color-text-muted)]">
                       {caseItem.doctor_name}
                     </small>
@@ -85,7 +87,11 @@ export default function AttentionPanel({
             ))}
           </div>
         ) : (
-          <EmptyState icon={emptyIcon} title={emptyTitle} description="Nada pendente neste bloco." />
+          <EmptyState
+            icon={emptyIcon}
+            title={emptyTitle}
+            description="Nada pendente neste bloco."
+          />
         )}
       </div>
     </section>

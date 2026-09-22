@@ -13,8 +13,6 @@ import { PrismaService } from '../../src/prisma/prisma.service';
 import { UserService } from '../../src/user/user.service';
 import { assertSafeTestDatabaseUrl } from '../../src/config/test-database';
 
-jest.setTimeout(30_000);
-
 describe('password recovery HTTP', () => {
   let app: INestApplication;
   let prisma: PrismaService;
@@ -61,14 +59,18 @@ describe('password recovery HTTP', () => {
     const existing = await request(app.getHttpServer())
       .post('/auth/forgot-password')
       .send({ email })
+      // Mock email delivery is immediate; a fixed 5.5-second floor must not return.
+      .timeout({ deadline: 2000 })
       .expect(200);
     const suppressed = await request(app.getHttpServer())
       .post('/auth/forgot-password')
       .send({ email })
+      .timeout({ deadline: 2000 })
       .expect(200);
     const missing = await request(app.getHttpServer())
       .post('/auth/forgot-password')
       .send({ email: 'missing@example.com' })
+      .timeout({ deadline: 2000 })
       .expect(200);
     for (const response of [existing, suppressed, missing]) {
       expect(response.body).toEqual({ detail: RECOVERY_MESSAGE });
@@ -83,6 +85,7 @@ describe('password recovery HTTP', () => {
     await request(app.getHttpServer())
       .post('/auth/forgot-password')
       .send({ email })
+      .timeout({ deadline: 2000 })
       .expect(200, { detail: RECOVERY_MESSAGE });
     expect(send).not.toHaveBeenCalled();
     expect(await prisma.passwordReset.count()).toBe(0);

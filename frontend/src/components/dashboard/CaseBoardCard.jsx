@@ -11,7 +11,12 @@ function formatItemsLabel(caseItem) {
   return count ? formatServiceItemCount(caseItem) : "Sem itens de serviço";
 }
 
-export default function CaseBoardCard({ caseItem, onOpenCase, onAdvanceCase, showReadyAction = false }) {
+export default function CaseBoardCard({
+  caseItem,
+  onOpenCase,
+  onAdvanceCase,
+  showReadyAction = false,
+}) {
   const canMarkReady = showReadyAction && caseItem.status === "pending" && onAdvanceCase;
 
   return (
@@ -25,7 +30,9 @@ export default function CaseBoardCard({ caseItem, onOpenCase, onAdvanceCase, sho
           >
             {caseItem.patient_ref}
           </button>
-          <small className="break-words text-xs text-[var(--color-text-muted)]">{caseItem.doctor_name}</small>
+          <small className="break-words text-xs text-[var(--color-text-muted)]">
+            {caseItem.doctor_name}
+          </small>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1.5">
           <PriorityBadge priority={caseItem.priority} />

@@ -41,11 +41,7 @@ function createEmptyHistoryPage(page = 1) {
 }
 
 function normalizeHistoryPage(data, fallbackPage) {
-  const items = Array.isArray(data)
-    ? data
-    : Array.isArray(data?.items)
-      ? data.items
-      : [];
+  const items = Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : [];
   const fallback = createEmptyHistoryPage(fallbackPage).pagination;
   const pagination = data?.pagination;
 
@@ -248,7 +244,9 @@ export default function HistoryPage({
           <strong className="break-words text-sm font-semibold text-[var(--color-text)]">
             {caseItem.patient_ref}
           </strong>
-          <small className="break-words text-xs text-[var(--color-text-muted)]">{caseItem.doctor_name}</small>
+          <small className="break-words text-xs text-[var(--color-text-muted)]">
+            {caseItem.doctor_name}
+          </small>
         </span>
       ),
     },
@@ -267,8 +265,16 @@ export default function HistoryPage({
         </span>
       ),
     },
-    { key: "total_value", header: "Valor", render: (caseItem) => formatCurrency(caseItem.total_value) },
-    { key: "status", header: "Status", render: (caseItem) => <StatusBadge status={caseItem.status} /> },
+    {
+      key: "total_value",
+      header: "Valor",
+      render: (caseItem) => formatCurrency(caseItem.total_value),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (caseItem) => <StatusBadge status={caseItem.status} />,
+    },
     {
       key: "delivered_at",
       header: "Entregue",
@@ -413,7 +419,10 @@ export default function HistoryPage({
         page: nextPage,
         limit: EVENT_PAGE_SIZE,
       });
-      setEvents((current) => [...current, ...(Array.isArray(timeline?.items) ? timeline.items : [])]);
+      setEvents((current) => [
+        ...current,
+        ...(Array.isArray(timeline?.items) ? timeline.items : []),
+      ]);
       setEventsPagination(timeline?.pagination || null);
     } catch (error) {
       if (handleUnauthorizedError(error)) return;
@@ -512,7 +521,10 @@ export default function HistoryPage({
       if (selectedCaseId && caseIds.includes(selectedCaseId)) {
         closeDetails();
       }
-      await Promise.all([refreshAfterDelete(result?.deleted_count ?? caseIds.length), onStatusChanged?.()]);
+      await Promise.all([
+        refreshAfterDelete(result?.deleted_count ?? caseIds.length),
+        onStatusChanged?.(),
+      ]);
       onMessage?.({ type: "success", text: "Registros selecionados apagados permanentemente." });
     } catch (error) {
       if (handleUnauthorizedError(error)) return;
@@ -525,7 +537,8 @@ export default function HistoryPage({
   function requestDeleteOne(caseId) {
     setPendingDelete({
       title: "Apagar registro",
-      description: "Esta ação remove permanentemente o caso e seu histórico. Não pode ser desfeita.",
+      description:
+        "Esta ação remove permanentemente o caso e seu histórico. Não pode ser desfeita.",
       confirmLabel: "Apagar",
       action: () => {
         void deleteOne(caseId);
@@ -643,7 +656,12 @@ export default function HistoryPage({
               </p>
             </div>
             {selectedIds.size > 0 && (
-              <Button variant="danger" size="sm" disabled={deleteLoading} onClick={requestDeleteSelected}>
+              <Button
+                variant="danger"
+                size="sm"
+                disabled={deleteLoading}
+                onClick={requestDeleteSelected}
+              >
                 <Trash2 size={14} />
                 Apagar selecionados
               </Button>
@@ -683,7 +701,9 @@ export default function HistoryPage({
                       >
                         {caseItem.patient_ref}
                       </button>
-                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">{caseItem.doctor_name}</p>
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                        {caseItem.doctor_name}
+                      </p>
                     </div>
                     <p className="break-words text-xs text-[var(--color-text-muted)]">
                       {caseItem.items_summary} · {caseItem.items_count} itens de serviço
@@ -697,9 +717,15 @@ export default function HistoryPage({
                       </span>
                     </div>
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <strong className="text-sm tabular-nums">{formatCurrency(caseItem.total_value)}</strong>
+                      <strong className="text-sm tabular-nums">
+                        {formatCurrency(caseItem.total_value)}
+                      </strong>
                       <div className="flex items-center gap-1">
-                        <Button variant="secondary" size="sm" onClick={() => openDetails(caseItem.id)}>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => openDetails(caseItem.id)}
+                        >
                           Ver histórico
                         </Button>
                         <ActionsMenu
@@ -725,7 +751,9 @@ export default function HistoryPage({
               error={listError}
               emptyIcon={History}
               emptyTitle={
-                hasActiveFilters ? "Nenhum caso encontrado com esses filtros." : "Nenhum caso no histórico."
+                hasActiveFilters
+                  ? "Nenhum caso encontrado com esses filtros."
+                  : "Nenhum caso no histórico."
               }
               emptyDescription={
                 hasActiveFilters
@@ -780,7 +808,9 @@ export default function HistoryPage({
                     <strong className="break-words text-base font-bold text-[var(--color-text)]">
                       {detail.patient_ref}
                     </strong>
-                    <span className="text-sm text-[var(--color-text-muted)]">{detail.doctor_name}</span>
+                    <span className="text-sm text-[var(--color-text-muted)]">
+                      {detail.doctor_name}
+                    </span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <StatusBadge status={detail.status} />
@@ -802,13 +832,17 @@ export default function HistoryPage({
                     </strong>
                   </div>
                   <div className="grid gap-1">
-                    <small className="text-xs font-bold text-[var(--color-text-muted)]">Valor</small>
+                    <small className="text-xs font-bold text-[var(--color-text-muted)]">
+                      Valor
+                    </small>
                     <strong className="text-sm text-[var(--color-text)]">
                       {formatCurrency(detail.total_value)}
                     </strong>
                   </div>
                   <div className="grid gap-1">
-                    <small className="text-xs font-bold text-[var(--color-text-muted)]">Itens</small>
+                    <small className="text-xs font-bold text-[var(--color-text-muted)]">
+                      Itens
+                    </small>
                     <strong className="text-sm text-[var(--color-text)]">
                       {formatServiceItemCount(detail)}
                     </strong>
@@ -874,7 +908,12 @@ export default function HistoryPage({
                 )}
                 {eventsPagination?.has_next_page && (
                   <div className="flex justify-end">
-                    <Button variant="secondary" size="sm" disabled={detailLoading} onClick={loadMoreEvents}>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      disabled={detailLoading}
+                      onClick={loadMoreEvents}
+                    >
                       Carregar mais
                     </Button>
                   </div>
@@ -895,7 +934,8 @@ export default function HistoryPage({
           <form className="grid gap-3" onSubmit={submitRevert}>
             <p className="text-sm leading-relaxed text-[var(--color-text-soft)]">
               Este caso sairá de <strong>{formatStatus(detail?.status)}</strong> e voltará para{" "}
-              <strong>{revertTarget.label}</strong>. Informe o motivo para documentar o retorno do trabalho.
+              <strong>{revertTarget.label}</strong>. Informe o motivo para documentar o retorno do
+              trabalho.
             </p>
             <label className="grid gap-1.5 text-xs font-bold text-[var(--color-text-muted)]">
               Motivo do retorno

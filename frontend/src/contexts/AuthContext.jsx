@@ -72,7 +72,9 @@ export function AuthProvider({ children }) {
         if (!active) return;
         handleAuthExpired();
       });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [session?.username]);
 
   function changeAuthMode(mode) {

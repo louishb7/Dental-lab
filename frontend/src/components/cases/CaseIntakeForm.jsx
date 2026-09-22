@@ -33,7 +33,9 @@ export default function CaseIntakeForm({
     0,
   );
   const totalValue =
-    caseForm.pricing_mode === "fixed" ? parseCurrencyToNumber(caseForm.total_value) || 0 : unitTotal;
+    caseForm.pricing_mode === "fixed"
+      ? parseCurrencyToNumber(caseForm.total_value) || 0
+      : unitTotal;
 
   function syncField(name, value) {
     onCaseChange({ target: { name, value } });
@@ -63,7 +65,8 @@ export default function CaseIntakeForm({
         aria-labelledby="intake-identification"
       >
         <h3 id="intake-identification" className="text-sm font-semibold">
-          <span className="mr-2 text-xs tabular-nums text-primary">01</span>Identificação do trabalho
+          <span className="mr-2 text-xs tabular-nums text-primary">01</span>Identificação do
+          trabalho
         </h3>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1.2fr_0.8fr]">
           <FormField label="Dentista responsável">
@@ -118,7 +121,9 @@ export default function CaseIntakeForm({
             <span className="mr-2 text-xs tabular-nums text-primary">03</span>Valores e observações
           </h3>
           <div className="grid gap-2">
-            <span className="text-xs font-bold text-[var(--color-text-muted)]">Forma de cobrança</span>
+            <span className="text-xs font-bold text-[var(--color-text-muted)]">
+              Forma de cobrança
+            </span>
             <div className="grid grid-cols-2 gap-2" role="group" aria-label="Forma de cobrança">
               <button
                 type="button"
@@ -199,7 +204,9 @@ export default function CaseIntakeForm({
               </div>
               <div>
                 <dt>Prazo</dt>
-                <dd>{caseForm.deadline ? formatDate(caseForm.deadline + "T12:00:00") : "Sem prazo"}</dd>
+                <dd>
+                  {caseForm.deadline ? formatDate(caseForm.deadline + "T12:00:00") : "Sem prazo"}
+                </dd>
               </div>
               <div>
                 <dt>Cobrança</dt>
@@ -216,7 +223,9 @@ export default function CaseIntakeForm({
       <footer className="sticky -bottom-4 z-10 -mx-4 -mb-4 flex items-center justify-between gap-3 border-t border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-4 sm:-bottom-6 sm:-mx-6 sm:-mb-6 sm:px-6">
         <div>
           <span className="text-xs text-[var(--color-text-muted)]">Total do caso</span>
-          <strong className="block text-lg font-semibold tabular-nums">{formatCurrency(totalValue)}</strong>
+          <strong className="block text-lg font-semibold tabular-nums">
+            {formatCurrency(totalValue)}
+          </strong>
         </div>
         <Button variant="primary" disabled={busy} type="submit">
           <SubmitIcon size={17} />

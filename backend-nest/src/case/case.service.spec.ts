@@ -1,10 +1,46 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import { CaseService } from './case.service';
-import { CaseRepository } from './case.repository';
+import { CaseRepository, type CaseWithItems, type ICaseRepository } from './case.repository';
+import type { Doctor } from '@prisma/client';
 
-const mockCaseRepository = {
-  runTransaction: jest.fn(async (cb) => cb(mockCaseRepository)),
+function caseFixture(overrides: Partial<CaseWithItems> = {}): CaseWithItems {
+  return {
+    id: 1,
+    doctorId: 1,
+    patientRef: 'Patient 1',
+    pricingMode: 'fixed',
+    deadline: null,
+    priority: 'normal',
+    status: 'pending',
+    totalValue: new Prisma.Decimal('100'),
+    deliveredTotalValue: null,
+    notes: null,
+    createdAt: new Date(),
+    deliveredAt: null,
+    deletedAt: null,
+    statusRevertReason: null,
+    items: [],
+    ...overrides,
+  };
+}
+
+const doctorFixture: Doctor = {
+  id: 1,
+  userId: 1,
+  name: 'Doctor',
+  clinicName: null,
+  phone: null,
+  notes: null,
+  createdAt: new Date(),
+  deletedAt: null,
+};
+
+const mockCaseRepository: jest.Mocked<Omit<ICaseRepository, 'runTransaction'>> &
+  Pick<ICaseRepository, 'runTransaction'> = {
+  async runTransaction<T>(cb: (repo: ICaseRepository) => Promise<T>): Promise<T> {
+    return cb(mockCaseRepository);
+  },
   createCase: jest.fn(),
   getCaseById: jest.fn(),
   getAllCases: jest.fn(),
@@ -33,8 +69,8 @@ describe('CaseService', () => {
     }).compile();
 
     service = module.get<CaseService>(CaseService);
-    repo = module.get(CaseRepository);
-    jest.clearAllMocks();
+    repo = mockCaseRepository;
+    jest.resetAllMocks();
   });
 
   it('should be defined', () => {
@@ -43,22 +79,10 @@ describe('CaseService', () => {
 
   describe('createCase', () => {
     it('should create a case successfully', async () => {
-      repo.getDoctorById.mockResolvedValue({ id: 1, userId: 1, deletedAt: null });
-      const createdCase = {
-        id: 1,
-        doctorId: 1,
-        patientRef: 'Patient 1',
-        pricingMode: 'fixed',
-        deadline: new Date(),
-        priority: 'normal',
-        status: 'pending',
-        totalValue: new Prisma.Decimal('100.00'),
-        notes: null,
-        createdAt: new Date(),
-        items: [],
-      };
+      repo.getDoctorById.mockResolvedValue(doctorFixture);
+      const createdCase = caseFixture();
       repo.createCase.mockResolvedValue(createdCase);
-      repo.createHistoryEvent.mockResolvedValue({});
+      repo.createHistoryEvent.mockResolvedValue(undefined);
 
       const result = await service.createCase(
         {
@@ -67,6 +91,7 @@ describe('CaseService', () => {
           pricing_mode: 'fixed',
           total_value: '100',
           priority: 'normal',
+          status: 'pending',
         },
         1,
       );
@@ -88,6 +113,7 @@ describe('CaseService', () => {
             pricing_mode: 'fixed',
             total_value: '100',
             priority: 'normal',
+            status: 'pending',
           },
           1,
         ),
@@ -97,10 +123,7 @@ describe('CaseService', () => {
 
   describe('getCaseById', () => {
     it('should return a case if found', async () => {
-      const mockCase = {
-        id: 1,
-        items: [],
-      };
+      const mockCase = caseFixture();
       repo.getCaseById.mockResolvedValue(mockCase);
 
       const result = await service.getCaseById(1, 1);
@@ -119,12 +142,12 @@ describe('CaseService', () => {
   describe('bulkDeliverCases', () => {
     it('should deliver cases successfully', async () => {
       const mockCases = [
-        { id: 1, status: 'completed', items: [] },
-        { id: 2, status: 'completed', items: [] },
+        caseFixture({ id: 1, status: 'completed' }),
+        caseFixture({ id: 2, status: 'completed' }),
       ];
 
       repo.getCasesForBulkDeliver.mockResolvedValueOnce(mockCases); // for txCases
-      repo.updateCase.mockResolvedValue({ id: 1, status: 'delivered' });
+      repo.updateCase.mockResolvedValue(caseFixture({ status: 'delivered' }));
       repo.getCasesForBulkDeliver.mockResolvedValueOnce(
         mockCases.map((c) => ({ ...c, status: 'delivered' })),
       ); // for return
@@ -139,12 +162,7 @@ describe('CaseService', () => {
 
   describe('updateCase', () => {
     it('should update case and record history if status changes', async () => {
-      const currentCase = {
-        id: 1,
-        status: 'pending',
-        pricingMode: 'fixed',
-        items: [],
-      };
+      const currentCase = caseFixture();
       repo.getCaseById.mockResolvedValue(currentCase);
       repo.updateCase.mockResolvedValue({ ...currentCase, status: 'completed' });
 
@@ -156,14 +174,10 @@ describe('CaseService', () => {
 
   describe('revertCaseStatus', () => {
     it('should revert status and record history', async () => {
-      const currentCase = {
-        id: 1,
-        status: 'delivered',
-        deliveredAt: new Date(),
-        items: [],
-      };
+      const currentCase = caseFixture({ status: 'delivered', deliveredAt: new Date() });
       repo.getCaseById.mockResolvedValue(currentCase);
       repo.getDoctorById.mockResolvedValue({
+        ...doctorFixture,
         id: currentCase.doctorId,
         userId: 1,
         deletedAt: null,

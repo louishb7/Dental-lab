@@ -14,7 +14,6 @@ import {
 } from '@nestjs/common';
 
 import type { Request, Response } from 'express';
-import { setTimeout as delay } from 'node:timers/promises';
 
 import { AccountLockedError } from '../user/account-locked.error';
 import { UserService } from '../user/user.service';
@@ -49,11 +48,7 @@ export class AuthController {
     @Req() request: Request,
   ): Promise<{ detail: string }> {
     const allowed = this.recoveryRateLimit.allow(request.ip ?? 'unknown', payload.email);
-    // Same response floor for missing accounts and suppressed requests; covers the provider timeout.
-    await Promise.all([
-      delay(5500),
-      allowed ? this.passwordResets.request(payload.email) : Promise.resolve(),
-    ]);
+    if (allowed) await this.passwordResets.request(payload.email);
     return { detail: RECOVERY_MESSAGE };
   }
 

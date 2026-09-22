@@ -66,7 +66,7 @@ export function DataProvider({ children }) {
   const { session, handleAuthExpired } = useAuth();
   const navigate = useNavigate();
   const sessionUsername = session?.username;
-  
+
   const [dashboard, setDashboard] = useState(null);
   const [dashboardLoading, setDashboardLoading] = useState(Boolean(session));
   const [dashboardError, setDashboardError] = useState(null);
@@ -108,17 +108,17 @@ export function DataProvider({ children }) {
     setMessage(null);
     void loadDashboard();
     try {
-      const [doctorData, caseData] = await Promise.all([
-        getDoctors(),
-        getCases(),
-      ]);
+      const [doctorData, caseData] = await Promise.all([getDoctors(), getCases()]);
       const doctorList = Array.isArray(doctorData) ? doctorData : [];
       const caseList = Array.isArray(caseData) ? caseData : [];
 
       setDoctors(doctorList);
       setCases(caseList);
 
-      if (selectedCaseIdSnapshot && caseList.some((caseItem) => caseItem.id === selectedCaseIdSnapshot)) {
+      if (
+        selectedCaseIdSnapshot &&
+        caseList.some((caseItem) => caseItem.id === selectedCaseIdSnapshot)
+      ) {
         try {
           const itemData = await getCaseItems(selectedCaseIdSnapshot);
           setItems(Array.isArray(itemData) ? itemData : []);
@@ -130,7 +130,7 @@ export function DataProvider({ children }) {
       }
 
       return true;
-    } catch (error) {
+    } catch {
       handleAuthExpired();
       return false;
     } finally {
@@ -206,7 +206,10 @@ export function DataProvider({ children }) {
       setDoctorForm(EMPTY_DOCTOR);
       setShowDoctorModal(false);
       setEditingDoctorId(null);
-      setMessage({ type: "success", text: isEditing ? "Dentista atualizado." : "Dentista cadastrado." });
+      setMessage({
+        type: "success",
+        text: isEditing ? "Dentista atualizado." : "Dentista cadastrado.",
+      });
     } catch (error) {
       setMessage({ type: "error", text: error.message });
     } finally {
@@ -235,10 +238,14 @@ export function DataProvider({ children }) {
     event.preventDefault();
     if (!selectedDoctorId) return;
 
-    const automaticItems = caseForm.pricing_mode === "services" ? buildAutomaticCaseItems(caseForm) : [];
+    const automaticItems =
+      caseForm.pricing_mode === "services" ? buildAutomaticCaseItems(caseForm) : [];
 
     if (automaticItems.some((item) => item.unit_value === null)) {
-      setMessage({ type: "error", text: "Preencha o valor de cada dente selecionado antes de criar o caso." });
+      setMessage({
+        type: "error",
+        text: "Preencha o valor de cada dente selecionado antes de criar o caso.",
+      });
       return;
     }
 
@@ -263,7 +270,9 @@ export function DataProvider({ children }) {
         type: "success",
         text: automaticItems.length
           ? `Caso criado com ${automaticItems.length} ${
-              automaticItems.length === 1 ? "item de serviço automático" : "itens de serviço automáticos"
+              automaticItems.length === 1
+                ? "item de serviço automático"
+                : "itens de serviço automáticos"
             }.`
           : "Caso criado.",
       });
@@ -280,7 +289,10 @@ export function DataProvider({ children }) {
 
     const selectedTeeth = Array.isArray(itemForm.selected_teeth) ? itemForm.selected_teeth : [];
     if (!options.itemId && !selectedTeeth.length) {
-      setMessage({ type: "error", text: "Selecione ao menos um dente antes de adicionar o serviço." });
+      setMessage({
+        type: "error",
+        text: "Selecione ao menos um dente antes de adicionar o serviço.",
+      });
       return false;
     }
 
@@ -288,24 +300,23 @@ export function DataProvider({ children }) {
     setMessage(null);
     try {
       if (options.itemId) {
-        const payload = buildItemPayload(
-          itemForm,
-          selectedCase?.pricing_mode,
-        );
+        const payload = buildItemPayload(itemForm, selectedCase?.pricing_mode);
         await updateCaseItem(selectedCaseId, options.itemId, payload);
       } else if (selectedTeeth.length) {
         const itemPricingMode = options.pricingMode || selectedCase?.pricing_mode;
         const payloads = buildDentalWorkItems(itemForm, itemPricingMode);
-        if (payloads.some((payload) => payload.unit_value === null && itemPricingMode !== "fixed")) {
-          setMessage({ type: "error", text: "Preencha o valor de cada dente selecionado antes de adicionar o serviço." });
+        if (
+          payloads.some((payload) => payload.unit_value === null && itemPricingMode !== "fixed")
+        ) {
+          setMessage({
+            type: "error",
+            text: "Preencha o valor de cada dente selecionado antes de adicionar o serviço.",
+          });
           return false;
         }
         await createCaseItemsBulk(selectedCaseId, payloads);
       } else {
-        const payload = buildItemPayload(
-          itemForm,
-          selectedCase?.pricing_mode,
-        );
+        const payload = buildItemPayload(itemForm, selectedCase?.pricing_mode);
         await createCaseItem(selectedCaseId, payload);
       }
       const refreshed = await loadAppData();
@@ -468,7 +479,9 @@ export function DataProvider({ children }) {
         setSelectedCaseId(null);
         setItems([]);
       }
-      const refreshed = await loadAppData({ selectedCaseId: selectedRemoved ? null : selectedCaseId });
+      const refreshed = await loadAppData({
+        selectedCaseId: selectedRemoved ? null : selectedCaseId,
+      });
       if (!refreshed) return;
       setMessage({ type: "success", text: "Caso removido." });
     } catch (error) {

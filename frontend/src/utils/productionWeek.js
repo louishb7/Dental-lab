@@ -159,11 +159,7 @@ export function groupCasesByDate(cases) {
  */
 export function formatWeekdayLabel(value) {
   const date = toDateOnly(value) || new Date();
-  return WEEKDAY_FORMATTER
-    .format(date)
-    .replace(".", "")
-    .slice(0, 3)
-    .toUpperCase();
+  return WEEKDAY_FORMATTER.format(date).replace(".", "").slice(0, 3).toUpperCase();
 }
 
 /**

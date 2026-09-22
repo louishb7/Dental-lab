@@ -38,7 +38,7 @@ O contrato entre frontend e backend é HTTP + JSON. O frontend consome a API pel
 
 Requisitos:
 
-- Node.js 20.19+ ou 22.12+.
+- Node.js 20.19+, 22.13+ ou 24+.
 - npm.
 - PostgreSQL acessível localmente ou via Docker Compose.
 
@@ -165,9 +165,12 @@ nos três formulários. A lista dinâmica aparece somente no cadastro e no reset
 `POST /auth/forgot-password` recebe `{ "email": "usuario@example.com" }` e responde
 200 com `detail`: “Se existir uma conta com esse e-mail, enviaremos as instruções
 para redefinir a senha.” A resposta também vale para endereço desconhecido e
-solicitações suprimidas. Existe um piso comum de 5,5 segundos para reduzir a
-diferença de tempo causada pelo envio (timeout de 5 segundos). O schema atual não
-possui estado de conta inativa; bloqueios de login não impedem recuperar o acesso.
+solicitações suprimidas. Não há atraso artificial: solicitações autorizadas
+aguardam o envio, limitado pelo timeout de 5 segundos do Resend. O tempo de
+resposta pode variar; a resposta genérica evita enumeração explícita, mas não
+garante uniformidade temporal. Os limites abaixo restringem tentativas e envios.
+O schema atual não possui estado de conta inativa; bloqueios de login não impedem
+recuperar o acesso.
 
 O link é `${FRONTEND_URL}/reset-password#token=<token>`. O navegador captura o
 fragmento no estado da tela e imediatamente substitui a URL. O reset não aceita
@@ -236,18 +239,30 @@ Frontend:
 ```bash
 cd frontend
 npm install
+npm run lint
+npm run format
 npm run build
+npm run test:auth
 ```
 
 Há também uma verificação de autenticação em navegador real, sem instalar uma
-stack de testes. Requer Node 22+ e Chromium/Chrome/Brave local com DevTools aberto
-em `127.0.0.1:9339`, usando um perfil temporário exclusivo. Inicie Vite com
-`npm run dev -- --host 127.0.0.1 --port 5178 --strictPort` e execute
-`npm run test:auth`. O script usa somente APIs nativas do Node, intercepta HTTP
+stack de testes. Requer Node 22+ e Chromium/Chrome/Brave local. `npm run test:auth`
+inicia Vite e o navegador em portas locais livres, com perfil temporário exclusivo,
+e encerra os recursos também em falhas ou interrupções. Se necessário, indique o
+executável em `AUTH_TEST_BROWSER_BIN`. O script usa APIs nativas do Node e a API
+do Vite, intercepta HTTP
 de autenticação com respostas simuladas e testa formulários, fragmento, loading,
-reenvio, erros e sessão. As URLs podem ser ajustadas por `AUTH_TEST_APP_URL` e
-`AUTH_TEST_BROWSER_URL`; somente hosts locais são aceitos. Frontend não possui
-scripts de lint, typecheck ou format check configurados.
+reenvio, erros e sessão. O runner configura `AUTH_TEST_APP_URL` e
+`AUTH_TEST_BROWSER_URL` para `127.0.0.1`; o worker aceita somente HTTP em
+`localhost`/`127.0.0.1` e bloqueia requisições externas. Erros de console e
+interceptação falham o teste. `Invalid InterceptionId.` só é tolerado quando há
+cancelamento da mesma requisição e navegação posterior do mesmo frame.
+
+ESLint valida JavaScript/JSX, incluindo variáveis não definidas e imports sem uso;
+Prettier verifica formatação. Não há typecheck TypeScript do frontend: o
+`jsconfig.json` configura apenas aliases e não há compilador/tipagens React
+instalados. ESLint e o build fornecem a checagem estática disponível sem converter
+o projeto ou introduzir uma infraestrutura de tipos.
 
 Backend:
 
@@ -258,12 +273,19 @@ npm run prisma:generate
 npx prisma validate --schema=prisma/schema.prisma
 npm run prisma:migrate:test
 npm run lint
-npx tsc --noEmit
+npx tsc --noEmit -p tsconfig.json
+npx tsc --noEmit -p tsconfig.spec.json
+npm run format
 npm run build
 npm run test
 npm run test:integration
 npm run test:e2e
 ```
+
+Antes de executar migrations de teste, integração ou E2E, configure
+`TEST_DATABASE_URL` para um PostgreSQL temporário/isolado, com banco terminado em
+`_test`. Essas suítes removem dados. Nunca use o banco de produção. Os testes de
+recuperação substituem `EmailService`; não enviam e-mails reais.
 
 ## Estrutura
 

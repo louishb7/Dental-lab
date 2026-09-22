@@ -64,12 +64,7 @@ const TOOTH_COLORS = {
 /**
  * Renderiza um dente anatômico simplificado em SVG com estado selecionável.
  */
-export default function ToothShape({
-  id,
-  selected = false,
-  variant = "anterior",
-  size = 40,
-}) {
+export default function ToothShape({ id, selected = false, variant = "anterior", size = 40 }) {
   const colors = selected ? TOOTH_COLORS.selected : TOOTH_COLORS.normal;
   const tooth = TOOTH_VARIANTS[variant] || TOOTH_VARIANTS.anterior;
   const strokeOpacity = selected ? 0.34 : 0.22;

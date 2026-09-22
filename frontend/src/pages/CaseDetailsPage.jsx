@@ -208,7 +208,9 @@ export default function CaseDetailsPage({
             <div className="mb-2 flex items-center justify-between gap-3">
               <h3 className="text-sm font-semibold">
                 Serviços do caso{" "}
-                <span className="ml-1 font-normal text-[var(--color-text-muted)]">{items.length}</span>
+                <span className="ml-1 font-normal text-[var(--color-text-muted)]">
+                  {items.length}
+                </span>
               </h3>
               <Button variant="primary" size="sm" onClick={() => openItemForm()}>
                 <Plus size={16} />
@@ -220,7 +222,10 @@ export default function CaseDetailsPage({
                 {pagedItems.map((item) => {
                   const view = getItemView(item);
                   return (
-                    <article key={item.id} className="grid gap-3 py-4 sm:grid-cols-[minmax(0,1fr)_auto]">
+                    <article
+                      key={item.id}
+                      className="grid gap-3 py-4 sm:grid-cols-[minmax(0,1fr)_auto]"
+                    >
                       <div className="flex min-w-0 items-start gap-3">
                         <span
                           className="min-w-10 rounded-md border border-[var(--color-border)] bg-[var(--color-surface-soft)] px-2 py-2 text-center text-sm font-semibold tabular-nums"
@@ -279,7 +284,10 @@ export default function CaseDetailsPage({
               />
             )}
             {totalServicePages > 1 && (
-              <nav className="mt-3 flex flex-wrap justify-end gap-2" aria-label="Páginas de serviços">
+              <nav
+                className="mt-3 flex flex-wrap justify-end gap-2"
+                aria-label="Páginas de serviços"
+              >
                 {Array.from({ length: totalServicePages }, (_, index) => index + 1).map((page) => (
                   <Button
                     key={page}
@@ -296,7 +304,9 @@ export default function CaseDetailsPage({
           </section>
           {caseNotes.teeth && (
             <section className="border-t border-[var(--color-border)] pt-4">
-              <h3 className="text-xs font-semibold text-[var(--color-text-muted)]">Dentes selecionados</h3>
+              <h3 className="text-xs font-semibold text-[var(--color-text-muted)]">
+                Dentes selecionados
+              </h3>
               <p className="mt-2 break-words text-sm tabular-nums">{caseNotes.teeth}</p>
             </section>
           )}
@@ -335,7 +345,9 @@ export default function CaseDetailsPage({
               </FormField>
             ) : (
               <div className="mx-auto grid w-full max-w-[460px] content-start gap-5 py-4 [&_g[role=button]:focus-visible]:drop-shadow-[0_0_3px_var(--color-primary)] [&>div]:gap-5">
-                <span className="text-xs font-bold text-[var(--color-text-muted)]">Dentes selecionados</span>
+                <span className="text-xs font-bold text-[var(--color-text-muted)]">
+                  Dentes selecionados
+                </span>
                 <OdontogramSelector selectedTeeth={selectedTeeth} onChange={handleTeethChange} />
               </div>
             )}

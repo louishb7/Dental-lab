@@ -77,7 +77,8 @@ export function buildCasePayload(doctorId, form) {
 
   payload.deadline = toIsoDate(form.deadline);
   payload.priority = form.priority;
-  payload.notes = [trimmedNotes || null, operationalNotes || null].filter(Boolean).join("\n\n") || null;
+  payload.notes =
+    [trimmedNotes || null, operationalNotes || null].filter(Boolean).join("\n\n") || null;
 
   return payload;
 }

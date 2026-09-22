@@ -84,7 +84,9 @@ export default function DashboardPage({
     .sort(sortByPriorityAndDeadline);
   const weekDays = getWeekDays(weekStart);
   const selectedDayKey = getLocalDateKey(selectedDate);
-  const selectedDayCases = [...(groupedCases.get(selectedDayKey) || [])].sort(sortByPriorityAndDeadline);
+  const selectedDayCases = [...(groupedCases.get(selectedDayKey) || [])].sort(
+    sortByPriorityAndDeadline,
+  );
   const selectedDayHasPending = selectedDayCases.some((caseItem) => caseItem.status === "pending");
   const selectedDayTitle = getDayBoardTitle(selectedDate);
 

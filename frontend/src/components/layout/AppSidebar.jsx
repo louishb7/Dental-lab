@@ -1,5 +1,13 @@
 import {
-  PanelsTopLeft, CreditCard, History, Stethoscope, ChevronUp, LogOut, Moon, Sun, User,
+  PanelsTopLeft,
+  CreditCard,
+  History,
+  Stethoscope,
+  ChevronUp,
+  LogOut,
+  Moon,
+  Sun,
+  User,
 } from "lucide-react";
 import { DropdownMenu } from "radix-ui";
 import { PRODUCT_NAME } from "../../config/product.js";
@@ -15,7 +23,14 @@ const NAV_ITEMS = [
 /**
  * Renders the primary app navigation and Cadisk brand mark.
  */
-export default function AppSidebar({ activePage, onNavigate, user, theme, onToggleTheme, onLogout }) {
+export default function AppSidebar({
+  activePage,
+  onNavigate,
+  user,
+  theme,
+  onToggleTheme,
+  onLogout,
+}) {
   const ThemeIcon = theme === "dark" ? Sun : Moon;
   const themeLabel = theme === "dark" ? "Tema claro" : "Tema escuro";
   return (

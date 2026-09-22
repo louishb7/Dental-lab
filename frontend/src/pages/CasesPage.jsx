@@ -1,4 +1,13 @@
-import { AlertTriangle, ArrowLeft, Eye, Layers3, PackageCheck, Plus, Search, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Eye,
+  Layers3,
+  PackageCheck,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
 import AttentionPanel from "../components/dashboard/AttentionPanel.jsx";
@@ -74,7 +83,10 @@ export default function CasesPage({
     setFilters({ search: "", status: "", doctorId: "" });
   }, [filterResetSignal]);
 
-  const doctorById = useMemo(() => new Map(doctors.map((doctor) => [doctor.id, doctor])), [doctors]);
+  const doctorById = useMemo(
+    () => new Map(doctors.map((doctor) => [doctor.id, doctor])),
+    [doctors],
+  );
 
   const filteredCases = useMemo(() => {
     const search = filters.search.trim().toLowerCase();
@@ -133,7 +145,9 @@ export default function CasesPage({
 
   function toggleDeliverySelection(caseId) {
     setSelectedDeliveryIds((current) =>
-      current.includes(caseId) ? current.filter((itemId) => itemId !== caseId) : [...current, caseId],
+      current.includes(caseId)
+        ? current.filter((itemId) => itemId !== caseId)
+        : [...current, caseId],
     );
   }
 
@@ -164,7 +178,12 @@ export default function CasesPage({
           label={`Ações de ${caseItem.patient_ref}`}
           items={[
             { label: "Exibir detalhes", icon: Eye, onSelect: () => onOpenCaseItems(caseItem.id) },
-            { label: "Excluir caso", icon: Trash2, danger: true, onSelect: () => onRemoveCase(caseItem.id) },
+            {
+              label: "Excluir caso",
+              icon: Trash2,
+              danger: true,
+              onSelect: () => onRemoveCase(caseItem.id),
+            },
           ]}
         />
       </div>
@@ -189,7 +208,12 @@ export default function CasesPage({
   }
 
   const openColumns = [
-    { key: "patient_ref", header: "Paciente / Dentista", className: "w-[29%]", render: caseIdentity },
+    {
+      key: "patient_ref",
+      header: "Paciente / Dentista",
+      className: "w-[29%]",
+      render: caseIdentity,
+    },
     { key: "services", header: "Serviços", className: "w-[16%]", render: formatServiceItemCount },
     {
       key: "deadline",
@@ -249,7 +273,9 @@ export default function CasesPage({
               <input
                 className={`${FILTER_CONTROL_CLASS} pl-9`}
                 value={filters.search}
-                onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))}
+                onChange={(event) =>
+                  setFilters((current) => ({ ...current, search: event.target.value }))
+                }
                 placeholder="Buscar paciente, caso ou dentista"
                 aria-label="Buscar casos"
               />
@@ -259,7 +285,9 @@ export default function CasesPage({
           <select
             className={FILTER_CONTROL_CLASS}
             value={filters.status}
-            onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))}
+            onChange={(event) =>
+              setFilters((current) => ({ ...current, status: event.target.value }))
+            }
             aria-label="Filtrar por status"
           >
             <option value="">Todos os estados</option>
@@ -269,7 +297,9 @@ export default function CasesPage({
           <select
             className={FILTER_CONTROL_CLASS}
             value={filters.doctorId}
-            onChange={(event) => setFilters((current) => ({ ...current, doctorId: event.target.value }))}
+            onChange={(event) =>
+              setFilters((current) => ({ ...current, doctorId: event.target.value }))
+            }
             aria-label="Filtrar por dentista"
           >
             <option value="">Todos dentistas</option>
@@ -285,8 +315,8 @@ export default function CasesPage({
         </FilterToolbar>
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--color-text-muted)]">
           <p aria-live="polite">
-            {openCases.length} {openCases.length === 1 ? "resultado" : "resultados"} · {productionCaseCount}{" "}
-            em produção · {readyCases.length} prontos
+            {openCases.length} {openCases.length === 1 ? "resultado" : "resultados"} ·{" "}
+            {productionCaseCount} em produção · {readyCases.length} prontos
           </p>
           {readyCases.length > 0 && (
             <Button variant="secondary" size="sm" onClick={openDeliverModal}>
@@ -331,7 +361,8 @@ export default function CasesPage({
         {overdueCases.length > 0 && (
           <details className="text-sm">
             <summary className="min-h-11 cursor-pointer py-3 text-[var(--color-text-muted)]">
-              {overdueCases.length} {overdueCases.length === 1 ? "atrasado nesta consulta" : "atrasados nesta consulta"}
+              {overdueCases.length}{" "}
+              {overdueCases.length === 1 ? "atrasado nesta consulta" : "atrasados nesta consulta"}
             </summary>
             <AttentionPanel
               title="Atrasados"
@@ -394,7 +425,11 @@ export default function CasesPage({
               <Button variant="ghost" onClick={() => setShowDeliverModal(false)}>
                 Cancelar
               </Button>
-              <Button variant="success" type="submit" disabled={!selectedDeliveryIds.length || busy}>
+              <Button
+                variant="success"
+                type="submit"
+                disabled={!selectedDeliveryIds.length || busy}
+              >
                 <PackageCheck size={18} />
                 Confirmar saída
               </Button>

@@ -1,5 +1,13 @@
-import { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { lazy, Suspense, useEffect, useState } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import AppLayout from "./components/layout/AppLayout.jsx";
 import ConfirmModal from "./components/ui/ConfirmModal.jsx";
 import Modal from "./components/ui/Modal.jsx";
@@ -10,7 +18,7 @@ import PasswordRecoveryPage from "./pages/PasswordRecoveryPage.jsx";
 import CasesPage from "./pages/CasesPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import DoctorsPage from "./pages/DoctorsPage.jsx";
-import FinancePage from "./pages/FinancePage.jsx";
+const FinancePage = lazy(() => import("./pages/FinancePage.jsx"));
 import HistoryPage from "./pages/HistoryPage.jsx";
 
 import { AuthProvider, useAuth } from "./contexts/AuthContext.jsx";
@@ -50,9 +58,9 @@ function AuthPageWrapper() {
 
 function HistoryPageWrapper({ data }) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const caseId = searchParams.get('caseId');
+  const caseId = searchParams.get("caseId");
   const { handleAuthExpired } = useAuth();
-  
+
   return (
     <HistoryPage
       doctors={data.doctors}
@@ -69,12 +77,7 @@ function HistoryPageWrapper({ data }) {
 function AppContent({ theme, onToggleTheme }) {
   const { session, handleLogout } = useAuth();
   const data = useData();
-  const {
-    message,
-    setMessage,
-    confirmPending,
-    setConfirmPending
-  } = data;
+  const { message, setMessage, confirmPending, setConfirmPending } = data;
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -106,80 +109,92 @@ function AppContent({ theme, onToggleTheme }) {
       onDismiss={() => setMessage(null)}
     >
       <Routes>
-        <Route path="/" element={
-          <DashboardPage
-            cases={data.cases}
-            doctors={data.doctors}
-            loading={data.loading && !data.showCaseModal}
-            busy={data.busy}
-            selectedCase={data.dashboardDetailOpen ? data.selectedCase : null}
-            items={data.items}
-            itemForm={data.itemForm}
-            onOpenNewCase={data.openNewCaseFromDashboard}
-            onOpenNewCaseForDate={data.openNewCaseFromDashboardDate}
-            onOpenCase={data.openCaseFromDashboard}
-            onAdvanceCase={data.advanceCase}
-            onDeliverCase={(caseId) => data.handleBulkDeliverCases([caseId])}
-            onBulkDeliverCases={data.handleBulkDeliverCases}
-            onRequestConfirm={data.requestConfirm}
-            onItemChange={data.handleItemChange}
-            onItemSubmit={data.handleItemSubmit}
-            onRemoveItem={data.removeItem}
-            onCloseDetails={data.closeDashboardCaseDetails}
-          />
-        } />
-        <Route path="/cases" element={
-          <CasesPage
-            cases={data.cases}
-            doctors={data.doctors}
-            items={data.items}
-            loading={data.loading}
-            busy={data.busy}
-            itemForm={data.itemForm}
-            selectedCase={data.selectedCase}
-            selectedDoctorId={data.selectedDoctorId}
-            setSelectedDoctorId={data.setSelectedDoctorId}
-            filterResetSignal={data.casesFilterResetSignal}
-            onNewCase={data.openNewCaseModal}
-            onItemChange={data.handleItemChange}
-            onItemSubmit={data.handleItemSubmit}
-            onOpenCaseItems={data.openCaseItems}
-            onAdvanceCase={data.advanceCase}
-            onBulkDeliverCases={data.handleBulkDeliverCases}
-            onRemoveCase={data.removeCase}
-            onRemoveItem={data.removeItem}
-            onCloseDetails={() => data.setSelectedCaseId(null)}
-          />
-        } />
-        <Route path="/history" element={
-          <HistoryPageWrapper data={data} />
-        } />
-        <Route path="/doctors" element={
-          <DoctorsPage
-            doctors={data.doctors}
-            loading={data.loading}
-            busy={data.busy}
-            doctorForm={data.doctorForm}
-            editingDoctorId={data.editingDoctorId}
-            showDoctorModal={data.showDoctorModal}
-            setShowDoctorModal={data.setShowDoctorModal}
-            onNewDoctor={data.openNewDoctorModal}
-            onEditDoctor={data.openEditDoctorModal}
-            onDoctorChange={data.handleDoctorChange}
-            onDoctorSubmit={data.handleDoctorSubmit}
-            onOpenDoctorCases={data.openDoctorCases}
-            onRemoveDoctor={data.removeDoctor}
-          />
-        } />
-        <Route path="/finance" element={
-          <FinancePage
-            dashboard={data.dashboard}
-            loading={data.dashboardLoading}
-            error={data.dashboardError}
-            onRetry={data.loadDashboard}
-            onOpenHistory={() => handleNavigate("history")}
-          />
-        } />
+        <Route
+          path="/"
+          element={
+            <DashboardPage
+              cases={data.cases}
+              doctors={data.doctors}
+              loading={data.loading && !data.showCaseModal}
+              busy={data.busy}
+              selectedCase={data.dashboardDetailOpen ? data.selectedCase : null}
+              items={data.items}
+              itemForm={data.itemForm}
+              onOpenNewCase={data.openNewCaseFromDashboard}
+              onOpenNewCaseForDate={data.openNewCaseFromDashboardDate}
+              onOpenCase={data.openCaseFromDashboard}
+              onAdvanceCase={data.advanceCase}
+              onDeliverCase={(caseId) => data.handleBulkDeliverCases([caseId])}
+              onBulkDeliverCases={data.handleBulkDeliverCases}
+              onRequestConfirm={data.requestConfirm}
+              onItemChange={data.handleItemChange}
+              onItemSubmit={data.handleItemSubmit}
+              onRemoveItem={data.removeItem}
+              onCloseDetails={data.closeDashboardCaseDetails}
+            />
+          }
+        />
+        <Route
+          path="/cases"
+          element={
+            <CasesPage
+              cases={data.cases}
+              doctors={data.doctors}
+              items={data.items}
+              loading={data.loading}
+              busy={data.busy}
+              itemForm={data.itemForm}
+              selectedCase={data.selectedCase}
+              selectedDoctorId={data.selectedDoctorId}
+              setSelectedDoctorId={data.setSelectedDoctorId}
+              filterResetSignal={data.casesFilterResetSignal}
+              onNewCase={data.openNewCaseModal}
+              onItemChange={data.handleItemChange}
+              onItemSubmit={data.handleItemSubmit}
+              onOpenCaseItems={data.openCaseItems}
+              onAdvanceCase={data.advanceCase}
+              onBulkDeliverCases={data.handleBulkDeliverCases}
+              onRemoveCase={data.removeCase}
+              onRemoveItem={data.removeItem}
+              onCloseDetails={() => data.setSelectedCaseId(null)}
+            />
+          }
+        />
+        <Route path="/history" element={<HistoryPageWrapper data={data} />} />
+        <Route
+          path="/doctors"
+          element={
+            <DoctorsPage
+              doctors={data.doctors}
+              loading={data.loading}
+              busy={data.busy}
+              doctorForm={data.doctorForm}
+              editingDoctorId={data.editingDoctorId}
+              showDoctorModal={data.showDoctorModal}
+              setShowDoctorModal={data.setShowDoctorModal}
+              onNewDoctor={data.openNewDoctorModal}
+              onEditDoctor={data.openEditDoctorModal}
+              onDoctorChange={data.handleDoctorChange}
+              onDoctorSubmit={data.handleDoctorSubmit}
+              onOpenDoctorCases={data.openDoctorCases}
+              onRemoveDoctor={data.removeDoctor}
+            />
+          }
+        />
+        <Route
+          path="/finance"
+          element={
+            <Suspense fallback={<p role="status">Carregando financeiro…</p>}>
+              <FinancePage
+                dashboard={data.dashboard}
+                loading={data.dashboardLoading}
+                error={data.dashboardError}
+                onRetry={data.loadDashboard}
+                onOpenHistory={() => handleNavigate("history")}
+              />
+            </Suspense>
+          }
+        />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
 
@@ -203,7 +218,7 @@ function AppContent({ theme, onToggleTheme }) {
           />
         </Modal>
       )}
-      
+
       {confirmPending && (
         <ConfirmModal
           title={confirmPending.title}
@@ -235,7 +250,7 @@ function Root() {
     window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
     setTheme(nextTheme);
   }
-  
+
   if (location.pathname === "/reset-password") return <PasswordRecoveryPage key="reset" reset />;
   if (location.pathname === "/forgot-password") return <PasswordRecoveryPage key="forgot" />;
 

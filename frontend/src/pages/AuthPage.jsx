@@ -50,7 +50,11 @@ export default function AuthPage({
               {authMessage.text}
             </p>
           )}
-          <form className="grid gap-4" onSubmit={isRegister ? onRegister : onLogin} aria-busy={authLoading}>
+          <form
+            className="grid gap-4"
+            onSubmit={isRegister ? onRegister : onLogin}
+            aria-busy={authLoading}
+          >
             {isRegister ? (
               <>
                 <FormField label="Email" errorText={authErrors.email}>
@@ -63,10 +67,7 @@ export default function AuthPage({
                     required
                   />
                 </FormField>
-                <FormField
-                  label="Usuário"
-                  errorText={authErrors.username}
-                >
+                <FormField label="Usuário" errorText={authErrors.username}>
                   <input
                     name="username"
                     maxLength={80}
@@ -99,8 +100,17 @@ export default function AuthPage({
               onChange={(event) => onAuthChange(event, authMode)}
               errorText={authErrors.password}
             />
-            {!isRegister && <Link to="/forgot-password" className="text-sm text-primary hover:underline">Esqueci minha senha</Link>}
-            <Button className="mt-2 w-full" variant="primary" disabled={authLoading || (isRegister && !validNewPassword(registerForm.password))} type="submit">
+            {!isRegister && (
+              <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+                Esqueci minha senha
+              </Link>
+            )}
+            <Button
+              className="mt-2 w-full"
+              variant="primary"
+              disabled={authLoading || (isRegister && !validNewPassword(registerForm.password))}
+              type="submit"
+            >
               {authLoading ? <LoaderCircle className="animate-spin" /> : null}
               {isRegister ? "Criar conta" : "Entrar"}
               {!authLoading && <ArrowRight size={16} />}
