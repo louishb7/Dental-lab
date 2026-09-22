@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 
 import type { Request, Response } from 'express';
+import { setTimeout as delay } from 'node:timers/promises';
 
 import { AccountLockedError } from '../user/account-locked.error';
 import { UserService } from '../user/user.service';
@@ -24,6 +25,12 @@ import { AuthLoginRequestDto } from './dto/auth-login-request.dto';
 import { AuthRegisterRequestDto } from './dto/auth-register-request.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LoginRateLimitService } from './login-rate-limit.service';
+import { PasswordResetService, RECOVERY_MESSAGE } from './password-reset.service';
+import { RecoveryRateLimitService } from './recovery-rate-limit.service';
+import {
+  ForgotPasswordRequestDto,
+  ResetPasswordRequestDto,
+} from './dto/password-reset-request.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -31,7 +38,37 @@ export class AuthController {
     private readonly auth: AuthService,
     private readonly loginRateLimit: LoginRateLimitService,
     private readonly users: UserService,
+    private readonly passwordResets: PasswordResetService,
+    private readonly recoveryRateLimit: RecoveryRateLimitService,
   ) {}
+
+  @Post('forgot-password')
+  @HttpCode(200)
+  async forgotPassword(
+    @Body() payload: ForgotPasswordRequestDto,
+    @Req() request: Request,
+  ): Promise<{ detail: string }> {
+    const allowed = this.recoveryRateLimit.allow(request.ip ?? 'unknown', payload.email);
+    // Same response floor for missing accounts and suppressed requests; covers the provider timeout.
+    await Promise.all([
+      delay(5500),
+      allowed ? this.passwordResets.request(payload.email) : Promise.resolve(),
+    ]);
+    return { detail: RECOVERY_MESSAGE };
+  }
+
+  @Post('reset-password')
+  @HttpCode(200)
+  async resetPassword(
+    @Body() payload: ResetPasswordRequestDto,
+    @Req() request: Request,
+  ): Promise<{ detail: string }> {
+    if (this.loginRateLimit.registerLoginAttempt(`reset:${request.ip ?? 'unknown'}`) !== null) {
+      throw new HttpException({ detail: 'Muitas tentativas. Tente novamente mais tarde.' }, 429);
+    }
+    await this.passwordResets.reset(payload.token, payload.password);
+    return { detail: 'Senha redefinida. Faça login com sua nova senha.' };
+  }
 
   @Post('register')
   async register(@Body() payload: AuthRegisterRequestDto): Promise<AuthTokenResponse> {

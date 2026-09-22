@@ -7,6 +7,7 @@ import {
   register,
 } from "../services/api.js";
 import { EMPTY_LOGIN, EMPTY_REGISTER } from "../utils/forms.js";
+import { validNewPassword } from "../utils/password.js";
 
 const AuthContext = createContext(null);
 
@@ -60,17 +61,23 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (!session) return;
+    let active = true;
 
     getCurrentUser()
       .then((user) => {
+        if (!active) return;
         setSession({ username: user.username, email: user.email });
       })
       .catch(() => {
+        if (!active) return;
         handleAuthExpired();
       });
+    return () => { active = false; };
   }, [session?.username]);
 
   function changeAuthMode(mode) {
+    setLoginForm(EMPTY_LOGIN);
+    setRegisterForm(EMPTY_REGISTER);
     setAuthMode(mode);
     setAuthMessage(null);
     setAuthErrors(createEmptyAuthErrors());
@@ -104,6 +111,7 @@ export function AuthProvider({ children }) {
 
   async function handleRegister(event) {
     event.preventDefault();
+    if (authLoading || !validNewPassword(registerForm.password)) return;
     setAuthLoading(true);
     setAuthMessage(null);
     setAuthErrors(createEmptyAuthErrors());
@@ -134,6 +142,9 @@ export function AuthProvider({ children }) {
     clearSession();
     setSession(null);
     setAuthMessage(null);
+    setLoginForm(EMPTY_LOGIN);
+    setRegisterForm(EMPTY_REGISTER);
+    setAuthMode("login");
   }
 
   function handleAuthExpired(messageText = "Sessão expirada. Faça login novamente.") {

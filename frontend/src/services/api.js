@@ -129,6 +129,25 @@ export async function register(data) {
   return saveSession(payload);
 }
 
+async function recoveryRequest(path, data) {
+  const response = await fetch(`${API_ROOT_URL}/auth/${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+    cache: "no-store",
+    referrerPolicy: "no-referrer",
+  });
+  return parseResponse(response);
+}
+
+export function forgotPassword(email) {
+  return recoveryRequest("forgot-password", { email });
+}
+
+export function resetPassword(token, password) {
+  return recoveryRequest("reset-password", { token, password });
+}
+
 /**
  * Fetches the current authenticated user from the backend.
  *

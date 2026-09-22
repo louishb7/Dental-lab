@@ -13,7 +13,7 @@ import { assertSafeTestDatabaseUrl } from '../../src/config/test-database';
 import { PrismaService } from '../../src/prisma/prisma.service';
 
 const STRONG_PASSWORD = 'StrongPass123!';
-const SPECIAL_PASSWORD = 'Ab!1cd';
+const SPECIAL_PASSWORD = 'Ab!1cde';
 
 function decodeJwtPayload(token: string): { exp?: number; iat?: number } {
   const [, payload] = token.split('.');

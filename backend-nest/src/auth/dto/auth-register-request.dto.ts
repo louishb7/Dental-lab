@@ -1,5 +1,6 @@
 import { Transform } from 'class-transformer';
 import { IsString, Matches, MaxLength, Validate } from 'class-validator';
+import { CadiskPasswordConstraint } from '../password-policy';
 import {
   type ValidationArguments,
   type ValidatorConstraintInterface,
@@ -35,24 +36,11 @@ class CadiskUsernameConstraint implements ValidatorConstraintInterface {
   }
 }
 
-@ValidatorConstraint({ name: 'cadiskPassword', async: false })
-class CadiskPasswordConstraint implements ValidatorConstraintInterface {
-  validate(value: unknown): boolean {
-    return typeof value === 'string' && value.length >= 6 && /\d/.test(value);
-  }
-
-  defaultMessage(args: ValidationArguments): string {
-    if (typeof args.value !== 'string' || args.value.length < 6) {
-      return 'Value error, Senha deve ter pelo menos 6 caracteres';
-    }
-
-    return 'Value error, Senha deve conter ao menos um número';
-  }
-}
-
 export class AuthRegisterRequestDto {
   @IsString()
   @Matches(EMAIL_PATTERN)
+  @MaxLength(255)
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim().toLowerCase() : value))
   email!: string;
 
   @IsString()
@@ -62,7 +50,6 @@ export class AuthRegisterRequestDto {
   username!: string;
 
   @IsString()
-  @MaxLength(72)
   @Validate(CadiskPasswordConstraint)
   password!: string;
 }

@@ -9,6 +9,7 @@ import {
 } from '../auth/security.constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { AccountLockedError } from './account-locked.error';
+import { assertPasswordPolicy } from '../auth/password-policy';
 
 export interface CreateUserInput {
   email: string;
@@ -79,6 +80,7 @@ export class UserService {
   }
 
   async createUser(input: CreateUserInput): Promise<User> {
+    assertPasswordPolicy(input.password);
     const normalizedEmail = input.email.trim().toLowerCase();
     const normalizedUsername = input.username.trim();
 
@@ -180,7 +182,7 @@ export class UserService {
     return authenticatedUser;
   }
 
-  private async hashPassword(password: string): Promise<string> {
+  async hashPassword(password: string): Promise<string> {
     return bcrypt.hash(password, PASSWORD_HASH_ROUNDS);
   }
 }

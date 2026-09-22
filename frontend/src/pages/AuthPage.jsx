@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
-import { ArrowRight, Eye, EyeOff, LoaderCircle } from "lucide-react";
+import { ArrowRight, LoaderCircle } from "lucide-react";
+import { Link } from "react-router-dom";
+import PasswordField from "../components/ui/PasswordField.jsx";
+import { validNewPassword } from "../utils/password.js";
 import Button from "../components/ui/Button.jsx";
 import FormField from "../components/ui/FormField.jsx";
 import ToothIcon from "../components/icons/ToothIcon.jsx";
@@ -17,11 +19,7 @@ export default function AuthPage({
   onLogin,
   onRegister,
 }) {
-  const [showPassword, setShowPassword] = useState(false);
   const isRegister = authMode === "register";
-  useEffect(() => {
-    setShowPassword(false);
-  }, [authMode]);
 
   return (
     <main className="grid min-h-dvh place-items-center px-5 py-10">
@@ -67,11 +65,11 @@ export default function AuthPage({
                 </FormField>
                 <FormField
                   label="Usuário"
-                  helperText="Mínimo 5 caracteres, apenas letras e números."
                   errorText={authErrors.username}
                 >
                   <input
                     name="username"
+                    maxLength={80}
                     autoComplete="username"
                     autoCapitalize="off"
                     spellCheck={false}
@@ -94,45 +92,15 @@ export default function AuthPage({
                 />
               </FormField>
             )}
-            <div className="grid gap-1.5">
-              <label htmlFor="auth-password" className="text-xs font-bold text-[var(--color-text-muted)]">
-                Senha
-              </label>
-              <div className="relative">
-                <input
-                  id="auth-password"
-                  className="min-h-11 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-input-bg)] py-2 pl-3 pr-12 text-base focus:border-primary focus:ring-2 focus:ring-primary/25 md:text-sm"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete={isRegister ? "new-password" : "current-password"}
-                  minLength={isRegister ? 6 : undefined}
-                  value={isRegister ? registerForm.password : loginForm.password}
-                  onChange={(event) => onAuthChange(event, authMode)}
-                  aria-invalid={authErrors.password ? true : undefined}
-                  aria-describedby={authErrors.password || isRegister ? "password-help" : undefined}
-                  required
-                />
-                <button
-                  className="absolute inset-y-0 right-0 grid w-11 place-items-center rounded-md text-[var(--color-text-muted)] hover:text-primary"
-                  type="button"
-                  onClick={() => setShowPassword((current) => !current)}
-                  aria-pressed={showPassword}
-                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-                  title={showPassword ? "Ocultar senha" : "Mostrar senha"}
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-              {(authErrors.password || isRegister) && (
-                <small
-                  id="password-help"
-                  className={`text-xs ${authErrors.password ? "text-[var(--color-danger)]" : "text-[var(--color-text-muted)]"}`}
-                >
-                  {authErrors.password || "Mínimo 6 caracteres e pelo menos 1 número."}
-                </small>
-              )}
-            </div>
-            <Button className="mt-2 w-full" variant="primary" disabled={authLoading} type="submit">
+            <PasswordField
+              key={authMode}
+              creation={isRegister}
+              value={isRegister ? registerForm.password : loginForm.password}
+              onChange={(event) => onAuthChange(event, authMode)}
+              errorText={authErrors.password}
+            />
+            {!isRegister && <Link to="/forgot-password" className="text-sm text-primary hover:underline">Esqueci minha senha</Link>}
+            <Button className="mt-2 w-full" variant="primary" disabled={authLoading || (isRegister && !validNewPassword(registerForm.password))} type="submit">
               {authLoading ? <LoaderCircle className="animate-spin" /> : null}
               {isRegister ? "Criar conta" : "Entrar"}
               {!authLoading && <ArrowRight size={16} />}

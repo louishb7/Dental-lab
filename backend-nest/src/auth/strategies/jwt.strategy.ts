@@ -28,7 +28,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       });
     }
 
-    const user = await this.auth.findAuthenticatedUserByUsername(payload.sub);
+    // Pre-migration JWTs represent version zero, and are revoked by the first reset.
+    const version = payload.authVersion === undefined ? 0 : payload.authVersion;
+    if (typeof version !== 'number' || !Number.isSafeInteger(version) || version < 0) {
+      throw new UnauthorizedException({ detail: 'Token inválido ou expirado' });
+    }
+    const user = await this.auth.findAuthenticatedUserByUsername(payload.sub, version);
     if (user === null) {
       throw new UnauthorizedException({
         detail: 'Usuário autenticado não encontrado',

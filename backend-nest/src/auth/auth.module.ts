@@ -11,6 +11,10 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LoginRateLimitService } from './login-rate-limit.service';
 import { ACCESS_TOKEN_EXPIRE_MINUTES, JWT_ALGORITHM } from './security.constants';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { PasswordResetService } from './password-reset.service';
+import { RecoveryRateLimitService } from './recovery-rate-limit.service';
+import { EmailService } from '../email/email.service';
+import { ResendEmailService } from '../email/resend-email.service';
 
 @Module({
   controllers: [AuthController],
@@ -33,6 +37,14 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     }),
     UserModule,
   ],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard, LoginRateLimitService],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    JwtAuthGuard,
+    LoginRateLimitService,
+    PasswordResetService,
+    RecoveryRateLimitService,
+    { provide: EmailService, useClass: ResendEmailService },
+  ],
 })
 export class AuthModule {}

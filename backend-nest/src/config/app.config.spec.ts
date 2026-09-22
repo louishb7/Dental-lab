@@ -10,6 +10,37 @@ const VALID_ENV = {
 };
 
 describe('validateEnvironment', () => {
+  it('accepts backend-only recovery configuration', () => {
+    const config = validateEnvironment({
+      ...VALID_ENV,
+      FRONTEND_URL: 'https://app.example.com',
+      RESEND_API_KEY: 'test-placeholder',
+      EMAIL_FROM: 'Cadisk <sender@example.com>',
+    });
+    expect(config.FRONTEND_URL).toBe('https://app.example.com');
+    expect(config.EMAIL_FROM).toBe('Cadisk <sender@example.com>');
+  });
+
+  it.each([
+    'https://app.example.com/reset',
+    'https://app.example.com?token=x',
+    'https://app.example.com#token=x',
+    'https://user:password@app.example.com',
+  ])('rejects unsafe frontend origins', (origin) => {
+    expect(() => validateEnvironment({ ...VALID_ENV, FRONTEND_URL: origin })).toThrow();
+  });
+
+  it('requires HTTPS for production recovery links', () => {
+    expect(() =>
+      validateEnvironment({
+        ...VALID_ENV,
+        NODE_ENV: 'production',
+        CORS_ORIGINS: 'https://app.example.com',
+        FRONTEND_URL: 'http://app.example.com',
+      }),
+    ).toThrow('HTTPS');
+  });
+
   it('normalizes the minimal required environment variables', () => {
     expect(validateEnvironment(VALID_ENV)).toEqual({
       NODE_ENV: 'test',

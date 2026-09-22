@@ -6,6 +6,7 @@ import Modal from "./components/ui/Modal.jsx";
 import CaseIntakeForm from "./components/cases/CaseIntakeForm.jsx";
 import { Plus } from "lucide-react";
 import AuthPage from "./pages/AuthPage.jsx";
+import PasswordRecoveryPage from "./pages/PasswordRecoveryPage.jsx";
 import CasesPage from "./pages/CasesPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import DoctorsPage from "./pages/DoctorsPage.jsx";
@@ -221,6 +222,7 @@ function AppContent({ theme, onToggleTheme }) {
 
 function Root() {
   const { session } = useAuth();
+  const location = useLocation();
   const [theme, setTheme] = useState(() => getStoredTheme());
 
   // Auth and the workspace share the same explicit preference; never use the OS theme.
@@ -234,6 +236,9 @@ function Root() {
     setTheme(nextTheme);
   }
   
+  if (location.pathname === "/reset-password") return <PasswordRecoveryPage key="reset" reset />;
+  if (location.pathname === "/forgot-password") return <PasswordRecoveryPage key="forgot" />;
+
   if (!session) {
     return <AuthPageWrapper />;
   }

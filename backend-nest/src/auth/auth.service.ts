@@ -23,22 +23,28 @@ export class AuthService {
 
   buildTokenResponse(user: User): AuthTokenResponse {
     return {
-      access_token: this.createAccessToken(user.username),
+      access_token: this.createAccessToken(user),
       email: user.email,
       token_type: 'bearer',
       username: user.username,
     };
   }
 
-  async findAuthenticatedUserByUsername(username: string): Promise<AuthenticatedUser | null> {
+  async findAuthenticatedUserByUsername(
+    username: string,
+    authVersion: number,
+  ): Promise<AuthenticatedUser | null> {
     const user = await this.users.getUserByUsername(username);
-    return user === null ? null : this.buildAuthenticatedUser(user);
+    return user === null || user.authVersion !== authVersion
+      ? null
+      : this.buildAuthenticatedUser(user);
   }
 
-  private createAccessToken(username: string): string {
+  private createAccessToken(user: User): string {
     return this.jwt.sign(
       {
-        sub: username,
+        sub: user.username,
+        authVersion: user.authVersion,
       },
       {
         algorithm: JWT_ALGORITHM,

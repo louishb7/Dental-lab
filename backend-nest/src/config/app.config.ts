@@ -6,6 +6,9 @@ export interface EnvironmentVariables {
   DATABASE_URL: string;
   SECRET_KEY: string;
   CORS_ORIGINS: string[];
+  FRONTEND_URL?: string;
+  RESEND_API_KEY?: string;
+  EMAIL_FROM?: string;
 }
 
 export const DEFAULT_LOCAL_CORS_ORIGINS = [
@@ -138,6 +141,19 @@ function isLocalCorsOrigin(origin: string): boolean {
 
 export function validateEnvironment(config: Record<string, unknown>): EnvironmentVariables {
   const nodeEnvironment = parseNodeEnvironment(readString(config, 'NODE_ENV'));
+  const frontendUrl = readString(config, 'FRONTEND_URL') || undefined;
+  if (frontendUrl) {
+    const origin = validateCorsOrigin(frontendUrl);
+    if (
+      new URL(frontendUrl).username ||
+      new URL(frontendUrl).password ||
+      (nodeEnvironment === 'production' && !origin.startsWith('https://'))
+    ) {
+      throw new Error(
+        'FRONTEND_URL must be a public HTTPS origin in production without credentials.',
+      );
+    }
+  }
 
   return {
     NODE_ENV: nodeEnvironment,
@@ -145,5 +161,10 @@ export function validateEnvironment(config: Record<string, unknown>): Environmen
     DATABASE_URL: parseDatabaseUrl(readString(config, 'DATABASE_URL')),
     SECRET_KEY: parseSecretKey(readString(config, 'SECRET_KEY')),
     CORS_ORIGINS: parseCorsOrigins(readString(config, 'CORS_ORIGINS'), nodeEnvironment),
+    ...(frontendUrl ? { FRONTEND_URL: frontendUrl } : {}),
+    ...(readString(config, 'RESEND_API_KEY')
+      ? { RESEND_API_KEY: readString(config, 'RESEND_API_KEY') }
+      : {}),
+    ...(readString(config, 'EMAIL_FROM') ? { EMAIL_FROM: readString(config, 'EMAIL_FROM') } : {}),
   };
 }
