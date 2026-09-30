@@ -6,6 +6,7 @@ import PageContainer from "../components/layout/PageContainer.jsx";
 import LoadingState from "../components/ui/LoadingState.jsx";
 import CaseDetailsPage from "./CaseDetailsPage.jsx";
 import { getLocalDateKey } from "../utils/formatters.js";
+import { getCaseDoctorName } from "../utils/cases.js";
 import {
   addDays,
   formatDayMonth,
@@ -20,7 +21,7 @@ import {
 function enrichCase(caseItem, doctorById) {
   return {
     ...caseItem,
-    doctor_name: doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`,
+    doctor_name: getCaseDoctorName(caseItem, doctorById.get(caseItem.doctor_id)?.name),
   };
 }
 

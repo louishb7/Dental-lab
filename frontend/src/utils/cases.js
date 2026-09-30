@@ -11,3 +11,7 @@ export function formatServiceItemCount(caseItem) {
   const count = getServiceCount(caseItem);
   return `${count} ${count === 1 ? "item de serviço" : "itens de serviço"}`;
 }
+
+export function getCaseDoctorName(caseItem, doctorName) {
+  return doctorName || (caseItem.doctor_id === null ? "Avulso" : `#${caseItem.doctor_id}`);
+}

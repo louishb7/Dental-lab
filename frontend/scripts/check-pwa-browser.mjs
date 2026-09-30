@@ -20,6 +20,7 @@ assert.ok(browserBin, "A local Chromium browser is required");
 
 let swVersion = 1;
 let apiMode = "online";
+let dashboardMode = "online";
 let postMode = "online";
 let activeUser = { id: 1, username: "tester", email: "tester@example.com" };
 let postCount = 0;
@@ -166,6 +167,14 @@ async function input(name, value) {
     `(() => { const el = document.querySelector('[name=${JSON.stringify(name)}]'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, ${JSON.stringify(value)}); el.dispatchEvent(new Event('input', { bubbles: true })); })()`,
   );
 }
+async function offerInstall() {
+  await evaluate(`(() => {
+    const event = new Event('beforeinstallprompt', { cancelable: true });
+    event.prompt = () => { window.__installPromptCount = (window.__installPromptCount || 0) + 1; return Promise.resolve(); };
+    event.userChoice = Promise.resolve({ outcome: 'dismissed' });
+    window.dispatchEvent(event);
+  })()`);
+}
 const records = `new Promise((resolve,reject) => { const r=indexedDB.open('cadisk-offline'); r.onerror=()=>reject(r.error); r.onsuccess=()=>{const q=r.result.transaction('records').objectStore('records').getAll();q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error)} })`;
 
 async function intercept({ requestId, request }) {
@@ -182,6 +191,8 @@ async function intercept({ requestId, request }) {
         { name: "Access-Control-Allow-Methods", value: "GET,POST,PUT,DELETE,OPTIONS" },
       ],
     });
+  if (url.pathname === "/dashboard/overview" && dashboardMode === "network")
+    return command("Fetch.failRequest", { requestId, errorReason: "ConnectionFailed" });
   if (
     apiMode === "network" ||
     (request.method === "POST" && url.pathname === "/cases/" && postMode === "network")
@@ -279,16 +290,149 @@ try {
   await command("Fetch.enable", {
     patterns: [{ urlPattern: "http://localhost:3001/*", requestStage: "Request" }],
   });
+  const standaloneScript = await command("Page.addScriptToEvaluateOnNewDocument", {
+    source: `(() => {
+      const original = window.matchMedia.bind(window);
+      window.matchMedia = (query) => query === '(display-mode: standalone)'
+        ? { matches: true, addEventListener() {}, removeEventListener() {} }
+        : original(query);
+    })();`,
+  });
   await navigate("/");
+  await offerInstall();
+  assert.equal(
+    await evaluate(`document.body.textContent.includes('Instale o Cadisk')`),
+    false,
+    "Standalone must not show installation UI",
+  );
+  await command("Page.removeScriptToEvaluateOnNewDocument", {
+    identifier: standaloneScript.identifier,
+  });
+  const browserAgent = await evaluate(`navigator.userAgent`);
+  const iosScript = await command("Page.addScriptToEvaluateOnNewDocument", {
+    source: `(() => {
+      const original = window.addEventListener.bind(window);
+      window.addEventListener = (type, ...args) =>
+        type === 'beforeinstallprompt' ? undefined : original(type, ...args);
+    })();`,
+  });
+  await command("Emulation.setUserAgentOverride", {
+    userAgent:
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+  });
+  await navigate("/");
+  await waitFor(`document.body.textContent.includes('Instale o Cadisk')`);
+  await click("Instalar Cadisk");
+  await waitFor(`document.body.textContent.includes('Adicionar à Tela de Início')`);
+  await evaluate(`document.querySelector('[role=dialog] button[aria-label="Fechar"]').click()`);
+  await command("Emulation.setUserAgentOverride", { userAgent: browserAgent });
+  await navigate("/");
+  assert.equal(await evaluate(`document.body.textContent.includes('Instale o Cadisk')`), false);
+  await command("Page.removeScriptToEvaluateOnNewDocument", { identifier: iosScript.identifier });
+  await navigate("/");
+  await offerInstall();
+  await waitFor(`document.body.textContent.includes('Instale o Cadisk')`);
+  await evaluate(`document.querySelector('[aria-label="Fechar sugestão de instalação"]').click()`);
+  await waitFor(`!document.body.textContent.includes('Instale o Cadisk')`);
   await input("identifier", "tester");
   await input("password", "password");
   await evaluate(
     `document.querySelector('form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))`,
   );
   await waitFor(`localStorage.getItem('cadisk_user')?.includes('"id":1')`);
+  await evaluate(
+    `history.pushState({}, '', '/cases'); window.dispatchEvent(new PopStateEvent('popstate'))`,
+  );
+  await waitFor(`location.pathname === '/cases'`);
+  assert.equal(
+    await evaluate(`document.body.textContent.includes('Instale o Cadisk')`),
+    false,
+    "Dismissed install UI must stay hidden on SPA navigation",
+  );
+  await navigate("/");
+  await offerInstall();
+  await waitFor(`document.body.textContent.includes('Instale o Cadisk')`);
+  await click("Instalar Cadisk");
+  await waitFor(`!document.body.textContent.includes('Instale o Cadisk')`);
+  assert.equal(await evaluate(`window.__installPromptCount`), 1);
+  await navigate("/");
+  await offerInstall();
+  await waitFor(`document.body.textContent.includes('Instale o Cadisk')`);
+  await evaluate(`window.dispatchEvent(new Event('appinstalled'))`);
+  await waitFor(`!document.body.textContent.includes('Instale o Cadisk')`);
+  await navigate("/");
   await waitFor(`(await ${records}).some(row => row.type === 'cases' && row.ownerId === 1)`);
   assert.ok(meCount > 0, "Online /auth/me should succeed");
   await waitFor(`(await navigator.serviceWorker.getRegistration())?.active`);
+  await waitFor(`document.querySelector('[aria-label="Semana de produção"]')`);
+  assert.equal(
+    await evaluate(
+      `document.querySelector('[aria-label="Semana de produção"] button').getClientRects().length > 0`,
+    ),
+    true,
+  );
+  await evaluate(
+    `Array.from(document.querySelector('[aria-label="Semana de produção"]').querySelectorAll('button')).find(button => button.textContent.trim() === 'Novo caso').click()`,
+  );
+  await waitFor(`document.querySelector('[name=deadline]')`);
+  const todayKey = await evaluate(
+    `(() => { const d = new Date(); return [d.getFullYear(), String(d.getMonth()+1).padStart(2,'0'), String(d.getDate()).padStart(2,'0')].join('-') })()`,
+  );
+  assert.equal(await evaluate(`document.querySelector('[name=deadline]').value`), todayKey);
+  await evaluate(`document.querySelector('[role=dialog] button[aria-label="Fechar"]').click()`);
+  await command("Emulation.setDeviceMetricsOverride", {
+    width: 390,
+    height: 844,
+    deviceScaleFactor: 2,
+    mobile: true,
+  });
+  await waitFor(`document.querySelector('[aria-label="Semana de produção"]')`);
+  assert.equal(
+    await evaluate(
+      `Array.from(document.querySelector('[aria-label="Semana de produção"]').querySelectorAll('button')).find(button => button.textContent.trim() === 'Novo caso').getClientRects().length`,
+    ),
+    0,
+    "Desktop week action must be hidden on mobile",
+  );
+  assert.equal(
+    await evaluate(
+      `document.querySelector('[aria-label="Semana de produção"]').textContent.includes('Neste dia')`,
+    ),
+    false,
+  );
+  await evaluate(`document.querySelector('[aria-label="Próxima semana"]').click()`);
+  await evaluate(
+    `document.querySelector('[aria-label="Dias da semana"] > div:nth-child(4) > button').click()`,
+  );
+  const selectedThursday = await evaluate(
+    `(() => { const d = new Date(); d.setDate(d.getDate() + (d.getDay() === 0 ? -6 : 1-d.getDay()) + 10); return [d.getFullYear(), String(d.getMonth()+1).padStart(2,'0'), String(d.getDate()).padStart(2,'0')].join('-') })()`,
+  );
+  assert.ok(
+    await evaluate(
+      `document.querySelector('[aria-label="Criar caso no dia selecionado"]').getClientRects().length > 0`,
+    ),
+  );
+  await evaluate(`document.querySelector('[aria-label="Criar caso no dia selecionado"]').click()`);
+  await waitFor(`document.querySelector('[name=deadline]')`);
+  assert.equal(await evaluate(`document.querySelector('[name=deadline]').value`), selectedThursday);
+  await evaluate(`document.querySelector('[role=dialog] button[aria-label="Fechar"]').click()`);
+  await command("Emulation.setDeviceMetricsOverride", {
+    width: 1440,
+    height: 900,
+    deviceScaleFactor: 1,
+    mobile: false,
+  });
+  await waitFor(`(await ${records}).some(row => row.type === 'dashboard' && row.ownerId === 1)`);
+  dashboardMode = "network";
+  await navigate("/");
+  await waitFor(
+    `document.body.textContent.includes('Último estado conhecido') && document.body.textContent.includes('Semana de produção')`,
+  );
+  dashboardMode = "online";
+  await navigate("/");
+  await waitFor(
+    `document.body.textContent.includes('Semana de produção') && !document.body.textContent.includes('Último estado conhecido')`,
+  );
   await navigate("/cases");
   await waitFor(`navigator.serviceWorker.controller !== null`);
   await waitFor(`document.body.textContent.includes('Caso existente')`);
@@ -375,12 +519,15 @@ try {
   await waitFor(`document.body.textContent.includes('Caso existente')`);
   await click("Novo caso");
   await waitFor(`document.querySelector('[name=patient_ref]')`);
+  await evaluate(
+    `(() => { const select = document.querySelector('[role=dialog] select'); select.value = ''; select.dispatchEvent(new Event('change', { bubbles: true })); })()`,
+  );
   await input("patient_ref", "Paciente offline");
   await click("Valor fixo");
   await input("total_value", "120,00");
   await click("Salvar rascunho");
   await waitFor(
-    `(await ${records}).some(row => row.type === 'draft' && row.data.form.patient_ref === 'Paciente offline')`,
+    `(await ${records}).some(row => row.type === 'draft' && row.data.doctorId === null && row.data.form.patient_ref === 'Paciente offline')`,
   );
   const postsBefore = postCount;
   await navigate("/cases");
@@ -392,6 +539,7 @@ try {
     await evaluate(`document.querySelector('[name=patient_ref]').value`),
     "Paciente offline",
   );
+  assert.equal(await evaluate(`document.querySelector('[role=dialog] select').value`), "");
   assert.equal(postCount, postsBefore, "Draft must not POST automatically");
   await command("Network.emulateNetworkConditions", {
     offline: false,
@@ -430,6 +578,7 @@ try {
   await click("Salvar caso");
   await waitFor(`(await ${records}).every(row => row.type !== 'draft')`);
   assert.equal(postCount, postsBefore + 2);
+  assert.equal(cases.find((foundCase) => foundCase.id === 2)?.doctor_id, null);
   await waitFor(`!document.querySelector('[name=patient_ref]')`);
   await click("Novo caso");
   await waitFor(`document.querySelector('[name=patient_ref]')`);
@@ -442,11 +591,15 @@ try {
   await waitFor(`(await ${records}).every(row => row.type !== 'draft')`);
   await waitFor(`document.querySelector('[name=patient_ref]')`);
   await input("patient_ref", "Edição em andamento");
+  await offerInstall();
+  await waitFor(`document.body.textContent.includes('Instale o Cadisk')`);
   swVersion = 3;
   await evaluate(`navigator.serviceWorker.getRegistration().then(reg => reg.update())`);
   await waitFor(
     `Array.from(document.querySelectorAll('button')).some(button => button.textContent === 'Depois')`,
   );
+  await click("Instalar Cadisk");
+  assert.ok(await evaluate(`document.body.textContent.includes('Nova versão disponível')`));
   await click("Depois");
   assert.equal(
     await evaluate(`document.querySelector('[name=patient_ref]').value`),
@@ -472,6 +625,20 @@ try {
     !(await evaluate(`document.body.textContent.includes('Caso existente')`)),
     "Previous user's data must not appear",
   );
+  await waitFor(
+    `(await ${records}).some(row => row.ownerId === 2 && row.type === 'doctors' && row.data.length === 0)`,
+  );
+  apiMode = "network";
+  await navigate("/cases");
+  await waitFor(`document.body.textContent.includes('Último estado conhecido')`);
+  await click("Novo caso");
+  await waitFor(`document.querySelector('[name=patient_ref]')`);
+  assert.equal(await evaluate(`document.querySelector('[role=dialog] select').value`), "");
+  await input("patient_ref", "Avulso sem dentistas");
+  await click("Salvar rascunho");
+  await waitFor(
+    `(await ${records}).some(row => row.ownerId === 2 && row.type === 'draft' && row.data.doctorId === null)`,
+  );
   apiMode = "unauthorized";
   await evaluate(`window.dispatchEvent(new Event('online'))`);
   await waitFor(`localStorage.getItem('cadisk_token') === null`);
@@ -479,7 +646,7 @@ try {
   await Promise.all(interceptions);
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: PWA shell/cache, old-cache cleanup, update activation/deferral, real reset fragment, auth 200/401/network/5xx, isolated snapshots, draft lifecycle, explicit POST.",
+    "PASS: install banner/standalone/dismiss, responsive week dates, dashboard snapshot, PWA shell/cache/update, auth isolation, avulso drafts and explicit POST.",
   );
 } finally {
   socket?.close();

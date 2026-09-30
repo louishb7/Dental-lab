@@ -48,7 +48,8 @@ describe('DashboardService integration', () => {
   }
 
   async function createCase(input: {
-    doctorId: number;
+    doctorId: number | null;
+    userId?: number;
     patientRef: string;
     deadline?: Date | null;
     priority?: 'normal' | 'urgent';
@@ -58,8 +59,13 @@ describe('DashboardService integration', () => {
     deliveredAt?: Date | null;
     deletedAt?: Date | null;
   }): Promise<number> {
+    const userId =
+      input.userId ??
+      (await prisma.doctor.findUniqueOrThrow({ where: { id: input.doctorId! } })).userId;
+    if (userId === null) throw new Error('Test case requires an owner');
     const created = await prisma.dentalCase.create({
       data: {
+        userId,
         doctorId: input.doctorId,
         patientRef: input.patientRef,
         deadline: input.deadline ?? null,
@@ -105,6 +111,41 @@ describe('DashboardService integration', () => {
   afterAll(async () => {
     await resetDatabase();
     await prisma.$disconnect();
+  });
+
+  it('includes avulso cases in owned counts, lists and finance only', async () => {
+    const ownerId = await createUser('avulso@cadisk.local', 'avulso1');
+    const strangerId = await createUser('other@cadisk.local', 'other1');
+    await createCase({
+      userId: ownerId,
+      doctorId: null,
+      patientRef: 'Avulso urgente',
+      priority: 'urgent',
+      deadline: new Date('2026-07-27T12:00:00.000Z'),
+    });
+    await createCase({
+      userId: ownerId,
+      doctorId: null,
+      patientRef: 'Avulso entregue',
+      status: 'delivered',
+      totalValue: new Prisma.Decimal('125.00'),
+      deliveredTotalValue: new Prisma.Decimal('125.00'),
+      deliveredAt: new Date('2026-07-20T12:00:00.000Z'),
+    });
+
+    const owned = await dashboard.getDashboardSummary(ownerId, now);
+    expect(owned.status_counts).toMatchObject({ pending: 1, delivered: 1 });
+    expect(owned.urgent_open_cases).toMatchObject([
+      { doctor_id: null, doctor_name: 'Avulso', patient_ref: 'Avulso urgente' },
+    ]);
+    expect(owned.overdue_cases).toHaveLength(1);
+    expect(owned.delivered_cases_month).toMatchObject([
+      { doctor_id: null, doctor_name: 'Avulso', patient_ref: 'Avulso entregue' },
+    ]);
+    expect(owned.delivered_total_month.toString()).toBe('125');
+    const stranger = await dashboard.getDashboardSummary(strangerId, now);
+    expect(stranger.status_counts).toMatchObject({ pending: 0, delivered: 0 });
+    expect(stranger.delivered_cases_month).toEqual([]);
   });
 
   it('returns status counts and dashboard lists matching the legacy summary shape', async () => {

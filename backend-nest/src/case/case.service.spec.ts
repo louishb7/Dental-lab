@@ -7,6 +7,7 @@ import type { Doctor } from '@prisma/client';
 function caseFixture(overrides: Partial<CaseWithItems> = {}): CaseWithItems {
   return {
     id: 1,
+    userId: 1,
     doctorId: 1,
     patientRef: 'Patient 1',
     pricingMode: 'fixed',
@@ -102,6 +103,21 @@ describe('CaseService', () => {
       expect(result.id).toEqual(createdCase.id);
     });
 
+    it('creates an avulso case for the authenticated user without looking up a doctor', async () => {
+      repo.createCase.mockResolvedValue(caseFixture({ doctorId: null }));
+      repo.createHistoryEvent.mockResolvedValue(undefined);
+
+      const result = await service.createCase(
+        { doctor_id: null, patient_ref: 'Avulso', priority: 'normal' },
+        1,
+      );
+      expect(repo.getDoctorById).not.toHaveBeenCalled();
+      expect(repo.createCase).toHaveBeenCalledWith(
+        expect.objectContaining({ userId: 1, doctorId: null }),
+      );
+      expect(result.doctor_id).toBeNull();
+    });
+
     it('should throw if doctor not found', async () => {
       repo.getDoctorById.mockResolvedValue(null);
 
@@ -178,7 +194,7 @@ describe('CaseService', () => {
       repo.getCaseById.mockResolvedValue(currentCase);
       repo.getDoctorById.mockResolvedValue({
         ...doctorFixture,
-        id: currentCase.doctorId,
+        id: currentCase.doctorId!,
         userId: 1,
         deletedAt: null,
       });

@@ -236,6 +236,7 @@ describe('doctor e2e', () => {
 
   it('returns cases_count for active cases and blocks delete with pending/completed cases', async () => {
     const user = await registerUser('admin@cadisk.local', 'admin1');
+    const ownerId = (await prisma.user.findUniqueOrThrow({ where: { email: user.email } })).id;
     const created = await request(app.getHttpServer())
       .post('/doctors/')
       .set('Authorization', `Bearer ${user.access_token}`)
@@ -244,6 +245,7 @@ describe('doctor e2e', () => {
 
     await prisma.dentalCase.create({
       data: {
+        userId: ownerId,
         doctorId: created.body.id as number,
         patientRef: 'Paciente ativo',
         status: 'pending',
@@ -251,6 +253,7 @@ describe('doctor e2e', () => {
     });
     await prisma.dentalCase.create({
       data: {
+        userId: ownerId,
         deletedAt: new Date(),
         doctorId: created.body.id as number,
         patientRef: 'Paciente removido',

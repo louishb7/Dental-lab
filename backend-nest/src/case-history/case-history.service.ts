@@ -68,9 +68,7 @@ export class CaseHistoryService {
     const foundCase = await this.prisma.dentalCase.findFirst({
       where: {
         id: caseId,
-        doctor: {
-          userId,
-        },
+        userId,
       },
       include: this.historyCaseInclude(),
     });
@@ -82,7 +80,9 @@ export class CaseHistoryService {
     return {
       id: foundCase.id,
       doctor_id: foundCase.doctorId,
-      doctor_name: foundCase.doctor?.name ?? `#${foundCase.doctorId}`,
+      doctor_name:
+        foundCase.doctor?.name ??
+        (foundCase.doctorId === null ? 'Avulso' : `#${foundCase.doctorId}`),
       patient_ref: foundCase.patientRef,
       pricing_mode: foundCase.pricingMode,
       deadline: foundCase.deadline,
@@ -109,9 +109,7 @@ export class CaseHistoryService {
     const caseExists = await this.prisma.dentalCase.findFirst({
       where: {
         id: caseId,
-        doctor: {
-          userId,
-        },
+        userId,
       },
       select: {
         id: true,
@@ -153,9 +151,7 @@ export class CaseHistoryService {
       const foundCase = await tx.dentalCase.findFirst({
         where: {
           id: caseId,
-          doctor: {
-            userId,
-          },
+          userId,
         },
         select: { id: true, deletedAt: true },
       });
@@ -190,9 +186,7 @@ export class CaseHistoryService {
           id: {
             in: normalizedIds,
           },
-          doctor: {
-            userId,
-          },
+          userId,
         },
         select: {
           id: true,
@@ -244,9 +238,7 @@ export class CaseHistoryService {
     }
 
     return {
-      doctor: {
-        userId,
-      },
+      userId,
       ...(search
         ? {
             OR: [
@@ -297,7 +289,9 @@ export class CaseHistoryService {
     return {
       id: foundCase.id,
       doctor_id: foundCase.doctorId,
-      doctor_name: foundCase.doctor?.name ?? `#${foundCase.doctorId}`,
+      doctor_name:
+        foundCase.doctor?.name ??
+        (foundCase.doctorId === null ? 'Avulso' : `#${foundCase.doctorId}`),
       patient_ref: foundCase.patientRef,
       pricing_mode: foundCase.pricingMode,
       status: foundCase.status,

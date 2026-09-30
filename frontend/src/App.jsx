@@ -22,6 +22,7 @@ import DoctorsPage from "./pages/DoctorsPage.jsx";
 const FinancePage = lazy(() => import("./pages/FinancePage.jsx"));
 import HistoryPage from "./pages/HistoryPage.jsx";
 import PwaStatus from "./pwa/PwaStatus.jsx";
+import { InstallPromptBanner, InstallPromptProvider } from "./pwa/InstallPrompt.jsx";
 import useApiAvailability from "./pwa/useApiAvailability.js";
 
 import { AuthProvider, useAuth } from "./contexts/AuthContext.jsx";
@@ -44,18 +45,23 @@ function getNextTheme(currentTheme) {
 function AuthPageWrapper() {
   const auth = useAuth();
   return (
-    <AuthPage
-      authMode={auth.authMode}
-      setAuthMode={auth.changeAuthMode}
-      loginForm={auth.loginForm}
-      registerForm={auth.registerForm}
-      authLoading={auth.authLoading}
-      authMessage={auth.authMessage}
-      authErrors={auth.authErrors}
-      onAuthChange={auth.handleAuthChange}
-      onLogin={auth.handleLogin}
-      onRegister={auth.handleRegister}
-    />
+    <>
+      <div className="sticky top-0 z-20">
+        <InstallPromptBanner />
+      </div>
+      <AuthPage
+        authMode={auth.authMode}
+        setAuthMode={auth.changeAuthMode}
+        loginForm={auth.loginForm}
+        registerForm={auth.registerForm}
+        authLoading={auth.authLoading}
+        authMessage={auth.authMessage}
+        authErrors={auth.authErrors}
+        onAuthChange={auth.handleAuthChange}
+        onLogin={auth.handleLogin}
+        onRegister={auth.handleRegister}
+      />
+    </>
   );
 }
 
@@ -99,7 +105,9 @@ function AppContent({ theme, onToggleTheme }) {
         ? ["doctors"]
         : activePage === "history"
           ? []
-          : ["cases", "doctors"];
+          : activePage === "dashboard"
+            ? ["dashboard", "cases", "doctors"]
+            : ["cases", "doctors"];
   if (data.selectedCase && (activePage === "cases" || activePage === "dashboard")) {
     relevantSnapshots.push("items");
   }
@@ -107,7 +115,10 @@ function AppContent({ theme, onToggleTheme }) {
     .map((type) => data.snapshotMeta[type])
     .filter((entry) => entry?.source === "snapshot")
     .sort((a, b) => a.updatedAt.localeCompare(b.updatedAt))[0];
-  const readOnly = apiAvailability === "unavailable" || Boolean(stale);
+  const operationalSnapshot = relevantSnapshots.some(
+    (type) => type !== "dashboard" && data.snapshotMeta[type]?.source === "snapshot",
+  );
+  const readOnly = apiAvailability === "unavailable" || operationalSnapshot;
 
   function handleNavigate(page, options = {}) {
     const nextPage = page === "dashboard" ? "/" : `/${page}`;
@@ -337,10 +348,12 @@ function Root() {
 export default function App() {
   return (
     <Router>
-      <AuthProvider>
-        <Root />
-        <PwaStatus />
-      </AuthProvider>
+      <InstallPromptProvider>
+        <AuthProvider>
+          <Root />
+          <PwaStatus />
+        </AuthProvider>
+      </InstallPromptProvider>
     </Router>
   );
 }

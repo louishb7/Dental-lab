@@ -4,7 +4,7 @@ import ToothIcon from "../icons/ToothIcon.jsx";
 
 export default function AppHeader({ title }) {
   return (
-    <header className="sticky top-0 z-10 flex min-h-16 items-center gap-3 border-b border-[var(--color-border)] bg-[var(--color-header)] px-[var(--space-page-x)] py-2 lg:hidden">
+    <header className="flex min-h-16 items-center gap-3 border-b border-[var(--color-border)] bg-[var(--color-header)] px-[var(--space-page-x)] py-2 lg:hidden">
       <Dialog.Trigger
         className="grid size-11 shrink-0 place-items-center rounded-md border border-[var(--color-border)] bg-[var(--color-surface)]"
         aria-label="Abrir navegação"

@@ -57,6 +57,7 @@ describe('schema parity integration', () => {
         'uq_users_email',
         'uq_users_username',
         'fk_doctors_user_id_users',
+        'fk_cases_user_id_users',
         'cases_doctor_id_fkey',
         'case_items_case_id_fkey',
         'case_history_events_case_id_fkey',
@@ -84,6 +85,7 @@ describe('schema parity integration', () => {
           'ix_doctors_name',
           'ix_doctors_deleted_at',
           'ix_cases_doctor_id',
+          'ix_cases_user_id',
           'ix_cases_patient_ref',
           'ix_cases_priority',
           'ix_cases_status',
@@ -109,6 +111,7 @@ describe('schema parity integration', () => {
       'ck_cases_priority_valid',
       'ck_cases_status_valid',
       'ck_cases_total_value_non_negative',
+      'fk_cases_user_id_users',
       'fk_doctors_user_id_users',
       'uq_users_email',
       'uq_users_username',
@@ -122,12 +125,41 @@ describe('schema parity integration', () => {
       'ix_cases_patient_ref',
       'ix_cases_priority',
       'ix_cases_status',
+      'ix_cases_user_id',
       'ix_doctors_deleted_at',
       'ix_doctors_name',
       'ix_doctors_user_id',
       'uq_users_email_lower',
       'uq_users_username_lower',
     ]);
+  });
+
+  it('requires a case owner and permits an absent doctor', async () => {
+    const columns = await prisma.$queryRaw<Array<{ column_name: string; is_nullable: string }>>`
+      SELECT column_name, is_nullable
+      FROM information_schema.columns
+      WHERE table_schema = ${schemaName}
+        AND table_name = 'cases'
+        AND column_name IN ('user_id', 'doctor_id')
+      ORDER BY column_name
+    `;
+    expect(columns).toEqual([
+      { column_name: 'doctor_id', is_nullable: 'YES' },
+      { column_name: 'user_id', is_nullable: 'NO' },
+    ]);
+
+    await prisma.$executeRaw`
+      INSERT INTO "users" ("email", "username", "password_hash")
+      VALUES ('owner@cadisk.local', 'OwnerUser', 'hash')
+    `;
+    await prisma.$executeRaw`
+      INSERT INTO "cases" ("user_id", "doctor_id", "patient_ref")
+      VALUES (1, NULL, 'Avulso Schema')
+    `;
+    await expect(prisma.$executeRaw`
+      INSERT INTO "cases" ("doctor_id", "patient_ref")
+      VALUES (NULL, 'Sem proprietário')
+    `).rejects.toThrow();
   });
 
   it('enforces case-insensitive user identity and domain checks', async () => {
@@ -140,8 +172,8 @@ describe('schema parity integration', () => {
       VALUES (1, 'Dr. Schema')
     `;
     await prisma.$executeRaw`
-      INSERT INTO "cases" ("doctor_id", "patient_ref")
-      VALUES (1, 'Paciente Schema')
+      INSERT INTO "cases" ("user_id", "doctor_id", "patient_ref")
+      VALUES (1, 1, 'Paciente Schema')
     `;
 
     await expect(prisma.$executeRaw`
@@ -153,20 +185,20 @@ describe('schema parity integration', () => {
       VALUES ('other@cadisk.local', 'adminuser', 'hash')
     `).rejects.toThrow();
     await expect(prisma.$executeRaw`
-      INSERT INTO "cases" ("doctor_id", "patient_ref", "priority")
-      VALUES (1, 'Prioridade invalida', 'high')
+      INSERT INTO "cases" ("user_id", "doctor_id", "patient_ref", "priority")
+      VALUES (1, 1, 'Prioridade invalida', 'high')
     `).rejects.toThrow();
     await expect(prisma.$executeRaw`
-      INSERT INTO "cases" ("doctor_id", "patient_ref", "status")
-      VALUES (1, 'Status invalido', 'archived')
+      INSERT INTO "cases" ("user_id", "doctor_id", "patient_ref", "status")
+      VALUES (1, 1, 'Status invalido', 'archived')
     `).rejects.toThrow();
     await expect(prisma.$executeRaw`
-      INSERT INTO "cases" ("doctor_id", "patient_ref", "pricing_mode")
-      VALUES (1, 'Cobranca invalida', 'hourly')
+      INSERT INTO "cases" ("user_id", "doctor_id", "patient_ref", "pricing_mode")
+      VALUES (1, 1, 'Cobranca invalida', 'hourly')
     `).rejects.toThrow();
     await expect(prisma.$executeRaw`
-      INSERT INTO "cases" ("doctor_id", "patient_ref", "total_value")
-      VALUES (1, 'Valor invalido', -1)
+      INSERT INTO "cases" ("user_id", "doctor_id", "patient_ref", "total_value")
+      VALUES (1, 1, 'Valor invalido', -1)
     `).rejects.toThrow();
     await expect(prisma.$executeRaw`
       INSERT INTO "case_items" ("case_id", "tooth", "service_type", "quantity")
@@ -196,8 +228,8 @@ describe('schema parity integration', () => {
       VALUES (1, 'Dr. Owner')
     `;
     await prisma.$executeRaw`
-      INSERT INTO "cases" ("doctor_id", "patient_ref")
-      VALUES (1, 'Paciente Restrict')
+      INSERT INTO "cases" ("user_id", "doctor_id", "patient_ref")
+      VALUES (1, 1, 'Paciente Restrict')
     `;
     await prisma.$executeRaw`
       INSERT INTO "case_items" ("case_id", "tooth", "service_type")

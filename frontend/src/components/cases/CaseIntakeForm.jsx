@@ -71,13 +71,12 @@ export default function CaseIntakeForm({
           trabalho
         </h3>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1.2fr_0.8fr]">
-          <FormField label="Dentista responsável">
+          <FormField label="Dentista">
             <select
               value={selectedDoctorId || ""}
               onChange={(event) => onDoctorChange(Number(event.target.value) || null)}
-              required
             >
-              <option value="">Selecione um dentista</option>
+              <option value="">Avulso / Sem dentista</option>
               {doctors.map((doctor) => (
                 <option key={doctor.id} value={doctor.id}>
                   {doctor.name}
@@ -198,7 +197,7 @@ export default function CaseIntakeForm({
             <dl className="grid gap-2 text-xs [&>div]:grid [&>div]:grid-cols-[72px_minmax(0,1fr)] [&>div]:gap-3 [&_dt]:text-[var(--color-text-muted)] [&_dd]:break-words">
               <div>
                 <dt>Dentista</dt>
-                <dd>{selectedDoctor?.name || "A selecionar"}</dd>
+                <dd>{selectedDoctor?.name || "Avulso"}</dd>
               </div>
               <div>
                 <dt>Paciente</dt>

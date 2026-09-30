@@ -48,7 +48,7 @@ describe('CaseItemService integration', () => {
 
   async function createCase(
     userId: number,
-    doctorId: number,
+    doctorId: number | null,
     pricingMode: 'fixed' | 'services' = 'services',
   ): Promise<number> {
     const created = await cases.createCase(
@@ -280,5 +280,28 @@ describe('CaseItemService integration', () => {
         secondUserId,
       ),
     ).rejects.toBeInstanceOf(CaseItemCaseNotFoundError);
+  });
+
+  it('protects items on an avulso case by direct case ownership', async () => {
+    const ownerId = await createUser('avulso@cadisk.local', 'avulso1');
+    const strangerId = await createUser('other@cadisk.local', 'other1');
+    const caseId = await createCase(ownerId, null);
+    const item = await caseItems.createCaseItem(
+      caseId,
+      { tooth: '11', service_type: 'Coroa', unit_value: '120,00' },
+      ownerId,
+    );
+    await expect(caseItems.listCaseItems(caseId, ownerId)).resolves.toMatchObject([
+      { id: item.id, service_type: 'Coroa' },
+    ]);
+    await expect(caseItems.listCaseItems(caseId, strangerId)).rejects.toBeInstanceOf(
+      CaseItemCaseNotFoundError,
+    );
+    await expect(
+      caseItems.updateCaseItem(caseId, item.id, { notes: 'Tentativa' }, strangerId),
+    ).rejects.toBeInstanceOf(CaseItemCaseNotFoundError);
+    await expect(caseItems.deleteCaseItem(caseId, item.id, strangerId)).rejects.toBeInstanceOf(
+      CaseItemCaseNotFoundError,
+    );
   });
 });

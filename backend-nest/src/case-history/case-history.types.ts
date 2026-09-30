@@ -12,7 +12,7 @@ export interface PaginationMeta {
 
 export interface CaseHistoryListItem {
   id: number;
-  doctor_id: number;
+  doctor_id: number | null;
   doctor_name: string;
   patient_ref: string;
   pricing_mode: string;

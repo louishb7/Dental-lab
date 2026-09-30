@@ -21,6 +21,7 @@ model User {
   createdAt           DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt           DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   doctors             Doctor[]
+  cases               DentalCase[]
   caseHistoryEvents   CaseHistoryEvent[]
 
   @@unique([email], map: "uq_users_email")
@@ -62,7 +63,8 @@ model Doctor {
 
 model DentalCase {
   id                  Int                @id @default(autoincrement())
-  doctorId            Int                @map("doctor_id")
+  userId              Int                @map("user_id")
+  doctorId            Int?               @map("doctor_id")
   patientRef          String             @map("patient_ref") @db.VarChar(150)
   pricingMode         String             @default("services") @map("pricing_mode") @db.VarChar(20)
   deadline            DateTime?          @db.Timestamptz(6)
@@ -75,10 +77,12 @@ model DentalCase {
   deliveredAt         DateTime?          @map("delivered_at") @db.Timestamptz(6)
   deletedAt           DateTime?          @map("deleted_at") @db.Timestamptz(6)
   statusRevertReason  String?            @map("status_revert_reason") @db.Text
-  doctor              Doctor             @relation(fields: [doctorId], references: [id], onDelete: Restrict, map: "cases_doctor_id_fkey")
+  user                User               @relation(fields: [userId], references: [id], onDelete: Restrict, map: "fk_cases_user_id_users")
+  doctor              Doctor?            @relation(fields: [doctorId], references: [id], onDelete: Restrict, map: "cases_doctor_id_fkey")
   items               CaseItem[]
   historyEvents       CaseHistoryEvent[]
 
+  @@index([userId], map: "ix_cases_user_id")
   @@index([doctorId], map: "ix_cases_doctor_id")
   @@index([patientRef], map: "ix_cases_patient_ref")
   @@index([priority], map: "ix_cases_priority")

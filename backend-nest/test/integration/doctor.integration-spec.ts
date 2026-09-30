@@ -125,6 +125,7 @@ describe('DoctorService integration', () => {
 
     await prisma.dentalCase.create({
       data: {
+        userId,
         doctorId: doctor.id,
         patientRef: 'Paciente ativo',
         status: 'pending',
@@ -132,6 +133,7 @@ describe('DoctorService integration', () => {
     });
     await prisma.dentalCase.create({
       data: {
+        userId,
         doctorId: doctor.id,
         deletedAt: new Date(),
         patientRef: 'Paciente removido',

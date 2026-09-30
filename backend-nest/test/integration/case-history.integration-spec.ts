@@ -101,6 +101,32 @@ describe('CaseHistory integration', () => {
     });
   });
 
+  it('lists avulso history for its owner and hides details, events and deletion from others', async () => {
+    const ownerId = await createUser('avulso@cadisk.local', 'avulso1');
+    const strangerId = await createUser('other@cadisk.local', 'other1');
+    const created = await cases.createCase(
+      { doctor_id: null, patient_ref: 'Histórico Avulso', priority: 'normal' },
+      ownerId,
+    );
+    expect((await history.listCases({ page: 1, limit: 10 }, ownerId)).items).toMatchObject([
+      { id: created.id, doctor_id: null, doctor_name: 'Avulso' },
+    ]);
+    expect((await history.listCases({ page: 1, limit: 10 }, strangerId)).items).toEqual([]);
+    await expect(history.getCaseDetail(created.id, ownerId)).resolves.toMatchObject({
+      doctor_id: null,
+      doctor_name: 'Avulso',
+    });
+    await expect(history.getCaseDetail(created.id, strangerId)).resolves.toBeNull();
+    await expect(
+      history.listCaseEvents(created.id, { page: 1, limit: 10 }, strangerId),
+    ).resolves.toBeNull();
+    await cases.deleteCase(created.id, ownerId);
+    await expect(history.permanentlyDeleteCase(created.id, strangerId)).resolves.toBeNull();
+    await expect(history.permanentlyDeleteCase(created.id, ownerId)).resolves.toEqual({
+      deleted_count: 1,
+    });
+  });
+
   it('records creation, status advances, bulk delivery and preserves events after soft delete', async () => {
     const userId = await createUser('history@cadisk.local', 'hist01');
     const doctorId = await createDoctor(userId);
@@ -302,6 +328,7 @@ describe('CaseHistory integration', () => {
 
     const oldDelivered = await prisma.dentalCase.create({
       data: {
+        userId: firstUserId,
         doctorId: firstDoctorId,
         patientRef: 'Paciente Antigo Localizável',
         status: 'delivered',

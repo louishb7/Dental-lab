@@ -95,6 +95,9 @@ describe('CaseService integration', () => {
     expect(created.total_value?.toString()).toBe('1234.56');
     expect(created.delivered_at).toBeNull();
     expect(created.items_count).toBe(0);
+    await expect(cases.updateCase(created.id, { doctor_id: null }, userId)).resolves.toMatchObject({
+      doctor_id: null,
+    });
   });
 
   it('rejects invalid pricing payloads with legacy messages', async () => {
@@ -216,6 +219,45 @@ describe('CaseService integration', () => {
     await expect(cases.getAllCases({ skip: 0, limit: 100 }, secondUserId)).resolves.toMatchObject([
       { id: secondCase.id, patient_ref: 'Paciente Segundo' },
     ]);
+  });
+
+  it('owns avulso cases directly and preserves status, bulk delivery and isolation', async () => {
+    const ownerId = await createUser('avulso@cadisk.local', 'avulso1');
+    const strangerId = await createUser('other@cadisk.local', 'other1');
+    const created = await cases.createCase(
+      { doctor_id: null, patient_ref: 'Paciente Avulso', priority: 'normal' },
+      ownerId,
+    );
+
+    expect(created.doctor_id).toBeNull();
+    await expect(
+      prisma.dentalCase.findUnique({ where: { id: created.id } }),
+    ).resolves.toMatchObject({
+      userId: ownerId,
+      doctorId: null,
+    });
+    await expect(cases.getCaseById(created.id, strangerId)).resolves.toBeNull();
+    await expect(cases.getAllCases({ skip: 0, limit: 100 }, strangerId)).resolves.toEqual([]);
+    await expect(
+      cases.updateCase(created.id, { patient_ref: 'Acesso cruzado' }, strangerId),
+    ).resolves.toBeNull();
+    await expect(cases.deleteCase(created.id, strangerId)).rejects.toThrow('Caso não encontrado');
+    await expect(cases.bulkDeliverCases({ case_ids: [created.id] }, strangerId)).rejects.toThrow(
+      'Alguns pedidos selecionados não foram encontrados.',
+    );
+
+    const completed = await cases.updateCase(created.id, { status: 'completed' }, ownerId);
+    expect(completed?.status).toBe('completed');
+    await expect(
+      cases.revertCaseStatus(created.id, 'Ainda em andamento', ownerId),
+    ).resolves.toMatchObject({
+      status: 'pending',
+      doctor_id: null,
+    });
+    await cases.updateCase(created.id, { status: 'completed' }, ownerId);
+    await expect(
+      cases.bulkDeliverCases({ case_ids: [created.id] }, ownerId),
+    ).resolves.toMatchObject([{ id: created.id, status: 'delivered', doctor_id: null }]);
   });
 
   it('preserves linear status flow and existing delivered_at', async () => {

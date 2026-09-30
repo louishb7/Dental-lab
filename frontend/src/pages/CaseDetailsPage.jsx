@@ -10,6 +10,7 @@ import Modal from "../components/ui/Modal.jsx";
 import StatusBadge from "../components/ui/StatusBadge.jsx";
 import { formatCurrency, formatCurrencyInput, parseCurrencyToNumber } from "../utils/formatters.js";
 import { splitItemOperationalNotes } from "../utils/forms.js";
+import { getCaseDoctorName } from "../utils/cases.js";
 import { sortTeethByFdi } from "../utils/odontogram.js";
 
 const EMPTY_ITEM_FORM = {
@@ -180,7 +181,7 @@ export default function CaseDetailsPage({
     <>
       <Modal
         title={caseItem.patient_ref}
-        description={doctor?.name || `Dentista #${caseItem.doctor_id}`}
+        description={getCaseDoctorName(caseItem, doctor?.name)}
         onClose={onClose}
         className="max-w-[720px]"
       >

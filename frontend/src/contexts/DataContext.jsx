@@ -73,7 +73,7 @@ function validCollection(type, data) {
     return data.every(
       (item) =>
         Number.isSafeInteger(item?.id) &&
-        Number.isSafeInteger(item.doctor_id) &&
+        (item.doctor_id === null || Number.isSafeInteger(item.doctor_id)) &&
         typeof item.patient_ref === "string" &&
         typeof item.status === "string",
     );
@@ -336,7 +336,6 @@ export function DataProvider({ children }) {
 
   async function handleCaseSubmit(event) {
     event.preventDefault();
-    if (!selectedDoctorId) return;
     if (getApiAvailability() === "unavailable") {
       setMessage({ type: "error", text: "API indisponível. Salve o caso como rascunho local." });
       return;
@@ -371,7 +370,11 @@ export function DataProvider({ children }) {
           draftCleanupFailed = true;
         }
       }
-      window.localStorage.setItem(LAST_CASE_DOCTOR_STORAGE_KEY, String(selectedDoctorId));
+      if (selectedDoctorId === null) {
+        window.localStorage.removeItem(LAST_CASE_DOCTOR_STORAGE_KEY);
+      } else {
+        window.localStorage.setItem(LAST_CASE_DOCTOR_STORAGE_KEY, String(selectedDoctorId));
+      }
 
       const refreshed = await loadAppData({ selectedCaseId: null });
       setSelectedCaseId(null);
@@ -564,10 +567,6 @@ export function DataProvider({ children }) {
   }
 
   async function openNewCaseModal(defaults = {}) {
-    if (getApiAvailability() === "unavailable" && !doctors.length) {
-      setMessage({ type: "error", text: "Dentistas não disponíveis offline neste dispositivo." });
-      return;
-    }
     setCaseForm(createDefaultCaseForm(defaults));
     setSelectedDoctorId(getDefaultCaseDoctorId());
     const storedDraft = userId ? await readOfflineRecord(userId, "draft").catch(() => draft) : null;
@@ -626,7 +625,7 @@ export function DataProvider({ children }) {
   }
 
   function openNewCaseFromDashboard() {
-    openNewCaseModal();
+    openNewCaseModal({ deadline: getLocalDateKey(new Date()) });
   }
 
   function openNewCaseFromDashboardDate(date) {

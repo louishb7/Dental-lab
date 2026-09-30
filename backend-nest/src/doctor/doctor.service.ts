@@ -162,7 +162,9 @@ export class DoctorService extends OwnershipBase {
       },
     });
 
-    return new Map(rows.map((row) => [row.doctorId, row._count.id]));
+    return new Map(
+      rows.filter((row) => row.doctorId !== null).map((row) => [row.doctorId!, row._count.id]),
+    );
   }
 
   private toResponse(doctor: Doctor, casesCount: number): DoctorResponse {

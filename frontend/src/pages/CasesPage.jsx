@@ -22,7 +22,7 @@ import PageContainer from "../components/layout/PageContainer.jsx";
 import PriorityBadge from "../components/ui/PriorityBadge.jsx";
 import StatusBadge from "../components/ui/StatusBadge.jsx";
 import { formatCurrency } from "../utils/formatters.js";
-import { formatServiceItemCount } from "../utils/cases.js";
+import { formatServiceItemCount, getCaseDoctorName } from "../utils/cases.js";
 import { isOverdue } from "../utils/productionWeek.js";
 import CaseDetailsPage from "./CaseDetailsPage.jsx";
 
@@ -114,7 +114,7 @@ export default function CasesPage({
     .filter(isOverdue)
     .map((caseItem) => ({
       ...caseItem,
-      doctor_name: doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`,
+      doctor_name: getCaseDoctorName(caseItem, doctorById.get(caseItem.doctor_id)?.name),
     }))
     .sort(sortByPriorityAndDeadline);
 
@@ -204,7 +204,7 @@ export default function CasesPage({
           {caseItem.patient_ref}
         </button>
         <span className="text-xs text-[var(--color-text-muted)]">
-          {doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`}
+          {getCaseDoctorName(caseItem, doctorById.get(caseItem.doctor_id)?.name)}
         </span>
         <PriorityBadge priority={caseItem.priority} />
       </div>
@@ -408,7 +408,7 @@ export default function CasesPage({
                         {caseItem.patient_ref}
                       </strong>
                       <small className="truncate text-xs text-[var(--color-text-muted)]">
-                        {doctorById.get(caseItem.doctor_id)?.name || `#${caseItem.doctor_id}`} ·{" "}
+                        {getCaseDoctorName(caseItem, doctorById.get(caseItem.doctor_id)?.name)} ·{" "}
                         {formatServiceItemCount(caseItem)}
                       </small>
                     </span>

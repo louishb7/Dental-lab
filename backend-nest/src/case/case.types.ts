@@ -14,7 +14,7 @@ export interface CaseItemResponse {
 
 export interface CaseResponse {
   id: number;
-  doctor_id: number;
+  doctor_id: number | null;
   patient_ref: string;
   pricing_mode: string;
   deadline: Date | null;

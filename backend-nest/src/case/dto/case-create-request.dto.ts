@@ -27,7 +27,8 @@ import { CaseItemCreateRequestDto } from '../../case-item/dto/case-item-create-r
 export class CaseCreateRequestDto {
   @IsInt()
   @Min(1)
-  doctor_id!: number;
+  @IsOptional()
+  doctor_id?: number | null;
 
   @IsString()
   @IsNotEmpty()

@@ -19,7 +19,7 @@ export class CaseService {
   constructor(private readonly caseRepository: CaseRepository) {}
 
   async createCase(input: CaseCreateRequestDto, userId: number): Promise<CaseResponse> {
-    await this.assertActiveDoctor(input.doctor_id, userId);
+    if (input.doctor_id != null) await this.assertActiveDoctor(input.doctor_id, userId);
 
     const providedTotalValue =
       input.total_value !== undefined
@@ -56,7 +56,8 @@ export class CaseService {
 
     const createdCase = await this.caseRepository.runTransaction(async (repo) => {
       const foundCase = await repo.createCase({
-        doctorId: input.doctor_id,
+        userId,
+        doctorId: input.doctor_id ?? null,
         patientRef: input.patient_ref,
         pricingMode,
         deadline: input.deadline ?? null,
@@ -284,7 +285,9 @@ export class CaseService {
         return null;
       }
 
-      await this.assertActiveDoctor(currentCase.doctorId, userId);
+      if (currentCase.doctorId !== null) {
+        await this.assertActiveDoctor(currentCase.doctorId, userId);
+      }
 
       const previousStatus = getPreviousCaseStatus(currentCase.status);
 
@@ -346,8 +349,9 @@ export class CaseService {
   ): Promise<Prisma.DentalCaseUpdateInput> {
     const data: Prisma.DentalCaseUpdateInput = {};
 
-    if (input.doctor_id !== undefined && input.doctor_id !== null) {
-      data.doctor = { connect: { id: input.doctor_id } };
+    if (input.doctor_id !== undefined) {
+      data.doctor =
+        input.doctor_id === null ? { disconnect: true } : { connect: { id: input.doctor_id } };
     }
     if (input.patient_ref !== undefined && input.patient_ref !== null) {
       data.patientRef = input.patient_ref;

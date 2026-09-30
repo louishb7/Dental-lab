@@ -204,9 +204,7 @@ export class CaseItemService {
       where: {
         id: caseId,
         deletedAt: null,
-        doctor: {
-          userId,
-        },
+        userId,
       },
       select: {
         id: true,
@@ -227,9 +225,7 @@ export class CaseItemService {
       where: {
         id: caseId,
         deletedAt: null,
-        doctor: {
-          userId,
-        },
+        userId,
       },
       select: {
         id: true,
@@ -255,9 +251,7 @@ export class CaseItemService {
       caseId,
       case: {
         deletedAt: null,
-        doctor: {
-          userId,
-        },
+        userId,
       },
     };
   }

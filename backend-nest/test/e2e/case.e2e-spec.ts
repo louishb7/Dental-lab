@@ -173,6 +173,47 @@ describe('case e2e', () => {
       .expect({ detail: 'Caso não encontrado' });
   });
 
+  it('creates avulso cases without a doctor and denies another user access', async () => {
+    const owner = await registerUser('avulso@cadisk.local', 'avulso1');
+    const stranger = await registerUser('other@cadisk.local', 'other1');
+    const created = await request(app.getHttpServer())
+      .post('/cases/')
+      .set('Authorization', `Bearer ${owner.access_token}`)
+      .send({ doctor_id: null, patient_ref: 'Paciente Avulso' })
+      .expect(201);
+    expect(created.body).toMatchObject({ doctor_id: null, patient_ref: 'Paciente Avulso' });
+    await request(app.getHttpServer())
+      .post('/cases/')
+      .set('Authorization', `Bearer ${owner.access_token}`)
+      .send({ patient_ref: 'Avulso sem campo' })
+      .expect(201)
+      .expect((response) => expect(response.body.doctor_id).toBeNull());
+
+    await request(app.getHttpServer())
+      .get('/cases/')
+      .set('Authorization', `Bearer ${stranger.access_token}`)
+      .expect(200)
+      .expect((response) => expect(response.body).toEqual([]));
+    await request(app.getHttpServer())
+      .get(`/cases/${created.body.id}`)
+      .set('Authorization', `Bearer ${stranger.access_token}`)
+      .expect(404);
+    await request(app.getHttpServer())
+      .put(`/cases/${created.body.id}`)
+      .set('Authorization', `Bearer ${stranger.access_token}`)
+      .send({ patient_ref: 'Outro' })
+      .expect(404);
+    await request(app.getHttpServer())
+      .delete(`/cases/${created.body.id}`)
+      .set('Authorization', `Bearer ${stranger.access_token}`)
+      .expect(404);
+    await request(app.getHttpServer())
+      .get(`/cases/${created.body.id}`)
+      .set('Authorization', `Bearer ${owner.access_token}`)
+      .expect(200)
+      .expect((response) => expect(response.body.doctor_id).toBeNull());
+  });
+
   it('rejects invalid pricing and doctor ownership with legacy status codes', async () => {
     const firstUser = await registerUser('first@cadisk.local', 'first1');
     const secondUser = await registerUser('second@cadisk.local', 'second1');

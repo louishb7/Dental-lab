@@ -8,10 +8,10 @@ export abstract class OwnershipBase {
   }
 
   protected ownCase(caseId: number, userId: number) {
-    return { id: caseId, deletedAt: null, doctor: { userId } };
+    return { id: caseId, userId, deletedAt: null };
   }
 
   protected ownCases(userId: number) {
-    return { deletedAt: null, doctor: { userId } };
+    return { userId, deletedAt: null };
   }
 }

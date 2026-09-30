@@ -32,7 +32,7 @@ export default function WeekSchedule({
             {weekCount} {weekCount === 1 ? "trabalho agendado" : "trabalhos agendados"}
           </p>
         </div>
-        <Button variant="primary" onClick={onOpenNewCase}>
+        <Button variant="primary" className="hidden sm:inline-flex" onClick={onOpenNewCase}>
           <Plus size={16} />
           Novo caso
         </Button>
@@ -120,7 +120,7 @@ export default function WeekSchedule({
           aria-label="Criar caso no dia selecionado"
         >
           <Plus size={14} />
-          Neste dia
+          Novo caso
         </Button>
       </div>
     </section>

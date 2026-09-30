@@ -32,9 +32,8 @@ export class DashboardService {
         this.prisma.$queryRaw<Array<{ status: string; count: number }>>`
           SELECT cases.status, COUNT(cases.id)::int AS count
           FROM cases
-          JOIN doctors ON doctors.id = cases.doctor_id
           WHERE cases.deleted_at IS NULL
-            AND doctors.user_id = ${userId}
+            AND cases.user_id = ${userId}
           GROUP BY cases.status
         `,
         this.prisma.dentalCase.findMany({
@@ -177,9 +176,7 @@ export class DashboardService {
   private activeOwnedCasesWhere(userId: number): Prisma.DentalCaseWhereInput {
     return {
       deletedAt: null,
-      doctor: {
-        userId,
-      },
+      userId,
     };
   }
 
@@ -187,7 +184,9 @@ export class DashboardService {
     return {
       id: foundCase.id,
       doctor_id: foundCase.doctorId,
-      doctor_name: foundCase.doctor?.name ?? `#${foundCase.doctorId}`,
+      doctor_name:
+        foundCase.doctor?.name ??
+        (foundCase.doctorId === null ? 'Avulso' : `#${foundCase.doctorId}`),
       patient_ref: foundCase.patientRef,
       deadline: foundCase.deadline,
       priority: foundCase.priority,
