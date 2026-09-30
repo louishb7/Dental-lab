@@ -20,6 +20,7 @@ import DashboardPage from "./pages/DashboardPage.jsx";
 import DoctorsPage from "./pages/DoctorsPage.jsx";
 const FinancePage = lazy(() => import("./pages/FinancePage.jsx"));
 import HistoryPage from "./pages/HistoryPage.jsx";
+import PwaStatus from "./pwa/PwaStatus.jsx";
 
 import { AuthProvider, useAuth } from "./contexts/AuthContext.jsx";
 import { DataProvider, useData } from "./contexts/DataContext.jsx";
@@ -270,6 +271,7 @@ export default function App() {
     <Router>
       <AuthProvider>
         <Root />
+        <PwaStatus />
       </AuthProvider>
     </Router>
   );
