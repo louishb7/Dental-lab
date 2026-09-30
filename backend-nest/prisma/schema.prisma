@@ -64,6 +64,7 @@ model Doctor {
 model DentalCase {
   id                  Int                @id @default(autoincrement())
   userId              Int                @map("user_id")
+  clientRequestId     String?            @map("client_request_id") @db.Uuid
   doctorId            Int?               @map("doctor_id")
   patientRef          String             @map("patient_ref") @db.VarChar(150)
   pricingMode         String             @default("services") @map("pricing_mode") @db.VarChar(20)
@@ -83,6 +84,7 @@ model DentalCase {
   historyEvents       CaseHistoryEvent[]
 
   @@index([userId], map: "ix_cases_user_id")
+  @@unique([userId, clientRequestId], map: "uq_cases_user_client_request_id")
   @@index([doctorId], map: "ix_cases_doctor_id")
   @@index([patientRef], map: "ix_cases_patient_ref")
   @@index([priority], map: "ix_cases_priority")

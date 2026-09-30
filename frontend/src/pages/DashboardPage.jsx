@@ -5,6 +5,7 @@ import WeekSchedule from "../components/dashboard/WeekSchedule.jsx";
 import PageContainer from "../components/layout/PageContainer.jsx";
 import LoadingState from "../components/ui/LoadingState.jsx";
 import CaseDetailsPage from "./CaseDetailsPage.jsx";
+import PendingCases from "../components/cases/PendingCases.jsx";
 import { getLocalDateKey } from "../utils/formatters.js";
 import { getCaseDoctorName } from "../utils/cases.js";
 import {
@@ -41,7 +42,11 @@ function getDayBoardTitle(date) {
 
 export default function DashboardPage({
   cases = [],
+  pendingCases = [],
   doctors = [],
+  syncingCaseId,
+  onReviewPendingCase,
+  onCancelPendingCase,
   loading,
   busy,
   selectedCase,
@@ -67,7 +72,7 @@ export default function DashboardPage({
 
   // Keep the working surface (including the open delivery queue) mounted while
   // existing records refresh after an action. Initial bootstrap still shows loading.
-  if (loading && !cases.length) {
+  if (loading && !cases.length && !pendingCases.length) {
     return (
       <PageContainer title="Bancada" description="Carregando visão semanal dos casos.">
         <section className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
@@ -111,6 +116,13 @@ export default function DashboardPage({
       description="Organize seus casos da semana e acompanhe o que precisa de atenção."
     >
       <div className="grid gap-4">
+        <PendingCases
+          cases={pendingCases}
+          doctors={doctors}
+          syncingCaseId={syncingCaseId}
+          onReview={onReviewPendingCase}
+          onCancel={onCancelPendingCase}
+        />
         <WeekSchedule
           groupedCases={groupedCases}
           selectedDate={selectedDate}

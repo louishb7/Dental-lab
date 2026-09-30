@@ -25,6 +25,11 @@ let postMode = "online";
 let activeUser = { id: 1, username: "tester", email: "tester@example.com" };
 let postCount = 0;
 let meCount = 0;
+let secondaryDelayMs = 0;
+let nextCaseId = 2;
+let deliveryCount = 0;
+const requestLog = [];
+const createdByKey = new Map();
 const cases = [
   {
     id: 1,
@@ -181,6 +186,15 @@ async function intercept({ requestId, request }) {
   const url = new URL(request.url);
   if (url.hostname !== "localhost" || url.port !== "3001")
     return command("Fetch.continueRequest", { requestId });
+  requestLog.push({
+    method: request.method,
+    path: url.pathname,
+    at: Date.now(),
+    key:
+      request.method === "POST" && url.pathname === "/cases/"
+        ? JSON.parse(request.postData || "{}").client_request_id
+        : null,
+  });
   if (request.method === "OPTIONS")
     return command("Fetch.fulfillRequest", {
       requestId,
@@ -202,6 +216,12 @@ async function intercept({ requestId, request }) {
   }
   let status = apiMode === "server" ? 503 : 200;
   let body = { detail: "API indisponível" };
+  if (
+    secondaryDelayMs &&
+    request.method === "GET" &&
+    ["/doctors/", "/dashboard/overview"].includes(url.pathname)
+  )
+    await delay(secondaryDelayMs);
   if (url.pathname === "/auth/me") {
     meCount++;
     if (apiMode === "unauthorized") {
@@ -226,8 +246,45 @@ async function intercept({ requestId, request }) {
   else if (status === 200 && url.pathname === "/cases/1/items/") body = items;
   else if (status === 200 && url.pathname === "/cases/" && request.method === "POST") {
     postCount++;
-    body = { id: 2, ...JSON.parse(request.postData || "{}"), status: "pending", items_count: 0 };
-    cases.push(body);
+    if (postMode === "unauthorized") {
+      status = 401;
+      body = { detail: "Sessão expirada" };
+    } else if (postMode === "invalid") {
+      status = 422;
+      body = { detail: "Dados inválidos" };
+    } else if (postMode === "server") {
+      status = 503;
+      body = { detail: "Servidor indisponível" };
+    } else {
+      const payload = JSON.parse(request.postData || "{}");
+      body = createdByKey.get(`${activeUser.id}:${payload.client_request_id}`);
+      if (!body) {
+        body = {
+          id: nextCaseId++,
+          ...payload,
+          status: "pending",
+          items_count: payload.items?.length || 0,
+        };
+        createdByKey.set(`${activeUser.id}:${payload.client_request_id}`, body);
+        cases.push(body);
+      }
+      if (postMode === "lost")
+        return command("Fetch.failRequest", { requestId, errorReason: "ConnectionFailed" });
+      status = 201;
+    }
+  } else if (
+    status === 200 &&
+    url.pathname === "/cases/bulk-deliver" &&
+    request.method === "POST"
+  ) {
+    deliveryCount++;
+    const ids = JSON.parse(request.postData || "{}").case_ids;
+    body = cases
+      .filter((item) => ids.includes(item.id))
+      .map((item) => {
+        item.status = "delivered";
+        return { ...item };
+      });
   }
   return command("Fetch.fulfillRequest", {
     requestId,
@@ -517,6 +574,7 @@ try {
   );
   await navigate("/cases");
   await waitFor(`document.body.textContent.includes('Caso existente')`);
+  const postsBefore = postCount;
   await click("Novo caso");
   await waitFor(`document.querySelector('[name=patient_ref]')`);
   await evaluate(
@@ -525,75 +583,247 @@ try {
   await input("patient_ref", "Paciente offline");
   await click("Valor fixo");
   await input("total_value", "120,00");
-  await click("Salvar rascunho");
+  assert.equal(await evaluate(`document.body.textContent.includes('Salvar rascunho')`), false);
+  await click("Salvar caso");
   await waitFor(
-    `(await ${records}).some(row => row.type === 'draft' && row.data.doctorId === null && row.data.form.patient_ref === 'Paciente offline')`,
+    `(await ${records}).some(row => row.type === 'pending-case' && row.data.payload.patient_ref === 'Paciente offline' && row.data.doctorId === null)`,
   );
-  const postsBefore = postCount;
-  await navigate("/cases");
+  await waitFor(`document.body.textContent.includes('Aguardando sincronização')`);
+  assert.equal(postCount, postsBefore, "Known offline state must not POST");
+
   await click("Novo caso");
   await waitFor(`document.querySelector('[name=patient_ref]')`);
+  await input("patient_ref", "Paciente com dentista offline");
+  await click("Valor fixo");
+  await input("total_value", "90,00");
+  await command("Emulation.setDeviceMetricsOverride", {
+    width: 390,
+    height: 844,
+    deviceScaleFactor: 2,
+    mobile: true,
+  });
+  await offerInstall();
+  await waitFor(`document.body.textContent.includes('Instale o Cadisk')`);
+  swVersion = 3;
+  await evaluate(`navigator.serviceWorker.getRegistration().then(reg => reg.update())`);
+  await waitFor(`document.body.textContent.includes('Nova versão disponível')`);
+  assert.equal(
+    await evaluate(`(() => {
+    const save = document.querySelector('[role=dialog] button[type=submit]').getBoundingClientRect();
+    const warnings = [...document.querySelectorAll('[role=status]')].filter(el => /API indisponível|Nova versão disponível/.test(el.textContent));
+    const install = [...document.querySelectorAll('button')].find(el => el.textContent.trim() === 'Instalar Cadisk')?.parentElement;
+    return [...warnings, install].filter(Boolean).every(el => {
+      const r = el.getBoundingClientRect();
+      return r.bottom <= save.top || r.top >= save.bottom || r.right <= save.left || r.left >= save.right;
+    });
+  })()`),
+    true,
+    "PWA banners must not cover Save on mobile",
+  );
+  await click("Depois");
+  await evaluate(`document.querySelector('[aria-label="Fechar sugestão de instalação"]').click()`);
+  await click("Salvar caso");
+  await waitFor(
+    `(await ${records}).filter(row => row.type === 'pending-case' && row.ownerId === 1).length === 2`,
+  );
+  assert.equal(postCount, postsBefore);
+  await waitFor(`!document.querySelector('[name=patient_ref]')`);
+  await click("Novo caso");
+  await waitFor(`document.querySelector('[name=patient_ref]')`);
+  await input("patient_ref", "Dente offline");
+  await waitFor(`document.querySelector('[role=button][aria-label="Dente 11"]')`);
+  await evaluate(
+    `document.querySelector('[role=button][aria-label="Dente 11"]').dispatchEvent(new MouseEvent('click', { bubbles: true }))`,
+  );
+  await waitFor(`document.querySelector('input[placeholder="R$ 0,00"]')`);
+  await evaluate(
+    `(() => { const el=document.querySelector('input[placeholder="R$ 0,00"]'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,'14000'); el.dispatchEvent(new Event('input',{bubbles:true})); })()`,
+  );
+  await click("Salvar caso");
+  await waitFor(
+    `(await ${records}).some(row => row.type === 'pending-case' && row.data.payload.patient_ref === 'Dente offline' && row.data.payload.items?.[0]?.tooth === '11' && row.data.payload.items[0].unit_value === 140)`,
+  );
+  assert.equal(postCount, postsBefore);
+  await navigate("/cases");
+  await waitFor(
+    `document.body.textContent.includes('Paciente offline') && document.body.textContent.includes('Paciente com dentista offline') && document.body.textContent.includes('Dente offline')`,
+  );
+  await command("Emulation.setDeviceMetricsOverride", {
+    width: 1440,
+    height: 900,
+    deviceScaleFactor: 1,
+    mobile: false,
+  });
+
+  // An old manual draft is restored only after explicit user action.
+  await evaluate(`(async () => {
+    const db = await new Promise((resolve, reject) => {
+      const req = indexedDB.open('cadisk-offline');
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    const tx = db.transaction('records', 'readwrite');
+    tx.objectStore('records').put({
+      key: '1:draft:', ownerId: 1, type: 'draft', schemaVersion: 1,
+      updatedAt: new Date().toISOString(),
+      data: { doctorId: null, form: { patient_ref: 'Rascunho legado', pricing_mode: 'fixed', total_value: 'R$ 50,00', deadline: '', priority: 'normal', notes: '', selected_teeth: [], unit_values: {}, service_name: '' } }
+    });
+    await new Promise(resolve => tx.oncomplete = resolve);
+  })()`);
+  await navigate("/cases");
+  await click("Novo caso");
   await waitFor(`document.body.textContent.includes('Há um rascunho local')`);
+  assert.equal(postCount, postsBefore, "Legacy draft must never be sent automatically");
   await click("Restaurar");
   assert.equal(
     await evaluate(`document.querySelector('[name=patient_ref]').value`),
-    "Paciente offline",
+    "Rascunho legado",
   );
-  assert.equal(await evaluate(`document.querySelector('[role=dialog] select').value`), "");
-  assert.equal(postCount, postsBefore, "Draft must not POST automatically");
+  await click("Salvar caso");
+  await waitFor(
+    `(await ${records}).filter(row => row.type === 'pending-case' && row.ownerId === 1).length === 4`,
+  );
+  assert.ok((await evaluate(`(async()=>${records})()`)).every((row) => row.type !== "draft"));
+
   await command("Network.emulateNetworkConditions", {
     offline: false,
     latency: 0,
     downloadThroughput: -1,
     uploadThroughput: -1,
   });
-  apiMode = "server";
-  await evaluate(`window.dispatchEvent(new Event('online'))`);
-  await waitFor(
-    `(await navigator.serviceWorker.getRegistration())?.active && document.body.textContent.includes('API indisponível')`,
-  );
-  assert.equal(
-    await evaluate(`localStorage.getItem('cadisk_token')`),
-    "token-1",
-    "5xx must preserve session",
-  );
   apiMode = "online";
-  await click("Tentar novamente");
-  await waitFor(
-    `!document.body.textContent.includes('Último estado conhecido') && !document.body.textContent.includes('API indisponível')`,
-  );
-  assert.equal(postCount, postsBefore, "Reconnect must not POST a draft");
-  postMode = "network";
-  await click("Salvar caso");
-  await waitFor(`document.body.textContent.includes('Não foi possível confirmar a criação')`);
+  await evaluate(`window.dispatchEvent(new Event('online'))`);
+  await waitFor(`(await ${records}).every(row => row.type !== 'pending-case')`);
+  await waitFor(`document.body.textContent.includes('Rascunho legado')`);
+  assert.equal(postCount, postsBefore + 4, "Four local cases must sync once each");
   assert.equal(
-    await evaluate(`document.querySelector('[name=patient_ref]').value`),
-    "Paciente offline",
+    cases.filter((item) =>
+      [
+        "Paciente offline",
+        "Paciente com dentista offline",
+        "Dente offline",
+        "Rascunho legado",
+      ].includes(item.patient_ref),
+    ).length,
+    4,
   );
-  assert.ok((await evaluate(`(async()=>${records})()`)).some((row) => row.type === "draft"));
-  postMode = "online";
-  await click("Tentar novamente");
-  await waitFor(`!document.body.textContent.includes('API indisponível')`);
-  assert.equal(postCount, postsBefore + 1, "Failed POST must not be retried automatically");
-  await click("Salvar caso");
-  await waitFor(`(await ${records}).every(row => row.type !== 'draft')`);
-  assert.equal(postCount, postsBefore + 2);
-  assert.equal(cases.find((foundCase) => foundCase.id === 2)?.doctor_id, null);
-  await waitFor(`!document.querySelector('[name=patient_ref]')`);
+  assert.equal(cases.find((item) => item.patient_ref === "Paciente offline")?.doctor_id, null);
+
+  // A fast mutation must release its modal before deliberately slow secondary GETs.
+  secondaryDelayMs = 1800;
   await click("Novo caso");
   await waitFor(`document.querySelector('[name=patient_ref]')`);
-  await input("patient_ref", "Rascunho descartável");
-  await click("Salvar rascunho");
-  await waitFor(`(await ${records}).some(row => row.type === 'draft')`);
+  await input("patient_ref", "Criação rápida");
+  await click("Valor fixo");
+  await input("total_value", "70,00");
+  const createRequestStart = requestLog.length;
+  const createStartedAt = Date.now();
+  await click("Salvar caso");
+  await waitFor(`!document.querySelector('[name=patient_ref]')`);
+  assert.ok(Date.now() - createStartedAt < 1200, "Slow GETs must not keep the creation modal open");
+  assert.equal(
+    requestLog
+      .slice(createRequestStart)
+      .filter((item) => item.method === "POST" && item.path === "/cases/").length,
+    1,
+  );
+  assert.ok(await evaluate(`document.body.textContent.includes('Criação rápida')`));
+  secondaryDelayMs = 0;
+  await delay(1900);
+
+  cases.find((item) => item.patient_ref === "Paciente offline").status = "completed";
+  cases.find((item) => item.patient_ref === "Paciente com dentista offline").status = "completed";
+  await navigate("/cases");
+  await waitFor(`document.body.textContent.includes('Registrar entrega')`);
+  secondaryDelayMs = 1800;
+  const deliveryRequestStart = requestLog.length;
+  const deliveryStartedAt = Date.now();
+  await click("Registrar entrega");
+  await click("Confirmar saída");
+  await waitFor(`!document.body.textContent.includes('Confirmar saída')`);
+  assert.ok(Date.now() - deliveryStartedAt < 1200, "Slow GETs must not keep delivery blocked");
+  assert.equal(deliveryCount, 1);
+  assert.equal(
+    requestLog
+      .slice(deliveryRequestStart)
+      .filter((item) => item.method === "GET" && item.path === "/cases/").length,
+    0,
+  );
+  assert.equal(cases.find((item) => item.patient_ref === "Paciente offline").status, "delivered");
+  secondaryDelayMs = 0;
+  await delay(1900);
+
+  postMode = "lost";
   await click("Novo caso");
-  await waitFor(`document.body.textContent.includes('Há um rascunho local')`);
-  await click("Descartar");
-  await waitFor(`(await ${records}).every(row => row.type !== 'draft')`);
+  await waitFor(`document.querySelector('[name=patient_ref]')`);
+  await input("patient_ref", "Resposta perdida");
+  await click("Valor fixo");
+  await input("total_value", "80,00");
+  const lostRequestStart = requestLog.length;
+  await click("Salvar caso");
+  await waitFor(
+    `(await ${records}).some(row => row.type === 'pending-case' && row.data.payload.patient_ref === 'Resposta perdida')`,
+  );
+  assert.equal(cases.filter((item) => item.patient_ref === "Resposta perdida").length, 1);
+  postMode = "online";
+  await click("Tentar novamente");
+  await waitFor(`(await ${records}).every(row => row.type !== 'pending-case')`);
+  const lostPosts = requestLog
+    .slice(lostRequestStart)
+    .filter((item) => item.method === "POST" && item.path === "/cases/");
+  assert.equal(lostPosts.length, 2);
+  assert.equal(lostPosts[0].key, lostPosts[1].key);
+  assert.equal(cases.filter((item) => item.patient_ref === "Resposta perdida").length, 1);
+
+  postMode = "invalid";
+  await click("Novo caso");
+  await waitFor(`document.querySelector('[name=patient_ref]')`);
+  await input("patient_ref", "Caso para revisar");
+  await click("Valor fixo");
+  await input("total_value", "45,00");
+  await click("Salvar caso");
+  await waitFor(
+    `(await ${records}).some(row => row.type === 'pending-case' && row.data.state === 'failed')`,
+  );
+  postMode = "online";
+  const postsAtFailure = postCount;
+  await evaluate(`window.dispatchEvent(new Event('online'))`);
+  await delay(400);
+  assert.equal(postCount, postsAtFailure, "A 4xx failure must not loop");
+  await click("Revisar");
+  await waitFor(`document.querySelector('[name=patient_ref]')`);
+  await click("Salvar caso");
+  await waitFor(`(await ${records}).every(row => row.type !== 'pending-case')`);
+
+  postMode = "server";
+  await click("Novo caso");
+  await waitFor(`document.querySelector('[name=patient_ref]')`);
+  await input("patient_ref", "Falha do servidor");
+  await click("Valor fixo");
+  await input("total_value", "55,00");
+  await click("Salvar caso");
+  await waitFor(
+    `(await ${records}).some(row => row.type === 'pending-case' && row.data.payload.patient_ref === 'Falha do servidor')`,
+  );
+  postMode = "online";
+  await navigate("/cases"); // A fresh app load also retries owned pending cases.
+  await waitFor(`(await ${records}).every(row => row.type !== 'pending-case')`);
+
+  apiMode = "network";
+  await evaluate(`window.dispatchEvent(new Event('offline'))`);
+  await click("Novo caso");
+  await waitFor(`document.querySelector('[name=patient_ref]')`);
+  await input("patient_ref", "Pendente no logout");
+  await click("Valor fixo");
+  await input("total_value", "60,00");
+  await click("Salvar caso");
+  await waitFor(`(await ${records}).some(row => row.type === 'pending-case')`);
+  await click("Novo caso");
   await waitFor(`document.querySelector('[name=patient_ref]')`);
   await input("patient_ref", "Edição em andamento");
   await offerInstall();
   await waitFor(`document.body.textContent.includes('Instale o Cadisk')`);
-  swVersion = 3;
+  swVersion = 4;
   await evaluate(`navigator.serviceWorker.getRegistration().then(reg => reg.update())`);
   await waitFor(
     `Array.from(document.querySelectorAll('button')).some(button => button.textContent === 'Depois')`,
@@ -605,6 +835,7 @@ try {
     await evaluate(`document.querySelector('[name=patient_ref]').value`),
     "Edição em andamento",
   );
+  await evaluate(`document.querySelector('[role=dialog] button[aria-label="Fechar"]').click()`);
   await evaluate(
     `(() => { const button = Array.from(document.querySelectorAll('button[aria-label^="Conta de "]')).find(button => button.getClientRects().length); button.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'mouse', button: 0 })); button.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'mouse', button: 0 })); })()`,
   );
@@ -612,8 +843,31 @@ try {
     `Array.from(document.querySelectorAll('[role=menuitem]')).some(item => item.textContent.trim() === 'Sair')`,
   );
   await click("Sair");
+  await waitFor(`document.body.textContent.includes('Sair com casos não sincronizados?')`);
+  assert.ok(
+    (await evaluate(`(async()=>${records})()`)).some(
+      (row) => row.type === "pending-case" && row.ownerId === 1,
+    ),
+  );
+  await click("Cancelar");
+  assert.equal(await evaluate(`localStorage.getItem('cadisk_token')`), "token-1");
+  assert.ok(
+    (await evaluate(`(async()=>${records})()`)).some(
+      (row) => row.type === "pending-case" && row.ownerId === 1,
+    ),
+  );
+  await evaluate(
+    `(() => { const button = Array.from(document.querySelectorAll('button[aria-label^="Conta de "]')).find(button => button.getClientRects().length); button.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'mouse', button: 0 })); button.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'mouse', button: 0 })); })()`,
+  );
+  await waitFor(
+    `Array.from(document.querySelectorAll('[role=menuitem]')).some(item => item.textContent.trim() === 'Sair')`,
+  );
+  await click("Sair");
+  await waitFor(`document.body.textContent.includes('Sair com casos não sincronizados?')`);
+  await click("Sair e apagar");
   await waitFor(`localStorage.getItem('cadisk_token') === null`);
   await waitFor(`(await ${records}).every(row => row.ownerId !== 1)`);
+  apiMode = "online";
   activeUser = { id: 2, username: "other", email: "other@example.com" };
   await input("identifier", "other");
   await input("password", "password");
@@ -635,18 +889,19 @@ try {
   await waitFor(`document.querySelector('[name=patient_ref]')`);
   assert.equal(await evaluate(`document.querySelector('[role=dialog] select').value`), "");
   await input("patient_ref", "Avulso sem dentistas");
-  await click("Salvar rascunho");
+  await click("Salvar caso");
   await waitFor(
-    `(await ${records}).some(row => row.ownerId === 2 && row.type === 'draft' && row.data.doctorId === null)`,
+    `(await ${records}).some(row => row.ownerId === 2 && row.type === 'pending-case' && row.data.doctorId === null)`,
   );
-  apiMode = "unauthorized";
+  apiMode = "online";
+  postMode = "unauthorized";
   await evaluate(`window.dispatchEvent(new Event('online'))`);
   await waitFor(`localStorage.getItem('cadisk_token') === null`);
   assert.ok((await evaluate(`(async()=>${records})()`)).every((row) => row.ownerId !== 2));
   await Promise.all(interceptions);
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: install banner/standalone/dismiss, responsive week dates, dashboard snapshot, PWA shell/cache/update, auth isolation, avulso drafts and explicit POST.",
+    "PASS: PWA shell/update/install, offline pending cases, idempotent retry, mobile banners, fast create/delivery, legacy draft and auth isolation.",
   );
 } finally {
   socket?.close();

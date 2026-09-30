@@ -62,6 +62,55 @@ function pick(source, fields) {
 }
 
 function sanitize(type, value) {
+  if (type === "pending-case") {
+    if (
+      !value ||
+      typeof value.clientRequestId !== "string" ||
+      value.clientRequestId !== value.id ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.id) ||
+      value.payload?.client_request_id !== value.id ||
+      !["pending", "failed"].includes(value.state) ||
+      typeof value.createdAt !== "string" ||
+      !value.form ||
+      typeof value.form !== "object" ||
+      Array.isArray(value.form) ||
+      typeof value.payload?.patient_ref !== "string" ||
+      (value.payload.doctor_id !== null && !Number.isSafeInteger(value.payload.doctor_id))
+    )
+      throw new Error("Caso pendente inválido.");
+    const payload = pick(value.payload, [
+      "client_request_id",
+      "doctor_id",
+      "patient_ref",
+      "pricing_mode",
+      "total_value",
+      "deadline",
+      "priority",
+      "notes",
+    ]);
+    if (Array.isArray(value.payload.items)) {
+      payload.items = value.payload.items.map((item) =>
+        pick(item, [
+          "tooth",
+          "service_type",
+          "quantity",
+          "unit_value",
+          "material",
+          "color",
+          "notes",
+        ]),
+      );
+    }
+    return {
+      id: value.id,
+      clientRequestId: value.clientRequestId,
+      payload,
+      form: pick(value.form, DRAFT_FIELDS),
+      doctorId: value.payload.doctor_id,
+      createdAt: value.createdAt,
+      state: value.state,
+    };
+  }
   if (type === "doctors" && Array.isArray(value))
     return value.map((item) => pick(item, DOCTOR_FIELDS));
   if (type === "cases" && Array.isArray(value)) return value.map((item) => pick(item, CASE_FIELDS));
@@ -122,6 +171,23 @@ export async function readOfflineRecord(ownerId, type, resourceId = "") {
 
 export async function deleteOfflineRecord(ownerId, type, resourceId = "") {
   await (await getDb()).delete("records", keyFor(ownerId, type, resourceId));
+}
+
+export async function readPendingCases(ownerId) {
+  if (!Number.isSafeInteger(ownerId) || ownerId <= 0) return [];
+  const prefix = `${ownerId}:pending-case:`;
+  const db = await getDb();
+  const records = await db.getAll(
+    "records",
+    globalThis.IDBKeyRange.bound(prefix, `${prefix}\uffff`),
+  );
+  return records
+    .filter(
+      (record) =>
+        record.ownerId === ownerId && record.type === "pending-case" && record.schemaVersion === 1,
+    )
+    .map((record) => record.data)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
 export async function clearUserOfflineData(ownerId) {

@@ -100,6 +100,53 @@ describe('CaseService integration', () => {
     });
   });
 
+  it('deduplicates sequential and concurrent retries by owner and client request id', async () => {
+    const ownerId = await createUser('idempotent@cadisk.local', 'idempotent');
+    const otherId = await createUser('other@cadisk.local', 'otheruser');
+    const doctorId = await createDoctor(ownerId);
+    const key = 'f730a1a1-d876-4e3c-9a53-2a588df83b12';
+    const payload = {
+      client_request_id: key,
+      doctor_id: doctorId,
+      patient_ref: 'Idempotente',
+      priority: 'normal' as const,
+    };
+
+    const [first, concurrent] = await Promise.all([
+      cases.createCase(payload, ownerId),
+      cases.createCase(payload, ownerId),
+    ]);
+    const retried = await cases.createCase(payload, ownerId);
+    expect(concurrent.id).toBe(first.id);
+    expect(retried.id).toBe(first.id);
+    expect(await prisma.dentalCase.count({ where: { userId: ownerId } })).toBe(1);
+    expect(await prisma.caseHistoryEvent.count({ where: { caseId: first.id } })).toBe(1);
+
+    const avulsoKey = 'de50d321-f90a-48fc-9e42-79c73a4015db';
+    const avulso = await cases.createCase(
+      { client_request_id: avulsoKey, doctor_id: null, patient_ref: 'Avulso', priority: 'normal' },
+      ownerId,
+    );
+    const avulsoRetry = await cases.createCase(
+      { client_request_id: avulsoKey, doctor_id: null, patient_ref: 'Avulso', priority: 'normal' },
+      ownerId,
+    );
+    expect(avulsoRetry).toMatchObject({ id: avulso.id, doctor_id: null });
+    expect(await prisma.dentalCase.count({ where: { userId: ownerId } })).toBe(2);
+
+    const otherCase = await cases.createCase(
+      {
+        client_request_id: avulsoKey,
+        doctor_id: null,
+        patient_ref: 'Outro usuário',
+        priority: 'normal',
+      },
+      otherId,
+    );
+    expect(otherCase.id).not.toBe(avulso.id);
+    expect(await cases.getCaseById(avulso.id, otherId)).toBeNull();
+  });
+
   it('rejects invalid pricing payloads with legacy messages', async () => {
     const userId = await createUser('case@cadisk.local', 'case01');
     const doctorId = await createDoctor(userId);

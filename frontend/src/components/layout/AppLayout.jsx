@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Dialog } from "radix-ui";
 import { X } from "lucide-react";
 import { InstallPromptBanner } from "../../pwa/InstallPrompt.jsx";
+import PwaStatus from "../../pwa/PwaStatus.jsx";
 
 const PAGE_META = {
   dashboard: {
@@ -69,6 +70,7 @@ export default function AppLayout({
         <main className="flex min-w-0 flex-col bg-transparent">
           <div className="sticky top-0 z-20">
             <InstallPromptBanner />
+            <PwaStatus />
             <AppHeader title={meta.title} />
           </div>
           <h1 className="sr-only hidden lg:block">{meta.title}</h1>

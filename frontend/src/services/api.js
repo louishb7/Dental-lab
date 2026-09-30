@@ -320,7 +320,7 @@ export async function getCases(filters = {}) {
 }
 
 /**
- * Creates a case linked to a doctor.
+ * Creates a case, optionally linked to a doctor.
  *
  * @param {object} data Case payload compatible with the backend schema.
  * @returns {Promise<object>} Case created by the backend.

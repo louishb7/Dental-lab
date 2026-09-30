@@ -8,6 +8,7 @@ export type CaseWithItems = DentalCase & { items: CaseItem[] };
 export interface ICaseRepository {
   runTransaction<T>(fn: (repo: ICaseRepository) => Promise<T>): Promise<T>;
   createCase(data: Prisma.DentalCaseUncheckedCreateInput): Promise<CaseWithItems>;
+  getCaseByClientRequestId(userId: number, clientRequestId: string): Promise<CaseWithItems | null>;
   createHistoryEvent(data: Prisma.CaseHistoryEventUncheckedCreateInput): Promise<void>;
   getCaseById(caseId: number, userId: number): Promise<CaseWithItems | null>;
   lockCaseRow(caseId: number): Promise<void>;
@@ -57,6 +58,16 @@ export class CaseRepository extends OwnershipBase implements ICaseRepository {
     return this.client.dentalCase.create({
       data,
       include: { items: true },
+    });
+  }
+
+  async getCaseByClientRequestId(
+    userId: number,
+    clientRequestId: string,
+  ): Promise<CaseWithItems | null> {
+    return this.client.dentalCase.findUnique({
+      where: { userId_clientRequestId: { userId, clientRequestId } },
+      include: { items: { orderBy: { id: 'desc' } } },
     });
   }
 

@@ -7,6 +7,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
   Min,
   MinLength,
   Validate,
@@ -25,6 +26,10 @@ import { CadiskDecimalValueConstraint } from './case-decimal.validator';
 import { CaseItemCreateRequestDto } from '../../case-item/dto/case-item-create-request.dto';
 
 export class CaseCreateRequestDto {
+  @IsOptional()
+  @IsUUID()
+  client_request_id?: string;
+
   @IsInt()
   @Min(1)
   @IsOptional()

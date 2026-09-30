@@ -25,6 +25,7 @@ import { formatCurrency } from "../utils/formatters.js";
 import { formatServiceItemCount, getCaseDoctorName } from "../utils/cases.js";
 import { isOverdue } from "../utils/productionWeek.js";
 import CaseDetailsPage from "./CaseDetailsPage.jsx";
+import PendingCases from "../components/cases/PendingCases.jsx";
 
 const FILTER_CONTROL_CLASS =
   "min-h-11 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-input-bg)] px-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-muted)]/75 focus:border-primary focus:ring-2 focus:ring-primary/25";
@@ -38,7 +39,11 @@ function sortByPriorityAndDeadline(a, b) {
 
 export default function CasesPage({
   cases,
+  pendingCases = [],
   doctors,
+  syncingCaseId,
+  onReviewPendingCase,
+  onCancelPendingCase,
   items,
   loading,
   busy,
@@ -251,6 +256,13 @@ export default function CasesPage({
       description="Consulte, filtre e acompanhe todos os casos da bancada."
     >
       <div className="grid min-w-0 gap-5">
+        <PendingCases
+          cases={pendingCases}
+          doctors={doctors}
+          syncingCaseId={syncingCaseId}
+          onReview={onReviewPendingCase}
+          onCancel={onCancelPendingCase}
+        />
         <div className="flex items-center justify-between gap-3">
           <div>
             <Link

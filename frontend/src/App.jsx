@@ -48,6 +48,7 @@ function AuthPageWrapper() {
     <>
       <div className="sticky top-0 z-20">
         <InstallPromptBanner />
+        <PwaStatus />
       </div>
       <AuthPage
         authMode={auth.authMode}
@@ -61,6 +62,17 @@ function AuthPageWrapper() {
         onLogin={auth.handleLogin}
         onRegister={auth.handleRegister}
       />
+    </>
+  );
+}
+
+function RecoveryPageWrapper({ reset = false }) {
+  return (
+    <>
+      <div className="sticky top-0 z-20">
+        <PwaStatus />
+      </div>
+      <PasswordRecoveryPage reset={reset} />
     </>
   );
 }
@@ -84,7 +96,7 @@ function HistoryPageWrapper({ data }) {
 }
 
 function AppContent({ theme, onToggleTheme }) {
-  const { session, handleLogout } = useAuth();
+  const { session } = useAuth();
   const data = useData();
   const { message, setMessage, confirmPending, setConfirmPending } = data;
   const location = useLocation();
@@ -136,7 +148,7 @@ function AppContent({ theme, onToggleTheme }) {
       session={session}
       theme={theme}
       onToggleTheme={onToggleTheme}
-      onLogout={handleLogout}
+      onLogout={data.requestLogout}
       message={message}
       onDismiss={() => setMessage(null)}
     >
@@ -168,7 +180,11 @@ function AppContent({ theme, onToggleTheme }) {
           element={
             <DashboardPage
               cases={data.cases}
+              pendingCases={data.pendingCases}
               doctors={data.doctors}
+              syncingCaseId={data.syncingCaseId}
+              onReviewPendingCase={data.reviewPendingCase}
+              onCancelPendingCase={data.cancelPendingCase}
               loading={data.loading && !data.showCaseModal}
               busy={data.busy}
               selectedCase={data.dashboardDetailOpen ? data.selectedCase : null}
@@ -195,7 +211,11 @@ function AppContent({ theme, onToggleTheme }) {
           element={
             <CasesPage
               cases={data.cases}
+              pendingCases={data.pendingCases}
               doctors={data.doctors}
+              syncingCaseId={data.syncingCaseId}
+              onReviewPendingCase={data.reviewPendingCase}
+              onCancelPendingCase={data.cancelPendingCase}
               items={data.items}
               loading={data.loading}
               busy={data.busy}
@@ -293,8 +313,7 @@ function AppContent({ theme, onToggleTheme }) {
             onDoctorChange={data.setSelectedDoctorId}
             onCaseChange={data.handleCaseChange}
             onSubmit={data.handleCaseSubmit}
-            readOnly={readOnly}
-            onSaveDraft={data.saveCaseDraft}
+            readOnly={false}
           />
         </Modal>
       )}
@@ -331,8 +350,8 @@ function Root() {
     setTheme(nextTheme);
   }
 
-  if (location.pathname === "/reset-password") return <PasswordRecoveryPage key="reset" reset />;
-  if (location.pathname === "/forgot-password") return <PasswordRecoveryPage key="forgot" />;
+  if (location.pathname === "/reset-password") return <RecoveryPageWrapper key="reset" reset />;
+  if (location.pathname === "/forgot-password") return <RecoveryPageWrapper key="forgot" />;
 
   if (!session) {
     return <AuthPageWrapper />;
@@ -351,7 +370,6 @@ export default function App() {
       <InstallPromptProvider>
         <AuthProvider>
           <Root />
-          <PwaStatus />
         </AuthProvider>
       </InstallPromptProvider>
     </Router>

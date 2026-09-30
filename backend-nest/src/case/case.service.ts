@@ -19,6 +19,13 @@ export class CaseService {
   constructor(private readonly caseRepository: CaseRepository) {}
 
   async createCase(input: CaseCreateRequestDto, userId: number): Promise<CaseResponse> {
+    if (input.client_request_id) {
+      const existing = await this.caseRepository.getCaseByClientRequestId(
+        userId,
+        input.client_request_id,
+      );
+      if (existing) return this.toResponse(existing, existing.items.length);
+    }
     if (input.doctor_id != null) await this.assertActiveDoctor(input.doctor_id, userId);
 
     const providedTotalValue =
@@ -54,43 +61,60 @@ export class CaseService {
 
     const pricingMode = resolvePricingMode(input.pricing_mode, providedTotalValue);
 
-    const createdCase = await this.caseRepository.runTransaction(async (repo) => {
-      const foundCase = await repo.createCase({
-        userId,
-        doctorId: input.doctor_id ?? null,
-        patientRef: input.patient_ref,
-        pricingMode,
-        deadline: input.deadline ?? null,
-        priority: input.priority,
-        status: 'pending',
-        totalValue: computedTotalValue,
-        notes: input.notes ?? null,
-        items: input.items
-          ? {
-              create: input.items.map((item) => ({
-                tooth: item.tooth ?? null,
-                serviceType: item.service_type,
-                quantity: item.quantity ?? 1,
-                unitValue: normalizeDecimalValue(item.unit_value, 'Valor unitário inválido'),
-                material: item.material ?? null,
-                color: item.color ?? null,
-                notes: item.notes ?? null,
-              })),
-            }
-          : undefined,
-      });
+    let createdCase: CaseWithItems;
+    try {
+      createdCase = await this.caseRepository.runTransaction(async (repo) => {
+        const foundCase = await repo.createCase({
+          userId,
+          clientRequestId: input.client_request_id ?? null,
+          doctorId: input.doctor_id ?? null,
+          patientRef: input.patient_ref,
+          pricingMode,
+          deadline: input.deadline ?? null,
+          priority: input.priority,
+          status: 'pending',
+          totalValue: computedTotalValue,
+          notes: input.notes ?? null,
+          items: input.items
+            ? {
+                create: input.items.map((item) => ({
+                  tooth: item.tooth ?? null,
+                  serviceType: item.service_type,
+                  quantity: item.quantity ?? 1,
+                  unitValue: normalizeDecimalValue(item.unit_value, 'Valor unitário inválido'),
+                  material: item.material ?? null,
+                  color: item.color ?? null,
+                  notes: item.notes ?? null,
+                })),
+              }
+            : undefined,
+        });
 
-      await repo.createHistoryEvent({
-        caseId: foundCase.id,
-        userId,
-        eventType: 'case_created',
-        fromStatus: null,
-        toStatus: 'pending',
-        createdAt: foundCase.createdAt,
-      });
+        await repo.createHistoryEvent({
+          caseId: foundCase.id,
+          userId,
+          eventType: 'case_created',
+          fromStatus: null,
+          toStatus: 'pending',
+          createdAt: foundCase.createdAt,
+        });
 
-      return foundCase;
-    });
+        return foundCase;
+      });
+    } catch (error) {
+      if (
+        input.client_request_id &&
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        const existing = await this.caseRepository.getCaseByClientRequestId(
+          userId,
+          input.client_request_id,
+        );
+        if (existing) return this.toResponse(existing, existing.items.length);
+      }
+      throw error;
+    }
 
     return this.toResponse(createdCase, createdCase.items?.length ?? 0);
   }

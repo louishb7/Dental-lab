@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "./AuthContext.jsx";
 import {
   createCase,
@@ -32,7 +32,12 @@ import {
 import { formatCurrencyInput, getLocalDateKey } from "../utils/formatters.js";
 import { useNavigate } from "react-router-dom";
 import { getApiAvailability, subscribeApiAvailability } from "../services/api.js";
-import { deleteOfflineRecord, readOfflineRecord, saveOfflineRecord } from "../pwa/offlineStore.js";
+import {
+  deleteOfflineRecord,
+  readOfflineRecord,
+  readPendingCases,
+  saveOfflineRecord,
+} from "../pwa/offlineStore.js";
 
 const DataContext = createContext(null);
 
@@ -85,7 +90,7 @@ function validCollection(type, data) {
 }
 
 export function DataProvider({ children }) {
-  const { session, handleAuthExpired } = useAuth();
+  const { session, handleAuthExpired, handleLogout, revalidateSession } = useAuth();
   const navigate = useNavigate();
   const sessionUsername = session?.username;
   const userId = session?.id;
@@ -115,6 +120,13 @@ export function DataProvider({ children }) {
   const [draft, setDraft] = useState(null);
   const [draftOffer, setDraftOffer] = useState(false);
   const [draftInForm, setDraftInForm] = useState(false);
+  const [pendingCases, setPendingCases] = useState([]);
+  const [pendingReviewId, setPendingReviewId] = useState(null);
+  const [syncingCaseId, setSyncingCaseId] = useState(null);
+  const casesRef = useRef([]);
+  const caseMutationVersionRef = useRef(0);
+  const syncPromiseRef = useRef(null);
+  const activeCreateIdsRef = useRef(new Set());
 
   const selectedCase = useMemo(
     () => cases.find((caseItem) => caseItem.id === selectedCaseId) || null,
@@ -123,13 +135,24 @@ export function DataProvider({ children }) {
 
   useEffect(() => {
     if (sessionUsername) {
-      loadAppData();
+      void loadAppData().then(() => syncPendingCases());
     }
   }, [sessionUsername, userId]);
 
   useEffect(() => {
     if (!userId) return;
     let active = true;
+    readPendingCases(userId)
+      .then((records) => {
+        if (active) {
+          setPendingCases(records);
+          void syncPendingCases();
+        }
+      })
+      .catch(() => {
+        if (active)
+          setMessage({ type: "error", text: "Casos locais indisponíveis neste dispositivo." });
+      });
     readOfflineRecord(userId, "draft")
       .then((record) => {
         if (active) setDraft(record);
@@ -147,7 +170,7 @@ export function DataProvider({ children }) {
     if (!userId) return;
     return subscribeApiAvailability((next, previous, reason) => {
       if (previous === "unavailable" && next === "available" && reason !== "auth") {
-        void loadAppData();
+        void loadAppData().then(() => syncPendingCases());
       }
     });
   }, [userId]);
@@ -158,9 +181,11 @@ export function DataProvider({ children }) {
 
   async function loadCollection(type, request, setter) {
     const requestToken = window.localStorage.getItem("cadisk_token");
+    const caseVersion = caseMutationVersionRef.current;
     try {
       const data = await request();
       if (!validCollection(type, data)) throw new Error("Resposta inválida da API.");
+      if (type === "cases" && caseVersion !== caseMutationVersionRef.current) return true;
       setter(data);
       setSource(type, "live", new Date().toISOString());
       if (userId && getStoredSession()?.id === userId) {
@@ -177,7 +202,9 @@ export function DataProvider({ children }) {
         handleAuthExpired();
         return false;
       }
+      if (type === "cases" && caseVersion !== caseMutationVersionRef.current) return false;
       const record = userId ? await readOfflineRecord(userId, type).catch(() => null) : null;
+      if (type === "cases" && caseVersion !== caseMutationVersionRef.current) return false;
       setter(record?.data || []);
       setSource(type, record ? "snapshot" : "unavailable", record?.updatedAt);
       return false;
@@ -195,7 +222,7 @@ export function DataProvider({ children }) {
     try {
       const [doctorsCurrent, casesCurrent] = await Promise.all([
         loadCollection("doctors", getDoctors, setDoctors),
-        loadCollection("cases", getCases, setCases),
+        loadCollection("cases", getCases, replaceCases),
       ]);
 
       if (selectedCaseIdSnapshot) {
@@ -211,6 +238,98 @@ export function DataProvider({ children }) {
       return false;
     } finally {
       setLoading(false);
+    }
+  }
+
+  function replaceCases(next) {
+    casesRef.current = next;
+    setCases(next);
+  }
+
+  function applyOfficialCases(confirmed) {
+    caseMutationVersionRef.current += 1;
+    const updatedIds = new Set(confirmed.map((item) => item.id));
+    const next = [...confirmed, ...casesRef.current.filter((item) => !updatedIds.has(item.id))];
+    replaceCases(next);
+    setSource("cases", "live", new Date().toISOString());
+    if (userId && getStoredSession()?.id === userId) {
+      void saveOfflineRecord(userId, "cases", next).catch(() => {
+        setMessage({
+          type: "error",
+          text: "Não foi possível atualizar a consulta offline de casos.",
+        });
+      });
+    }
+  }
+
+  function refreshSecondaryData() {
+    void loadDashboard();
+    void loadCollection("doctors", getDoctors, setDoctors);
+  }
+
+  function closeCaseForm() {
+    setSelectedDoctorId(null);
+    setCasesFilterResetSignal((current) => current + 1);
+    setCaseForm(EMPTY_CASE);
+    setShowCaseModal(false);
+  }
+
+  function syncPendingCases() {
+    if (syncPromiseRef.current) return syncPromiseRef.current;
+    if (!userId || getApiAvailability() !== "available") return Promise.resolve();
+    const promise = runPendingSync();
+    syncPromiseRef.current = promise;
+    void promise.finally(() => {
+      if (syncPromiseRef.current === promise) syncPromiseRef.current = null;
+    });
+    return promise;
+  }
+
+  async function runPendingSync() {
+    let confirmedAny = false;
+    try {
+      const records = await readPendingCases(userId);
+      if (
+        !records.some(
+          (record) => record.state === "pending" && !activeCreateIdsRef.current.has(record.id),
+        )
+      )
+        return;
+      if (!(await revalidateSession()) || getStoredSession()?.id !== userId) return;
+      for (const record of records) {
+        if (record.state === "failed" || activeCreateIdsRef.current.has(record.id)) continue;
+        if (getApiAvailability() !== "available" || getStoredSession()?.id !== userId) break;
+        setSyncingCaseId(record.id);
+        try {
+          const created = await createCase(record.payload);
+          if (getStoredSession()?.id !== userId) break;
+          applyOfficialCases([created]);
+          await deleteOfflineRecord(userId, "pending-case", record.id);
+          setPendingCases((current) => current.filter((item) => item.id !== record.id));
+          confirmedAny = true;
+        } catch (error) {
+          if (error.status === 401) {
+            handleAuthExpired();
+            break;
+          }
+          if (error.status >= 400 && error.status < 500) {
+            const failed = { ...record, state: "failed" };
+            await saveOfflineRecord(userId, "pending-case", failed, record.id);
+            setPendingCases((current) =>
+              current.map((item) => (item.id === record.id ? failed : item)),
+            );
+            continue;
+          }
+          break; // Network and 5xx failures wait for another real opportunity.
+        } finally {
+          setSyncingCaseId(null);
+        }
+      }
+    } catch {
+      setMessage({ type: "error", text: "Não foi possível consultar os casos locais." });
+    } finally {
+      setSyncingCaseId(null);
+      if (confirmedAny && getStoredSession()?.id === userId) refreshSecondaryData();
     }
   }
 
@@ -336,11 +455,6 @@ export function DataProvider({ children }) {
 
   async function handleCaseSubmit(event) {
     event.preventDefault();
-    if (getApiAvailability() === "unavailable") {
-      setMessage({ type: "error", text: "API indisponível. Salve o caso como rascunho local." });
-      return;
-    }
-
     const automaticItems =
       caseForm.pricing_mode === "services" ? buildAutomaticCaseItems(caseForm) : [];
 
@@ -354,75 +468,102 @@ export function DataProvider({ children }) {
 
     setBusy(true);
     setMessage(null);
+    let localCase = null;
+    let persisted = false;
     try {
+      if (!userId) throw new Error("Aguarde a validação da sessão antes de salvar o caso.");
       const payload = buildCasePayload(selectedDoctorId, caseForm);
       if (automaticItems.length) {
         payload.items = automaticItems;
       }
-      await createCase(payload);
-      let draftCleanupFailed = false;
+      const id = pendingReviewId || globalThis.crypto.randomUUID();
+      payload.client_request_id = id;
+      localCase = {
+        id,
+        clientRequestId: id,
+        payload,
+        form: caseForm,
+        doctorId: selectedDoctorId,
+        createdAt:
+          pendingCases.find((item) => item.id === id)?.createdAt || new Date().toISOString(),
+        state: "pending",
+      };
+      activeCreateIdsRef.current.add(id);
+      await saveOfflineRecord(userId, "pending-case", localCase, id);
+      persisted = true;
+      setPendingCases((current) => [localCase, ...current.filter((item) => item.id !== id)]);
       if (draftInForm && userId) {
         try {
           await deleteOfflineRecord(userId, "draft");
           setDraft(null);
           setDraftInForm(false);
         } catch {
-          draftCleanupFailed = true;
-        }
-      }
-      if (selectedDoctorId === null) {
-        window.localStorage.removeItem(LAST_CASE_DOCTOR_STORAGE_KEY);
-      } else {
-        window.localStorage.setItem(LAST_CASE_DOCTOR_STORAGE_KEY, String(selectedDoctorId));
-      }
-
-      const refreshed = await loadAppData({ selectedCaseId: null });
-      setSelectedCaseId(null);
-      setSelectedDoctorId(null);
-      setCasesFilterResetSignal((current) => current + 1);
-      setCaseForm(EMPTY_CASE);
-      setShowCaseModal(false);
-      setMessage({
-        type: refreshed && !draftCleanupFailed ? "success" : "error",
-        text: draftCleanupFailed
-          ? "Caso registrado, mas o rascunho local não pôde ser apagado. Descarte-o antes de reutilizar."
-          : !refreshed
-            ? "Caso registrado, mas a lista não foi atualizada. Confira os casos antes de criar novamente."
-            : automaticItems.length
-              ? `Caso criado com ${automaticItems.length} ${
-                  automaticItems.length === 1
-                    ? "item de serviço automático"
-                    : "itens de serviço automáticos"
-                }.`
-              : "Caso criado.",
-      });
-    } catch (error) {
-      let draftSaveFailed = false;
-      const unconfirmed =
-        error.code !== "OFFLINE_WRITE_BLOCKED" && (!error.status || error.status >= 500);
-      if (unconfirmed && userId && (!draft || draftInForm)) {
-        try {
-          const record = await saveOfflineRecord(userId, "draft", {
-            doctorId: selectedDoctorId,
-            form: caseForm,
+          setMessage({
+            type: "error",
+            text: "Caso salvo, mas não foi possível remover o rascunho antigo.",
           });
-          setDraft(record);
-          setDraftInForm(true);
-        } catch {
-          draftSaveFailed = true;
         }
       }
+      setPendingReviewId(null);
+      if (getApiAvailability() === "unavailable") {
+        closeCaseForm();
+        setMessage({
+          type: "success",
+          text: "Caso salvo neste dispositivo. Aguardando conexão para sincronizar.",
+        });
+        return;
+      }
+      const created = await createCase(payload);
+      if (getStoredSession()?.id !== userId) return;
+      applyOfficialCases([created]);
+      if (selectedDoctorId === null) window.localStorage.removeItem(LAST_CASE_DOCTOR_STORAGE_KEY);
+      else window.localStorage.setItem(LAST_CASE_DOCTOR_STORAGE_KEY, String(selectedDoctorId));
+      setSelectedCaseId(null);
+      closeCaseForm();
       setMessage({
-        type: "error",
-        text: draftSaveFailed
-          ? "Não foi possível confirmar a criação nem guardar o rascunho. Mantenha o formulário aberto e confira a lista após reconectar."
-          : error.code === "OFFLINE_WRITE_BLOCKED"
-            ? "API indisponível. Salve o caso como rascunho local."
-            : unconfirmed
-              ? "Não foi possível confirmar a criação. Confira a lista de casos após reconectar antes de tentar novamente."
-              : error.message,
+        type: "success",
+        text: automaticItems.length
+          ? `Caso criado com ${automaticItems.length} ${automaticItems.length === 1 ? "item de serviço automático" : "itens de serviço automáticos"}.`
+          : "Caso criado.",
       });
+      refreshSecondaryData();
+      try {
+        await deleteOfflineRecord(userId, "pending-case", id);
+        setPendingCases((current) => current.filter((item) => item.id !== id));
+      } catch {
+        setMessage({
+          type: "error",
+          text: "Caso criado, mas o registro local não pôde ser removido. Ele será conferido na próxima conexão.",
+        });
+      }
+    } catch (error) {
+      if (error.status === 401) {
+        handleAuthExpired();
+      } else if (
+        persisted &&
+        (error.code === "OFFLINE_WRITE_BLOCKED" || !error.status || error.status >= 500)
+      ) {
+        closeCaseForm();
+        setMessage({
+          type: "success",
+          text: "Caso salvo neste dispositivo. Aguardando confirmação do servidor.",
+        });
+      } else if (persisted && error.status >= 400 && error.status < 500) {
+        const failed = { ...localCase, state: "failed" };
+        await saveOfflineRecord(userId, "pending-case", failed, failed.id);
+        setPendingCases((current) =>
+          current.map((item) => (item.id === failed.id ? failed : item)),
+        );
+        closeCaseForm();
+        setMessage({
+          type: "error",
+          text: "Não foi possível sincronizar o caso. Revise os dados na lista.",
+        });
+      } else {
+        setMessage({ type: "error", text: error.message });
+      }
     } finally {
+      if (localCase) activeCreateIdsRef.current.delete(localCase.id);
       setBusy(false);
     }
   }
@@ -488,11 +629,7 @@ export function DataProvider({ children }) {
       const deliveredCases = await bulkDeliverCases({ case_ids: caseIds });
       const deliveredIds = new Set(deliveredCases.map((caseItem) => caseItem.id));
       const shouldClearSelection = selectedCaseId && deliveredIds.has(selectedCaseId);
-
-      const refreshed = await loadAppData({
-        selectedCaseId: shouldClearSelection ? null : selectedCaseId,
-      });
-      if (!refreshed) return false;
+      applyOfficialCases(deliveredCases);
       if (shouldClearSelection) {
         setSelectedCaseId(null);
         setItems([]);
@@ -501,6 +638,7 @@ export function DataProvider({ children }) {
         type: "success",
         text: `${deliveredCases.length} ${deliveredCases.length === 1 ? "caso entregue" : "casos entregues"}.`,
       });
+      refreshSecondaryData();
       return true;
     } catch (error) {
       setMessage({ type: "error", text: error.message });
@@ -567,6 +705,7 @@ export function DataProvider({ children }) {
   }
 
   async function openNewCaseModal(defaults = {}) {
+    setPendingReviewId(null);
     setCaseForm(createDefaultCaseForm(defaults));
     setSelectedDoctorId(getDefaultCaseDoctorId());
     const storedDraft = userId ? await readOfflineRecord(userId, "draft").catch(() => draft) : null;
@@ -574,31 +713,6 @@ export function DataProvider({ children }) {
     setDraftOffer(Boolean(storedDraft));
     setDraftInForm(false);
     setShowCaseModal(true);
-  }
-
-  async function saveCaseDraft() {
-    if (!userId) {
-      setMessage({
-        type: "error",
-        text: "Aguarde a validação da sessão antes de salvar um rascunho.",
-      });
-      return;
-    }
-    try {
-      const record = await saveOfflineRecord(userId, "draft", {
-        doctorId: selectedDoctorId,
-        form: caseForm,
-      });
-      setDraft(record);
-      setDraftInForm(true);
-      setMessage({
-        type: "success",
-        text: "Rascunho salvo neste dispositivo. Ainda não é um caso registrado.",
-      });
-      setShowCaseModal(false);
-    } catch {
-      setMessage({ type: "error", text: "Não foi possível salvar o rascunho local." });
-    }
   }
 
   function restoreCaseDraft() {
@@ -622,6 +736,58 @@ export function DataProvider({ children }) {
     } catch {
       setMessage({ type: "error", text: "Não foi possível descartar o rascunho." });
     }
+  }
+
+  function reviewPendingCase(localCase) {
+    setPendingReviewId(localCase.id);
+    setCaseForm(createDefaultCaseForm(localCase.form));
+    setSelectedDoctorId(localCase.doctorId);
+    setDraftOffer(false);
+    setDraftInForm(false);
+    setShowCaseModal(true);
+  }
+
+  function cancelPendingCase(localCase) {
+    if (syncingCaseId === localCase.id || activeCreateIdsRef.current.has(localCase.id)) return;
+    requestConfirm({
+      title: "Remover caso local",
+      description:
+        "Este caso ainda não foi confirmado pelo servidor. Removê-lo apagará os dados deste dispositivo.",
+      confirmLabel: "Remover",
+      action: () => {
+        void deleteOfflineRecord(userId, "pending-case", localCase.id)
+          .then(() =>
+            setPendingCases((current) => current.filter((item) => item.id !== localCase.id)),
+          )
+          .catch(() =>
+            setMessage({ type: "error", text: "Não foi possível remover o caso local." }),
+          );
+      },
+    });
+  }
+
+  async function requestLogout() {
+    if (getApiAvailability() === "available") await syncPendingCases();
+    let remaining;
+    try {
+      remaining = userId ? await readPendingCases(userId) : pendingCases;
+    } catch {
+      setMessage({
+        type: "error",
+        text: "Não foi possível conferir os casos locais antes de sair.",
+      });
+      return;
+    }
+    if (!remaining.length) {
+      handleLogout();
+      return;
+    }
+    requestConfirm({
+      title: "Sair com casos não sincronizados?",
+      description: `${remaining.length} ${remaining.length === 1 ? "caso será apagado" : "casos serão apagados"} deste dispositivo ao sair. Esta ação não pode ser desfeita.`,
+      confirmLabel: "Sair e apagar",
+      action: handleLogout,
+    });
   }
 
   function openNewCaseFromDashboard() {
@@ -759,6 +925,8 @@ export function DataProvider({ children }) {
     dashboardError,
     doctors,
     cases,
+    pendingCases,
+    syncingCaseId,
     items,
     doctorForm,
     caseForm,
@@ -787,9 +955,11 @@ export function DataProvider({ children }) {
     draft,
     draftOffer,
     setDraftOffer,
-    saveCaseDraft,
     restoreCaseDraft,
     discardCaseDraft,
+    reviewPendingCase,
+    cancelPendingCase,
+    requestLogout,
     selectedCase,
     loadAppData,
     loadDashboard,

@@ -86,6 +86,7 @@ describe('schema parity integration', () => {
           'ix_doctors_deleted_at',
           'ix_cases_doctor_id',
           'ix_cases_user_id',
+          'uq_cases_user_client_request_id',
           'ix_cases_patient_ref',
           'ix_cases_priority',
           'ix_cases_status',
@@ -129,6 +130,7 @@ describe('schema parity integration', () => {
       'ix_doctors_deleted_at',
       'ix_doctors_name',
       'ix_doctors_user_id',
+      'uq_cases_user_client_request_id',
       'uq_users_email_lower',
       'uq_users_username_lower',
     ]);

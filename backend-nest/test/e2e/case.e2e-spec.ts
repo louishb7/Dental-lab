@@ -214,6 +214,33 @@ describe('case e2e', () => {
       .expect((response) => expect(response.body.doctor_id).toBeNull());
   });
 
+  it('returns the same official case after a lost-response retry', async () => {
+    const user = await registerUser('retry@cadisk.local', 'retryuser');
+    const clientRequestId = '1af5c173-c844-4ab1-bd31-49beccf0e192';
+    const payload = {
+      client_request_id: clientRequestId,
+      doctor_id: null,
+      patient_ref: 'Avulso offline',
+    };
+    const first = await request(app.getHttpServer())
+      .post('/cases/')
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .send(payload)
+      .expect(201);
+    const retry = await request(app.getHttpServer())
+      .post('/cases/')
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .send(payload)
+      .expect(201);
+    expect(retry.body).toMatchObject({ id: first.body.id, doctor_id: null });
+    expect(await prisma.dentalCase.count()).toBe(1);
+    await request(app.getHttpServer())
+      .post('/cases/')
+      .set('Authorization', `Bearer ${user.access_token}`)
+      .send({ ...payload, client_request_id: 'invalid' })
+      .expect(422);
+  });
+
   it('rejects invalid pricing and doctor ownership with legacy status codes', async () => {
     const firstUser = await registerUser('first@cadisk.local', 'first1');
     const secondUser = await registerUser('second@cadisk.local', 'second1');
