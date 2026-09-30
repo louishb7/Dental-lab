@@ -1,4 +1,4 @@
-import { ArrowUpRight, Edit3, Phone, Plus, Stethoscope, Trash2 } from "lucide-react";
+import { Edit3, Phone, Plus, Stethoscope, Trash2 } from "lucide-react";
 import Button from "../components/ui/Button.jsx";
 import ActionsMenu from "../components/ui/ActionsMenu.jsx";
 import EmptyState from "../components/ui/EmptyState.jsx";
@@ -19,7 +19,6 @@ export default function DoctorsPage({
   onEditDoctor,
   onDoctorChange,
   onDoctorSubmit,
-  onOpenDoctorCases,
   onRemoveDoctor,
   readOnly = false,
 }) {
@@ -50,7 +49,7 @@ export default function DoctorsPage({
             {doctors.map((doctor) => (
               <article
                 key={doctor.id}
-                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:p-5"
+                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 p-4 sm:p-5"
               >
                 <div className="min-w-0">
                   <h2 className="break-words text-sm font-semibold">{doctor.name}</h2>
@@ -74,17 +73,7 @@ export default function DoctorsPage({
                     </details>
                   )}
                 </div>
-                <div className="col-span-2 row-start-2 justify-self-end sm:col-span-1 sm:col-start-2 sm:row-start-1">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => onOpenDoctorCases(doctor.id)}
-                  >
-                    {doctor.cases_count ?? 0} casos ativos
-                    <ArrowUpRight size={15} />
-                  </Button>
-                </div>
-                <div className="col-start-2 row-start-1 self-start sm:col-start-3 sm:self-center">
+                <div className="col-start-2 row-start-1 self-start sm:self-center">
                   {!readOnly && (
                     <ActionsMenu
                       label={`Ações de ${doctor.name}`}

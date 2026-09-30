@@ -30,7 +30,6 @@ import {
   formatBrazilianPhone,
 } from "../utils/forms.js";
 import { formatCurrencyInput, getLocalDateKey } from "../utils/formatters.js";
-import { useNavigate } from "react-router-dom";
 import { getApiAvailability, subscribeApiAvailability } from "../services/api.js";
 import {
   deleteOfflineRecord,
@@ -91,7 +90,6 @@ function validCollection(type, data) {
 
 export function DataProvider({ children }) {
   const { session, handleAuthExpired, handleLogout, revalidateSession } = useAuth();
-  const navigate = useNavigate();
   const sessionUsername = session?.username;
   const userId = session?.id;
 
@@ -689,11 +687,6 @@ export function DataProvider({ children }) {
     }
   }
 
-  function openDoctorCases(doctorId) {
-    setSelectedDoctorId(doctorId);
-    navigate("/cases");
-  }
-
   function getDefaultCaseDoctorId() {
     const storedDoctorId = Number(window.localStorage.getItem(LAST_CASE_DOCTOR_STORAGE_KEY));
 
@@ -974,7 +967,6 @@ export function DataProvider({ children }) {
     handleItemSubmit,
     handleBulkDeliverCases,
     openCaseItems,
-    openDoctorCases,
     openNewCaseModal,
     openNewCaseFromDashboard,
     openNewCaseFromDashboardDate,

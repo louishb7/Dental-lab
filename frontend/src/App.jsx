@@ -254,7 +254,6 @@ function AppContent({ theme, onToggleTheme }) {
               onEditDoctor={data.openEditDoctorModal}
               onDoctorChange={data.handleDoctorChange}
               onDoctorSubmit={data.handleDoctorSubmit}
-              onOpenDoctorCases={data.openDoctorCases}
               onRemoveDoctor={data.removeDoctor}
               readOnly={readOnly}
             />
