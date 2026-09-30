@@ -57,6 +57,8 @@ export default function DashboardPage({
   onItemSubmit,
   onRemoveItem,
   onCloseDetails,
+  readOnly = false,
+  itemsUnavailable = false,
 }) {
   const today = useMemo(() => new Date(), []);
   const [weekStart, setWeekStart] = useState(() => getStartOfWeek(today));
@@ -128,6 +130,7 @@ export default function DashboardPage({
             onDeliverCase={onDeliverCase}
             onBulkDeliverCases={onBulkDeliverCases}
             onRequestConfirm={onRequestConfirm}
+            readOnly={readOnly}
           />
           <DayBoard
             title={
@@ -148,6 +151,7 @@ export default function DashboardPage({
             onOpenCase={onOpenCase}
             onAdvanceCase={onAdvanceCase}
             showReadyAction
+            readOnly={readOnly}
           />
         </div>
       </div>
@@ -163,6 +167,8 @@ export default function DashboardPage({
           onItemSubmit={onItemSubmit}
           onRemoveItem={onRemoveItem}
           onClose={onCloseDetails}
+          readOnly={readOnly}
+          itemsUnavailable={itemsUnavailable}
         />
       )}
     </PageContainer>

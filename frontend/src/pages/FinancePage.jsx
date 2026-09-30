@@ -58,9 +58,7 @@ function getMonthComparison(trend) {
   };
 }
 
-function buildFallbackRevenueTrend(totalMes, countMes) {
-  const now = new Date();
-
+function buildFallbackRevenueTrend(totalMes, countMes, now) {
   return Array.from({ length: 6 }, (_, index) => {
     const monthOffset = index - 5;
     const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + monthOffset, 1));
@@ -93,13 +91,15 @@ export default function FinancePage({ dashboard, loading, error, onRetry, onOpen
 
   const totalMes = parseCurrencyToNumber(dashboard?.delivered_total_month) ?? 0;
   const countMes = dashboard?.delivered_count_month ?? 0;
+  const generatedAt = new Date(dashboard?.generated_at);
+  const referenceDate = Number.isNaN(generatedAt.getTime()) ? new Date() : generatedAt;
   const deliveredCases = dashboard?.delivered_cases_month ?? [];
   const recentDeliveredCases = deliveredCases.slice(0, 5);
   const averageTicket = countMes > 0 ? totalMes / countMes : 0;
   const revenueTrend =
     Array.isArray(dashboard?.revenue_trend) && dashboard.revenue_trend.length
       ? dashboard.revenue_trend
-      : buildFallbackRevenueTrend(totalMes, countMes);
+      : buildFallbackRevenueTrend(totalMes, countMes, referenceDate);
   const chartData = revenueTrend.map((item) => ({
     month: item.month,
     monthLabel: formatMonthLabel(item.month),
@@ -158,7 +158,7 @@ export default function FinancePage({ dashboard, loading, error, onRetry, onOpen
           <h2 className="text-lg font-semibold">Resultado do mês</h2>
           <span className="text-xs capitalize text-[var(--color-text-muted)]">
             {new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(
-              new Date(),
+              referenceDate,
             )}
           </span>
         </div>

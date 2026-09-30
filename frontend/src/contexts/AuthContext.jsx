@@ -1,11 +1,13 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import {
   clearSession,
   getCurrentUser,
   getStoredSession,
   login,
   register,
+  saveValidatedSession,
 } from "../services/api.js";
+import { clearUserOfflineData } from "../pwa/offlineStore.js";
 import { EMPTY_LOGIN, EMPTY_REGISTER } from "../utils/forms.js";
 import { validNewPassword } from "../utils/password.js";
 
@@ -58,22 +60,41 @@ export function AuthProvider({ children }) {
   const [authLoading, setAuthLoading] = useState(false);
   const [authMessage, setAuthMessage] = useState(null);
   const [authErrors, setAuthErrors] = useState(createEmptyAuthErrors());
+  const pendingValidation = useRef(null);
+
+  function revalidateSession() {
+    const token = window.localStorage.getItem("cadisk_token");
+    if (!token) return Promise.resolve(false);
+    if (pendingValidation.current?.token === token) return pendingValidation.current.promise;
+
+    const promise = getCurrentUser()
+      .then((user) => {
+        if (window.localStorage.getItem("cadisk_token") !== token) return false;
+        setSession(saveValidatedSession(user));
+        return true;
+      })
+      .catch((error) => {
+        if (window.localStorage.getItem("cadisk_token") === token && error.status === 401) {
+          handleAuthExpired();
+        }
+        return false;
+      })
+      .finally(() => {
+        if (pendingValidation.current?.token === token) pendingValidation.current = null;
+      });
+    pendingValidation.current = { token, promise };
+    return promise;
+  }
 
   useEffect(() => {
     if (!session) return;
-    let active = true;
-
-    getCurrentUser()
-      .then((user) => {
-        if (!active) return;
-        setSession({ username: user.username, email: user.email });
-      })
-      .catch(() => {
-        if (!active) return;
-        handleAuthExpired();
-      });
+    void revalidateSession();
+    const onOnline = () => {
+      void revalidateSession();
+    };
+    window.addEventListener("online", onOnline);
     return () => {
-      active = false;
+      window.removeEventListener("online", onOnline);
     };
   }, [session?.username]);
 
@@ -141,18 +162,36 @@ export function AuthProvider({ children }) {
   }
 
   function handleLogout() {
+    const userId = getStoredSession()?.id;
     clearSession();
     setSession(null);
     setAuthMessage(null);
     setLoginForm(EMPTY_LOGIN);
     setRegisterForm(EMPTY_REGISTER);
     setAuthMode("login");
+    if (userId) {
+      void clearUserOfflineData(userId).catch(() => {
+        setAuthMessage({
+          type: "error",
+          text: "Não foi possível apagar os dados offline deste usuário.",
+        });
+      });
+    }
   }
 
   function handleAuthExpired(messageText = "Sessão expirada. Faça login novamente.") {
+    const userId = getStoredSession()?.id;
     clearSession();
     setSession(null);
     setAuthMessage({ type: "error", text: messageText });
+    if (userId) {
+      void clearUserOfflineData(userId).catch(() => {
+        setAuthMessage({
+          type: "error",
+          text: "Sessão encerrada, mas não foi possível apagar os dados offline.",
+        });
+      });
+    }
   }
 
   const value = {
@@ -169,6 +208,7 @@ export function AuthProvider({ children }) {
     handleRegister,
     handleLogout,
     handleAuthExpired,
+    revalidateSession,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

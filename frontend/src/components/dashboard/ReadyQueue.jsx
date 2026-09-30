@@ -11,6 +11,7 @@ export default function ReadyQueue({
   onDeliverCase,
   onBulkDeliverCases,
   onRequestConfirm,
+  readOnly = false,
 }) {
   const [open, setOpen] = useState(false);
   const count = cases.length;
@@ -43,15 +44,17 @@ export default function ReadyQueue({
             </button>
             <div className="flex items-center justify-between gap-2">
               <DeadlineBadge deadline={caseItem.deadline} status={caseItem.status} />
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={busy}
-                aria-label={`Entregar caso de ${caseItem.patient_ref}`}
-                onClick={() => onDeliverCase(caseItem.id)}
-              >
-                <PackageCheck size={14} /> Entregar
-              </Button>
+              {!readOnly && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={busy}
+                  aria-label={`Entregar caso de ${caseItem.patient_ref}`}
+                  onClick={() => onDeliverCase(caseItem.id)}
+                >
+                  <PackageCheck size={14} /> Entregar
+                </Button>
+              )}
             </div>
           </article>
         ))}
@@ -107,7 +110,7 @@ export default function ReadyQueue({
           onClose={() => setOpen(false)}
           className="max-w-[520px]"
         >
-          {count > 0 && (
+          {count > 0 && !readOnly && (
             <div className="mb-4 flex justify-end">
               <Button variant="secondary" disabled={busy} onClick={deliverAll}>
                 <PackageCheck size={16} /> Entregar todos

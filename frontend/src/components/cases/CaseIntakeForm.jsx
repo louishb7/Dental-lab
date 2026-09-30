@@ -23,6 +23,8 @@ export default function CaseIntakeForm({
   onDoctorChange,
   onCaseChange,
   onSubmit,
+  readOnly = false,
+  onSaveDraft,
 }) {
   const selectedDoctor = doctors.find((doctor) => doctor.id === selectedDoctorId);
   const SubmitIcon = submitIcon;
@@ -227,10 +229,17 @@ export default function CaseIntakeForm({
             {formatCurrency(totalValue)}
           </strong>
         </div>
-        <Button variant="primary" disabled={busy} type="submit">
-          <SubmitIcon size={17} />
-          {submitLabel}
-        </Button>
+        <div className="flex flex-wrap justify-end gap-2">
+          {onSaveDraft && (
+            <Button variant="outline" disabled={busy} type="button" onClick={onSaveDraft}>
+              Salvar rascunho
+            </Button>
+          )}
+          <Button variant="primary" disabled={busy || readOnly} type="submit">
+            <SubmitIcon size={17} />
+            {submitLabel}
+          </Button>
+        </div>
       </footer>
     </form>
   );

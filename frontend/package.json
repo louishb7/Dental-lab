@@ -9,12 +9,14 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "test:auth": "node scripts/run-auth-browser.mjs",
+    "test:pwa": "node scripts/check-pwa-browser.mjs",
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "idb": "7.1.1",
     "lucide-react": "^0.468.0",
     "radix-ui": "^1.6.7",
     "react": "^18.2.0",

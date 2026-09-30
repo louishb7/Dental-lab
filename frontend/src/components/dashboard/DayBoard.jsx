@@ -7,6 +7,7 @@ export default function DayBoard({
   onOpenCase,
   onAdvanceCase,
   showReadyAction = false,
+  readOnly = false,
 }) {
   return (
     <section className="min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)]">
@@ -30,7 +31,7 @@ export default function DayBoard({
                 caseItem={caseItem}
                 onOpenCase={onOpenCase}
                 onAdvanceCase={onAdvanceCase}
-                showReadyAction={showReadyAction}
+                showReadyAction={showReadyAction && !readOnly}
               />
             ))}
           </div>

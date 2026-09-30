@@ -1,37 +1,35 @@
-import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import Button from "../components/ui/Button.jsx";
+import useApiAvailability from "./useApiAvailability.js";
+import { useAuth } from "../contexts/AuthContext.jsx";
 
 export default function PwaStatus() {
-  const [online, setOnline] = useState(navigator.onLine);
+  const apiAvailability = useApiAvailability();
+  const { session, revalidateSession } = useAuth();
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
   } = useRegisterSW();
 
-  useEffect(() => {
-    const connected = () => setOnline(true);
-    const disconnected = () => setOnline(false);
-    window.addEventListener("online", connected);
-    window.addEventListener("offline", disconnected);
-    return () => {
-      window.removeEventListener("online", connected);
-      window.removeEventListener("offline", disconnected);
-    };
-  }, []);
-
-  if (!needRefresh && online) return null;
+  if (!needRefresh && apiAvailability !== "unavailable") return null;
 
   return createPortal(
     <div className="pointer-events-none fixed inset-x-3 bottom-3 z-[70] flex flex-col items-end gap-2 text-sm sm:inset-x-5 sm:bottom-5">
-      {!online && (
-        <p
+      {apiAvailability === "unavailable" && (
+        <div
           role="status"
-          className="pointer-events-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-[var(--color-text)] shadow-[var(--shadow-soft)]"
+          className="pointer-events-auto flex max-w-lg flex-wrap items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-[var(--color-text)] shadow-[var(--shadow-soft)]"
         >
-          Sem conexão. Dados e alterações precisam de internet.
-        </p>
+          <span>
+            API indisponível. Dados podem estar desatualizados; alterações precisam de conexão.
+          </span>
+          {session && (
+            <Button variant="ghost" size="sm" onClick={() => void revalidateSession()}>
+              Tentar novamente
+            </Button>
+          )}
+        </div>
       )}
       {needRefresh && (
         <div

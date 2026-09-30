@@ -76,6 +76,8 @@ export default function CaseDetailsPage({
   onItemSubmit,
   onRemoveItem,
   onClose,
+  readOnly = false,
+  itemsUnavailable = false,
 }) {
   const [showItemForm, setShowItemForm] = useState(false);
   const [editingItemId, setEditingItemId] = useState(null);
@@ -212,12 +214,18 @@ export default function CaseDetailsPage({
                   {items.length}
                 </span>
               </h3>
-              <Button variant="primary" size="sm" onClick={() => openItemForm()}>
-                <Plus size={16} />
-                Adicionar serviço
-              </Button>
+              {!readOnly && (
+                <Button variant="primary" size="sm" onClick={() => openItemForm()}>
+                  <Plus size={16} />
+                  Adicionar serviço
+                </Button>
+              )}
             </div>
-            {items.length ? (
+            {itemsUnavailable ? (
+              <p className="py-4 text-sm text-[var(--color-text-muted)]">
+                Detalhes ainda não disponíveis offline neste dispositivo.
+              </p>
+            ) : items.length ? (
               <div className="divide-y divide-[var(--color-border)]">
                 {pagedItems.map((item) => {
                   const view = getItemView(item);
@@ -257,21 +265,25 @@ export default function CaseDetailsPage({
                             )}
                           </div>
                         )}
-                        <Button variant="ghost" size="sm" onClick={() => openItemForm(item)}>
-                          <Edit3 size={15} />
-                          Editar
-                        </Button>
-                        <ActionsMenu
-                          label={`Ações do serviço ${item.tooth || item.id}`}
-                          items={[
-                            {
-                              label: "Excluir serviço",
-                              icon: Trash2,
-                              danger: true,
-                              onSelect: () => onRemoveItem(item.id),
-                            },
-                          ]}
-                        />
+                        {!readOnly && (
+                          <Button variant="ghost" size="sm" onClick={() => openItemForm(item)}>
+                            <Edit3 size={15} />
+                            Editar
+                          </Button>
+                        )}
+                        {!readOnly && (
+                          <ActionsMenu
+                            label={`Ações do serviço ${item.tooth || item.id}`}
+                            items={[
+                              {
+                                label: "Excluir serviço",
+                                icon: Trash2,
+                                danger: true,
+                                onSelect: () => onRemoveItem(item.id),
+                              },
+                            ]}
+                          />
+                        )}
                       </div>
                     </article>
                   );
@@ -323,7 +335,7 @@ export default function CaseDetailsPage({
         </div>
       </Modal>
 
-      {showItemForm && (
+      {showItemForm && !readOnly && (
         <Modal
           title={editingItemId ? "Editar serviço extra" : "Serviço extra"}
           onClose={closeItemForm}

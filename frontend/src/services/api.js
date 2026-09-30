@@ -7,6 +7,50 @@ const DOCTORS_URL = `${API_ROOT_URL}/doctors`;
 const CASES_URL = `${API_ROOT_URL}/cases`;
 const CASE_HISTORY_URL = `${API_ROOT_URL}/case-history`;
 
+let apiAvailability = navigator.onLine ? "unknown" : "unavailable";
+const availabilityListeners = new Set();
+
+export function getApiAvailability() {
+  return apiAvailability;
+}
+
+export function subscribeApiAvailability(listener) {
+  availabilityListeners.add(listener);
+  return () => availabilityListeners.delete(listener);
+}
+
+function setApiAvailability(next, reason) {
+  if (apiAvailability === next) return;
+  const previous = apiAvailability;
+  apiAvailability = next;
+  availabilityListeners.forEach((listener) => listener(next, previous, reason));
+}
+
+window.addEventListener("offline", () => setApiAvailability("unavailable", "network"));
+
+// Every request in this module goes through this transport; no API response enters Cache Storage.
+async function fetch(url, options = {}) {
+  const method = options.method || "GET";
+  if (method !== "GET" && !url.includes("/auth/") && apiAvailability === "unavailable") {
+    const error = new Error("API indisponível. Alterações exigem conexão.");
+    error.code = "OFFLINE_WRITE_BLOCKED";
+    throw error;
+  }
+
+  let response;
+  try {
+    response = await globalThis.fetch(url, options);
+  } catch (error) {
+    setApiAvailability("unavailable", "network");
+    throw error;
+  }
+  setApiAvailability(
+    response.status >= 500 ? "unavailable" : "available",
+    response.status === 401 ? "auth" : "response",
+  );
+  return response;
+}
+
 /**
  * Builds default request headers for the Cadisk API.
  *
@@ -67,6 +111,12 @@ export function saveSession(payload) {
   return { username: payload.username, email: payload.email };
 }
 
+export function saveValidatedSession(user) {
+  const session = { id: user.id, username: user.username, email: user.email };
+  window.localStorage.setItem("cadisk_user", JSON.stringify(session));
+  return session;
+}
+
 /**
  * Reads the saved Cadisk user session from browser storage.
  *
@@ -96,6 +146,7 @@ export function getStoredSession() {
 export function clearSession() {
   window.localStorage.removeItem("cadisk_token");
   window.localStorage.removeItem("cadisk_user");
+  window.localStorage.removeItem("cadisk_last_case_doctor_id");
 }
 
 /**

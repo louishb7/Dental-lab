@@ -11,6 +11,7 @@ import {
 import AppLayout from "./components/layout/AppLayout.jsx";
 import ConfirmModal from "./components/ui/ConfirmModal.jsx";
 import Modal from "./components/ui/Modal.jsx";
+import Button from "./components/ui/Button.jsx";
 import CaseIntakeForm from "./components/cases/CaseIntakeForm.jsx";
 import { Plus } from "lucide-react";
 import AuthPage from "./pages/AuthPage.jsx";
@@ -21,6 +22,7 @@ import DoctorsPage from "./pages/DoctorsPage.jsx";
 const FinancePage = lazy(() => import("./pages/FinancePage.jsx"));
 import HistoryPage from "./pages/HistoryPage.jsx";
 import PwaStatus from "./pwa/PwaStatus.jsx";
+import useApiAvailability from "./pwa/useApiAvailability.js";
 
 import { AuthProvider, useAuth } from "./contexts/AuthContext.jsx";
 import { DataProvider, useData } from "./contexts/DataContext.jsx";
@@ -81,6 +83,7 @@ function AppContent({ theme, onToggleTheme }) {
   const { message, setMessage, confirmPending, setConfirmPending } = data;
   const location = useLocation();
   const navigate = useNavigate();
+  const apiAvailability = useApiAvailability();
 
   // "dashboard" | "cases" | "history" | "doctors" | "finance"
   let activePage = "dashboard";
@@ -88,6 +91,23 @@ function AppContent({ theme, onToggleTheme }) {
   else if (location.pathname.startsWith("/history")) activePage = "history";
   else if (location.pathname.startsWith("/doctors")) activePage = "doctors";
   else if (location.pathname.startsWith("/finance")) activePage = "finance";
+
+  const relevantSnapshots =
+    activePage === "finance"
+      ? ["dashboard"]
+      : activePage === "doctors"
+        ? ["doctors"]
+        : activePage === "history"
+          ? []
+          : ["cases", "doctors"];
+  if (data.selectedCase && (activePage === "cases" || activePage === "dashboard")) {
+    relevantSnapshots.push("items");
+  }
+  const stale = relevantSnapshots
+    .map((type) => data.snapshotMeta[type])
+    .filter((entry) => entry?.source === "snapshot")
+    .sort((a, b) => a.updatedAt.localeCompare(b.updatedAt))[0];
+  const readOnly = apiAvailability === "unavailable" || Boolean(stale);
 
   function handleNavigate(page, options = {}) {
     const nextPage = page === "dashboard" ? "/" : `/${page}`;
@@ -109,6 +129,28 @@ function AppContent({ theme, onToggleTheme }) {
       message={message}
       onDismiss={() => setMessage(null)}
     >
+      {stale && (
+        <p
+          role="status"
+          className="border-b border-[var(--color-border)] bg-[var(--color-surface-soft)] px-4 py-2 text-xs text-[var(--color-text-muted)]"
+        >
+          Último estado conhecido · atualizado em{" "}
+          {new Intl.DateTimeFormat("pt-BR", {
+            day: "2-digit",
+            month: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+          }).format(new Date(stale.updatedAt))}
+        </p>
+      )}
+      {readOnly && !stale && (
+        <p
+          role="status"
+          className="border-b border-[var(--color-border)] bg-[var(--color-surface-soft)] px-4 py-2 text-xs text-[var(--color-text-muted)]"
+        >
+          API indisponível · dados desta tela podem não estar disponíveis neste dispositivo.
+        </p>
+      )}
       <Routes>
         <Route
           path="/"
@@ -132,6 +174,8 @@ function AppContent({ theme, onToggleTheme }) {
               onItemSubmit={data.handleItemSubmit}
               onRemoveItem={data.removeItem}
               onCloseDetails={data.closeDashboardCaseDetails}
+              readOnly={readOnly}
+              itemsUnavailable={data.itemsUnavailable}
             />
           }
         />
@@ -158,6 +202,8 @@ function AppContent({ theme, onToggleTheme }) {
               onRemoveCase={data.removeCase}
               onRemoveItem={data.removeItem}
               onCloseDetails={() => data.setSelectedCaseId(null)}
+              readOnly={readOnly}
+              itemsUnavailable={data.itemsUnavailable}
             />
           }
         />
@@ -179,6 +225,7 @@ function AppContent({ theme, onToggleTheme }) {
               onDoctorSubmit={data.handleDoctorSubmit}
               onOpenDoctorCases={data.openDoctorCases}
               onRemoveDoctor={data.removeDoctor}
+              readOnly={readOnly}
             />
           }
         />
@@ -206,6 +253,25 @@ function AppContent({ theme, onToggleTheme }) {
           onClose={() => data.setShowCaseModal(false)}
           className="max-w-[1060px]"
         >
+          {data.draftOffer && (
+            <div className="mb-4 flex flex-wrap items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-3 text-sm">
+              <span className="flex-1">Há um rascunho local ainda não registrado.</span>
+              <Button type="button" variant="outline" size="sm" onClick={data.restoreCaseDraft}>
+                Restaurar
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => data.setDraftOffer(false)}
+              >
+                Continuar em branco
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={data.discardCaseDraft}>
+                Descartar
+              </Button>
+            </div>
+          )}
           <CaseIntakeForm
             doctors={data.doctors}
             selectedDoctorId={data.selectedDoctorId}
@@ -216,6 +282,8 @@ function AppContent({ theme, onToggleTheme }) {
             onDoctorChange={data.setSelectedDoctorId}
             onCaseChange={data.handleCaseChange}
             onSubmit={data.handleCaseSubmit}
+            readOnly={readOnly}
+            onSaveDraft={data.saveCaseDraft}
           />
         </Modal>
       )}

@@ -56,6 +56,8 @@ export default function CasesPage({
   onRemoveCase,
   onRemoveItem,
   onCloseDetails,
+  readOnly = false,
+  itemsUnavailable = false,
 }) {
   const [filters, setFilters] = useState({
     search: "",
@@ -163,7 +165,7 @@ export default function CasesPage({
   function caseActions(caseItem) {
     return (
       <div className="flex items-center justify-end gap-1">
-        {caseItem.status === "pending" && (
+        {caseItem.status === "pending" && !readOnly && (
           <Button
             variant="secondary"
             size="sm"
@@ -174,18 +176,20 @@ export default function CasesPage({
             Pronto
           </Button>
         )}
-        <ActionsMenu
-          label={`Ações de ${caseItem.patient_ref}`}
-          items={[
-            { label: "Exibir detalhes", icon: Eye, onSelect: () => onOpenCaseItems(caseItem.id) },
-            {
-              label: "Excluir caso",
-              icon: Trash2,
-              danger: true,
-              onSelect: () => onRemoveCase(caseItem.id),
-            },
-          ]}
-        />
+        {!readOnly && (
+          <ActionsMenu
+            label={`Ações de ${caseItem.patient_ref}`}
+            items={[
+              { label: "Exibir detalhes", icon: Eye, onSelect: () => onOpenCaseItems(caseItem.id) },
+              {
+                label: "Excluir caso",
+                icon: Trash2,
+                danger: true,
+                onSelect: () => onRemoveCase(caseItem.id),
+              },
+            ]}
+          />
+        )}
       </div>
     );
   }
@@ -318,7 +322,7 @@ export default function CasesPage({
             {openCases.length} {openCases.length === 1 ? "resultado" : "resultados"} ·{" "}
             {productionCaseCount} em produção · {readyCases.length} prontos
           </p>
-          {readyCases.length > 0 && (
+          {readyCases.length > 0 && !readOnly && (
             <Button variant="secondary" size="sm" onClick={openDeliverModal}>
               <PackageCheck size={16} />
               Registrar entrega
@@ -373,13 +377,13 @@ export default function CasesPage({
               onOpenCase={onOpenCaseItems}
               onDeliverCase={(caseId) => onBulkDeliverCases([caseId])}
               onRemoveCase={onRemoveCase}
-              showActions
+              showActions={!readOnly}
             />
           </details>
         )}
       </div>
 
-      {showDeliverModal && (
+      {showDeliverModal && !readOnly && (
         <Modal
           title="Registrar entregas"
           description="Selecione os casos prontos que devem ser marcados como entregues."
@@ -448,6 +452,8 @@ export default function CasesPage({
           onItemChange={onItemChange}
           onItemSubmit={onItemSubmit}
           onRemoveItem={onRemoveItem}
+          readOnly={readOnly}
+          itemsUnavailable={itemsUnavailable}
           onClose={onCloseDetails}
         />
       )}

@@ -21,6 +21,7 @@ export default function DoctorsPage({
   onDoctorSubmit,
   onOpenDoctorCases,
   onRemoveDoctor,
+  readOnly = false,
 }) {
   return (
     <PageContainer
@@ -29,7 +30,7 @@ export default function DoctorsPage({
       title="Seus dentistas"
       description={`${doctors.length} ${doctors.length === 1 ? "profissional cadastrado" : "profissionais cadastrados"}`}
       action={
-        <Button variant="primary" onClick={onNewDoctor}>
+        <Button variant="primary" disabled={readOnly} onClick={onNewDoctor}>
           <Plus size={18} />
           Novo dentista
         </Button>
@@ -84,22 +85,24 @@ export default function DoctorsPage({
                   </Button>
                 </div>
                 <div className="col-start-2 row-start-1 self-start sm:col-start-3 sm:self-center">
-                  <ActionsMenu
-                    label={`Ações de ${doctor.name}`}
-                    items={[
-                      {
-                        label: "Editar dentista",
-                        icon: Edit3,
-                        onSelect: () => onEditDoctor(doctor),
-                      },
-                      {
-                        label: "Excluir dentista",
-                        icon: Trash2,
-                        danger: true,
-                        onSelect: () => onRemoveDoctor(doctor.id),
-                      },
-                    ]}
-                  />
+                  {!readOnly && (
+                    <ActionsMenu
+                      label={`Ações de ${doctor.name}`}
+                      items={[
+                        {
+                          label: "Editar dentista",
+                          icon: Edit3,
+                          onSelect: () => onEditDoctor(doctor),
+                        },
+                        {
+                          label: "Excluir dentista",
+                          icon: Trash2,
+                          danger: true,
+                          onSelect: () => onRemoveDoctor(doctor.id),
+                        },
+                      ]}
+                    />
+                  )}
                 </div>
               </article>
             ))}
@@ -107,7 +110,7 @@ export default function DoctorsPage({
         )}
       </section>
 
-      {showDoctorModal && (
+      {showDoctorModal && !readOnly && (
         <Modal
           className="max-w-[480px]"
           title={editingDoctorId ? "Editar dentista" : "Novo dentista"}

@@ -11,6 +11,7 @@ import {
   deleteDoctor,
   getCaseItems,
   getCases,
+  getStoredSession,
   getDashboardOverview,
   getDoctors,
   updateCaseItem,
@@ -30,6 +31,8 @@ import {
 } from "../utils/forms.js";
 import { formatCurrencyInput, getLocalDateKey } from "../utils/formatters.js";
 import { useNavigate } from "react-router-dom";
+import { getApiAvailability, subscribeApiAvailability } from "../services/api.js";
+import { deleteOfflineRecord, readOfflineRecord, saveOfflineRecord } from "../pwa/offlineStore.js";
 
 const DataContext = createContext(null);
 
@@ -62,10 +65,30 @@ function createDefaultCaseForm(overrides = {}) {
   };
 }
 
+function validCollection(type, data) {
+  if (!Array.isArray(data)) return false;
+  if (type === "doctors")
+    return data.every((item) => Number.isSafeInteger(item?.id) && typeof item.name === "string");
+  if (type === "cases")
+    return data.every(
+      (item) =>
+        Number.isSafeInteger(item?.id) &&
+        Number.isSafeInteger(item.doctor_id) &&
+        typeof item.patient_ref === "string" &&
+        typeof item.status === "string",
+    );
+  if (type === "items")
+    return data.every(
+      (item) => Number.isSafeInteger(item?.id) && typeof item.service_type === "string",
+    );
+  return false;
+}
+
 export function DataProvider({ children }) {
   const { session, handleAuthExpired } = useAuth();
   const navigate = useNavigate();
   const sessionUsername = session?.username;
+  const userId = session?.id;
 
   const [dashboard, setDashboard] = useState(null);
   const [dashboardLoading, setDashboardLoading] = useState(Boolean(session));
@@ -87,6 +110,11 @@ export function DataProvider({ children }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState(null);
   const [confirmPending, setConfirmPending] = useState(null);
+  const [snapshotMeta, setSnapshotMeta] = useState({});
+  const [itemsUnavailable, setItemsUnavailable] = useState(false);
+  const [draft, setDraft] = useState(null);
+  const [draftOffer, setDraftOffer] = useState(false);
+  const [draftInForm, setDraftInForm] = useState(false);
 
   const selectedCase = useMemo(
     () => cases.find((caseItem) => caseItem.id === selectedCaseId) || null,
@@ -97,7 +125,64 @@ export function DataProvider({ children }) {
     if (sessionUsername) {
       loadAppData();
     }
-  }, [sessionUsername]);
+  }, [sessionUsername, userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+    let active = true;
+    readOfflineRecord(userId, "draft")
+      .then((record) => {
+        if (active) setDraft(record);
+      })
+      .catch(() => {
+        if (active)
+          setMessage({ type: "error", text: "Rascunho local indisponível neste dispositivo." });
+      });
+    return () => {
+      active = false;
+    };
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+    return subscribeApiAvailability((next, previous, reason) => {
+      if (previous === "unavailable" && next === "available" && reason !== "auth") {
+        void loadAppData();
+      }
+    });
+  }, [userId]);
+
+  function setSource(type, source, updatedAt = null) {
+    setSnapshotMeta((current) => ({ ...current, [type]: { source, updatedAt } }));
+  }
+
+  async function loadCollection(type, request, setter) {
+    const requestToken = window.localStorage.getItem("cadisk_token");
+    try {
+      const data = await request();
+      if (!validCollection(type, data)) throw new Error("Resposta inválida da API.");
+      setter(data);
+      setSource(type, "live", new Date().toISOString());
+      if (userId && getStoredSession()?.id === userId) {
+        await saveOfflineRecord(userId, type, data).catch(() => {
+          setMessage({
+            type: "error",
+            text: "Não foi possível guardar os dados para consulta offline.",
+          });
+        });
+      }
+      return true;
+    } catch (error) {
+      if (error.status === 401 && window.localStorage.getItem("cadisk_token") === requestToken) {
+        handleAuthExpired();
+        return false;
+      }
+      const record = userId ? await readOfflineRecord(userId, type).catch(() => null) : null;
+      setter(record?.data || []);
+      setSource(type, record ? "snapshot" : "unavailable", record?.updatedAt);
+      return false;
+    }
+  }
 
   async function loadAppData(options = {}) {
     const selectedCaseIdSnapshot = Object.prototype.hasOwnProperty.call(options, "selectedCaseId")
@@ -108,30 +193,21 @@ export function DataProvider({ children }) {
     setMessage(null);
     void loadDashboard();
     try {
-      const [doctorData, caseData] = await Promise.all([getDoctors(), getCases()]);
-      const doctorList = Array.isArray(doctorData) ? doctorData : [];
-      const caseList = Array.isArray(caseData) ? caseData : [];
+      const [doctorsCurrent, casesCurrent] = await Promise.all([
+        loadCollection("doctors", getDoctors, setDoctors),
+        loadCollection("cases", getCases, setCases),
+      ]);
 
-      setDoctors(doctorList);
-      setCases(caseList);
-
-      if (
-        selectedCaseIdSnapshot &&
-        caseList.some((caseItem) => caseItem.id === selectedCaseIdSnapshot)
-      ) {
-        try {
-          const itemData = await getCaseItems(selectedCaseIdSnapshot);
-          setItems(Array.isArray(itemData) ? itemData : []);
-        } catch {
-          setItems([]);
-        }
+      if (selectedCaseIdSnapshot) {
+        await loadCaseItems(selectedCaseIdSnapshot);
       } else {
         setItems([]);
+        setItemsUnavailable(false);
       }
 
-      return true;
-    } catch {
-      handleAuthExpired();
+      return doctorsCurrent && casesCurrent;
+    } catch (error) {
+      setMessage({ type: "error", text: error.message });
       return false;
     } finally {
       setLoading(false);
@@ -139,17 +215,41 @@ export function DataProvider({ children }) {
   }
 
   async function loadDashboard() {
+    const requestToken = window.localStorage.getItem("cadisk_token");
     setDashboardLoading(true);
     setDashboardError(null);
     try {
       const dashboardData = await getDashboardOverview();
+      if (
+        !dashboardData ||
+        typeof dashboardData !== "object" ||
+        !dashboardData.status_counts ||
+        !Array.isArray(dashboardData.overdue_cases) ||
+        !Array.isArray(dashboardData.urgent_open_cases) ||
+        !Array.isArray(dashboardData.delivered_cases_month) ||
+        !Array.isArray(dashboardData.revenue_trend) ||
+        typeof dashboardData.delivered_count_month !== "number"
+      ) {
+        throw new Error("Resposta inválida da API.");
+      }
       setDashboard(dashboardData);
+      setSource("dashboard", "live", new Date().toISOString());
+      if (userId && getStoredSession()?.id === userId) {
+        await saveOfflineRecord(userId, "dashboard", dashboardData).catch(() => {
+          setMessage({ type: "error", text: "Não foi possível guardar o dashboard offline." });
+        });
+      }
       return true;
     } catch (error) {
-      if (error.status === 401) {
+      if (error.status === 401 && window.localStorage.getItem("cadisk_token") === requestToken) {
         handleAuthExpired();
       } else {
-        setDashboardError(error.message);
+        const record = userId
+          ? await readOfflineRecord(userId, "dashboard").catch(() => null)
+          : null;
+        setDashboard(record?.data || null);
+        setSource("dashboard", record ? "snapshot" : "unavailable", record?.updatedAt);
+        setDashboardError(record ? null : "Dashboard indisponível sem conexão.");
       }
       return false;
     } finally {
@@ -237,6 +337,10 @@ export function DataProvider({ children }) {
   async function handleCaseSubmit(event) {
     event.preventDefault();
     if (!selectedDoctorId) return;
+    if (getApiAvailability() === "unavailable") {
+      setMessage({ type: "error", text: "API indisponível. Salve o caso como rascunho local." });
+      return;
+    }
 
     const automaticItems =
       caseForm.pricing_mode === "services" ? buildAutomaticCaseItems(caseForm) : [];
@@ -257,27 +361,64 @@ export function DataProvider({ children }) {
         payload.items = automaticItems;
       }
       await createCase(payload);
+      let draftCleanupFailed = false;
+      if (draftInForm && userId) {
+        try {
+          await deleteOfflineRecord(userId, "draft");
+          setDraft(null);
+          setDraftInForm(false);
+        } catch {
+          draftCleanupFailed = true;
+        }
+      }
       window.localStorage.setItem(LAST_CASE_DOCTOR_STORAGE_KEY, String(selectedDoctorId));
 
       const refreshed = await loadAppData({ selectedCaseId: null });
-      if (!refreshed) return;
       setSelectedCaseId(null);
       setSelectedDoctorId(null);
       setCasesFilterResetSignal((current) => current + 1);
       setCaseForm(EMPTY_CASE);
       setShowCaseModal(false);
       setMessage({
-        type: "success",
-        text: automaticItems.length
-          ? `Caso criado com ${automaticItems.length} ${
-              automaticItems.length === 1
-                ? "item de serviço automático"
-                : "itens de serviço automáticos"
-            }.`
-          : "Caso criado.",
+        type: refreshed && !draftCleanupFailed ? "success" : "error",
+        text: draftCleanupFailed
+          ? "Caso registrado, mas o rascunho local não pôde ser apagado. Descarte-o antes de reutilizar."
+          : !refreshed
+            ? "Caso registrado, mas a lista não foi atualizada. Confira os casos antes de criar novamente."
+            : automaticItems.length
+              ? `Caso criado com ${automaticItems.length} ${
+                  automaticItems.length === 1
+                    ? "item de serviço automático"
+                    : "itens de serviço automáticos"
+                }.`
+              : "Caso criado.",
       });
     } catch (error) {
-      setMessage({ type: "error", text: error.message });
+      let draftSaveFailed = false;
+      const unconfirmed =
+        error.code !== "OFFLINE_WRITE_BLOCKED" && (!error.status || error.status >= 500);
+      if (unconfirmed && userId && (!draft || draftInForm)) {
+        try {
+          const record = await saveOfflineRecord(userId, "draft", {
+            doctorId: selectedDoctorId,
+            form: caseForm,
+          });
+          setDraft(record);
+          setDraftInForm(true);
+        } catch {
+          draftSaveFailed = true;
+        }
+      }
+      setMessage({
+        type: "error",
+        text: draftSaveFailed
+          ? "Não foi possível confirmar a criação nem guardar o rascunho. Mantenha o formulário aberto e confira a lista após reconectar."
+          : error.code === "OFFLINE_WRITE_BLOCKED"
+            ? "API indisponível. Salve o caso como rascunho local."
+            : unconfirmed
+              ? "Não foi possível confirmar a criação. Confira a lista de casos após reconectar antes de tentar novamente."
+              : error.message,
+      });
     } finally {
       setBusy(false);
     }
@@ -370,13 +511,40 @@ export function DataProvider({ children }) {
     setBusy(true);
     setMessage(null);
     try {
-      const data = await getCaseItems(caseId);
-      setSelectedCaseId(caseId);
-      setItems(Array.isArray(data) ? data : []);
+      await loadCaseItems(caseId);
     } catch (error) {
       setMessage({ type: "error", text: error.message });
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function loadCaseItems(caseId) {
+    const requestToken = window.localStorage.getItem("cadisk_token");
+    try {
+      const data = await getCaseItems(caseId);
+      if (!validCollection("items", data)) throw new Error("Resposta inválida da API.");
+      setSelectedCaseId(caseId);
+      setItems(data);
+      setItemsUnavailable(false);
+      setSource("items", "live", new Date().toISOString());
+      if (userId && getStoredSession()?.id === userId) {
+        await saveOfflineRecord(userId, "items", data, caseId).catch(() => {
+          setMessage({ type: "error", text: "Não foi possível guardar os detalhes offline." });
+        });
+      }
+    } catch (error) {
+      if (error.status === 401 && window.localStorage.getItem("cadisk_token") === requestToken) {
+        handleAuthExpired();
+        return;
+      }
+      const record = userId
+        ? await readOfflineRecord(userId, "items", caseId).catch(() => null)
+        : null;
+      setSelectedCaseId(caseId);
+      setItems(record?.data || []);
+      setItemsUnavailable(!record);
+      setSource("items", record ? "snapshot" : "unavailable", record?.updatedAt);
     }
   }
 
@@ -395,10 +563,66 @@ export function DataProvider({ children }) {
     return doctors.length === 1 ? doctors[0].id : null;
   }
 
-  function openNewCaseModal(defaults = {}) {
+  async function openNewCaseModal(defaults = {}) {
+    if (getApiAvailability() === "unavailable" && !doctors.length) {
+      setMessage({ type: "error", text: "Dentistas não disponíveis offline neste dispositivo." });
+      return;
+    }
     setCaseForm(createDefaultCaseForm(defaults));
     setSelectedDoctorId(getDefaultCaseDoctorId());
+    const storedDraft = userId ? await readOfflineRecord(userId, "draft").catch(() => draft) : null;
+    setDraft(storedDraft);
+    setDraftOffer(Boolean(storedDraft));
+    setDraftInForm(false);
     setShowCaseModal(true);
+  }
+
+  async function saveCaseDraft() {
+    if (!userId) {
+      setMessage({
+        type: "error",
+        text: "Aguarde a validação da sessão antes de salvar um rascunho.",
+      });
+      return;
+    }
+    try {
+      const record = await saveOfflineRecord(userId, "draft", {
+        doctorId: selectedDoctorId,
+        form: caseForm,
+      });
+      setDraft(record);
+      setDraftInForm(true);
+      setMessage({
+        type: "success",
+        text: "Rascunho salvo neste dispositivo. Ainda não é um caso registrado.",
+      });
+      setShowCaseModal(false);
+    } catch {
+      setMessage({ type: "error", text: "Não foi possível salvar o rascunho local." });
+    }
+  }
+
+  function restoreCaseDraft() {
+    if (!draft) return;
+    setCaseForm(createDefaultCaseForm(draft.data.form));
+    setSelectedDoctorId(draft.data.doctorId);
+    setDraftInForm(true);
+    setDraftOffer(false);
+  }
+
+  async function discardCaseDraft() {
+    if (!userId) return;
+    try {
+      await deleteOfflineRecord(userId, "draft");
+      setDraft(null);
+      setDraftInForm(false);
+      setDraftOffer(false);
+      setCaseForm(createDefaultCaseForm());
+      setSelectedDoctorId(getDefaultCaseDoctorId());
+      setMessage({ type: "success", text: "Rascunho descartado." });
+    } catch {
+      setMessage({ type: "error", text: "Não foi possível descartar o rascunho." });
+    }
   }
 
   function openNewCaseFromDashboard() {
@@ -559,6 +783,14 @@ export function DataProvider({ children }) {
     setMessage,
     confirmPending,
     setConfirmPending,
+    snapshotMeta,
+    itemsUnavailable,
+    draft,
+    draftOffer,
+    setDraftOffer,
+    saveCaseDraft,
+    restoreCaseDraft,
+    discardCaseDraft,
     selectedCase,
     loadAppData,
     loadDashboard,
