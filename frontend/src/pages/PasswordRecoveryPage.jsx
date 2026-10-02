@@ -51,7 +51,7 @@ export default function PasswordRecoveryPage({ reset = false }) {
         await resetPassword(token, password);
         setToken("");
         setPassword("");
-        handleLogout();
+        await handleLogout();
       } else {
         await forgotPassword(email.trim());
       }

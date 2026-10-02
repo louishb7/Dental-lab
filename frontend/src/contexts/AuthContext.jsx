@@ -3,6 +3,9 @@ import {
   clearSession,
   getCurrentUser,
   getStoredSession,
+  hasRefreshSession,
+  ensurePersistentSession,
+  revokeSession,
   login,
   register,
   saveValidatedSession,
@@ -64,17 +67,23 @@ export function AuthProvider({ children }) {
 
   function revalidateSession() {
     const token = window.localStorage.getItem("cadisk_token");
-    if (!token) return Promise.resolve(false);
+    const owner = getStoredSession()?.username;
+    if (!token && !hasRefreshSession()) return Promise.resolve(false);
     if (pendingValidation.current?.token === token) return pendingValidation.current.promise;
 
     const promise = getCurrentUser()
       .then((user) => {
-        if (window.localStorage.getItem("cadisk_token") !== token) return false;
+        if (
+          !window.localStorage.getItem("cadisk_token") ||
+          getStoredSession()?.username !== user.username
+        )
+          return false;
         setSession(saveValidatedSession(user));
+        void ensurePersistentSession().catch(() => {});
         return true;
       })
       .catch((error) => {
-        if (window.localStorage.getItem("cadisk_token") === token && error.status === 401) {
+        if (error.status === 401 && getStoredSession()?.username === owner) {
           handleAuthExpired();
         }
         return false;
@@ -161,9 +170,9 @@ export function AuthProvider({ children }) {
     }
   }
 
-  function handleLogout() {
+  async function handleLogout() {
     const userId = getStoredSession()?.id;
-    clearSession();
+    const revocation = revokeSession();
     setSession(null);
     setAuthMessage(null);
     setLoginForm(EMPTY_LOGIN);
@@ -177,9 +186,11 @@ export function AuthProvider({ children }) {
         });
       });
     }
+    await revocation;
   }
 
   function handleAuthExpired(messageText = "Sessão expirada. Faça login novamente.") {
+    if (getStoredSession()?.username !== session?.username) return;
     const userId = getStoredSession()?.id;
     clearSession();
     setSession(null);

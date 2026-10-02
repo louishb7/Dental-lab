@@ -66,6 +66,8 @@ async function intercepted(params) {
   const payload = JSON.parse(request.postData || "{}");
   if (request.method === "OPTIONS") status = 204;
   else if (path === "/auth/me") body = { id: 1, username: "tester", email: "test@example.com" };
+  else if (path === "/auth/session") body = { refresh_token: "b".repeat(64) };
+  else if (path === "/auth/logout") body = { detail: "Sessão encerrada" };
   else if (path === "/auth/login") {
     counts.login++;
     lastLogin = payload;

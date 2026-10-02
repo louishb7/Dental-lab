@@ -18,6 +18,7 @@ describe('password recovery HTTP', () => {
   let prisma: PrismaService;
   let resets: PasswordResetService;
   let accessToken: string;
+  let refreshToken: string;
   let userId: number;
   const send = jest.fn<Promise<void>, [EmailMessage]>();
   const email = 'reset@example.com';
@@ -46,6 +47,7 @@ describe('password recovery HTTP', () => {
       .send({ email, username: 'reset1', password: 'abcde1' })
       .expect(201);
     accessToken = response.body.access_token as string;
+    refreshToken = response.body.refresh_token as string;
     userId = (await prisma.user.findFirstOrThrow()).id;
   });
   afterEach(() => jest.restoreAllMocks());
@@ -102,6 +104,11 @@ describe('password recovery HTTP', () => {
       .post('/auth/reset-password')
       .send({ token: latestToken(), password: 'newpass1' })
       .expect(200);
+    await request(app.getHttpServer())
+      .post('/auth/refresh')
+      .send({ refresh_token: refreshToken })
+      .expect(401);
+    expect(await prisma.persistentSession.count({ where: { userId, revokedAt: null } })).toBe(0);
     for (const token of [accessToken, legacy])
       await request(app.getHttpServer())
         .get('/auth/me')

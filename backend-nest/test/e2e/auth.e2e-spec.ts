@@ -1,4 +1,5 @@
 import type { INestApplication } from '@nestjs/common';
+import { createHash } from 'node:crypto';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 
@@ -7,6 +8,7 @@ import { AppModule } from '../../src/app.module';
 import { LoginRateLimitService } from '../../src/auth/login-rate-limit.service';
 import {
   ACCOUNT_LOCK_MAX_ATTEMPTS,
+  ACCESS_TOKEN_EXPIRE_MINUTES,
   LOGIN_RATE_LIMIT_ATTEMPTS,
 } from '../../src/auth/security.constants';
 import { assertSafeTestDatabaseUrl } from '../../src/config/test-database';
@@ -42,7 +44,13 @@ describe('auth e2e', () => {
   async function registerUser(
     email = 'admin@cadisk.local',
     username = 'admin1',
-  ): Promise<{ access_token: string; email: string; token_type: 'bearer'; username: string }> {
+  ): Promise<{
+    access_token: string;
+    refresh_token: string;
+    email: string;
+    token_type: 'bearer';
+    username: string;
+  }> {
     const response = await request(app.getHttpServer())
       .post('/auth/register')
       .send({
@@ -54,6 +62,7 @@ describe('auth e2e', () => {
 
     return response.body as {
       access_token: string;
+      refresh_token: string;
       email: string;
       token_type: 'bearer';
       username: string;
@@ -93,7 +102,8 @@ describe('auth e2e', () => {
     expect(registerPayload.access_token).toEqual(expect.any(String));
     const tokenPayload = decodeJwtPayload(registerPayload.access_token);
     expect(tokenPayload.iat).toEqual(expect.any(Number));
-    expect(tokenPayload.exp).toBeUndefined();
+    expect(tokenPayload.exp).toBe(tokenPayload.iat! + ACCESS_TOKEN_EXPIRE_MINUTES * 60);
+    expect(registerPayload.refresh_token).toMatch(/^[a-f0-9]{64}$/);
 
     await request(app.getHttpServer())
       .get('/auth/me')
@@ -116,6 +126,50 @@ describe('auth e2e', () => {
       .send({ email: 'ADMIN@CADISK.LOCAL', password: STRONG_PASSWORD })
       .expect(200);
     expect(loginByEmailAlias.body.email).toBe('admin@cadisk.local');
+  });
+
+  it('renews an expired access token with a rotating, revocable session', async () => {
+    const login = await registerUser();
+    const tokenHash = createHash('sha256').update(login.refresh_token).digest('hex');
+    const saved = await prisma.persistentSession.findUnique({ where: { tokenHash } });
+    expect(saved?.userId).toBe(1);
+    expect(saved?.tokenHash).not.toBe(login.refresh_token);
+    const upgrade = await request(app.getHttpServer())
+      .post('/auth/session')
+      .set('Authorization', `Bearer ${login.access_token}`)
+      .expect(201);
+    expect(upgrade.body.refresh_token).toMatch(/^[a-f0-9]{64}$/);
+    const future = Date.now() + 5 * 24 * 60 * 60 * 1000;
+    const clock = jest.spyOn(Date, 'now').mockReturnValue(future);
+    try {
+      await request(app.getHttpServer())
+        .get('/auth/me')
+        .set('Authorization', `Bearer ${login.access_token}`)
+        .expect(401);
+      const refreshed = await request(app.getHttpServer())
+        .post('/auth/refresh')
+        .send({ refresh_token: login.refresh_token })
+        .expect(200);
+      expect(refreshed.body.refresh_token).not.toBe(login.refresh_token);
+      await request(app.getHttpServer())
+        .post('/auth/refresh')
+        .send({ refresh_token: login.refresh_token })
+        .expect(401);
+      await request(app.getHttpServer())
+        .get('/auth/me')
+        .set('Authorization', `Bearer ${refreshed.body.access_token}`)
+        .expect(200);
+      await request(app.getHttpServer())
+        .post('/auth/logout')
+        .send({ refresh_token: refreshed.body.refresh_token })
+        .expect(200);
+      await request(app.getHttpServer())
+        .post('/auth/refresh')
+        .send({ refresh_token: refreshed.body.refresh_token })
+        .expect(401);
+    } finally {
+      clock.mockRestore();
+    }
   });
 
   it('allows multiple users and rejects duplicate identities', async () => {

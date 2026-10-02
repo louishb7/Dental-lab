@@ -25,6 +25,7 @@ let postMode = "online";
 let activeUser = { id: 1, username: "tester", email: "tester@example.com" };
 let postCount = 0;
 let meCount = 0;
+let refreshCount = 0;
 let secondaryDelayMs = 0;
 let nextCaseId = 2;
 let deliveryCount = 0;
@@ -216,6 +217,10 @@ async function intercept({ requestId, request }) {
   }
   let status = apiMode === "server" ? 503 : 200;
   let body = { detail: "API indisponível" };
+  if (request.headers.Authorization === "Bearer expired") {
+    status = 401;
+    body = { detail: "Token expirado" };
+  }
   if (
     secondaryDelayMs &&
     request.method === "GET" &&
@@ -228,6 +233,18 @@ async function intercept({ requestId, request }) {
       status = 401;
       body = { detail: "Sessão expirada" };
     } else if (status === 200) body = activeUser;
+  } else if (status === 200 && url.pathname === "/auth/session") {
+    body = { refresh_token: "b".repeat(64) };
+  } else if (url.pathname === "/auth/refresh") {
+    refreshCount++;
+    status = apiMode === "unauthorized" ? 401 : status;
+    body =
+      status === 200
+        ? {
+            access_token: `token-${activeUser.id}`,
+            refresh_token: refreshCount.toString(16).padStart(64, "c"),
+          }
+        : { detail: "Sessão inválida" };
   } else if (status === 200 && url.pathname === "/auth/login") {
     body = {
       access_token: `token-${activeUser.id}`,
@@ -692,10 +709,33 @@ try {
     uploadThroughput: -1,
   });
   apiMode = "online";
+  await evaluate(`localStorage.setItem('cadisk_token', 'expired')`);
+  const refreshesBeforeSync = refreshCount;
   await evaluate(`window.dispatchEvent(new Event('online'))`);
   await waitFor(`(await ${records}).every(row => row.type !== 'pending-case')`);
   await waitFor(`document.body.textContent.includes('Rascunho legado')`);
   assert.equal(postCount, postsBefore + 4, "Four local cases must sync once each");
+  assert.equal(
+    refreshCount - refreshesBeforeSync,
+    1,
+    "Reconnect must rotate once before outbox sync",
+  );
+  assert.equal(await evaluate(`localStorage.getItem('cadisk_token')`), "token-1");
+  await evaluate(`localStorage.setItem('cadisk_token', 'expired')`);
+  const refreshesBeforeReopen = refreshCount;
+  const credentialBeforeReopen = await evaluate(`localStorage.getItem('cadisk_refresh_token')`);
+  await navigate("/cases");
+  await waitFor(`localStorage.getItem('cadisk_token') === 'token-1'`);
+  assert.equal(await evaluate(`location.pathname`), "/cases");
+  assert.equal(
+    refreshCount - refreshesBeforeReopen,
+    1,
+    "Reopen must restore from refresh credential",
+  );
+  assert.notEqual(
+    await evaluate(`localStorage.getItem('cadisk_refresh_token')`),
+    credentialBeforeReopen,
+  );
   assert.equal(
     cases.filter((item) =>
       [

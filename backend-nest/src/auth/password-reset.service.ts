@@ -121,6 +121,10 @@ export class PasswordResetService {
         where: { userId: current.userId, usedAt: null },
         data: { usedAt: now },
       });
+      await tx.persistentSession.updateMany({
+        where: { userId: current.userId, revokedAt: null },
+        data: { revokedAt: now },
+      });
     });
   }
 

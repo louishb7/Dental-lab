@@ -15,6 +15,7 @@ import { PasswordResetService } from './password-reset.service';
 import { RecoveryRateLimitService } from './recovery-rate-limit.service';
 import { EmailService } from '../email/email.service';
 import { ResendEmailService } from '../email/resend-email.service';
+import { PersistentSessionService } from './persistent-session.service';
 
 @Module({
   controllers: [AuthController],
@@ -44,6 +45,7 @@ import { ResendEmailService } from '../email/resend-email.service';
     LoginRateLimitService,
     PasswordResetService,
     RecoveryRateLimitService,
+    PersistentSessionService,
     { provide: EmailService, useClass: ResendEmailService },
   ],
 })

@@ -6,6 +6,78 @@ const API_ROOT_URL = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_ROOT_URL)
 const DOCTORS_URL = `${API_ROOT_URL}/doctors`;
 const CASES_URL = `${API_ROOT_URL}/cases`;
 const CASE_HISTORY_URL = `${API_ROOT_URL}/case-history`;
+const REFRESH_KEY = "cadisk_refresh_token";
+let refreshPromise = null;
+let sessionUpgradePromise = null;
+
+export function hasRefreshSession() {
+  return Boolean(window.localStorage.getItem(REFRESH_KEY));
+}
+
+async function rotateSession() {
+  if (navigator.onLine === false) throw new Error("Sem conexão");
+  const rotate = async () => {
+    const credential = window.localStorage.getItem(REFRESH_KEY);
+    if (!credential) throw new Error("Sessão ausente");
+    const response = await globalThis.fetch(`${API_ROOT_URL}/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: credential }),
+      cache: "no-store",
+    });
+    if (!response.ok) {
+      if (credential !== window.localStorage.getItem(REFRESH_KEY)) return;
+      const error = new Error("Sessão inválida");
+      error.status = response.status;
+      throw error;
+    }
+    const payload = await response.json();
+    if (typeof payload.access_token !== "string" || typeof payload.refresh_token !== "string") {
+      throw new Error("Resposta de sessão inválida");
+    }
+    if (credential === window.localStorage.getItem(REFRESH_KEY)) {
+      window.localStorage.setItem("cadisk_token", payload.access_token);
+      window.localStorage.setItem(REFRESH_KEY, payload.refresh_token);
+    }
+  };
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      if (navigator.locks) await navigator.locks.request("cadisk-refresh", rotate);
+      else await rotate();
+    })().finally(() => {
+      refreshPromise = null;
+    });
+  }
+  return refreshPromise;
+}
+
+export async function ensurePersistentSession() {
+  if (hasRefreshSession() || navigator.onLine === false) return;
+  if (!sessionUpgradePromise) {
+    sessionUpgradePromise = (async () => {
+      const upgrade = async () => {
+        if (hasRefreshSession()) return;
+        const token = window.localStorage.getItem("cadisk_token");
+        if (!token) return;
+        const response = await globalThis.fetch(`${API_ROOT_URL}/auth/session`, {
+          method: "POST",
+          headers: buildHeaders(),
+          cache: "no-store",
+        });
+        if (response.ok && token === window.localStorage.getItem("cadisk_token")) {
+          const payload = await response.json();
+          if (typeof payload.refresh_token === "string")
+            window.localStorage.setItem(REFRESH_KEY, payload.refresh_token);
+        }
+      };
+      if (navigator.locks) await navigator.locks.request("cadisk-session-upgrade", upgrade);
+      else await upgrade();
+    })().finally(() => {
+      sessionUpgradePromise = null;
+    });
+  }
+  return sessionUpgradePromise;
+}
 
 let apiAvailability = navigator.onLine ? "unknown" : "unavailable";
 const availabilityListeners = new Set();
@@ -40,14 +112,44 @@ async function fetch(url, options = {}) {
   let response;
   try {
     response = await globalThis.fetch(url, options);
+    if (response.status === 401 && !url.includes("/auth/") && hasRefreshSession()) {
+      if (
+        !window.localStorage.getItem("cadisk_token") ||
+        options.headers?.Authorization === `Bearer ${window.localStorage.getItem("cadisk_token")}`
+      )
+        await rotateSession();
+      response = await globalThis.fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          Authorization: `Bearer ${window.localStorage.getItem("cadisk_token")}`,
+        },
+      });
+    } else if (response.status === 401 && url.endsWith("/auth/me") && hasRefreshSession()) {
+      if (
+        !window.localStorage.getItem("cadisk_token") ||
+        options.headers?.Authorization === `Bearer ${window.localStorage.getItem("cadisk_token")}`
+      )
+        await rotateSession();
+      response = await globalThis.fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          Authorization: `Bearer ${window.localStorage.getItem("cadisk_token")}`,
+        },
+      });
+    }
   } catch (error) {
-    setApiAvailability("unavailable", "network");
+    if (error.status !== 401) setApiAvailability("unavailable", "network");
     throw error;
   }
   setApiAvailability(
     response.status >= 500 ? "unavailable" : "available",
     response.status === 401 ? "auth" : "response",
   );
+  if (response.ok && !url.includes("/auth/") && !hasRefreshSession()) {
+    void ensurePersistentSession().catch(() => {});
+  }
   return response;
 }
 
@@ -102,7 +204,10 @@ async function parseResponse(response) {
  * @returns {{username: string, email: string}} Public session data for the UI.
  */
 export function saveSession(payload) {
+  const prior = getStoredSession();
+  if (prior && prior.username !== payload.username) clearSession();
   window.localStorage.setItem("cadisk_token", payload.access_token);
+  if (payload.refresh_token) window.localStorage.setItem(REFRESH_KEY, payload.refresh_token);
   window.localStorage.setItem(
     "cadisk_user",
     JSON.stringify({ username: payload.username, email: payload.email }),
@@ -126,7 +231,7 @@ export function getStoredSession() {
   const rawUser = window.localStorage.getItem("cadisk_user");
   const token = window.localStorage.getItem("cadisk_token");
 
-  if (!rawUser || !token) {
+  if (!rawUser || (!token && !hasRefreshSession())) {
     return null;
   }
 
@@ -145,8 +250,26 @@ export function getStoredSession() {
  */
 export function clearSession() {
   window.localStorage.removeItem("cadisk_token");
+  window.localStorage.removeItem(REFRESH_KEY);
   window.localStorage.removeItem("cadisk_user");
   window.localStorage.removeItem("cadisk_last_case_doctor_id");
+}
+
+export async function revokeSession() {
+  const credential = window.localStorage.getItem(REFRESH_KEY);
+  clearSession();
+  if (credential && navigator.onLine !== false) {
+    try {
+      await globalThis.fetch(`${API_ROOT_URL}/auth/logout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: credential }),
+        cache: "no-store",
+      });
+    } catch {
+      /* Offline logout removes the device credential below. */
+    }
+  }
 }
 
 /**

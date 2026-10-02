@@ -26,6 +26,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LoginRateLimitService } from './login-rate-limit.service';
 import { PasswordResetService, RECOVERY_MESSAGE } from './password-reset.service';
 import { RecoveryRateLimitService } from './recovery-rate-limit.service';
+import { PersistentSessionService } from './persistent-session.service';
 import {
   ForgotPasswordRequestDto,
   ResetPasswordRequestDto,
@@ -39,6 +40,7 @@ export class AuthController {
     private readonly users: UserService,
     private readonly passwordResets: PasswordResetService,
     private readonly recoveryRateLimit: RecoveryRateLimitService,
+    private readonly sessions: PersistentSessionService,
   ) {}
 
   @Post('forgot-password')
@@ -69,7 +71,7 @@ export class AuthController {
   async register(@Body() payload: AuthRegisterRequestDto): Promise<AuthTokenResponse> {
     try {
       const user = await this.users.createUser(payload);
-      return this.auth.buildTokenResponse(user);
+      return { ...this.auth.buildTokenResponse(user), ...(await this.sessions.create(user.id)) };
     } catch (error) {
       if (error instanceof Error && error.message.startsWith('Já existe')) {
         throw new ConflictException({
@@ -121,7 +123,7 @@ export class AuthController {
         });
       }
 
-      return this.auth.buildTokenResponse(user);
+      return { ...this.auth.buildTokenResponse(user), ...(await this.sessions.create(user.id)) };
     } catch (error) {
       if (error instanceof AccountLockedError) {
         const remainingSeconds = Math.max(
@@ -154,5 +156,24 @@ export class AuthController {
       id: user.id,
       username: user.username,
     };
+  }
+
+  @Post('session')
+  @UseGuards(JwtAuthGuard)
+  createSession(@CurrentUser() user: AuthUserResponse) {
+    return this.sessions.create(user.id);
+  }
+
+  @Post('refresh')
+  @HttpCode(200)
+  refresh(@Body() payload: { refresh_token?: unknown }) {
+    return this.sessions.refresh(payload?.refresh_token);
+  }
+
+  @Post('logout')
+  @HttpCode(200)
+  async logout(@Body() payload: { refresh_token?: unknown }) {
+    await this.sessions.revoke(payload?.refresh_token);
+    return { detail: 'Sessão encerrada' };
   }
 }
