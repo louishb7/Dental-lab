@@ -4,7 +4,6 @@ import {
   getCurrentUser,
   getStoredSession,
   hasRefreshSession,
-  ensurePersistentSession,
   revokeSession,
   login,
   register,
@@ -79,7 +78,6 @@ export function AuthProvider({ children }) {
         )
           return false;
         setSession(saveValidatedSession(user));
-        void ensurePersistentSession().catch(() => {});
         return true;
       })
       .catch((error) => {

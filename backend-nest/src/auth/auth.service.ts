@@ -48,9 +48,7 @@ export class AuthService {
       },
       {
         algorithm: JWT_ALGORITHM,
-        ...(ACCESS_TOKEN_EXPIRE_MINUTES > 0
-          ? { expiresIn: `${ACCESS_TOKEN_EXPIRE_MINUTES}m` }
-          : {}),
+        expiresIn: `${ACCESS_TOKEN_EXPIRE_MINUTES}m`,
       },
     );
   }

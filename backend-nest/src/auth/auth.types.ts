@@ -21,4 +21,5 @@ export interface AuthUserResponse {
 export interface JwtPayload {
   sub?: unknown;
   authVersion?: unknown;
+  exp?: unknown;
 }

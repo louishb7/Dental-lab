@@ -158,12 +158,6 @@ export class AuthController {
     };
   }
 
-  @Post('session')
-  @UseGuards(JwtAuthGuard)
-  createSession(@CurrentUser() user: AuthUserResponse) {
-    return this.sessions.create(user.id);
-  }
-
   @Post('refresh')
   @HttpCode(200)
   refresh(@Body() payload: { refresh_token?: unknown }) {

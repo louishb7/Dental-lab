@@ -28,9 +28,7 @@ import { PersistentSessionService } from './persistent-session.service';
         return {
           secret: config.getOrThrow('SECRET_KEY'),
           signOptions: {
-            ...(ACCESS_TOKEN_EXPIRE_MINUTES > 0
-              ? { expiresIn: `${ACCESS_TOKEN_EXPIRE_MINUTES}m` }
-              : {}),
+            expiresIn: `${ACCESS_TOKEN_EXPIRE_MINUTES}m`,
             algorithm: JWT_ALGORITHM,
           },
         };

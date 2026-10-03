@@ -8,7 +8,6 @@ const CASES_URL = `${API_ROOT_URL}/cases`;
 const CASE_HISTORY_URL = `${API_ROOT_URL}/case-history`;
 const REFRESH_KEY = "cadisk_refresh_token";
 let refreshPromise = null;
-let sessionUpgradePromise = null;
 
 export function hasRefreshSession() {
   return Boolean(window.localStorage.getItem(REFRESH_KEY));
@@ -49,34 +48,6 @@ async function rotateSession() {
     });
   }
   return refreshPromise;
-}
-
-export async function ensurePersistentSession() {
-  if (hasRefreshSession() || navigator.onLine === false) return;
-  if (!sessionUpgradePromise) {
-    sessionUpgradePromise = (async () => {
-      const upgrade = async () => {
-        if (hasRefreshSession()) return;
-        const token = window.localStorage.getItem("cadisk_token");
-        if (!token) return;
-        const response = await globalThis.fetch(`${API_ROOT_URL}/auth/session`, {
-          method: "POST",
-          headers: buildHeaders(),
-          cache: "no-store",
-        });
-        if (response.ok && token === window.localStorage.getItem("cadisk_token")) {
-          const payload = await response.json();
-          if (typeof payload.refresh_token === "string")
-            window.localStorage.setItem(REFRESH_KEY, payload.refresh_token);
-        }
-      };
-      if (navigator.locks) await navigator.locks.request("cadisk-session-upgrade", upgrade);
-      else await upgrade();
-    })().finally(() => {
-      sessionUpgradePromise = null;
-    });
-  }
-  return sessionUpgradePromise;
 }
 
 let apiAvailability = navigator.onLine ? "unknown" : "unavailable";
@@ -147,9 +118,6 @@ async function fetch(url, options = {}) {
     response.status >= 500 ? "unavailable" : "available",
     response.status === 401 ? "auth" : "response",
   );
-  if (response.ok && !url.includes("/auth/") && !hasRefreshSession()) {
-    void ensurePersistentSession().catch(() => {});
-  }
   return response;
 }
 

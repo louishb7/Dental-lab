@@ -1,6 +1,7 @@
 import type { INestApplication } from '@nestjs/common';
 import { createHash } from 'node:crypto';
 import { Test } from '@nestjs/testing';
+import { JwtService } from '@nestjs/jwt';
 import request from 'supertest';
 
 import { configureApp } from '../../src/app.configure';
@@ -134,11 +135,6 @@ describe('auth e2e', () => {
     const saved = await prisma.persistentSession.findUnique({ where: { tokenHash } });
     expect(saved?.userId).toBe(1);
     expect(saved?.tokenHash).not.toBe(login.refresh_token);
-    const upgrade = await request(app.getHttpServer())
-      .post('/auth/session')
-      .set('Authorization', `Bearer ${login.access_token}`)
-      .expect(201);
-    expect(upgrade.body.refresh_token).toMatch(/^[a-f0-9]{64}$/);
     const future = Date.now() + 5 * 24 * 60 * 60 * 1000;
     const clock = jest.spyOn(Date, 'now').mockReturnValue(future);
     try {
@@ -170,6 +166,31 @@ describe('auth e2e', () => {
     } finally {
       clock.mockRestore();
     }
+  });
+
+  it('requires exp on signed access tokens and rejects expired tokens', async () => {
+    await registerUser();
+    const jwt = new JwtService({ secret: 'test-secret-key-for-cadisk-nest-auth' });
+    const claims = { sub: 'admin1', authVersion: 0 };
+    const withoutExpiry = jwt.sign(claims);
+    const expired = jwt.sign(claims, { expiresIn: -1 });
+    const valid = jwt.sign(claims, { expiresIn: '60m' });
+    await request(app.getHttpServer())
+      .get('/auth/me')
+      .set('Authorization', `Bearer ${withoutExpiry}`)
+      .expect(401);
+    await request(app.getHttpServer())
+      .get('/auth/me')
+      .set('Authorization', `Bearer ${expired}`)
+      .expect(401);
+    await request(app.getHttpServer())
+      .get('/auth/me')
+      .set('Authorization', `Bearer ${valid}`)
+      .expect(200);
+    await request(app.getHttpServer())
+      .post('/auth/session')
+      .set('Authorization', `Bearer ${valid}`)
+      .expect(404);
   });
 
   it('allows multiple users and rejects duplicate identities', async () => {

@@ -22,7 +22,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
-    if (typeof payload.sub !== 'string' || !payload.sub) {
+    if (
+      typeof payload.sub !== 'string' ||
+      !payload.sub ||
+      typeof payload.exp !== 'number' ||
+      !Number.isSafeInteger(payload.exp) ||
+      payload.exp <= Math.floor(Date.now() / 1000)
+    ) {
       throw new UnauthorizedException({
         detail: 'Token inválido ou expirado',
       });

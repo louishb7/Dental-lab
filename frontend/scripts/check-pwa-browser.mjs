@@ -233,8 +233,6 @@ async function intercept({ requestId, request }) {
       status = 401;
       body = { detail: "Sessão expirada" };
     } else if (status === 200) body = activeUser;
-  } else if (status === 200 && url.pathname === "/auth/session") {
-    body = { refresh_token: "b".repeat(64) };
   } else if (url.pathname === "/auth/refresh") {
     refreshCount++;
     status = apiMode === "unauthorized" ? 401 : status;
@@ -248,6 +246,7 @@ async function intercept({ requestId, request }) {
   } else if (status === 200 && url.pathname === "/auth/login") {
     body = {
       access_token: `token-${activeUser.id}`,
+      refresh_token: activeUser.id.toString(16).padStart(64, "a"),
       username: activeUser.username,
       email: activeUser.email,
     };
